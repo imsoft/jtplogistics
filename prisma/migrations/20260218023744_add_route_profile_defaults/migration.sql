@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "profiles" ALTER COLUMN "created_at" SET DEFAULT CURRENT_TIMESTAMP;
+
+-- AlterTable
+ALTER TABLE "routes" ALTER COLUMN "created_at" SET DEFAULT CURRENT_TIMESTAMP;

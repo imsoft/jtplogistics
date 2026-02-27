@@ -1,0 +1,13 @@
+---
+description: Interfaces in their folder, components/hooks/functions organized, no duplicated code
+alwaysApply: true
+---
+
+# Estructura y DRY
+
+- **Interfaces y tipos**: Definir en `src/types/`, por dominio o módulo (ej. `auth.types.ts`, `user.types.ts`). Un archivo por ámbito; exportar interfaces con nombres claros. No definir interfaces inline en componentes cuando se reutilicen o sean relevantes para el dominio.
+- **Componentes**: En `src/components/`. Los de shadcn en `src/components/ui/`. Componentes propios por carpeta de feature (ej. `auth/`, `layout/`). Un componente por archivo; componentes compuestos en la misma carpeta si son específicos de esa feature.
+- **Hooks**: En `src/hooks/`. Un hook por archivo (ej. `use-form-submit.ts`, `use-auth.ts`). Reutilizar hooks en lugar de repetir lógica entre componentes.
+- **Funciones de lógica/utilidades**: En `src/lib/`, agrupadas por responsabilidad (ej. `validators/`, `api/`). No duplicar validaciones ni transformaciones; extraer a funciones con nombre y usarlas donde haga falta.
+- **Cero duplicación**: Antes de escribir lógica o UI repetida, extraer a tipo en `types/`, componente en `components/`, hook en `hooks/` o función en `lib/`. Reutilizar en todo el proyecto.
+- **Imports**: Usar alias `@/types`, `@/components`, `@/hooks`, `@/lib` (según corresponda con la estructura del proyecto).

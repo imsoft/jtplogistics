@@ -1,0 +1,80 @@
+export interface Employee {
+  id: string;
+  name: string;
+  email: string;
+  image: string | null;
+  birthDate: string | null;
+  position: string | null;
+  department: string | null;
+  phone: string | null;
+  password: string | null;
+  createdAt: string;
+}
+
+export interface EmployeeFormData {
+  name: string;
+  email: string;
+  password: string;
+  birthDate: string;
+  position: string;
+  department: string;
+  phone: string;
+}
+
+export interface Laptop {
+  id: string;
+  name: string;
+  password: string | null;
+  serialNumber: string | null;
+  assignedToId: string | null;
+  assignedTo: { id: string; name: string } | null;
+  emailAccountId: string | null;
+  emailAccount: { id: string; email: string } | null;
+  createdAt: string;
+}
+
+export interface LaptopFormData {
+  name: string;
+  password: string;
+  serialNumber: string;
+  assignedToId: string;
+  emailAccountId: string;
+}
+
+export interface PhoneDevice {
+  id: string;
+  name: string;
+  phoneNumber: string | null;
+  password: string | null;
+  imei: string | null;
+  assignedToId: string | null;
+  assignedTo: { id: string; name: string } | null;
+  emailAccountId: string | null;
+  emailAccount: { id: string; email: string } | null;
+  createdAt: string;
+}
+
+export interface PhoneFormData {
+  name: string;
+  phoneNumber: string;
+  password: string;
+  imei: string;
+  assignedToId: string;
+  emailAccountId: string;
+}
+
+export interface EmailAccount {
+  id: string;
+  type: string;
+  email: string;
+  password: string | null;
+  assignees: { id: string; name: string }[];
+  createdAt: string;
+}
+
+export interface EmailFormData {
+  type: string;
+  email: string;
+  password: string;
+  assigneeIds: string[];
+}

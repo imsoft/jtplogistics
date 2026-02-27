@@ -1,0 +1,17 @@
+---
+description: All tables must be Data Table with filters
+alwaysApply: true
+---
+
+# Tablas: siempre Data Table con filtros
+
+- **Todas las tablas de datos** del proyecto deben usar el componente **DataTable** de `@/components/ui/data-table.tsx`, basado en **TanStack Table** (`@tanstack/react-table`), no tablas HTML manuales ni solo el `<Table />` de shadcn sin lógica de datos.
+- **Estructura**:
+  - Definir **columnas** con `ColumnDef<TData, TValue>[]` (en un archivo `*-columns.tsx` o en el mismo módulo). Incluir ordenación donde aplique (cabeceras con `column.toggleSorting`).
+  - Pasar **columns** y **data** al `<DataTable />`. Usar **filterColumn** (o una columna con `accessorKey`) y **filterPlaceholder** para el input de búsqueda.
+  - Si hace falta una columna solo para filtrar (p. ej. búsqueda en varios campos), usar una columna con `accessorFn` y **initialColumnVisibility** para ocultarla.
+- **Filtros**: cada Data Table debe tener **siempre** un filtro de búsqueda (al menos uno). Usar la prop **filterColumn** apuntando a la columna por la que se filtra, y **filterPlaceholder** en español.
+- **Identidad de filas**: cuando el modelo tenga `id`, pasar **getRowId** (p. ej. `(row) => row.id`) al DataTable.
+- **Acciones por fila** (editar, eliminar, etc.): definirlas en una columna `id: "actions"` en las column definitions, usando los componentes de shadcn (Button, Link, DropdownMenu, etc.).
+
+Referencia: [Data Table - shadcn/ui](https://ui.shadcn.com/docs/components/radix/data-table).

@@ -1,0 +1,12 @@
+---
+description: Use only shadcn UI components and conventions
+alwaysApply: true
+---
+
+# shadcn UI only
+
+- **Use exclusively shadcn components** from `@/components/ui` for all UI (buttons, inputs, cards, forms, dialogs, etc.). Do not use raw HTML elements for UI that shadcn provides.
+- **Add new components** with: `pnpm dlx shadcn@latest add <component-name> --yes` when a primitive is missing. Prefer existing shadcn primitives over custom implementations.
+- **Follow shadcn patterns**: use the `cn()` utility from `@/lib/utils` for class merging; respect the design tokens in `globals.css` (e.g. `primary`, `muted`, `card`); use the variants and sizes defined by each component (e.g. `Button` variants: default, outline, ghost, link).
+- **Styling**: rely on Tailwind classes that map to the theme (e.g. `bg-primary`, `text-muted-foreground`, `border-border`). Do not introduce arbitrary colors or one-off styles that bypass the design system.
+- **Composition**: build complex UIs by composing shadcn components (Card, CardHeader, CardContent, etc.) rather than custom div-based layouts for interactive pieces.

@@ -1,0 +1,256 @@
+// Prisma schema - BD en snake_case (tablas y columnas).
+// Ver /docs/conventions.md
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---- Better Auth (tablas mapeadas a snake_case) ----
+// User roles stored in English: admin, carrier, collaborator
+
+enum UserRole {
+  admin
+  carrier
+  collaborator
+}
+
+model User {
+  id            String         @id @default(cuid()) @map("id")
+  name          String         @map("name")
+  email         String         @unique @map("email")
+  emailVerified Boolean        @map("email_verified")
+  image         String?        @map("image")
+  birthDate     DateTime?      @map("birth_date")
+  role          UserRole       @default(collaborator) @map("role")
+  createdAt     DateTime       @map("created_at")
+  updatedAt     DateTime       @map("updated_at")
+  sessions         Session[]
+  accounts         Account[]
+  profile          Profile?
+  carrierRoutes    CarrierRoute[]
+  employeeProfile  EmployeeProfile?
+  assignedLaptops  Laptop[]
+  assignedPhones   Phone[]
+  assignedEmails   EmailAccountUser[]
+  ideas            Idea[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid()) @map("id")
+  expiresAt DateTime @map("expires_at")
+  token     String   @unique @map("token")
+  createdAt DateTime @map("created_at")
+  updatedAt DateTime @map("updated_at")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Account {
+  id                    String    @id @default(cuid()) @map("id")
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                String    @map("user_id")
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+  scope                 String?   @map("scope")
+  password              String?   @map("password")
+  createdAt             DateTime  @map("created_at")
+  updatedAt             DateTime  @map("updated_at")
+
+  @@map("accounts")
+}
+
+model Verification {
+  id         String    @id @default(cuid()) @map("id")
+  identifier String   @map("identifier")
+  value      String   @map("value")
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime? @map("created_at")
+  updatedAt  DateTime? @map("updated_at")
+
+  @@map("verifications")
+}
+
+// ---- App: routes (admin CRUD), profiles (carrier extra data) ----
+
+enum RouteStatus {
+  active
+  inactive
+  pending
+}
+
+enum UnitType {
+  dry_box
+}
+
+model Route {
+  id            String         @id @default(cuid()) @map("id")
+  origin        String         @map("origin")
+  destination   String         @map("destination")
+  description   String?        @map("description")
+  target        Float?         @map("target")
+  unitType      UnitType       @default(dry_box) @map("unit_type")
+  status        RouteStatus    @default(pending) @map("status")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  carrierRoutes CarrierRoute[]
+
+  @@map("routes")
+}
+
+model CarrierRoute {
+  id            String   @id @default(cuid()) @map("id")
+  carrierId     String   @map("carrier_id")
+  routeId       String   @map("route_id")
+  carrierTarget Float?   @map("carrier_target")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  carrier       User     @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  route         Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
+
+  @@unique([carrierId, routeId])
+  @@map("carrier_routes")
+}
+
+enum ContactType {
+  phone
+  email
+}
+
+model Profile {
+  id             String    @id @default(cuid()) @map("id")
+  userId         String    @unique @map("user_id")
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  commercialName String?   @map("commercial_name")
+  legalName      String?   @map("legal_name")
+  rfc            String?   @map("rfc")
+  address        String?   @map("address")
+  contacts       Contact[]
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@map("profiles")
+}
+
+model Contact {
+  id        String      @id @default(cuid()) @map("id")
+  profileId String      @map("profile_id")
+  profile   Profile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  type      ContactType @map("type")
+  value     String      @map("value")
+  label     String?     @map("label")
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  @@map("contacts")
+}
+
+// ---- App: recursos internos (admin CRUD) ----
+
+model EmployeeProfile {
+  id         String  @id @default(cuid()) @map("id")
+  userId     String  @unique @map("user_id")
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  position   String? @map("position")
+  department String? @map("department")
+  phone      String? @map("phone")
+  password   String? @map("password")
+
+  @@map("employee_profiles")
+}
+
+model Laptop {
+  id             String        @id @default(cuid()) @map("id")
+  name           String        @map("name")
+  password       String?       @map("password")
+  serialNumber   String?       @map("serial_number")
+  assignedToId   String?       @map("assigned_to_id")
+  assignedTo     User?         @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+  emailAccountId String?       @map("email_account_id")
+  emailAccount   EmailAccount? @relation("LaptopEmailAccount", fields: [emailAccountId], references: [id], onDelete: SetNull)
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  @@map("laptops")
+}
+
+model Phone {
+  id             String        @id @default(cuid()) @map("id")
+  name           String        @map("name")
+  phoneNumber    String?       @map("phone_number")
+  password       String?       @map("password")
+  imei           String?       @map("imei")
+  assignedToId   String?       @map("assigned_to_id")
+  assignedTo     User?         @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+  emailAccountId String?       @map("email_account_id")
+  emailAccount   EmailAccount? @relation("PhoneEmailAccount", fields: [emailAccountId], references: [id], onDelete: SetNull)
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  @@map("phones")
+}
+
+model EmailAccount {
+  id        String             @id @default(cuid()) @map("id")
+  type      String             @map("type")
+  email     String             @map("email")
+  password  String?            @map("password")
+  assignees EmailAccountUser[]
+  laptops   Laptop[]           @relation("LaptopEmailAccount")
+  phones    Phone[]            @relation("PhoneEmailAccount")
+  createdAt DateTime           @default(now()) @map("created_at")
+  updatedAt DateTime           @updatedAt @map("updated_at")
+
+  @@map("email_accounts")
+}
+
+model EmailAccountUser {
+  emailAccountId String       @map("email_account_id")
+  userId         String       @map("user_id")
+  emailAccount   EmailAccount @relation(fields: [emailAccountId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([emailAccountId, userId])
+  @@map("email_account_users")
+}
+
+// ---- App: ideas (colaboradores + admins) ----
+
+model Idea {
+  id          String   @id @default(cuid()) @map("id")
+  title       String   @map("title")
+  description String?  @map("description")
+  category    String?  @map("category")
+  authorId    String   @map("author_id")
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("ideas")
+}
+
+model Image {
+  id        String   @id @default(cuid()) @map("id")
+  name      String   @map("name")
+  url       String   @map("url")
+  publicId  String   @unique @map("public_id")
+  alt       String?  @map("alt")
+  folder    String?  @map("folder")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("images")
+}

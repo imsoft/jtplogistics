@@ -1,0 +1,18 @@
+---
+description: Responsive design for all screen sizes
+alwaysApply: true
+---
+
+# Responsive design
+
+- **Mobile-first**: Prefer base styles for small screens, then `sm:`, `md:`, `lg:` for larger. Breakpoints: `sm` 640px, `md` 768px, `lg` 1024px.
+- **Layout**:
+  - Use `min-w-0` on flex/grid children that can overflow (e.g. main content, table containers) so they can shrink and allow horizontal scroll where needed.
+  - Use `truncate` or `min-w-0` on text in headers/sidebars to avoid overflow on narrow viewports.
+- **Spacing**: Prefer responsive padding/margin: `px-3 sm:px-4`, `py-8 sm:py-12`, `gap-3 sm:gap-4`, `space-y-4 sm:space-y-6`.
+- **Typography**: Scale titles on small screens: `text-xl sm:text-2xl`, `text-lg sm:text-xl`; descriptions `text-xs sm:text-sm`.
+- **Forms**:
+  - Buttons row: `flex flex-col-reverse gap-3 sm:flex-row sm:justify-end`; primary and secondary full width on mobile (`w-full sm:w-auto`).
+  - Grids: `grid-cols-1 sm:grid-cols-2` (or similar) so fields stack on mobile.
+- **Tables**: Keep horizontal scroll (e.g. `overflow-x-auto` on wrapper); filter input `w-full sm:max-w-sm`; pagination `flex-wrap` and centered/full width on mobile.
+- **Body**: Avoid horizontal page scroll: `overflow-x-hidden` on `body` when appropriate; ensure no fixed widths that exceed viewport on small screens.

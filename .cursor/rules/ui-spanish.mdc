@@ -1,0 +1,10 @@
+---
+description: User-facing text must be in Spanish
+alwaysApply: true
+---
+
+# UI copy in Spanish
+
+- **All text that the user sees** (labels, buttons, placeholders, messages, page titles, descriptions, metadata title/description) must be written in **Spanish**.
+- **Code** (routes, file names, variable names, component names, comments) stays in **English**.
+- Keep tone neutral and clear; use standard Spanish (e.g. "Iniciar sesión", "Correo electrónico", "Contraseña", "Crear cuenta").

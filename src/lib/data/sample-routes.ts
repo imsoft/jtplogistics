@@ -1,0 +1,88 @@
+import type { Route } from "@/types/route.types";
+
+/**
+ * Rutas de ejemplo para mostrar la tabla cuando no hay datos.
+ * Ciudades usan nombres que existen en MEXICO_STATES_CITIES.
+ */
+export const SAMPLE_ROUTES: Route[] = [
+  {
+    id: "sample-1",
+    origin: "Monterrey",
+    destination: "Guadalajara",
+    description: "Ruta troncal norte-centro. Entrega estándar 24-48 h.",
+    target: 12500.5,
+    unitType: "dry_box",
+    status: "active",
+    createdAt: "2025-01-15T10:00:00.000Z",
+  },
+  {
+    id: "sample-2",
+    origin: "Ciudad Obregón",
+    destination: "Hermosillo",
+    description: "Distribución regional Sonora.",
+    target: 8500,
+    unitType: "dry_box",
+    status: "active",
+    createdAt: "2025-01-16T08:30:00.000Z",
+  },
+  {
+    id: "sample-3",
+    origin: "Mérida",
+    destination: "Cancún",
+    description: "Carga turística y perecederos. Frecuencia diaria.",
+    target: 3200.75,
+    unitType: "dry_box",
+    status: "active",
+    createdAt: "2025-01-17T09:00:00.000Z",
+  },
+  {
+    id: "sample-4",
+    origin: "León",
+    destination: "Querétaro",
+    description: "Corredor industrial. Múltiples salidas al día.",
+    target: 18900,
+    unitType: "dry_box",
+    status: "active",
+    createdAt: "2025-01-18T07:00:00.000Z",
+  },
+  {
+    id: "sample-5",
+    origin: "Tijuana",
+    destination: "Mexicali",
+    description: "Frontera Baja California. En tránsito a EU.",
+    target: 5600,
+    unitType: "dry_box",
+    status: "pending",
+    createdAt: "2025-01-19T11:00:00.000Z",
+  },
+  {
+    id: "sample-6",
+    origin: "Puebla de Zaragoza",
+    destination: "Orizaba",
+    description: "Conexión Puebla-Veracruz.",
+    target: 4200.5,
+    unitType: "dry_box",
+    status: "inactive",
+    createdAt: "2025-01-20T14:00:00.000Z",
+  },
+  {
+    id: "sample-7",
+    origin: "Torreón",
+    destination: "Saltillo",
+    description: "Logística Coahuila-Durango.",
+    target: 7100.25,
+    unitType: "dry_box",
+    status: "active",
+    createdAt: "2025-01-21T06:00:00.000Z",
+  },
+  {
+    id: "sample-8",
+    origin: "Tuxtla Gutiérrez",
+    destination: "Tapachula",
+    description: "Sur Chiapas. Carga agrícola.",
+    target: 9500,
+    unitType: "dry_box",
+    status: "pending",
+    createdAt: "2025-01-22T08:00:00.000Z",
+  },
+];

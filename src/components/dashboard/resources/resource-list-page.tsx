@@ -1,0 +1,37 @@
+import Link from "next/link";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+interface ResourceListPageProps {
+  title: string;
+  description: string;
+  newHref: string;
+  newLabel: string;
+  children: React.ReactNode;
+}
+
+export function ResourceListPage({
+  title,
+  description,
+  newHref,
+  newLabel,
+  children,
+}: ResourceListPageProps) {
+  return (
+    <div className="min-w-0 space-y-4 sm:space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">{title}</h1>
+          <p className="text-muted-foreground mt-1 text-xs sm:text-sm">{description}</p>
+        </div>
+        <Button asChild className="w-full shrink-0 sm:w-fit" size="sm">
+          <Link href={newHref}>
+            <Plus className="size-4" />
+            {newLabel}
+          </Link>
+        </Button>
+      </div>
+      {children}
+    </div>
+  );
+}
