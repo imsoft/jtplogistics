@@ -5,6 +5,17 @@
 
 import type { UserRole } from "@/types/roles";
 
+/**
+ * Returns a valid base URL for Better Auth.
+ * If BETTER_AUTH_URL lacks protocol, prepends https://.
+ * (instrumentation.ts normalizes BETTER_AUTH_URL at startup before any code runs)
+ */
+export function getAuthBaseUrl(): string {
+  const url = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  return `https://${url}`;
+}
+
 export type SessionUser = {
   id: string;
   name: string;
