@@ -48,6 +48,14 @@ export function getRoutesColumns({
       header: ({ column }) => <SortableColumnHeader column={column} title="Destino" />,
       cell: ({ row }) => row.getValue("destination") as string,
     },
+    {
+      accessorKey: "destinationState",
+      header: "Estado",
+      cell: ({ row }: { row: Row<Route> }) => {
+        const state = row.original.destinationState;
+        return state ? state : <span className="text-muted-foreground">—</span>;
+      },
+    },
     ...(carrierView
       ? []
       : ([
