@@ -2,6 +2,7 @@ export interface Route {
   id: string;
   origin: string;
   destination: string;
+  destinationState?: string;
   description?: string;
   target?: number;
   unitType: UnitType;
@@ -16,6 +17,7 @@ export type UnitType = "dry_box";
 export interface RouteFormData {
   origin: string;
   destination: string;
+  destinationState: string;
   description: string;
   target?: number;
   unitType: UnitType;

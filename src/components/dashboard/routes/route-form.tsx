@@ -22,6 +22,7 @@ import type { RouteFormData, RouteStatus, UnitType } from "@/types/route.types";
 const defaultFormData: RouteFormData = {
   origin: "",
   destination: "",
+  destinationState: "",
   description: "",
   target: undefined,
   unitType: "dry_box",
@@ -53,6 +54,9 @@ export function RouteForm({
   const [destination, setDestination] = useState<string | null>(
     initialValues.destination?.trim() ?? null
   );
+  const [destinationState, setDestinationState] = useState<string>(
+    initialValues.destinationState?.trim() ?? ""
+  );
   const [targetDisplay, setTargetDisplay] = useState<string>(
     initialValues.target != null ? formatMxn(initialValues.target) : ""
   );
@@ -69,6 +73,7 @@ export function RouteForm({
     const data: RouteFormData = {
       origin: origin?.trim() ?? "",
       destination: destination?.trim() ?? "",
+      destinationState: destinationState.trim(),
       description: (formData.get("description") as string)?.trim() ?? "",
       target: parsedTarget,
       unitType,
@@ -80,7 +85,7 @@ export function RouteForm({
   return (
     <form onSubmit={handleSubmit} className="w-full space-y-6">
       <div className="space-y-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <CityCombobox
             id="route-origin"
             label="Origen"
@@ -99,6 +104,17 @@ export function RouteForm({
             name="destination"
             required
           />
+          <div className="space-y-2">
+            <Label htmlFor="route-destination-state">Estado del destino</Label>
+            <Input
+              id="route-destination-state"
+              type="text"
+              value={destinationState}
+              onChange={(e) => setDestinationState(e.target.value)}
+              placeholder="Ej. Nuevo León"
+              className="w-full"
+            />
+          </div>
         </div>
         <div className="space-y-2">
           <Label htmlFor="route-description">Descripción (opcional)</Label>

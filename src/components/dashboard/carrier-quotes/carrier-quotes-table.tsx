@@ -30,12 +30,11 @@ function computeStats(quotes: CarrierQuote[]) {
   const targets = quotes
     .map((q) => q.carrierTarget)
     .filter((t): t is number => t != null && !Number.isNaN(t));
-  if (targets.length === 0) return { min: null, max: null, avg: null };
-  return {
-    min: Math.min(...targets),
-    max: Math.max(...targets),
-    avg: targets.reduce((a, b) => a + b, 0) / targets.length,
-  };
+  if (targets.length === 0) return { avg: null, venta: null, monto: null };
+  const avg = targets.reduce((a, b) => a + b, 0) / targets.length;
+  const venta = avg * 1.25;
+  const monto = venta * 1.16;
+  return { avg, venta, monto };
 }
 
 export function CarrierQuotesTable() {
@@ -237,7 +236,7 @@ export function CarrierQuotesTable() {
             filterColumn=""
           />
 
-          {(stats.min != null || stats.max != null || stats.avg != null) && (
+          {stats.avg != null && (
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
@@ -246,24 +245,18 @@ export function CarrierQuotesTable() {
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4 sm:grid-cols-3">
-                  {stats.min != null && (
-                    <div className="rounded-lg bg-muted/50 p-4">
-                      <p className="text-muted-foreground text-xs font-medium">Menor target</p>
-                      <p className="text-lg font-semibold">${formatMxn(stats.min)}</p>
-                    </div>
-                  )}
-                  {stats.max != null && (
-                    <div className="rounded-lg bg-muted/50 p-4">
-                      <p className="text-muted-foreground text-xs font-medium">Mayor target</p>
-                      <p className="text-lg font-semibold">${formatMxn(stats.max)}</p>
-                    </div>
-                  )}
-                  {stats.avg != null && (
-                    <div className="rounded-lg bg-muted/50 p-4">
-                      <p className="text-muted-foreground text-xs font-medium">Target promedio</p>
-                      <p className="text-lg font-semibold">${formatMxn(stats.avg)}</p>
-                    </div>
-                  )}
+                  <div className="rounded-lg bg-muted/50 p-4">
+                    <p className="text-muted-foreground text-xs font-medium">Promedio</p>
+                    <p className="text-lg font-semibold">${formatMxn(stats.avg)}</p>
+                  </div>
+                  <div className="rounded-lg bg-muted/50 p-4">
+                    <p className="text-muted-foreground text-xs font-medium">Venta</p>
+                    <p className="text-lg font-semibold">${formatMxn(stats.venta)}</p>
+                  </div>
+                  <div className="rounded-lg bg-muted/50 p-4">
+                    <p className="text-muted-foreground text-xs font-medium">Monto</p>
+                    <p className="text-lg font-semibold">${formatMxn(stats.monto)}</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>

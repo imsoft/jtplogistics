@@ -32,6 +32,7 @@ export async function PATCH(
     const body = await request.json();
     const origin = body.origin != null ? String(body.origin).trim() : undefined;
     const destination = body.destination != null ? String(body.destination).trim() : undefined;
+    const destinationState = body.destinationState != null ? String(body.destinationState).trim() : undefined;
     const description = body.description != null ? String(body.description).trim() : undefined;
     const target = body.target != null ? Number(body.target) : undefined;
     const unitType: UnitType | undefined = VALID_UNIT_TYPES.includes(body.unitType) ? body.unitType : undefined;
@@ -40,6 +41,7 @@ export async function PATCH(
     const updateData: Record<string, unknown> = {};
     if (origin !== undefined) updateData.origin = origin;
     if (destination !== undefined) updateData.destination = destination;
+    if (destinationState !== undefined) updateData.destinationState = destinationState;
     if (description !== undefined) updateData.description = description;
     if (target !== undefined) updateData.target = target;
     if (unitType !== undefined) updateData.unitType = unitType;

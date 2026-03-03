@@ -14,7 +14,7 @@ export default function CotizadorPage() {
         </h1>
         <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
           Filtra por origen y destino para ver los transportistas que tienen
-          esa ruta y su target. Al final verás el menor, mayor y promedio.
+          esa ruta y su target. Al final verás el promedio, venta y monto.
         </p>
       </div>
       <CarrierQuotesTable />

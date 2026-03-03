@@ -16,6 +16,25 @@ export function getAuthBaseUrl(): string {
   return `https://${url}`;
 }
 
+/**
+ * All origins trusted by Better Auth (CSRF / invalid origin).
+ * Includes base URL, localhost, Vercel deployment URL and BETTER_AUTH_TRUSTED_ORIGINS.
+ */
+export function getTrustedOrigins(): string[] {
+  const origins: string[] = [getAuthBaseUrl(), "http://localhost:3000"];
+
+  if (process.env.VERCEL_URL) {
+    origins.push(`https://${process.env.VERCEL_URL}`);
+  }
+
+  const extra = process.env.BETTER_AUTH_TRUSTED_ORIGINS;
+  if (extra) {
+    origins.push(...extra.split(",").map((s) => s.trim()).filter(Boolean));
+  }
+
+  return [...new Set(origins)];
+}
+
 export type SessionUser = {
   id: string;
   name: string;

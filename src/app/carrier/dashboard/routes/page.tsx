@@ -18,9 +18,14 @@ interface CarrierRouteRow {
   createdAt: string;
 }
 
-async function fetchCarrierRoutes(): Promise<CarrierRouteRow[]> {
+interface CarrierRoutesResponse {
+  canEditTarget: boolean;
+  routes: CarrierRouteRow[];
+}
+
+async function fetchCarrierRoutes(): Promise<CarrierRoutesResponse> {
   const res = await fetch("/api/carrier/routes");
-  if (!res.ok) return [];
+  if (!res.ok) return { canEditTarget: false, routes: [] };
   return res.json();
 }
 
@@ -57,6 +62,7 @@ function TargetDiff({
 
 export default function CarrierRoutesPage() {
   const [routes, setRoutes] = useState<CarrierRouteRow[]>([]);
+  const [canEditTarget, setCanEditTarget] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -69,11 +75,12 @@ export default function CarrierRoutesPage() {
 
   const loadRoutes = useCallback(async () => {
     const data = await fetchCarrierRoutes();
-    setRoutes(data);
+    setCanEditTarget(data.canEditTarget);
+    setRoutes(data.routes);
 
     const savedSelected = new Set<string>();
     const savedTargets: Record<string, string> = {};
-    for (const r of data) {
+    for (const r of data.routes) {
       if (r.selected) savedSelected.add(r.id);
       if (r.carrierTarget != null) savedTargets[r.id] = formatMxn(r.carrierTarget);
     }
@@ -153,6 +160,11 @@ export default function CarrierRoutesPage() {
         <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
           Selecciona las rutas en las que puedes trabajar y establece tu target.
         </p>
+        {!canEditTarget && isLoaded && (
+          <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+            Tu target está bloqueado. Contacta al administrador para poder modificarlo.
+          </p>
+        )}
       </div>
 
       {routes.length === 0 ? (
@@ -250,6 +262,7 @@ export default function CarrierRoutesPage() {
                         value={targetByRouteId[route.id] ?? ""}
                         onChange={(e) => handleTargetChange(route.id, e.target.value)}
                         onBlur={() => handleTargetBlur(route.id)}
+                        disabled={!canEditTarget}
                         className="h-8 min-w-0 w-full text-sm"
                         aria-label={`Mi target para ${route.origin} a ${route.destination}`}
                       />

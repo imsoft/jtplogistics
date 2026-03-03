@@ -26,6 +26,7 @@ model User {
   image         String?        @map("image")
   birthDate     DateTime?      @map("birth_date")
   role          UserRole       @default(collaborator) @map("role")
+  canEditTarget Boolean        @default(false) @map("can_edit_target")
   createdAt     DateTime       @map("created_at")
   updatedAt     DateTime       @map("updated_at")
   sessions         Session[]
@@ -102,7 +103,8 @@ model Route {
   origin        String         @map("origin")
   destination   String         @map("destination")
   description   String?        @map("description")
-  target        Float?         @map("target")
+  target             Float?         @map("target")
+  destinationState   String?        @map("destination_state")
   unitType      UnitType       @default(dry_box) @map("unit_type")
   status        RouteStatus    @default(pending) @map("status")
   createdAt     DateTime       @default(now()) @map("created_at")

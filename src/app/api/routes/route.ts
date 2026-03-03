@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const origin = String(body.origin ?? "").trim();
     const destination = String(body.destination ?? "").trim();
+    const destinationState = body.destinationState != null ? String(body.destinationState).trim() : null;
     const description = body.description != null ? String(body.description).trim() : null;
     const target = body.target != null ? Number(body.target) : null;
     const unitType: UnitType = VALID_UNIT_TYPES.includes(body.unitType) ? body.unitType : "dry_box";
@@ -36,6 +37,7 @@ export async function POST(request: NextRequest) {
       data: {
         origin,
         destination,
+        destinationState: destinationState || undefined,
         description: description || undefined,
         target: target ?? undefined,
         unitType,

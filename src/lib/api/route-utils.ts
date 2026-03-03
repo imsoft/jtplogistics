@@ -4,6 +4,7 @@ export type PrismaRoute = {
   id: string;
   origin: string;
   destination: string;
+  destinationState: string | null;
   description: string | null;
   target: number | null;
   unitType: string;
@@ -19,6 +20,7 @@ export function routeToJson(r: PrismaRoute) {
     id: r.id,
     origin: r.origin,
     destination: r.destination,
+    destinationState: r.destinationState ?? undefined,
     description: r.description ?? undefined,
     target: r.target ?? undefined,
     unitType: r.unitType as UnitType,

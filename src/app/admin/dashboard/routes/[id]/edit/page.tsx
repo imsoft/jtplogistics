@@ -75,6 +75,7 @@ export default function EditRoutePage() {
             initialValues={{
               origin: route.origin,
               destination: route.destination,
+              destinationState: route.destinationState ?? "",
               description: route.description ?? "",
               target: route.target,
               unitType: route.unitType,

@@ -9,7 +9,7 @@ import { nextCookies } from "better-auth/next-js";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
-import { getAuthBaseUrl } from "@/lib/auth-utils";
+import { getAuthBaseUrl, getTrustedOrigins } from "@/lib/auth-utils";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -43,8 +43,6 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: getAuthBaseUrl(),
   basePath: "/api/auth",
-  trustedOrigins: [getAuthBaseUrl(), "http://localhost:3000"].filter(
-    (v, i, a) => a.indexOf(v) === i
-  ),
+  trustedOrigins: getTrustedOrigins(),
   plugins: [nextCookies()],
 });
