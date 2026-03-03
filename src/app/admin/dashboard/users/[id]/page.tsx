@@ -79,8 +79,13 @@ export default async function UserProfilePage({
           </div>
           <div className="min-w-0">
             <h1 className="text-xl font-bold tracking-tight sm:text-2xl truncate">
-              {user.name}
+              {user.profile?.commercialName ?? user.name}
             </h1>
+            {user.profile?.commercialName && (
+              <p className="truncate text-sm font-medium text-foreground/70">
+                {user.name}
+              </p>
+            )}
             <p className="text-muted-foreground truncate text-xs sm:text-sm">
               {user.email}
             </p>
