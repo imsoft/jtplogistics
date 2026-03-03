@@ -12,14 +12,14 @@ export default function NewEmployeePage() {
 
   return (
     <ResourceNewPage
-      title="Nuevo empleado"
+      title="Nuevo colaborador"
       description="Completa los datos para registrar un colaborador."
       backHref="/admin/dashboard/employees"
-      backLabel="Volver a empleados"
+      backLabel="Volver a colaboradores"
       error={error}
     >
       <EmployeeForm
-        submitLabel="Crear empleado"
+        submitLabel="Crear colaborador"
         cancelHref="/admin/dashboard/employees"
         isNew
         onSubmit={handleSubmit}

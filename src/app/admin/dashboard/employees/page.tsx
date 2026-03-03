@@ -2,17 +2,17 @@ import { ResourceListPage } from "@/components/dashboard/resources/resource-list
 import { EmployeesTable } from "@/components/dashboard/resources/employees-table";
 
 export const metadata = {
-  title: "Empleados | JTP Logistics",
+  title: "Colaboradores | JTP Logistics",
   description: "Gestionar colaboradores de la empresa",
 };
 
 export default function EmployeesPage() {
   return (
     <ResourceListPage
-      title="Empleados"
+      title="Colaboradores"
       description="Colaboradores registrados en el sistema."
       newHref="/admin/dashboard/employees/new"
-      newLabel="Nuevo empleado"
+      newLabel="Nuevo colaborador"
     >
       <EmployeesTable />
     </ResourceListPage>

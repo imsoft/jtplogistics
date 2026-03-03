@@ -26,12 +26,12 @@ async function fetchUsers(): Promise<User[]> {
 
 type RoleFilter = UserRole | "all";
 
-export function UsersTable() {
+export function UsersTable({ defaultRole }: { defaultRole?: UserRole }) {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>(defaultRole ?? "all");
 
   const loadUsers = useCallback(async () => {
     setError(null);
@@ -64,7 +64,7 @@ export function UsersTable() {
     return <p className="text-destructive text-sm">{error}</p>;
   }
 
-  if (users.length === 0) {
+  if (filteredUsers.length === 0) {
     return (
       <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
         No hay usuarios registrados.
@@ -82,28 +82,30 @@ export function UsersTable() {
       getRowId={(row) => row.id}
       onRowClick={(user) => router.push(`/admin/dashboard/users/${user.id}`)}
       toolbar={
-        <>
-          <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as RoleFilter)}>
-            <SelectTrigger className="w-full sm:w-[160px]">
-              <SelectValue placeholder="Filtrar por rol" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los roles</SelectItem>
-              {(Object.keys(USER_ROLE_LABELS) as UserRole[]).map((role) => (
-                <SelectItem key={role} value={role}>
-                  {USER_ROLE_LABELS[role]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setRoleFilter("all")}
-          >
-            Limpiar filtros
-          </Button>
-        </>
+        !defaultRole ? (
+          <>
+            <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as RoleFilter)}>
+              <SelectTrigger className="w-full sm:w-[160px]">
+                <SelectValue placeholder="Filtrar por rol" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los roles</SelectItem>
+                {(Object.keys(USER_ROLE_LABELS) as UserRole[]).map((role) => (
+                  <SelectItem key={role} value={role}>
+                    {USER_ROLE_LABELS[role]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setRoleFilter("all")}
+            >
+              Limpiar filtros
+            </Button>
+          </>
+        ) : undefined
       }
     />
   );

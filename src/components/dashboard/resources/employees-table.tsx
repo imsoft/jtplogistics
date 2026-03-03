@@ -53,7 +53,7 @@ export function EmployeesTable() {
   const router = useRouter();
   const { data: employees, isLoaded, error } = useAdminFetch<Employee>(
     "/api/admin/employees",
-    "Error al cargar empleados"
+    "Error al cargar colaboradores"
   );
   const [filterDepartment, setFilterDepartment] = useState("all");
 

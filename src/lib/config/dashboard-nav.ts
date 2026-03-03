@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import { Route as RouteIcon } from "lucide-react";
-import { Users } from "lucide-react";
+import { Truck } from "lucide-react";
 import { Calculator } from "lucide-react";
 import { UserRound } from "lucide-react";
 import { Laptop } from "lucide-react";
@@ -31,13 +31,13 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
   {
     label: "Operaciones",
     items: [
-      { title: "Usuarios", href: "/admin/dashboard/users", icon: Users },
+      { title: "Proveedores", href: "/admin/dashboard/providers", icon: Truck },
     ],
   },
   {
     label: "Recursos",
     items: [
-      { title: "Empleados", href: "/admin/dashboard/employees", icon: UserRound },
+      { title: "Colaboradores", href: "/admin/dashboard/employees", icon: UserRound },
       { title: "Laptops", href: "/admin/dashboard/laptops", icon: Laptop },
       { title: "Celulares", href: "/admin/dashboard/phones", icon: Smartphone },
       { title: "Correos", href: "/admin/dashboard/emails", icon: Mail },

@@ -18,12 +18,12 @@ export default function EditEmployeePage() {
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
       <ResourceEditHeader
-        title={employee?.name ?? "Empleado"}
+        title={employee?.name ?? "Colaborador"}
         description="Editar información del colaborador."
         backHref="/admin/dashboard/employees"
-        backLabel="Volver a empleados"
-        deleteTitle="¿Eliminar empleado?"
-        deleteDescription="Esta acción no se puede deshacer. Se eliminará el empleado y su acceso al sistema."
+        backLabel="Volver a colaboradores"
+        deleteTitle="¿Eliminar colaborador?"
+        deleteDescription="Esta acción no se puede deshacer. Se eliminará el colaborador y su acceso al sistema."
         onDelete={handleDelete}
       />
       {employee && (
