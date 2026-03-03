@@ -101,7 +101,6 @@ export default async function UserProfilePage({
           </CardHeader>
           <CardContent className="px-4 pb-4">
             <InfoRow label="Rol" value={USER_ROLE_LABELS[user.role as UserRole]} />
-            <InfoRow label="Email verificado" value={user.emailVerified ? "Sí" : "No"} />
             <InfoRow
               label="Registro"
               value={user.createdAt.toLocaleDateString("es-MX", {
