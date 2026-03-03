@@ -27,7 +27,7 @@ const defaultFormData: RouteFormData = {
   description: "",
   target: undefined,
   unitType: "dry_box",
-  status: "pending",
+  status: "active",
 };
 
 interface RouteFormProps {
