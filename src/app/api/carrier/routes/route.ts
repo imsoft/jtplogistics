@@ -63,41 +63,59 @@ export async function PUT(request: NextRequest) {
       select: { canEditTarget: true, canEditRoutes: true },
     });
 
-    // Si no tiene permiso para editar rutas, rechazar
-    if (!userRecord?.canEditRoutes) {
-      return Response.json({ error: "No tienes permiso para modificar tus rutas." }, { status: 403 });
-    }
+    if (userRecord?.canEditRoutes) {
+      // Edición completa: reemplaza todo y bloquea
+      let data = body;
+      if (!userRecord.canEditTarget) {
+        const existingRoutes = await prisma.carrierRoute.findMany({
+          where: { carrierId: session.user.id },
+        });
+        const existingTargetMap = new Map(
+          existingRoutes.map((r) => [r.routeId, r.carrierTarget ?? null])
+        );
+        data = body.map((item) => ({
+          ...item,
+          carrierTarget: existingTargetMap.get(item.routeId) ?? null,
+        }));
+      }
 
-    // Si no tiene permiso para editar target, preservar los targets existentes
-    let data = body;
-    if (!userRecord?.canEditTarget) {
+      await prisma.$transaction([
+        prisma.carrierRoute.deleteMany({ where: { carrierId: session.user.id } }),
+        prisma.carrierRoute.createMany({
+          data: data.map((item) => ({
+            carrierId: session.user.id,
+            routeId: item.routeId,
+            carrierTarget: item.carrierTarget ?? undefined,
+          })),
+        }),
+        prisma.user.update({
+          where: { id: session.user.id },
+          data: { canEditRoutes: false },
+        }),
+      ]);
+    } else {
+      // Solo agrega rutas nuevas (no toca las existentes)
       const existingRoutes = await prisma.carrierRoute.findMany({
         where: { carrierId: session.user.id },
       });
-      const existingTargetMap = new Map(
-        existingRoutes.map((r) => [r.routeId, r.carrierTarget ?? null])
-      );
-      data = body.map((item) => ({
-        ...item,
-        carrierTarget: existingTargetMap.get(item.routeId) ?? null,
-      }));
-    }
+      const existingRouteIds = new Set(existingRoutes.map((r) => r.routeId));
 
-    // Transacción: borra las existentes, reinserta las nuevas y bloquea la edición
-    await prisma.$transaction([
-      prisma.carrierRoute.deleteMany({ where: { carrierId: session.user.id } }),
-      prisma.carrierRoute.createMany({
-        data: data.map((item) => ({
-          carrierId: session.user.id,
-          routeId: item.routeId,
-          carrierTarget: item.carrierTarget ?? undefined,
-        })),
-      }),
-      prisma.user.update({
-        where: { id: session.user.id },
-        data: { canEditRoutes: false },
-      }),
-    ]);
+      const newOnes = body.filter((item) => !existingRouteIds.has(item.routeId));
+
+      if (newOnes.length > 0) {
+        const targetData = userRecord?.canEditTarget
+          ? newOnes
+          : newOnes.map((item) => ({ ...item, carrierTarget: null }));
+
+        await prisma.carrierRoute.createMany({
+          data: targetData.map((item) => ({
+            carrierId: session.user.id,
+            routeId: item.routeId,
+            carrierTarget: item.carrierTarget ?? undefined,
+          })),
+        });
+      }
+    }
 
     return Response.json({ ok: true });
   } catch (e) {

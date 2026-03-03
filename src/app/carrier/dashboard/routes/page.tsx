@@ -61,6 +61,8 @@ export default function CarrierRoutesPage() {
   const [filterOrigin, setFilterOrigin] = useState<string | null>(null);
   const [filterDestination, setFilterDestination] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  // Rutas que estaban guardadas al cargar la página
+  const [originalSelected, setOriginalSelected] = useState<Set<string>>(new Set());
   const [targetByRouteId, setTargetByRouteId] = useState<Record<string, string>>({});
 
   const loadRoutes = useCallback(async () => {
@@ -76,6 +78,7 @@ export default function CarrierRoutesPage() {
       if (r.carrierTarget != null) savedTargets[r.id] = formatMxn(r.carrierTarget);
     }
     setSelected(savedSelected);
+    setOriginalSelected(savedSelected);
     setTargetByRouteId(savedTargets);
     setIsLoaded(true);
   }, []);
@@ -91,6 +94,12 @@ export default function CarrierRoutesPage() {
       return true;
     });
   }, [routes, filterOrigin, filterDestination]);
+
+  // Rutas nuevas que el carrier quiere agregar en esta sesión
+  const newSelections = useMemo(
+    () => new Set([...selected].filter((id) => !originalSelected.has(id))),
+    [selected, originalSelected]
+  );
 
   function toggleSelected(routeId: string) {
     setSelected((prev) => {
@@ -133,6 +142,8 @@ export default function CarrierRoutesPage() {
       if (!res.ok) throw new Error("Error al guardar");
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
+      // Recarga para reflejar el nuevo estado (nuevas rutas ya quedan bloqueadas)
+      await loadRoutes();
     } catch {
       setSaveError("No se pudieron guardar las selecciones. Intenta de nuevo.");
     } finally {
@@ -143,6 +154,8 @@ export default function CarrierRoutesPage() {
   if (!isLoaded) {
     return <p className="text-muted-foreground">Cargando…</p>;
   }
+
+  const canSave = canEditRoutes || newSelections.size > 0;
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
@@ -158,7 +171,7 @@ export default function CarrierRoutesPage() {
         )}
         {!canEditRoutes && isLoaded && (
           <p className="mt-1 text-xs text-muted-foreground">
-            Tu selección de rutas está bloqueada. Contacta al administrador para modificarla.
+            Las rutas ya guardadas están bloqueadas. Puedes agregar nuevas rutas. Contacta al administrador para modificar las existentes.
           </p>
         )}
       </div>
@@ -219,6 +232,9 @@ export default function CarrierRoutesPage() {
             ) : (
               filteredRoutes.map((route) => {
                 const isSelected = selected.has(route.id);
+                const isOriginallySelected = originalSelected.has(route.id);
+                // Rutas ya guardadas se bloquean si el admin no ha desbloqueado
+                const isLocked = isOriginallySelected && !canEditRoutes;
                 const currentTarget = parseMxn(targetByRouteId[route.id] ?? "") ?? null;
 
                 return (
@@ -232,7 +248,7 @@ export default function CarrierRoutesPage() {
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => toggleSelected(route.id)}
-                        disabled={!canEditRoutes}
+                        disabled={isLocked}
                         className="size-4 rounded border-input accent-primary disabled:cursor-not-allowed disabled:opacity-50"
                         aria-label={`Seleccionar ${route.origin} a ${route.destination}`}
                       />
@@ -259,13 +275,13 @@ export default function CarrierRoutesPage() {
                         value={targetByRouteId[route.id] ?? ""}
                         onChange={(e) => handleTargetChange(route.id, e.target.value)}
                         onBlur={() => handleTargetBlur(route.id)}
-                        disabled={!canEditTarget || !canEditRoutes || !isSelected}
+                        disabled={!canEditTarget || !isSelected || isLocked}
                         className="h-8 min-w-0 w-full text-sm"
                         aria-label={`Mi target para ${route.origin} a ${route.destination}`}
                       />
                     </div>
 
-                    {/* Diferencia: porcentaje arriba, palomita abajo */}
+                    {/* Diferencia */}
                     <div className="flex items-center justify-center">
                       <TargetDiff jtpTarget={route.jtpTarget} carrierTarget={currentTarget} />
                     </div>
@@ -288,8 +304,16 @@ export default function CarrierRoutesPage() {
               <span className="text-muted-foreground text-xs text-center sm:text-left">
                 {selected.size} ruta{selected.size !== 1 ? "s" : ""} seleccionada
                 {selected.size !== 1 ? "s" : ""}
+                {!canEditRoutes && newSelections.size > 0 && (
+                  <span className="ml-1">({newSelections.size} nueva{newSelections.size !== 1 ? "s" : ""})</span>
+                )}
               </span>
-              <Button type="button" onClick={handleSubmit} disabled={isSaving || !canEditRoutes} className="w-full sm:w-auto">
+              <Button
+                type="button"
+                onClick={handleSubmit}
+                disabled={isSaving || !canSave}
+                className="w-full sm:w-auto"
+              >
                 {isSaving ? "Guardando…" : "Guardar selección"}
               </Button>
             </div>
