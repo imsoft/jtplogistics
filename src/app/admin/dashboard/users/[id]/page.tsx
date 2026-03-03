@@ -10,6 +10,7 @@ import { InfoRow } from "@/components/dashboard/users/info-row";
 import { TargetDiff } from "@/components/dashboard/users/target-diff";
 import { ToggleCanEditTarget } from "@/components/dashboard/users/toggle-can-edit-target";
 import { ToggleCanEditRoutes } from "@/components/dashboard/users/toggle-can-edit-routes";
+import { EditWhatsapp } from "@/components/dashboard/users/edit-whatsapp";
 import type { UserRole } from "@/types/user.types";
 
 export async function generateMetadata({
@@ -189,6 +190,7 @@ export default async function UserProfilePage({
           <CardContent className="px-4 pb-4 pt-0 space-y-2">
             <ToggleCanEditRoutes userId={user.id} initialValue={user.canEditRoutes} />
             <ToggleCanEditTarget userId={user.id} initialValue={user.canEditTarget} />
+            <EditWhatsapp userId={user.id} initialPhone={user.whatsappPhone ?? null} />
           </CardContent>
           <CardContent className="px-0 pb-0">
             {user.carrierRoutes.length === 0 ? (
