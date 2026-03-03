@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { Pencil, Trash2 } from "lucide-react";
+import { MoveRight, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -161,7 +161,7 @@ export function RoutesCrud() {
                   <table className="w-full min-w-[680px] text-sm">
                     <thead>
                       <tr className="border-b bg-muted/20 text-xs font-medium text-muted-foreground">
-                        <th className="px-4 py-1.5 text-left font-medium">Destino</th>
+                        <th className="px-4 py-1.5 text-left font-medium">Ruta</th>
                         <th className="px-4 py-1.5 text-left font-medium">Estado</th>
                         <th className="px-4 py-1.5 text-left font-medium">Tipo</th>
                         <th className="px-4 py-1.5 text-left font-medium">Descripción</th>
@@ -181,7 +181,13 @@ export function RoutesCrud() {
                             key={route.id}
                             className="border-b last:border-b-0 transition-colors hover:bg-muted/30"
                           >
-                            <td className="px-4 py-3 font-medium">{route.destination}</td>
+                            <td className="px-4 py-3">
+                              <p className="flex items-center gap-1 font-medium">
+                                <span className="truncate">{route.origin}</span>
+                                <MoveRight className="size-3.5 shrink-0 text-muted-foreground" />
+                                <span className="truncate">{route.destination}</span>
+                              </p>
+                            </td>
                             <td className="px-4 py-3">
                               {route.destinationState ?? (
                                 <span className="text-muted-foreground">—</span>
