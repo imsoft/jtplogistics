@@ -166,7 +166,6 @@ export function RoutesCrud() {
                         <th className="px-4 py-1.5 text-left font-medium">Tipo</th>
                         <th className="px-4 py-1.5 text-left font-medium">Descripción</th>
                         <th className="px-4 py-1.5 text-left font-medium">Target (MXN)</th>
-                        <th className="px-4 py-1.5 text-left font-medium">Vol./sem.</th>
                         <th className="px-4 py-1.5 text-left font-medium">Estatus</th>
                         <th className="px-4 py-1.5 text-right font-medium">
                           <span className="sr-only">Acciones</span>
@@ -215,13 +214,6 @@ export function RoutesCrud() {
                             <td className="px-4 py-3">
                               {route.target != null ? (
                                 `$${formatMxn(route.target)}`
-                              ) : (
-                                <span className="text-muted-foreground">—</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-3">
-                              {route.weeklyVolume != null ? (
-                                route.weeklyVolume
                               ) : (
                                 <span className="text-muted-foreground">—</span>
                               )}

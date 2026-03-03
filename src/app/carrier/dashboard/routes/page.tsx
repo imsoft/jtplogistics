@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { Check, X, Minus, MessageCircle, MoveRight } from "lucide-react";
+import { Check, Minus, MessageCircle, MoveRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CityCombobox } from "@/components/dashboard/routes/city-combobox";
@@ -16,6 +16,7 @@ interface CarrierRouteRow {
   jtpTarget: number | null;
   selected: boolean;
   carrierTarget: number | null;
+  carrierWeeklyVolume: number | null;
   createdAt: string;
 }
 
@@ -66,6 +67,7 @@ export default function CarrierRoutesPage() {
   // Rutas que estaban guardadas al cargar la página
   const [originalSelected, setOriginalSelected] = useState<Set<string>>(new Set());
   const [targetByRouteId, setTargetByRouteId] = useState<Record<string, string>>({});
+  const [weeklyVolumeByRouteId, setWeeklyVolumeByRouteId] = useState<Record<string, string>>({});
 
   const loadRoutes = useCallback(async () => {
     const data = await fetchCarrierRoutes();
@@ -75,13 +77,16 @@ export default function CarrierRoutesPage() {
 
     const savedSelected = new Set<string>();
     const savedTargets: Record<string, string> = {};
+    const savedVolumes: Record<string, string> = {};
     for (const r of data.routes) {
       if (r.selected) savedSelected.add(r.id);
       if (r.carrierTarget != null) savedTargets[r.id] = formatMxn(r.carrierTarget);
+      if (r.carrierWeeklyVolume != null) savedVolumes[r.id] = String(r.carrierWeeklyVolume);
     }
     setSelected(savedSelected);
     setOriginalSelected(savedSelected);
     setTargetByRouteId(savedTargets);
+    setWeeklyVolumeByRouteId(savedVolumes);
     setIsLoaded(true);
   }, []);
 
@@ -141,15 +146,24 @@ export default function CarrierRoutesPage() {
     }
   }
 
+  function handleVolumeChange(routeId: string, value: string) {
+    setWeeklyVolumeByRouteId((prev) => ({ ...prev, [routeId]: value }));
+  }
+
   async function handleSubmit() {
     setSaveError(null);
     setSaveSuccess(false);
     setIsSaving(true);
     try {
-      const body = Array.from(selected).map((routeId) => ({
-        routeId,
-        carrierTarget: parseMxn(targetByRouteId[routeId] ?? "") ?? null,
-      }));
+      const body = Array.from(selected).map((routeId) => {
+        const rawVolume = weeklyVolumeByRouteId[routeId]?.trim();
+        const parsedVolume = rawVolume ? Math.round(Number(rawVolume)) : null;
+        return {
+          routeId,
+          carrierTarget: parseMxn(targetByRouteId[routeId] ?? "") ?? null,
+          carrierWeeklyVolume: rawVolume && !isNaN(parsedVolume as number) ? parsedVolume : null,
+        };
+      });
 
       const res = await fetch("/api/carrier/routes", {
         method: "PUT",
@@ -254,7 +268,7 @@ export default function CarrierRoutesPage() {
             <div className="space-y-4">
               {groupedRoutes.map(({ origin, items }) => (
                 <div key={origin} className="overflow-x-auto rounded-lg border">
-                  <div className="min-w-[340px]">
+                  <div className="min-w-[480px]">
                     {/* Encabezado de grupo */}
                     <div className="border-b bg-muted/60 px-3 py-2 sm:px-4">
                       <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -262,10 +276,11 @@ export default function CarrierRoutesPage() {
                       </span>
                     </div>
                     {/* Header de columnas */}
-                    <div className="grid grid-cols-[auto_1fr_130px_56px] gap-3 border-b bg-muted/20 px-3 py-1.5 text-xs font-medium text-muted-foreground sm:px-4">
+                    <div className="grid grid-cols-[auto_1fr_130px_80px_56px] gap-3 border-b bg-muted/20 px-3 py-1.5 text-xs font-medium text-muted-foreground sm:px-4">
                       <span className="flex items-center">Sel.</span>
                       <span className="flex items-center">Ruta</span>
                       <span className="flex items-center">Mi target</span>
+                      <span className="flex items-center">Vol./sem.</span>
                       <span className="flex items-center">Dif.</span>
                     </div>
                     {/* Filas */}
@@ -278,7 +293,7 @@ export default function CarrierRoutesPage() {
                       return (
                         <div
                           key={route.id}
-                          className="grid grid-cols-[auto_1fr_130px_56px] gap-3 items-center border-b px-3 py-3 last:border-b-0 sm:px-4 hover:bg-muted/30 transition-colors"
+                          className="grid grid-cols-[auto_1fr_130px_80px_56px] gap-3 items-center border-b px-3 py-3 last:border-b-0 sm:px-4 hover:bg-muted/30 transition-colors"
                         >
                           <label className="flex cursor-pointer items-center gap-2">
                             <input
@@ -315,6 +330,18 @@ export default function CarrierRoutesPage() {
                               aria-label={`Mi target para ${route.origin} a ${route.destination}`}
                             />
                           </div>
+
+                          <Input
+                            type="number"
+                            inputMode="numeric"
+                            min={0}
+                            placeholder="0"
+                            value={weeklyVolumeByRouteId[route.id] ?? ""}
+                            onChange={(e) => handleVolumeChange(route.id, e.target.value)}
+                            disabled={!isSelected || isLocked}
+                            className="h-8 w-full text-sm"
+                            aria-label={`Volumen semanal para ${route.origin} a ${route.destination}`}
+                          />
 
                           <div className="flex items-center justify-center">
                             <TargetDiff jtpTarget={route.jtpTarget} carrierTarget={currentTarget} />

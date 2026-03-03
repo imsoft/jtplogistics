@@ -122,10 +122,11 @@ model Route {
 
 model CarrierRoute {
   id            String   @id @default(cuid()) @map("id")
-  carrierId     String   @map("carrier_id")
-  routeId       String   @map("route_id")
-  carrierTarget Float?   @map("carrier_target")
-  createdAt     DateTime @default(now()) @map("created_at")
+  carrierId            String   @map("carrier_id")
+  routeId              String   @map("route_id")
+  carrierTarget        Float?   @map("carrier_target")
+  carrierWeeklyVolume  Int?     @map("carrier_weekly_volume")
+  createdAt            DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
   carrier       User     @relation(fields: [carrierId], references: [id], onDelete: Cascade)
   route         Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)

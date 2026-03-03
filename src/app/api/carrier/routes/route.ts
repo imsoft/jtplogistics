@@ -21,8 +21,11 @@ export async function GET() {
       }),
     ]);
 
-    const selectionMap = new Map<string, number | null>(
-      carrierRoutes.map((cr) => [cr.routeId, cr.carrierTarget ?? null])
+    const selectionMap = new Map<string, { carrierTarget: number | null; carrierWeeklyVolume: number | null }>(
+      carrierRoutes.map((cr) => [
+        cr.routeId,
+        { carrierTarget: cr.carrierTarget ?? null, carrierWeeklyVolume: cr.carrierWeeklyVolume ?? null },
+      ])
     );
 
     return Response.json({
@@ -35,7 +38,8 @@ export async function GET() {
         description: r.description ?? null,
         jtpTarget: r.target ?? null,
         selected: selectionMap.has(r.id),
-        carrierTarget: selectionMap.get(r.id) ?? null,
+        carrierTarget: selectionMap.get(r.id)?.carrierTarget ?? null,
+        carrierWeeklyVolume: selectionMap.get(r.id)?.carrierWeeklyVolume ?? null,
         createdAt: r.createdAt.toISOString(),
       })),
     });
@@ -52,7 +56,7 @@ export async function PUT(request: NextRequest) {
   try {
     const session = await requireCarrier();
 
-    const body: { routeId: string; carrierTarget: number | null }[] = await request.json();
+    const body: { routeId: string; carrierTarget: number | null; carrierWeeklyVolume: number | null }[] = await request.json();
 
     if (!Array.isArray(body)) {
       return Response.json({ error: "Body must be an array" }, { status: 400 });
@@ -86,6 +90,7 @@ export async function PUT(request: NextRequest) {
             carrierId: session.user.id,
             routeId: item.routeId,
             carrierTarget: item.carrierTarget ?? undefined,
+            carrierWeeklyVolume: item.carrierWeeklyVolume ?? undefined,
           })),
         }),
         prisma.user.update({
@@ -112,6 +117,7 @@ export async function PUT(request: NextRequest) {
             carrierId: session.user.id,
             routeId: item.routeId,
             carrierTarget: item.carrierTarget ?? undefined,
+            carrierWeeklyVolume: item.carrierWeeklyVolume ?? undefined,
           })),
         });
       }
