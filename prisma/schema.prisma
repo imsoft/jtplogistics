@@ -27,6 +27,7 @@ model User {
   birthDate     DateTime?      @map("birth_date")
   role          UserRole       @default(collaborator) @map("role")
   canEditTarget Boolean        @default(true) @map("can_edit_target")
+  canEditRoutes Boolean        @default(true) @map("can_edit_routes")
   createdAt     DateTime       @map("created_at")
   updatedAt     DateTime       @map("updated_at")
   sessions         Session[]

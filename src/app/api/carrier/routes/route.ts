@@ -17,7 +17,7 @@ export async function GET() {
       }),
       prisma.user.findUnique({
         where: { id: session.user.id },
-        select: { canEditTarget: true },
+        select: { canEditTarget: true, canEditRoutes: true },
       }),
     ]);
 
@@ -27,6 +27,7 @@ export async function GET() {
 
     return Response.json({
       canEditTarget: userRecord?.canEditTarget ?? false,
+      canEditRoutes: userRecord?.canEditRoutes ?? false,
       routes: routes.map((r) => ({
         id: r.id,
         origin: r.origin,
@@ -59,10 +60,15 @@ export async function PUT(request: NextRequest) {
 
     const userRecord = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { canEditTarget: true },
+      select: { canEditTarget: true, canEditRoutes: true },
     });
 
-    // Si no tiene permiso, preservar los targets existentes
+    // Si no tiene permiso para editar rutas, rechazar
+    if (!userRecord?.canEditRoutes) {
+      return Response.json({ error: "No tienes permiso para modificar tus rutas." }, { status: 403 });
+    }
+
+    // Si no tiene permiso para editar target, preservar los targets existentes
     let data = body;
     if (!userRecord?.canEditTarget) {
       const existingRoutes = await prisma.carrierRoute.findMany({
@@ -77,7 +83,7 @@ export async function PUT(request: NextRequest) {
       }));
     }
 
-    // Transacción: borra las existentes y reinserta las nuevas
+    // Transacción: borra las existentes, reinserta las nuevas y bloquea la edición
     await prisma.$transaction([
       prisma.carrierRoute.deleteMany({ where: { carrierId: session.user.id } }),
       prisma.carrierRoute.createMany({
@@ -86,6 +92,10 @@ export async function PUT(request: NextRequest) {
           routeId: item.routeId,
           carrierTarget: item.carrierTarget ?? undefined,
         })),
+      }),
+      prisma.user.update({
+        where: { id: session.user.id },
+        data: { canEditRoutes: false },
       }),
     ]);
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { TrendingDown, TrendingUp, Minus } from "lucide-react";
+import { Check, X, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CityCombobox } from "@/components/dashboard/routes/city-combobox";
@@ -20,12 +20,13 @@ interface CarrierRouteRow {
 
 interface CarrierRoutesResponse {
   canEditTarget: boolean;
+  canEditRoutes: boolean;
   routes: CarrierRouteRow[];
 }
 
 async function fetchCarrierRoutes(): Promise<CarrierRoutesResponse> {
   const res = await fetch("/api/carrier/routes");
-  if (!res.ok) return { canEditTarget: false, routes: [] };
+  if (!res.ok) return { canEditTarget: false, canEditRoutes: false, routes: [] };
   return res.json();
 }
 
@@ -40,29 +41,18 @@ function TargetDiff({
   const diff = ((carrierTarget - jtpTarget) / jtpTarget) * 100;
   const abs = Math.abs(diff).toFixed(1);
   if (Math.abs(diff) < 0.05) {
-    return (
-      <span className="inline-flex items-center gap-0.5 text-xs text-muted-foreground">
-        <Minus className="size-3" /> 0%
-      </span>
-    );
+    return <Minus className="size-4 text-muted-foreground" />;
   }
   if (diff > 0) {
-    return (
-      <span className="inline-flex items-center gap-0.5 text-xs font-medium text-destructive">
-        <TrendingUp className="size-3" /> +{abs}%
-      </span>
-    );
+    return <span className="text-xs font-medium text-destructive">+{abs}%</span>;
   }
-  return (
-    <span className="inline-flex items-center gap-0.5 text-xs font-medium text-green-600 dark:text-green-400">
-      <TrendingDown className="size-3" /> -{abs}%
-    </span>
-  );
+  return <Check className="size-4 text-green-600 dark:text-green-400" />;
 }
 
 export default function CarrierRoutesPage() {
   const [routes, setRoutes] = useState<CarrierRouteRow[]>([]);
   const [canEditTarget, setCanEditTarget] = useState(false);
+  const [canEditRoutes, setCanEditRoutes] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -76,6 +66,7 @@ export default function CarrierRoutesPage() {
   const loadRoutes = useCallback(async () => {
     const data = await fetchCarrierRoutes();
     setCanEditTarget(data.canEditTarget);
+    setCanEditRoutes(data.canEditRoutes);
     setRoutes(data.routes);
 
     const savedSelected = new Set<string>();
@@ -165,6 +156,11 @@ export default function CarrierRoutesPage() {
             La edición de tu target está deshabilitada. Contacta al administrador.
           </p>
         )}
+        {!canEditRoutes && isLoaded && (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Tu selección de rutas está bloqueada. Contacta al administrador para modificarla.
+          </p>
+        )}
       </div>
 
       {routes.length === 0 ? (
@@ -236,7 +232,8 @@ export default function CarrierRoutesPage() {
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => toggleSelected(route.id)}
-                        className="size-4 rounded border-input accent-primary"
+                        disabled={!canEditRoutes}
+                        className="size-4 rounded border-input accent-primary disabled:cursor-not-allowed disabled:opacity-50"
                         aria-label={`Seleccionar ${route.origin} a ${route.destination}`}
                       />
                     </label>
@@ -268,8 +265,8 @@ export default function CarrierRoutesPage() {
                       />
                     </div>
 
-                    {/* Diferencia */}
-                    <div className="flex items-center">
+                    {/* Diferencia: porcentaje arriba, palomita abajo */}
+                    <div className="flex items-center justify-center">
                       <TargetDiff jtpTarget={route.jtpTarget} carrierTarget={currentTarget} />
                     </div>
                   </div>
@@ -292,7 +289,7 @@ export default function CarrierRoutesPage() {
                 {selected.size} ruta{selected.size !== 1 ? "s" : ""} seleccionada
                 {selected.size !== 1 ? "s" : ""}
               </span>
-              <Button type="button" onClick={handleSubmit} disabled={isSaving} className="w-full sm:w-auto">
+              <Button type="button" onClick={handleSubmit} disabled={isSaving || !canEditRoutes} className="w-full sm:w-auto">
                 {isSaving ? "Guardando…" : "Guardar selección"}
               </Button>
             </div>
