@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/combobox";
 import { Label } from "@/components/ui/label";
 import { MEXICO_STATES_CITIES } from "@/lib/data/mexico-cities";
-import type { StateCitiesGroup } from "@/lib/data/mexico-cities";
 
 interface CityComboboxProps {
   id: string;
@@ -24,6 +23,21 @@ interface CityComboboxProps {
   name?: string;
   required?: boolean;
   disabled?: boolean;
+}
+
+/**
+ * Grouped items where each city is stored as "State|City".
+ * This matches the ComboboxItem values so Base UI can resolve labels correctly.
+ */
+const GROUPED_CITY_VALUES = MEXICO_STATES_CITIES.map((group) => ({
+  value: group.value,
+  items: group.items.map((city) => `${group.value}|${city}`),
+}));
+
+/** Converts "State|City" → "City" for display in the input. */
+function cityLabel(v: string): string {
+  const idx = v.indexOf("|");
+  return idx === -1 ? v : v.slice(idx + 1);
 }
 
 export function CityCombobox({
@@ -40,7 +54,8 @@ export function CityCombobox({
     <div className="space-y-2">
       <Label htmlFor={id}>{label}</Label>
       <Combobox
-        items={MEXICO_STATES_CITIES}
+        items={GROUPED_CITY_VALUES}
+        itemToStringLabel={cityLabel}
         value={value}
         onValueChange={(v) => onValueChange(v ?? null)}
         name={name}
@@ -59,12 +74,12 @@ export function CityCombobox({
             <ComboboxEmpty>No se encontraron ciudades.</ComboboxEmpty>
             <ComboboxList className="max-h-none overflow-visible">
               <ComboboxCollection>
-                {(group: StateCitiesGroup) => (
+                {(group: { value: string; items: string[] }) => (
                   <ComboboxGroup key={group.value} items={group.items}>
                     <ComboboxLabel>{group.value}</ComboboxLabel>
-                    {group.items.map((city: string) => (
-                      <ComboboxItem key={`${group.value}-${city}`} value={`${group.value}|${city}`}>
-                        {city}
+                    {group.items.map((cityValue: string) => (
+                      <ComboboxItem key={cityValue} value={cityValue}>
+                        {cityLabel(cityValue)}
                       </ComboboxItem>
                     ))}
                   </ComboboxGroup>
