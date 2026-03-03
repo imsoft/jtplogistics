@@ -36,11 +36,14 @@ export function RegisterForm() {
     }
 
     await submit(async () => {
+      const normalizedEmail = normalizeEmail(data.email);
+      const role = normalizedEmail.endsWith("@jtp.com.mx") ? "collaborator" : "carrier";
+
       const res = await signUp.email({
         name: data.name,
-        email: normalizeEmail(data.email),
+        email: normalizedEmail,
         password: data.password,
-        role: "collaborator",
+        role,
       });
       if (res.error) {
         setError(res.error.message ?? "Error al crear la cuenta.");
