@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
+import Link from "next/link";
+import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -10,12 +12,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DataTable } from "@/components/ui/data-table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { RouteDeleteDialog } from "./route-delete-dialog";
 import { CityCombobox } from "./city-combobox";
-import { getRoutesColumns } from "./routes-columns";
 import { useRoutesStore } from "@/hooks/use-routes-store";
 import { parseCityValue } from "@/lib/data/mexico-cities";
+import { formatMxn } from "@/lib/utils";
+import { UNIT_TYPE_LABELS } from "@/lib/constants/unit-type";
+import { ROUTE_STATUS_LABELS } from "@/lib/constants/route-status";
 import type { Route, RouteStatus } from "@/types/route.types";
 import { ROUTE_STATUS_OPTIONS } from "@/lib/constants/route-status";
 
@@ -54,10 +62,15 @@ export function RoutesCrud() {
     });
   }, [routes, filterOrigin, filterDestination, filterStatus, filterUnitType]);
 
-  const columns = useMemo(
-    () => getRoutesColumns({ onDelete: openDelete }),
-    [openDelete]
-  );
+  const groupedRoutes = useMemo(() => {
+    const map = new Map<string, Route[]>();
+    for (const r of filteredRoutes) {
+      const group = map.get(r.origin) ?? [];
+      group.push(r);
+      map.set(r.origin, group);
+    }
+    return Array.from(map.entries()).map(([origin, items]) => ({ origin, items }));
+  }, [filteredRoutes]);
 
   if (!isLoaded) {
     return <p className="text-muted-foreground">Cargando…</p>;
@@ -132,13 +145,111 @@ export function RoutesCrud() {
             </div>
           </div>
 
-          <DataTable<Route, unknown>
-            columns={columns}
-            data={filteredRoutes}
-            filterColumn=""
-            initialColumnVisibility={{ search: false }}
-            getRowId={(row) => row.id}
-          />
+          {filteredRoutes.length === 0 ? (
+            <p className="text-muted-foreground rounded-lg border border-dashed p-6 text-center text-sm">
+              No hay rutas con esos filtros.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {groupedRoutes.map(({ origin, items }) => (
+                <div key={origin} className="overflow-x-auto rounded-lg border">
+                  <div className="border-b bg-muted/60 px-4 py-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Desde {origin}
+                    </span>
+                  </div>
+                  <table className="w-full min-w-[680px] text-sm">
+                    <thead>
+                      <tr className="border-b bg-muted/20 text-xs font-medium text-muted-foreground">
+                        <th className="px-4 py-1.5 text-left font-medium">Destino</th>
+                        <th className="px-4 py-1.5 text-left font-medium">Estado</th>
+                        <th className="px-4 py-1.5 text-left font-medium">Tipo</th>
+                        <th className="px-4 py-1.5 text-left font-medium">Descripción</th>
+                        <th className="px-4 py-1.5 text-left font-medium">Target (MXN)</th>
+                        <th className="px-4 py-1.5 text-left font-medium">Vol./sem.</th>
+                        <th className="px-4 py-1.5 text-left font-medium">Estatus</th>
+                        <th className="px-4 py-1.5 text-right font-medium">
+                          <span className="sr-only">Acciones</span>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {items.map((route) => {
+                        const description = route.description?.trim() ?? "";
+                        return (
+                          <tr
+                            key={route.id}
+                            className="border-b last:border-b-0 transition-colors hover:bg-muted/30"
+                          >
+                            <td className="px-4 py-3 font-medium">{route.destination}</td>
+                            <td className="px-4 py-3">
+                              {route.destinationState ?? (
+                                <span className="text-muted-foreground">—</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3">
+                              {UNIT_TYPE_LABELS[route.unitType]}
+                            </td>
+                            <td className="px-4 py-3">
+                              {description ? (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="block max-w-[140px] cursor-default truncate sm:max-w-[200px]">
+                                      {description}
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="max-w-xs whitespace-pre-wrap">
+                                    {description}
+                                  </TooltipContent>
+                                </Tooltip>
+                              ) : (
+                                <span className="text-muted-foreground">—</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3">
+                              {route.target != null ? (
+                                `$${formatMxn(route.target)}`
+                              ) : (
+                                <span className="text-muted-foreground">—</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3">
+                              {route.weeklyVolume != null ? (
+                                route.weeklyVolume
+                              ) : (
+                                <span className="text-muted-foreground">—</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3">
+                              {ROUTE_STATUS_LABELS[route.status]}
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex justify-end gap-2">
+                                <Button variant="ghost" size="icon" asChild aria-label="Editar ruta">
+                                  <Link href={`/admin/dashboard/routes/${route.id}/edit`}>
+                                    <Pencil className="size-4" />
+                                  </Link>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => openDelete(route)}
+                                  aria-label="Eliminar ruta"
+                                  className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                >
+                                  <Trash2 className="size-4" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ))}
+            </div>
+          )}
         </>
       )}
 
