@@ -10,17 +10,28 @@ export function getUsersColumns(): ColumnDef<User>[] {
     {
       id: "search",
       accessorFn: (row) =>
-        `${row.name} ${row.email} ${USER_ROLE_LABELS[row.role]}`.toLowerCase(),
+        `${row.profile?.commercialName ?? ""} ${row.name} ${row.email} ${USER_ROLE_LABELS[row.role]}`.toLowerCase(),
       header: () => null,
       cell: () => null,
       enableSorting: false,
       enableHiding: false,
     },
     {
+      id: "commercialName",
+      accessorFn: (row) => row.profile?.commercialName ?? "",
+      header: ({ column }) => <SortableColumnHeader column={column} title="Nombre comercial" />,
+      cell: ({ row }) => {
+        const name = row.original.profile?.commercialName;
+        return name
+          ? <span className="font-medium">{name}</span>
+          : <span className="text-muted-foreground">—</span>;
+      },
+    },
+    {
       accessorKey: "name",
       header: ({ column }) => <SortableColumnHeader column={column} title="Nombre" />,
       cell: ({ row }) => (
-        <span className="font-medium">{row.getValue("name")}</span>
+        <span className="text-muted-foreground">{row.getValue("name")}</span>
       ),
     },
     {
