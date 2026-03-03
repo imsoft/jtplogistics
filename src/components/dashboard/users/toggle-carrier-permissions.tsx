@@ -16,7 +16,7 @@ export function ToggleCarrierPermissions({
   const [canEditTarget, setCanEditTarget] = useState(initialCanEditTarget);
   const [isLoading, setIsLoading] = useState(false);
 
-  const isUnlocked = canEditRoutes || canEditTarget;
+  const isUnlocked = canEditRoutes && canEditTarget;
 
   async function handleToggle() {
     const next = !isUnlocked;
