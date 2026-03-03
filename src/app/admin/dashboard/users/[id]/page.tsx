@@ -8,8 +8,7 @@ import { requireAdmin } from "@/lib/auth-server";
 import { USER_ROLE_LABELS } from "@/lib/constants/user-role";
 import { InfoRow } from "@/components/dashboard/users/info-row";
 import { TargetDiff } from "@/components/dashboard/users/target-diff";
-import { ToggleCanEditTarget } from "@/components/dashboard/users/toggle-can-edit-target";
-import { ToggleCanEditRoutes } from "@/components/dashboard/users/toggle-can-edit-routes";
+import { ToggleCarrierPermissions } from "@/components/dashboard/users/toggle-carrier-permissions";
 import type { UserRole } from "@/types/user.types";
 
 export async function generateMetadata({
@@ -192,8 +191,11 @@ export default async function UserProfilePage({
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4 pt-0 space-y-2">
-            <ToggleCanEditRoutes userId={user.id} initialValue={user.canEditRoutes} />
-            <ToggleCanEditTarget userId={user.id} initialValue={user.canEditTarget} />
+            <ToggleCarrierPermissions
+              userId={user.id}
+              initialCanEditRoutes={user.canEditRoutes}
+              initialCanEditTarget={user.canEditTarget}
+            />
           </CardContent>
           <CardContent className="px-0 pb-0">
             {user.carrierRoutes.length === 0 ? (
