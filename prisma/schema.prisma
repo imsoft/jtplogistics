@@ -26,7 +26,7 @@ model User {
   image         String?        @map("image")
   birthDate     DateTime?      @map("birth_date")
   role          UserRole       @default(collaborator) @map("role")
-  canEditTarget Boolean        @default(false) @map("can_edit_target")
+  canEditTarget Boolean        @default(true) @map("can_edit_target")
   createdAt     DateTime       @map("created_at")
   updatedAt     DateTime       @map("updated_at")
   sessions         Session[]

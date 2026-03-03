@@ -161,8 +161,8 @@ export default function CarrierRoutesPage() {
           Selecciona las rutas en las que puedes trabajar y establece tu target.
         </p>
         {!canEditTarget && isLoaded && (
-          <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
-            Tu target está bloqueado. Contacta al administrador para poder modificarlo.
+          <p className="mt-2 text-xs text-muted-foreground">
+            La edición de tu target está deshabilitada. Contacta al administrador.
           </p>
         )}
       </div>

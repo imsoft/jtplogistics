@@ -33,8 +33,8 @@ export function ToggleCanEditTarget({
         <p className="text-sm font-medium">Editar target</p>
         <p className="text-muted-foreground text-xs">
           {canEditTarget
-            ? "Este transportista puede modificar su target."
-            : "Este transportista no puede modificar su target."}
+            ? "Habilitado — puede modificar su target."
+            : "Deshabilitado — no puede modificar su target."}
         </p>
       </div>
       <Button
