@@ -254,7 +254,7 @@ export function CarrierQuotesTable() {
                     <p className="text-lg font-semibold">${formatMxn(stats.venta)}</p>
                   </div>
                   <div className="rounded-lg bg-muted/50 p-4">
-                    <p className="text-muted-foreground text-xs font-medium">Monto</p>
+                    <p className="text-muted-foreground text-xs font-medium">Total con IVA</p>
                     <p className="text-lg font-semibold">${formatMxn(stats.monto)}</p>
                   </div>
                 </div>
