@@ -44,6 +44,7 @@ export function useRoutesStore() {
           body: JSON.stringify({
             origin: data.origin.trim(),
             destination: data.destination.trim(),
+            destinationState: data.destinationState?.trim() || undefined,
             description: data.description?.trim() || undefined,
             target: data.target,
             unitType: data.unitType,
@@ -75,6 +76,7 @@ export function useRoutesStore() {
           body: JSON.stringify({
             origin: data.origin.trim(),
             destination: data.destination.trim(),
+            destinationState: data.destinationState?.trim() || undefined,
             description: data.description?.trim() || undefined,
             target: data.target,
             unitType: data.unitType,
