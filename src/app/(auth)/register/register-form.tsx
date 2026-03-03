@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,8 @@ import type { RegisterFormData } from "@/types/auth.types";
 export function RegisterForm() {
   const router = useRouter();
   const { isLoading, error, setError, submit } = useFormSubmit();
+  const [emailValue, setEmailValue] = useState("");
+  const isJtp = normalizeEmail(emailValue).endsWith("@jtp.com.mx");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -50,15 +53,17 @@ export function RegisterForm() {
         return;
       }
 
-      // Guardar razón social y teléfono en el perfil
-      await fetch("/api/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          legalName: data.legalName,
-          contacts: [{ type: "phone", value: data.phone, label: "Teléfono" }],
-        }),
-      });
+      // Guardar razón social y teléfono en el perfil (solo para carriers)
+      if (!isJtp) {
+        await fetch("/api/profile", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            legalName: data.legalName,
+            contacts: [{ type: "phone", value: data.phone, label: "Teléfono" }],
+          }),
+        });
+      }
 
       router.push("/");
     });
@@ -67,17 +72,19 @@ export function RegisterForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && <FormAlert variant="error" message={error} />}
-      <div className="space-y-2">
-        <Label htmlFor="legalName">Razón social</Label>
-        <Input
-          id="legalName"
-          name="legalName"
-          type="text"
-          autoComplete="organization"
-          required
-          disabled={isLoading}
-        />
-      </div>
+      {!isJtp && (
+        <div className="space-y-2">
+          <Label htmlFor="legalName">Razón social</Label>
+          <Input
+            id="legalName"
+            name="legalName"
+            type="text"
+            autoComplete="organization"
+            required
+            disabled={isLoading}
+          />
+        </div>
+      )}
       <div className="space-y-2">
         <Label htmlFor="name">Nombre</Label>
         <Input
@@ -89,17 +96,19 @@ export function RegisterForm() {
           disabled={isLoading}
         />
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="phone">Teléfono</Label>
-        <Input
-          id="phone"
-          name="phone"
-          type="tel"
-          autoComplete="tel"
-          required
-          disabled={isLoading}
-        />
-      </div>
+      {!isJtp && (
+        <div className="space-y-2">
+          <Label htmlFor="phone">Teléfono</Label>
+          <Input
+            id="phone"
+            name="phone"
+            type="tel"
+            autoComplete="tel"
+            required
+            disabled={isLoading}
+          />
+        </div>
+      )}
       <div className="space-y-2">
         <Label htmlFor="email">Correo electrónico</Label>
         <Input
@@ -109,6 +118,8 @@ export function RegisterForm() {
           autoComplete="email"
           required
           disabled={isLoading}
+          value={emailValue}
+          onChange={(e) => setEmailValue(e.target.value)}
         />
       </div>
       <div className="space-y-2">

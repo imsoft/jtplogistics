@@ -16,7 +16,10 @@ export function validateLoginForm(data: LoginFormData): AuthValidationResult {
 }
 
 export function validateRegisterForm(data: RegisterFormData): AuthValidationResult {
-  if (!data.legalName?.trim() || !data.name?.trim() || !data.phone?.trim() || !data.email?.trim() || !data.password || !data.confirmPassword) {
+  const isJtp = data.email.trim().toLowerCase().endsWith("@jtp.com.mx");
+  const missingBase = !data.name?.trim() || !data.email?.trim() || !data.password || !data.confirmPassword;
+  const missingCarrier = !isJtp && (!data.legalName?.trim() || !data.phone?.trim());
+  if (missingBase || missingCarrier) {
     return { success: false, error: "Completa todos los campos." };
   }
   if (data.password !== data.confirmPassword) {
