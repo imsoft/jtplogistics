@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CityCombobox } from "./city-combobox";
-import { getCityState } from "@/lib/data/mexico-cities";
+import { parseCityValue, findCityValue } from "@/lib/data/mexico-cities";
 import { ROUTE_STATUS_OPTIONS } from "@/lib/constants/route-status";
 import { UNIT_TYPE_OPTIONS } from "@/lib/constants/unit-type";
 import { formatMxn, formatMxnLive, parseMxn } from "@/lib/utils";
@@ -50,14 +50,22 @@ export function RouteForm({
   const [unitType, setUnitType] = useState<UnitType>(
     initialValues.unitType ?? defaultFormData.unitType
   );
+  // Store full "State|City" values so each city is unambiguous
   const [origin, setOrigin] = useState<string | null>(
-    initialValues.origin?.trim() ?? null
+    initialValues.origin?.trim()
+      ? findCityValue(initialValues.origin.trim(), null)
+      : null
   );
   const [destination, setDestination] = useState<string | null>(
-    initialValues.destination?.trim() ?? null
+    initialValues.destination?.trim()
+      ? findCityValue(
+          initialValues.destination.trim(),
+          initialValues.destinationState?.trim() || null
+        )
+      : null
   );
   const [destinationState, setDestinationState] = useState<string>(
-    initialValues.destinationState?.trim() || getCityState(initialValues.destination?.trim() ?? "")
+    initialValues.destinationState?.trim() || ""
   );
   const [targetDisplay, setTargetDisplay] = useState<string>(
     initialValues.target != null ? formatMxn(initialValues.target) : ""
@@ -76,10 +84,12 @@ export function RouteForm({
     const formData = new FormData(form);
     const parsedTarget = parseMxn(targetDisplay);
     const parsedWeeklyVolume = weeklyVolume.trim() !== "" ? Math.round(Number(weeklyVolume)) : undefined;
+    const { city: originCity } = parseCityValue(origin);
+    const { city: destCity, state: destState } = parseCityValue(destination);
     const data: RouteFormData = {
-      origin: origin?.trim() ?? "",
-      destination: destination?.trim() ?? "",
-      destinationState: destinationState.trim(),
+      origin: originCity,
+      destination: destCity,
+      destinationState: destState || destinationState.trim(),
       description: (formData.get("description") as string)?.trim() ?? "",
       target: parsedTarget,
       weeklyVolume: !isNaN(parsedWeeklyVolume as number) ? parsedWeeklyVolume : undefined,
@@ -96,7 +106,6 @@ export function RouteForm({
           <CityCombobox
             id="route-origin"
             label="Origen"
-            placeholder=""
             value={origin}
             onValueChange={setOrigin}
             name="origin"
@@ -105,11 +114,10 @@ export function RouteForm({
           <CityCombobox
             id="route-destination"
             label="Destino"
-            placeholder=""
             value={destination}
             onValueChange={(v) => {
               setDestination(v);
-              setDestinationState(getCityState(v ?? ""));
+              setDestinationState(parseCityValue(v).state);
             }}
             name="destination"
             required
@@ -121,7 +129,6 @@ export function RouteForm({
               type="text"
               value={destinationState}
               readOnly
-              placeholder="Se llena automáticamente"
               className="w-full bg-muted/50 cursor-default"
             />
           </div>
@@ -161,7 +168,6 @@ export function RouteForm({
               min={0}
               value={weeklyVolume}
               onChange={(e) => setWeeklyVolume(e.target.value)}
-              placeholder="Núm. de viajes"
               className="w-full"
             />
           </div>

@@ -29,7 +29,7 @@ interface CityComboboxProps {
 export function CityCombobox({
   id,
   label,
-  placeholder = "Buscar ciudad…",
+  placeholder = "",
   value,
   onValueChange,
   name,
@@ -63,7 +63,7 @@ export function CityCombobox({
                   <ComboboxGroup key={group.value} items={group.items}>
                     <ComboboxLabel>{group.value}</ComboboxLabel>
                     {group.items.map((city: string) => (
-                      <ComboboxItem key={`${group.value}-${city}`} value={city}>
+                      <ComboboxItem key={`${group.value}-${city}`} value={`${group.value}|${city}`}>
                         {city}
                       </ComboboxItem>
                     ))}

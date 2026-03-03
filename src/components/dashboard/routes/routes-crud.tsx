@@ -15,6 +15,7 @@ import { RouteDeleteDialog } from "./route-delete-dialog";
 import { CityCombobox } from "./city-combobox";
 import { getRoutesColumns } from "./routes-columns";
 import { useRoutesStore } from "@/hooks/use-routes-store";
+import { parseCityValue } from "@/lib/data/mexico-cities";
 import type { Route, RouteStatus } from "@/types/route.types";
 import { ROUTE_STATUS_OPTIONS } from "@/lib/constants/route-status";
 
@@ -42,9 +43,11 @@ export function RoutesCrud() {
 
   const filteredRoutes = useMemo(() => {
     const status = filterStatus === STATUS_FILTER_ALL ? null : (filterStatus as RouteStatus);
+    const originCity = parseCityValue(filterOrigin).city;
+    const destCity = parseCityValue(filterDestination).city;
     return routes.filter((route) => {
-      if (filterOrigin && !route.origin.toLowerCase().includes(filterOrigin.toLowerCase())) return false;
-      if (filterDestination && !route.destination.toLowerCase().includes(filterDestination.toLowerCase())) return false;
+      if (originCity && !route.origin.toLowerCase().includes(originCity.toLowerCase())) return false;
+      if (destCity && !route.destination.toLowerCase().includes(destCity.toLowerCase())) return false;
       if (status != null && route.status !== status) return false;
       if (filterUnitType !== UNIT_FILTER_ALL && route.unitType !== filterUnitType) return false;
       return true;
@@ -75,14 +78,12 @@ export function RoutesCrud() {
             <CityCombobox
               id="filter-origin"
               label="Origen"
-              placeholder="Buscar ciudad de origen…"
               value={filterOrigin}
               onValueChange={setFilterOrigin}
             />
             <CityCombobox
               id="filter-destination"
               label="Destino"
-              placeholder="Buscar ciudad de destino…"
               value={filterDestination}
               onValueChange={setFilterDestination}
             />

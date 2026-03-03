@@ -45,7 +45,7 @@ export async function PATCH(
     const updateData: Record<string, unknown> = {};
     if (origin !== undefined) updateData.origin = origin;
     if (destination !== undefined) updateData.destination = destination;
-    if (destinationState !== undefined) updateData.destinationState = destinationState;
+    if (destinationState !== undefined) updateData.destinationState = destinationState || null;
     if (description !== undefined) updateData.description = description;
     if (target !== undefined) updateData.target = target;
     if (weeklyVolume !== undefined) updateData.weeklyVolume = weeklyVolume;

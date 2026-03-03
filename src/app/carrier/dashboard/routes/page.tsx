@@ -5,6 +5,7 @@ import { Check, X, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CityCombobox } from "@/components/dashboard/routes/city-combobox";
+import { parseCityValue } from "@/lib/data/mexico-cities";
 import { formatMxnLive, formatMxn, parseMxn } from "@/lib/utils";
 
 interface CarrierRouteRow {
@@ -88,9 +89,11 @@ export default function CarrierRoutesPage() {
   }, [loadRoutes]);
 
   const filteredRoutes = useMemo(() => {
+    const originCity = parseCityValue(filterOrigin).city;
+    const destCity = parseCityValue(filterDestination).city;
     return routes.filter((r) => {
-      if (filterOrigin && r.origin !== filterOrigin) return false;
-      if (filterDestination && r.destination !== filterDestination) return false;
+      if (originCity && r.origin !== originCity) return false;
+      if (destCity && r.destination !== destCity) return false;
       return true;
     });
   }, [routes, filterOrigin, filterDestination]);
@@ -187,14 +190,12 @@ export default function CarrierRoutesPage() {
             <CityCombobox
               id="filter-origin"
               label="Origen"
-              placeholder="Buscar origen…"
               value={filterOrigin}
               onValueChange={setFilterOrigin}
             />
             <CityCombobox
               id="filter-destination"
               label="Destino"
-              placeholder="Buscar destino…"
               value={filterDestination}
               onValueChange={setFilterDestination}
             />

@@ -2640,3 +2640,32 @@ export function getCityState(city: string): string {
   );
   return group?.value ?? "";
 }
+
+/**
+ * Parses a "State|City" value (as returned by CityCombobox) into its parts.
+ * If the value is a plain city name (legacy), falls back to getCityState.
+ */
+export function parseCityValue(v: string | null): { city: string; state: string } {
+  if (!v) return { city: "", state: "" };
+  const idx = v.indexOf("|");
+  if (idx === -1) return { city: v, state: getCityState(v) };
+  return { city: v.slice(idx + 1), state: v.slice(0, idx) };
+}
+
+/**
+ * Finds the full "State|City" value for a city name and optional state.
+ * Returns null if the city is not found in the data.
+ */
+export function findCityValue(city: string, state?: string | null): string | null {
+  if (!city.trim()) return null;
+  if (state) {
+    const group = MEXICO_STATES_CITIES.find((g) => g.value === state);
+    const exactCity = group?.items.find((c) => c.toLowerCase() === city.trim().toLowerCase());
+    if (exactCity) return `${state}|${exactCity}`;
+  }
+  for (const group of MEXICO_STATES_CITIES) {
+    const exactCity = group.items.find((c) => c.toLowerCase() === city.trim().toLowerCase());
+    if (exactCity) return `${group.value}|${exactCity}`;
+  }
+  return null;
+}
