@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CityCombobox } from "./city-combobox";
+import { getCityState } from "@/lib/data/mexico-cities";
 import { ROUTE_STATUS_OPTIONS } from "@/lib/constants/route-status";
 import { UNIT_TYPE_OPTIONS } from "@/lib/constants/unit-type";
 import { formatMxn, formatMxnLive, parseMxn } from "@/lib/utils";
@@ -55,7 +56,7 @@ export function RouteForm({
     initialValues.destination?.trim() ?? null
   );
   const [destinationState, setDestinationState] = useState<string>(
-    initialValues.destinationState?.trim() ?? ""
+    initialValues.destinationState?.trim() || getCityState(initialValues.destination?.trim() ?? "")
   );
   const [targetDisplay, setTargetDisplay] = useState<string>(
     initialValues.target != null ? formatMxn(initialValues.target) : ""
@@ -100,7 +101,10 @@ export function RouteForm({
             label="Destino"
             placeholder=""
             value={destination}
-            onValueChange={setDestination}
+            onValueChange={(v) => {
+              setDestination(v);
+              setDestinationState(getCityState(v ?? ""));
+            }}
             name="destination"
             required
           />
@@ -110,9 +114,9 @@ export function RouteForm({
               id="route-destination-state"
               type="text"
               value={destinationState}
-              onChange={(e) => setDestinationState(e.target.value)}
-              placeholder="Ej. Nuevo León"
-              className="w-full"
+              readOnly
+              placeholder="Se llena automáticamente"
+              className="w-full bg-muted/50 cursor-default"
             />
           </div>
         </div>

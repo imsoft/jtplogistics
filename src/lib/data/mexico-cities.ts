@@ -2628,3 +2628,12 @@ export const MEXICO_STATES_CITIES: StateCitiesGroup[] = [
     ],
   },
 ];
+
+/** Devuelve el estado al que pertenece una ciudad, o "" si no se encuentra. */
+export function getCityState(city: string): string {
+  if (!city) return "";
+  const group = MEXICO_STATES_CITIES.find((g) =>
+    g.items.some((c) => c.toLowerCase() === city.toLowerCase())
+  );
+  return group?.value ?? "";
+}
