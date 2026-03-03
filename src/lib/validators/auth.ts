@@ -16,7 +16,7 @@ export function validateLoginForm(data: LoginFormData): AuthValidationResult {
 }
 
 export function validateRegisterForm(data: RegisterFormData): AuthValidationResult {
-  if (!data.name?.trim() || !data.email?.trim() || !data.password || !data.confirmPassword) {
+  if (!data.legalName?.trim() || !data.name?.trim() || !data.phone?.trim() || !data.email?.trim() || !data.password || !data.confirmPassword) {
     return { success: false, error: "Completa todos los campos." };
   }
   if (data.password !== data.confirmPassword) {

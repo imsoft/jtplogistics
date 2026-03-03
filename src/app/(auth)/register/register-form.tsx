@@ -21,7 +21,9 @@ export function RegisterForm() {
     const form = e.currentTarget;
     const formData = new FormData(form);
     const data: RegisterFormData = {
+      legalName: (formData.get("legalName") as string)?.trim() ?? "",
       name: (formData.get("name") as string)?.trim() ?? "",
+      phone: (formData.get("phone") as string)?.trim() ?? "",
       email: (formData.get("email") as string)?.trim() ?? "",
       password: (formData.get("password") as string) ?? "",
       confirmPassword: (formData.get("confirmPassword") as string) ?? "",
@@ -44,6 +46,17 @@ export function RegisterForm() {
         setError(res.error.message ?? "Error al crear la cuenta.");
         return;
       }
+
+      // Guardar razón social y teléfono en el perfil
+      await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          legalName: data.legalName,
+          contacts: [{ type: "phone", value: data.phone, label: "Teléfono" }],
+        }),
+      });
+
       router.push("/");
     });
   }
@@ -52,12 +65,34 @@ export function RegisterForm() {
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && <FormAlert variant="error" message={error} />}
       <div className="space-y-2">
-        <Label htmlFor="name">Nombre completo</Label>
+        <Label htmlFor="legalName">Razón social</Label>
+        <Input
+          id="legalName"
+          name="legalName"
+          type="text"
+          autoComplete="organization"
+          required
+          disabled={isLoading}
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="name">Nombre</Label>
         <Input
           id="name"
           name="name"
           type="text"
           autoComplete="name"
+          required
+          disabled={isLoading}
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="phone">Teléfono</Label>
+        <Input
+          id="phone"
+          name="phone"
+          type="tel"
+          autoComplete="tel"
           required
           disabled={isLoading}
         />
