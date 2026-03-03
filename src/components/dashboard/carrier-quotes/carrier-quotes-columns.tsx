@@ -44,26 +44,35 @@ export function getCarrierQuotesColumns(
 ): ColumnDef<CarrierQuote>[] {
   return [
     {
-      accessorKey: "name",
-      header: ({ column }) => <SortableColumnHeader column={column} title="Nombre" />,
-      cell: ({ row }) => (
-        <span className="font-medium">{row.getValue("name")}</span>
-      ),
-    },
-    {
       accessorKey: "company",
       header: ({ column }) => <SortableColumnHeader column={column} title="Empresa" />,
       cell: ({ row }) => {
         const company = row.getValue("company") as string | null;
-        return company ?? <span className="text-muted-foreground">—</span>;
+        return company ? (
+          <span className="font-medium">{company}</span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        );
       },
     },
     {
-      accessorKey: "email",
-      header: "Correo electrónico",
+      accessorKey: "name",
+      header: ({ column }) => <SortableColumnHeader column={column} title="Nombre" />,
       cell: ({ row }) => (
-        <span className="text-muted-foreground">{row.getValue("email")}</span>
+        <span>{row.getValue("name")}</span>
       ),
+    },
+    {
+      accessorKey: "phone",
+      header: "Teléfono",
+      cell: ({ row }) => {
+        const phone = row.getValue("phone") as string | null;
+        return phone ? (
+          <span className="text-muted-foreground">{phone}</span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        );
+      },
     },
     {
       accessorKey: "carrierTarget",

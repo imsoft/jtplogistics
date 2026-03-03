@@ -9,7 +9,10 @@ type CarrierRouteWithCarrier = {
   carrier: {
     name: string;
     email: string;
-    profile: { commercialName: string | null } | null;
+    profile: {
+      commercialName: string | null;
+      contacts: { type: string; value: string }[];
+    } | null;
   };
 };
 
@@ -37,7 +40,12 @@ export async function GET(request: NextRequest) {
           select: {
             name: true,
             email: true,
-            profile: { select: { commercialName: true } },
+            profile: {
+              select: {
+                commercialName: true,
+                contacts: { select: { type: true, value: true }, where: { type: "phone" } },
+              },
+            },
           },
         },
       },
@@ -50,6 +58,7 @@ export async function GET(request: NextRequest) {
       name: cr.carrier.name,
       email: cr.carrier.email,
       company: cr.carrier.profile?.commercialName ?? null,
+      phone: cr.carrier.profile?.contacts[0]?.value ?? null,
       carrierTarget: cr.carrierTarget ?? null,
     }));
 
