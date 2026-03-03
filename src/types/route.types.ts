@@ -8,6 +8,7 @@ export interface Route {
   weeklyVolume?: number;
   unitType: UnitType;
   status: RouteStatus;
+  createdByName?: string;
   createdAt: string;
 }
 

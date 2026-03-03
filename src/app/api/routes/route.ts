@@ -7,7 +7,10 @@ import type { UnitType, RouteStatus } from "@/types/route.types";
 export async function GET() {
   try {
     await requireSession();
-    const routes = await prisma.route.findMany({ orderBy: { createdAt: "desc" } });
+    const routes = await prisma.route.findMany({
+      orderBy: { createdAt: "desc" },
+      include: { createdBy: { select: { id: true, name: true } } },
+    });
     return Response.json((routes as unknown as PrismaRoute[]).map(routeToJson));
   } catch (e) {
     if (e instanceof Response) throw e;
@@ -18,7 +21,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireAdmin();
+    const session = await requireAdmin();
 
     const body = await request.json();
     const origin = String(body.origin ?? "").trim();
@@ -34,7 +37,7 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "origin and destination are required" }, { status: 400 });
     }
 
-    const route = await (prisma.route.create as unknown as (a: { data: Record<string, unknown> }) => Promise<PrismaRoute>)({
+    const route = await (prisma.route.create as unknown as (a: { data: Record<string, unknown>; include: Record<string, unknown> }) => Promise<PrismaRoute>)({
       data: {
         origin,
         destination,
@@ -44,7 +47,9 @@ export async function POST(request: NextRequest) {
         weeklyVolume: weeklyVolume ?? undefined,
         unitType,
         status,
+        createdById: session.user.id,
       },
+      include: { createdBy: { select: { id: true, name: true } } },
     });
     return Response.json(routeToJson(route));
   } catch (e) {

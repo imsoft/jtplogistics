@@ -11,7 +11,10 @@ export async function GET(
   try {
     await requireSession();
     const { id } = await params;
-    const route = await prisma.route.findUnique({ where: { id } });
+    const route = await prisma.route.findUnique({
+      where: { id },
+      include: { createdBy: { select: { id: true, name: true } } },
+    });
     if (!route) return Response.json({ error: "Not found" }, { status: 404 });
     return Response.json(routeToJson(route as unknown as PrismaRoute));
   } catch (e) {
@@ -49,9 +52,10 @@ export async function PATCH(
     if (unitType !== undefined) updateData.unitType = unitType;
     if (status !== undefined) updateData.status = status;
 
-    const route = await (prisma.route.update as unknown as (a: { where: { id: string }; data: Record<string, unknown> }) => Promise<PrismaRoute>)({
+    const route = await (prisma.route.update as unknown as (a: { where: { id: string }; data: Record<string, unknown>; include: Record<string, unknown> }) => Promise<PrismaRoute>)({
       where: { id },
       data: updateData,
+      include: { createdBy: { select: { id: true, name: true } } },
     });
     return Response.json(routeToJson(route));
   } catch (e) {

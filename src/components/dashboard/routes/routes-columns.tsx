@@ -115,6 +115,18 @@ export function getRoutesColumns({
         ] as ColumnDef<Route>[])),
   ];
 
+  if (!carrierView) {
+    columns.push({
+      id: "createdByName",
+      header: "Ingresó",
+      cell: ({ row }: { row: Row<Route> }) => {
+        const name = row.original.createdByName;
+        return name ? name : <span className="text-muted-foreground">—</span>;
+      },
+      enableSorting: false,
+    } as ColumnDef<Route>);
+  }
+
   if (!viewOnly && onDelete) {
     columns.push({
       id: "actions",

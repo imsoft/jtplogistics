@@ -10,6 +10,8 @@ export type PrismaRoute = {
   weeklyVolume: number | null;
   unitType: string;
   status: string;
+  createdById: string | null;
+  createdBy: { id: string; name: string } | null;
   createdAt: Date;
 };
 
@@ -27,6 +29,7 @@ export function routeToJson(r: PrismaRoute) {
     weeklyVolume: r.weeklyVolume ?? undefined,
     unitType: r.unitType as UnitType,
     status: r.status as RouteStatus,
+    createdByName: r.createdBy?.name ?? undefined,
     createdAt: r.createdAt.toISOString(),
   };
 }
