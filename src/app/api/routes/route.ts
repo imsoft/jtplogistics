@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
     const destinationState = body.destinationState != null ? String(body.destinationState).trim() : null;
     const description = body.description != null ? String(body.description).trim() : null;
     const target = body.target != null ? Number(body.target) : null;
+    const weeklyVolume = body.weeklyVolume != null ? Math.round(Number(body.weeklyVolume)) : null;
     const unitType: UnitType = VALID_UNIT_TYPES.includes(body.unitType) ? body.unitType : "dry_box";
     const status: RouteStatus = VALID_STATUSES.includes(body.status) ? body.status : "pending";
 
@@ -40,6 +41,7 @@ export async function POST(request: NextRequest) {
         destinationState: destinationState || undefined,
         description: description || undefined,
         target: target ?? undefined,
+        weeklyVolume: weeklyVolume ?? undefined,
         unitType,
         status,
       },

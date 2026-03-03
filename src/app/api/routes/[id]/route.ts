@@ -35,6 +35,7 @@ export async function PATCH(
     const destinationState = body.destinationState != null ? String(body.destinationState).trim() : undefined;
     const description = body.description != null ? String(body.description).trim() : undefined;
     const target = body.target != null ? Number(body.target) : undefined;
+    const weeklyVolume = body.weeklyVolume != null ? Math.round(Number(body.weeklyVolume)) : undefined;
     const unitType: UnitType | undefined = VALID_UNIT_TYPES.includes(body.unitType) ? body.unitType : undefined;
     const status: RouteStatus | undefined = VALID_STATUSES.includes(body.status) ? body.status : undefined;
 
@@ -44,6 +45,7 @@ export async function PATCH(
     if (destinationState !== undefined) updateData.destinationState = destinationState;
     if (description !== undefined) updateData.description = description;
     if (target !== undefined) updateData.target = target;
+    if (weeklyVolume !== undefined) updateData.weeklyVolume = weeklyVolume;
     if (unitType !== undefined) updateData.unitType = unitType;
     if (status !== undefined) updateData.status = status;
 

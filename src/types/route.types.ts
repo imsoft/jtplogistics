@@ -5,6 +5,7 @@ export interface Route {
   destinationState?: string;
   description?: string;
   target?: number;
+  weeklyVolume?: number;
   unitType: UnitType;
   status: RouteStatus;
   createdAt: string;
@@ -20,6 +21,7 @@ export interface RouteFormData {
   destinationState: string;
   description: string;
   target?: number;
+  weeklyVolume?: number;
   unitType: UnitType;
   status: RouteStatus;
 }

@@ -78,6 +78,7 @@ export default function EditRoutePage() {
               destinationState: route.destinationState ?? "",
               description: route.description ?? "",
               target: route.target,
+              weeklyVolume: route.weeklyVolume,
               unitType: route.unitType,
               status: route.status,
             }}

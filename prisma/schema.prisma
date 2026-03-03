@@ -105,6 +105,7 @@ model Route {
   destination   String         @map("destination")
   description   String?        @map("description")
   target             Float?         @map("target")
+  weeklyVolume       Int?           @map("weekly_volume")
   destinationState   String?        @map("destination_state")
   unitType      UnitType       @default(dry_box) @map("unit_type")
   status        RouteStatus    @default(pending) @map("status")

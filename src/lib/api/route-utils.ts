@@ -7,6 +7,7 @@ export type PrismaRoute = {
   destinationState: string | null;
   description: string | null;
   target: number | null;
+  weeklyVolume: number | null;
   unitType: string;
   status: string;
   createdAt: Date;
@@ -23,6 +24,7 @@ export function routeToJson(r: PrismaRoute) {
     destinationState: r.destinationState ?? undefined,
     description: r.description ?? undefined,
     target: r.target ?? undefined,
+    weeklyVolume: r.weeklyVolume ?? undefined,
     unitType: r.unitType as UnitType,
     status: r.status as RouteStatus,
     createdAt: r.createdAt.toISOString(),

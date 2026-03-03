@@ -26,6 +26,7 @@ const defaultFormData: RouteFormData = {
   destinationState: "",
   description: "",
   target: undefined,
+  weeklyVolume: undefined,
   unitType: "dry_box",
   status: "active",
 };
@@ -61,6 +62,9 @@ export function RouteForm({
   const [targetDisplay, setTargetDisplay] = useState<string>(
     initialValues.target != null ? formatMxn(initialValues.target) : ""
   );
+  const [weeklyVolume, setWeeklyVolume] = useState<string>(
+    initialValues.weeklyVolume != null ? String(initialValues.weeklyVolume) : ""
+  );
 
   const values = {
     description: initialValues.description ?? defaultFormData.description,
@@ -71,12 +75,14 @@ export function RouteForm({
     const form = e.currentTarget;
     const formData = new FormData(form);
     const parsedTarget = parseMxn(targetDisplay);
+    const parsedWeeklyVolume = weeklyVolume.trim() !== "" ? Math.round(Number(weeklyVolume)) : undefined;
     const data: RouteFormData = {
       origin: origin?.trim() ?? "",
       destination: destination?.trim() ?? "",
       destinationState: destinationState.trim(),
       description: (formData.get("description") as string)?.trim() ?? "",
       target: parsedTarget,
+      weeklyVolume: !isNaN(parsedWeeklyVolume as number) ? parsedWeeklyVolume : undefined,
       unitType,
       status,
     };
@@ -143,6 +149,19 @@ export function RouteForm({
                 const parsed = parseMxn(targetDisplay);
                 if (parsed != null) setTargetDisplay(formatMxn(parsed));
               }}
+              className="w-full"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="route-weekly-volume">Volumen por semana</Label>
+            <Input
+              id="route-weekly-volume"
+              type="number"
+              inputMode="numeric"
+              min={0}
+              value={weeklyVolume}
+              onChange={(e) => setWeeklyVolume(e.target.value)}
+              placeholder="Núm. de viajes"
               className="w-full"
             />
           </div>
