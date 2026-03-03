@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { Check, X, Minus, MessageCircle } from "lucide-react";
+import { Check, X, Minus, MessageCircle, MoveRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CityCombobox } from "@/components/dashboard/routes/city-combobox";
@@ -264,7 +264,7 @@ export default function CarrierRoutesPage() {
                     {/* Header de columnas */}
                     <div className="grid grid-cols-[auto_1fr_130px_56px] gap-3 border-b bg-muted/20 px-3 py-1.5 text-xs font-medium text-muted-foreground sm:px-4">
                       <span className="flex items-center">Sel.</span>
-                      <span className="flex items-center">Destino</span>
+                      <span className="flex items-center">Ruta</span>
                       <span className="flex items-center">Mi target</span>
                       <span className="flex items-center">Dif.</span>
                     </div>
@@ -292,7 +292,11 @@ export default function CarrierRoutesPage() {
                           </label>
 
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-medium">{route.destination}</p>
+                            <p className="flex items-center gap-1 text-sm font-medium">
+                              <span className="truncate">{route.origin}</span>
+                              <MoveRight className="size-3.5 shrink-0 text-muted-foreground" />
+                              <span className="truncate">{route.destination}</span>
+                            </p>
                             {route.description && (
                               <p className="text-muted-foreground truncate text-xs">{route.description}</p>
                             )}
