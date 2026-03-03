@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { useProfile } from "@/hooks/use-profile";
+import { EditJtpWhatsapp } from "@/components/dashboard/admin/edit-jtp-whatsapp";
 
 export default function AdminProfilePage() {
   const { data, isFetching, fetchError } = useProfile();
@@ -113,6 +114,8 @@ export default function AdminProfilePage() {
           </form>
         </CardContent>
       </Card>
+
+      <EditJtpWhatsapp />
     </div>
   );
 }

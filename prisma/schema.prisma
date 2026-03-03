@@ -262,3 +262,10 @@ model Image {
 
   @@map("images")
 }
+
+model Setting {
+  key   String @id @map("key")
+  value String @map("value")
+
+  @@map("settings")
+}
