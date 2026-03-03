@@ -103,6 +103,16 @@ export default function CarrierRoutesPage() {
     });
   }, [routes, filterOrigin, filterDestination]);
 
+  const groupedRoutes = useMemo(() => {
+    const map = new Map<string, CarrierRouteRow[]>();
+    for (const r of filteredRoutes) {
+      const group = map.get(r.origin) ?? [];
+      group.push(r);
+      map.set(r.origin, group);
+    }
+    return Array.from(map.entries()).map(([origin, items]) => ({ origin, items }));
+  }, [filteredRoutes]);
+
   // Rutas nuevas que el carrier quiere agregar en esta sesión
   const newSelections = useMemo(
     () => new Set([...selected].filter((id) => !originalSelected.has(id))),
@@ -235,83 +245,84 @@ export default function CarrierRoutesPage() {
             </div>
           </div>
 
-          {/* Tabla */}
-          <div className="overflow-x-auto rounded-lg border">
-            <div className="min-w-[340px]">
-            {/* Header */}
-            <div className="grid grid-cols-[auto_1fr_130px_56px] gap-3 border-b bg-muted/40 px-3 py-2 text-xs font-medium text-muted-foreground sm:px-4">
-              <span className="flex items-center">Sel.</span>
-              <span className="flex items-center">Ruta</span>
-              <span className="flex items-center">Mi target</span>
-              <span className="flex items-center">Dif.</span>
-            </div>
-
-            {filteredRoutes.length === 0 ? (
-              <p className="text-muted-foreground p-6 text-center text-sm">
-                No hay rutas con esos filtros.
-              </p>
-            ) : (
-              filteredRoutes.map((route) => {
-                const isSelected = selected.has(route.id);
-                const isOriginallySelected = originalSelected.has(route.id);
-                // Rutas ya guardadas se bloquean si el admin no ha desbloqueado
-                const isLocked = isOriginallySelected && !canEditRoutes;
-                const currentTarget = parseMxn(targetByRouteId[route.id] ?? "") ?? null;
-
-                return (
-                  <div
-                    key={route.id}
-                    className="grid grid-cols-[auto_1fr_130px_56px] gap-3 items-center border-b px-3 py-3 last:border-b-0 sm:px-4 hover:bg-muted/30 transition-colors"
-                  >
-                    {/* Checkbox */}
-                    <label className="flex cursor-pointer items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleSelected(route.id)}
-                        disabled={isLocked}
-                        className="size-4 rounded border-input accent-primary disabled:cursor-not-allowed disabled:opacity-50"
-                        aria-label={`Seleccionar ${route.origin} a ${route.destination}`}
-                      />
-                    </label>
-
-                    {/* Ruta */}
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">
-                        {route.origin} → {route.destination}
-                      </p>
-                      {route.description && (
-                        <p className="text-muted-foreground truncate text-xs">
-                          {route.description}
-                        </p>
-                      )}
+          {/* Tabla agrupada por origen */}
+          {filteredRoutes.length === 0 ? (
+            <p className="text-muted-foreground rounded-lg border border-dashed p-6 text-center text-sm">
+              No hay rutas con esos filtros.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {groupedRoutes.map(({ origin, items }) => (
+                <div key={origin} className="overflow-x-auto rounded-lg border">
+                  <div className="min-w-[340px]">
+                    {/* Encabezado de grupo */}
+                    <div className="border-b bg-muted/60 px-3 py-2 sm:px-4">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Desde {origin}
+                      </span>
                     </div>
-
-                    {/* Mi target */}
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-muted-foreground text-sm shrink-0">$</span>
-                      <Input
-                        type="text"
-                        inputMode="decimal"
-                        value={targetByRouteId[route.id] ?? ""}
-                        onChange={(e) => handleTargetChange(route.id, e.target.value)}
-                        onBlur={() => handleTargetBlur(route.id)}
-                        disabled={!canEditTarget || !isSelected || isLocked}
-                        className="h-8 min-w-0 w-full text-sm"
-                        aria-label={`Mi target para ${route.origin} a ${route.destination}`}
-                      />
+                    {/* Header de columnas */}
+                    <div className="grid grid-cols-[auto_1fr_130px_56px] gap-3 border-b bg-muted/20 px-3 py-1.5 text-xs font-medium text-muted-foreground sm:px-4">
+                      <span className="flex items-center">Sel.</span>
+                      <span className="flex items-center">Destino</span>
+                      <span className="flex items-center">Mi target</span>
+                      <span className="flex items-center">Dif.</span>
                     </div>
+                    {/* Filas */}
+                    {items.map((route) => {
+                      const isSelected = selected.has(route.id);
+                      const isOriginallySelected = originalSelected.has(route.id);
+                      const isLocked = isOriginallySelected && !canEditRoutes;
+                      const currentTarget = parseMxn(targetByRouteId[route.id] ?? "") ?? null;
 
-                    {/* Diferencia */}
-                    <div className="flex items-center justify-center">
-                      <TargetDiff jtpTarget={route.jtpTarget} carrierTarget={currentTarget} />
-                    </div>
+                      return (
+                        <div
+                          key={route.id}
+                          className="grid grid-cols-[auto_1fr_130px_56px] gap-3 items-center border-b px-3 py-3 last:border-b-0 sm:px-4 hover:bg-muted/30 transition-colors"
+                        >
+                          <label className="flex cursor-pointer items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleSelected(route.id)}
+                              disabled={isLocked}
+                              className="size-4 rounded border-input accent-primary disabled:cursor-not-allowed disabled:opacity-50"
+                              aria-label={`Seleccionar ${route.origin} a ${route.destination}`}
+                            />
+                          </label>
+
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium">{route.destination}</p>
+                            {route.description && (
+                              <p className="text-muted-foreground truncate text-xs">{route.description}</p>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-muted-foreground text-sm shrink-0">$</span>
+                            <Input
+                              type="text"
+                              inputMode="decimal"
+                              value={targetByRouteId[route.id] ?? ""}
+                              onChange={(e) => handleTargetChange(route.id, e.target.value)}
+                              onBlur={() => handleTargetBlur(route.id)}
+                              disabled={!canEditTarget || !isSelected || isLocked}
+                              className="h-8 min-w-0 w-full text-sm"
+                              aria-label={`Mi target para ${route.origin} a ${route.destination}`}
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-center">
+                            <TargetDiff jtpTarget={route.jtpTarget} carrierTarget={currentTarget} />
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })
-            )}
+                </div>
+              ))}
             </div>
-          </div>
+          )}
 
           {/* Footer */}
           <div className="flex flex-col gap-2 pt-2 sm:items-end">
