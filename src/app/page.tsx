@@ -17,7 +17,7 @@ export default async function HomePage() {
                 alt="JTP Logistics"
                 width={240}
                 height={60}
-                className="h-36 w-auto sm:h-40 lg:h-44"
+                className="h-44 w-auto sm:h-48 lg:h-52"
                 priority
               />
             </Link>
