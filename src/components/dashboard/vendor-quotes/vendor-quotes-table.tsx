@@ -180,7 +180,7 @@ export function VendorQuotesTable() {
                 <p className="text-lg font-semibold">${formatMxn(stats.monto)}</p>
               </div>
               <div className="rounded-lg bg-primary/10 p-4">
-                <p className="text-muted-foreground text-xs font-medium">Comisión (3%)</p>
+                <p className="text-muted-foreground text-xs font-medium">Comisión</p>
                 <p className="text-lg font-semibold text-primary">${formatMxn(stats.comision)}</p>
               </div>
             </div>
