@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 import { adminHandler } from "@/lib/api-handler";
+import { createAuthUser } from "@/lib/create-auth-user";
 
 export function GET() {
   return adminHandler(async () => {
@@ -44,17 +43,16 @@ export function POST(request: Request) {
       return Response.json({ error: "name, email y password son requeridos" }, { status: 400 });
     }
 
-    const res = await auth.api.signUpEmail({
-      body: { name, email, password },
-      headers: await headers(),
-    });
-
-    if (!res?.user?.id) {
-      return Response.json({ error: "No se pudo crear el usuario" }, { status: 500 });
+    let userId: string;
+    try {
+      const created = await createAuthUser({ name, email, password });
+      userId = created.id;
+    } catch (e) {
+      return Response.json({ error: e instanceof Error ? e.message : "No se pudo crear el usuario" }, { status: 400 });
     }
 
     await prisma.user.update({
-      where: { id: res.user.id },
+      where: { id: userId },
       data: {
         role: "collaborator",
         ...(birthDate ? { birthDate: new Date(birthDate) } : {}),
@@ -63,7 +61,7 @@ export function POST(request: Request) {
 
     await prisma.employeeProfile.create({
       data: {
-        userId: res.user.id,
+        userId,
         position: position?.trim() || null,
         department: department?.trim() || null,
         phone: phone?.trim() || null,
@@ -71,6 +69,6 @@ export function POST(request: Request) {
       },
     });
 
-    return Response.json({ id: res.user.id }, { status: 201 });
+    return Response.json({ id: userId }, { status: 201 });
   });
 }
