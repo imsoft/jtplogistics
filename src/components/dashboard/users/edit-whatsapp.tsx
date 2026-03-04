@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 
 export function EditWhatsapp({
@@ -15,11 +16,9 @@ export function EditWhatsapp({
   const [phone, setPhone] = useState(initialPhone ?? "");
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   async function handleSave() {
     setIsLoading(true);
-    setError(null);
     try {
       const res = await fetch(`/api/admin/users/${userId}/whatsapp`, {
         method: "PATCH",
@@ -28,8 +27,9 @@ export function EditWhatsapp({
       });
       if (!res.ok) throw new Error("Error al guardar");
       setIsEditing(false);
+      toast.success("Número guardado correctamente.");
     } catch {
-      setError("No se pudo guardar el número.");
+      toast.error("No se pudo guardar el número.");
     } finally {
       setIsLoading(false);
     }
@@ -62,7 +62,6 @@ export function EditWhatsapp({
             size="sm"
             onClick={() => {
               setIsEditing((v) => !v);
-              setError(null);
             }}
           >
             {isEditing ? "Cancelar" : "Editar"}
@@ -86,7 +85,6 @@ export function EditWhatsapp({
         </div>
       )}
 
-      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
 }

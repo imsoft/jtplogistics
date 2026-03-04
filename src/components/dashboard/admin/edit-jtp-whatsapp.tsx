@@ -5,14 +5,13 @@ import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 
 export function EditJtpWhatsapp() {
   const [phone, setPhone] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     fetch("/api/admin/settings")
@@ -26,8 +25,6 @@ export function EditJtpWhatsapp() {
 
   async function handleSave() {
     setIsLoading(true);
-    setError(null);
-    setSuccess(false);
     try {
       const res = await fetch("/api/admin/settings", {
         method: "PATCH",
@@ -36,10 +33,9 @@ export function EditJtpWhatsapp() {
       });
       if (!res.ok) throw new Error();
       setIsEditing(false);
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
+      toast.success("Número guardado correctamente.");
     } catch {
-      setError("No se pudo guardar el número.");
+      toast.error("No se pudo guardar el número.");
     } finally {
       setIsLoading(false);
     }
@@ -79,7 +75,7 @@ export function EditJtpWhatsapp() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => { setIsEditing((v) => !v); setError(null); }}
+                  onClick={() => setIsEditing((v) => !v)}
                 >
                   {isEditing ? "Cancelar" : "Editar"}
                 </Button>
@@ -102,8 +98,6 @@ export function EditJtpWhatsapp() {
               </div>
             )}
 
-            {error && <p className="text-xs text-destructive">{error}</p>}
-            {success && <p className="text-xs text-green-600 dark:text-green-400">Número guardado correctamente.</p>}
           </>
         )}
       </CardContent>

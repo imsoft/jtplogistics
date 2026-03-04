@@ -13,7 +13,7 @@ export function GET(
         assignees: { include: { user: { select: { id: true, name: true } } } },
       },
     });
-    if (!account) return Response.json({ error: "Not found" }, { status: 404 });
+    if (!account) return Response.json({ error: "No encontrado" }, { status: 404 });
     return Response.json({
       id: account.id,
       type: account.type,
@@ -40,7 +40,7 @@ export function PATCH(
     };
 
     const account = await prisma.emailAccount.findUnique({ where: { id } });
-    if (!account) return Response.json({ error: "Not found" }, { status: 404 });
+    if (!account) return Response.json({ error: "No encontrado" }, { status: 404 });
 
     await prisma.emailAccount.update({
       where: { id },
@@ -71,7 +71,7 @@ export function DELETE(
   return adminHandler(async () => {
     const { id } = await params;
     const account = await prisma.emailAccount.findUnique({ where: { id } });
-    if (!account) return Response.json({ error: "Not found" }, { status: 404 });
+    if (!account) return Response.json({ error: "No encontrado" }, { status: 404 });
     await prisma.emailAccount.delete({ where: { id } });
     return Response.json({ ok: true });
   });

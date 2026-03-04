@@ -12,7 +12,7 @@ export function GET(
       include: { employeeProfile: true },
     });
     if (!u || u.role !== "collaborator") {
-      return Response.json({ error: "Not found" }, { status: 404 });
+      return Response.json({ error: "No encontrado" }, { status: 404 });
     }
     return Response.json({
       id: u.id,
@@ -47,7 +47,7 @@ export function PATCH(
 
     const u = await prisma.user.findUnique({ where: { id } });
     if (!u || u.role !== "collaborator") {
-      return Response.json({ error: "Not found" }, { status: 404 });
+      return Response.json({ error: "No encontrado" }, { status: 404 });
     }
 
     const parsedBirthDate = birthDate !== undefined
@@ -93,7 +93,7 @@ export function DELETE(
     const { id } = await params;
     const u = await prisma.user.findUnique({ where: { id } });
     if (!u || u.role !== "collaborator") {
-      return Response.json({ error: "Not found" }, { status: 404 });
+      return Response.json({ error: "No encontrado" }, { status: 404 });
     }
     await prisma.user.delete({ where: { id } });
     return Response.json({ ok: true });

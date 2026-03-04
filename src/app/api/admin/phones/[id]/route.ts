@@ -14,7 +14,7 @@ export function GET(
         emailAccount: { select: { id: true, email: true } },
       },
     });
-    if (!phone) return Response.json({ error: "Not found" }, { status: 404 });
+    if (!phone) return Response.json({ error: "No encontrado" }, { status: 404 });
     return Response.json({
       id: phone.id,
       name: phone.name,
@@ -47,7 +47,7 @@ export function PATCH(
     };
 
     const phone = await prisma.phone.findUnique({ where: { id } });
-    if (!phone) return Response.json({ error: "Not found" }, { status: 404 });
+    if (!phone) return Response.json({ error: "No encontrado" }, { status: 404 });
 
     await prisma.phone.update({
       where: { id },
@@ -72,7 +72,7 @@ export function DELETE(
   return adminHandler(async () => {
     const { id } = await params;
     const phone = await prisma.phone.findUnique({ where: { id } });
-    if (!phone) return Response.json({ error: "Not found" }, { status: 404 });
+    if (!phone) return Response.json({ error: "No encontrado" }, { status: 404 });
     await prisma.phone.delete({ where: { id } });
     return Response.json({ ok: true });
   });

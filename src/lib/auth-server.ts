@@ -17,7 +17,7 @@ export async function getSession() {
 export async function requireSession() {
   const session = await getSession();
   if (!session) {
-    throw new Response(JSON.stringify({ error: "Unauthorized" }), {
+    throw new Response(JSON.stringify({ error: "No autorizado" }), {
       status: 401,
       headers: { "Content-Type": "application/json" },
     });
@@ -28,7 +28,7 @@ export async function requireSession() {
 export async function requireAdmin() {
   const session = await requireSession();
   if (session.user.role !== "admin") {
-    throw new Response(JSON.stringify({ error: "Forbidden" }), {
+    throw new Response(JSON.stringify({ error: "Prohibido" }), {
       status: 403,
       headers: { "Content-Type": "application/json" },
     });
@@ -39,7 +39,7 @@ export async function requireAdmin() {
 export async function requireCarrier() {
   const session = await requireSession();
   if (session.user.role !== "carrier") {
-    throw new Response(JSON.stringify({ error: "Forbidden" }), {
+    throw new Response(JSON.stringify({ error: "Prohibido" }), {
       status: 403,
       headers: { "Content-Type": "application/json" },
     });
@@ -50,7 +50,7 @@ export async function requireCarrier() {
 export async function requireCollaboratorOrAdmin() {
   const session = await requireSession();
   if (session.user.role !== "collaborator" && session.user.role !== "admin") {
-    throw new Response(JSON.stringify({ error: "Forbidden" }), {
+    throw new Response(JSON.stringify({ error: "Prohibido" }), {
       status: 403,
       headers: { "Content-Type": "application/json" },
     });

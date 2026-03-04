@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { CityCombobox } from "@/components/dashboard/routes/city-combobox";
 import { parseCityValue } from "@/lib/data/mexico-cities";
 import { formatMxnLive, formatMxn, parseMxn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface CarrierRouteRow {
   id: string;
@@ -58,8 +59,6 @@ export default function CarrierRoutesPage() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [jtpWhatsapp, setJtpWhatsapp] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const [filterOrigin, setFilterOrigin] = useState<string | null>(null);
   const [filterDestination, setFilterDestination] = useState<string | null>(null);
@@ -151,8 +150,6 @@ export default function CarrierRoutesPage() {
   }
 
   async function handleSubmit() {
-    setSaveError(null);
-    setSaveSuccess(false);
     setIsSaving(true);
     try {
       const body = Array.from(selected).map((routeId) => {
@@ -172,12 +169,11 @@ export default function CarrierRoutesPage() {
       });
 
       if (!res.ok) throw new Error("Error al guardar");
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
+      toast.success("Selecciones guardadas correctamente.");
       // Recarga para reflejar el nuevo estado (nuevas rutas ya quedan bloqueadas)
       await loadRoutes();
     } catch {
-      setSaveError("No se pudieron guardar las selecciones. Intenta de nuevo.");
+      toast.error("No se pudieron guardar las selecciones. Intenta de nuevo.");
     } finally {
       setIsSaving(false);
     }
@@ -357,12 +353,6 @@ export default function CarrierRoutesPage() {
 
           {/* Footer */}
           <div className="flex flex-col gap-2 pt-2 sm:items-end">
-            {saveError && <p className="text-destructive text-sm">{saveError}</p>}
-            {saveSuccess && (
-              <p className="text-green-600 dark:text-green-400 text-sm">
-                Selecciones guardadas correctamente.
-              </p>
-            )}
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:gap-3">
               <span className="text-muted-foreground text-xs text-center sm:text-left">
                 {selected.size} ruta{selected.size !== 1 ? "s" : ""} seleccionada

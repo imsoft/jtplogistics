@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RouteForm } from "./route-form";
@@ -11,10 +11,8 @@ import type { Route, RouteFormData } from "@/types/route.types";
 
 export function EditRouteForm({ route }: { route: Route }) {
   const router = useRouter();
-  const [submitError, setSubmitError] = useState<string | null>(null);
 
   async function handleSubmit(data: RouteFormData) {
-    setSubmitError(null);
     try {
       const res = await fetch(`/api/routes/${route.id}`, {
         method: "PATCH",
@@ -34,9 +32,10 @@ export function EditRouteForm({ route }: { route: Route }) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error ?? "No se pudo guardar.");
       }
+      toast.success("Ruta guardada correctamente.");
       router.push("/admin/dashboard/routes");
     } catch (e) {
-      setSubmitError(e instanceof Error ? e.message : "No se pudo guardar. Verifica tener permisos de administrador.");
+      toast.error(e instanceof Error ? e.message : "No se pudo guardar. Verifica tener permisos de administrador.");
     }
   }
 
@@ -63,9 +62,6 @@ export function EditRouteForm({ route }: { route: Route }) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {submitError && (
-            <p className="mb-4 text-sm text-destructive">{submitError}</p>
-          )}
           <RouteForm
             initialValues={{
               origin: route.origin,

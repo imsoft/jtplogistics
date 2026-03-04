@@ -12,7 +12,7 @@ export function adminHandler(fn: () => Promise<Response>): Promise<Response> {
     } catch (e) {
       if (e instanceof Response) throw e;
       console.error(e);
-      return Response.json({ error: "Internal server error" }, { status: 500 });
+      return Response.json({ error: "Error interno del servidor" }, { status: 500 });
     }
   })();
 }
@@ -31,7 +31,7 @@ export function ideasHandler(
     } catch (e) {
       if (e instanceof Response) throw e;
       console.error(e);
-      return Response.json({ error: "Internal server error" }, { status: 500 });
+      return Response.json({ error: "Error interno del servidor" }, { status: 500 });
     }
   })();
 }

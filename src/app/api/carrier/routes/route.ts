@@ -46,7 +46,7 @@ export async function GET() {
   } catch (e) {
     if (e instanceof Response) throw e;
     console.error(e);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return Response.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }
 
@@ -59,7 +59,7 @@ export async function PUT(request: NextRequest) {
     const body: { routeId: string; carrierTarget: number | null; carrierWeeklyVolume: number | null }[] = await request.json();
 
     if (!Array.isArray(body)) {
-      return Response.json({ error: "Body must be an array" }, { status: 400 });
+      return Response.json({ error: "El cuerpo debe ser un arreglo" }, { status: 400 });
     }
 
     const userRecord = await prisma.user.findUnique({
@@ -127,6 +127,6 @@ export async function PUT(request: NextRequest) {
   } catch (e) {
     if (e instanceof Response) throw e;
     console.error(e);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return Response.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }

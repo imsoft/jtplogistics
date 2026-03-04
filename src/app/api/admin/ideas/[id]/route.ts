@@ -11,7 +11,7 @@ export function GET(
       where: { id },
       include: { author: { select: { name: true } } },
     });
-    if (!idea) return Response.json({ error: "Not found" }, { status: 404 });
+    if (!idea) return Response.json({ error: "No encontrado" }, { status: 404 });
     return Response.json({
       id: idea.id,
       title: idea.title,
@@ -39,7 +39,7 @@ export function PATCH(
     };
 
     const idea = await prisma.idea.findUnique({ where: { id } });
-    if (!idea) return Response.json({ error: "Not found" }, { status: 404 });
+    if (!idea) return Response.json({ error: "No encontrado" }, { status: 404 });
 
     await prisma.idea.update({
       where: { id },
@@ -61,7 +61,7 @@ export function DELETE(
   return adminHandler(async () => {
     const { id } = await params;
     const idea = await prisma.idea.findUnique({ where: { id } });
-    if (!idea) return Response.json({ error: "Not found" }, { status: 404 });
+    if (!idea) return Response.json({ error: "No encontrado" }, { status: 404 });
     await prisma.idea.delete({ where: { id } });
     return Response.json({ ok: true });
   });

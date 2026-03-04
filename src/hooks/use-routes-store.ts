@@ -7,7 +7,7 @@ async function fetchRoutes(): Promise<Route[]> {
   const res = await fetch("/api/routes");
   if (!res.ok) {
     if (res.status === 401) return [];
-    throw new Error("Failed to fetch routes");
+    throw new Error("Error al cargar rutas");
   }
   return res.json();
 }
@@ -23,7 +23,7 @@ export function useRoutesStore() {
       const data = await fetchRoutes();
       setRoutes(data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Error loading routes");
+      setError(e instanceof Error ? e.message : "Error al cargar las rutas");
       setRoutes([]);
     } finally {
       setIsLoaded(true);
@@ -54,13 +54,13 @@ export function useRoutesStore() {
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
-          throw new Error(err.error ?? "Failed to create route");
+          throw new Error(err.error ?? "Error al crear la ruta");
         }
         const route = await res.json();
         setRoutes((prev) => [route, ...prev]);
         return route;
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to create route");
+        setError(e instanceof Error ? e.message : "Error al crear la ruta");
         return null;
       }
     },
@@ -87,13 +87,13 @@ export function useRoutesStore() {
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
-          throw new Error(err.error ?? "Failed to update route");
+          throw new Error(err.error ?? "Error al actualizar la ruta");
         }
         const updated = await res.json();
         setRoutes((prev) => prev.map((r) => (r.id === id ? updated : r)));
         return true;
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to update route");
+        setError(e instanceof Error ? e.message : "Error al actualizar la ruta");
         return false;
       }
     },
@@ -106,12 +106,12 @@ export function useRoutesStore() {
       const res = await fetch(`/api/routes/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error ?? "Failed to delete route");
+        throw new Error(err.error ?? "Error al eliminar la ruta");
       }
       setRoutes((prev) => prev.filter((r) => r.id !== id));
       return true;
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to delete route");
+      setError(e instanceof Error ? e.message : "Error al eliminar la ruta");
       return false;
     }
   }, []);

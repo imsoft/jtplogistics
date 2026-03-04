@@ -13,7 +13,7 @@ export async function POST(
 
     const u = await prisma.user.findUnique({ where: { id } });
     if (!u || u.role !== "collaborator") {
-      return Response.json({ error: "Not found" }, { status: 404 });
+      return Response.json({ error: "No encontrado" }, { status: 404 });
     }
 
     const formData = await request.formData();

@@ -14,7 +14,7 @@ export function GET(
         emailAccount: { select: { id: true, email: true } },
       },
     });
-    if (!laptop) return Response.json({ error: "Not found" }, { status: 404 });
+    if (!laptop) return Response.json({ error: "No encontrado" }, { status: 404 });
     return Response.json({
       id: laptop.id,
       name: laptop.name,
@@ -45,7 +45,7 @@ export function PATCH(
     };
 
     const laptop = await prisma.laptop.findUnique({ where: { id } });
-    if (!laptop) return Response.json({ error: "Not found" }, { status: 404 });
+    if (!laptop) return Response.json({ error: "No encontrado" }, { status: 404 });
 
     await prisma.laptop.update({
       where: { id },
@@ -69,7 +69,7 @@ export function DELETE(
   return adminHandler(async () => {
     const { id } = await params;
     const laptop = await prisma.laptop.findUnique({ where: { id } });
-    if (!laptop) return Response.json({ error: "Not found" }, { status: 404 });
+    if (!laptop) return Response.json({ error: "No encontrado" }, { status: 404 });
     await prisma.laptop.delete({ where: { id } });
     return Response.json({ ok: true });
   });

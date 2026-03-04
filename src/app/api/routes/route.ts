@@ -15,7 +15,7 @@ export async function GET() {
   } catch (e) {
     if (e instanceof Response) throw e;
     console.error(e);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return Response.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }
 
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     const status: RouteStatus = VALID_STATUSES.includes(body.status) ? body.status : "pending";
 
     if (!origin || !destination) {
-      return Response.json({ error: "origin and destination are required" }, { status: 400 });
+      return Response.json({ error: "El origen y destino son requeridos" }, { status: 400 });
     }
 
     const route = await (prisma.route.create as unknown as (a: { data: Record<string, unknown>; include: Record<string, unknown> }) => Promise<PrismaRoute>)({
@@ -55,6 +55,6 @@ export async function POST(request: NextRequest) {
   } catch (e) {
     if (e instanceof Response) throw e;
     console.error(e);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return Response.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }

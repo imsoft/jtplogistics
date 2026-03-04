@@ -15,12 +15,12 @@ export async function GET(
       where: { id },
       include: { createdBy: { select: { id: true, name: true } } },
     });
-    if (!route) return Response.json({ error: "Not found" }, { status: 404 });
+    if (!route) return Response.json({ error: "No encontrado" }, { status: 404 });
     return Response.json(routeToJson(route as unknown as PrismaRoute));
   } catch (e) {
     if (e instanceof Response) throw e;
     console.error(e);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return Response.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }
 
@@ -61,10 +61,10 @@ export async function PATCH(
   } catch (e) {
     if (e instanceof Response) throw e;
     if (e && typeof e === "object" && "code" in e && e.code === "P2025") {
-      return Response.json({ error: "Not found" }, { status: 404 });
+      return Response.json({ error: "No encontrado" }, { status: 404 });
     }
     console.error(e);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return Response.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }
 
@@ -80,9 +80,9 @@ export async function DELETE(
   } catch (e) {
     if (e instanceof Response) throw e;
     if (e && typeof e === "object" && "code" in e && e.code === "P2025") {
-      return Response.json({ error: "Not found" }, { status: 404 });
+      return Response.json({ error: "No encontrado" }, { status: 404 });
     }
     console.error(e);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return Response.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }
