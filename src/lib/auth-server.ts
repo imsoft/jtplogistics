@@ -58,6 +58,17 @@ export async function requireCollaboratorOrAdmin() {
   return session;
 }
 
+export async function requireVendedor() {
+  const session = await requireSession();
+  if (session.user.role !== "vendedor") {
+    throw new Response(JSON.stringify({ error: "Prohibido" }), {
+      status: 403,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  return session;
+}
+
 /** Redirects to the user's dashboard if they already have an active session. */
 export async function redirectIfAuthenticated() {
   const session = await getSession();
@@ -66,5 +77,6 @@ export async function redirectIfAuthenticated() {
   if (role === "admin") redirect("/admin/dashboard");
   else if (role === "carrier") redirect("/carrier/dashboard/routes");
   else if (role === "collaborator") redirect("/collaborator/dashboard");
+  else if (role === "vendedor") redirect("/vendor/dashboard/quotes");
   else redirect("/login");
 }

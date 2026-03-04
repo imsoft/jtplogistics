@@ -61,3 +61,7 @@ export function isCarrier(user: { role?: string | null } | null): boolean {
 export function isCollaborator(user: { role?: string | null } | null): boolean {
   return hasRole(user, "collaborator");
 }
+
+export function isVendedor(user: { role?: string | null } | null): boolean {
+  return hasRole(user, "vendedor");
+}

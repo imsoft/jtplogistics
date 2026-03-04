@@ -21,6 +21,22 @@ export interface EmployeeFormData {
   phone: string;
 }
 
+export interface Vendor {
+  id: string;
+  name: string;
+  email: string;
+  image: string | null;
+  birthDate: string | null;
+  createdAt: string;
+}
+
+export interface VendorFormData {
+  name: string;
+  email: string;
+  password: string;
+  birthDate: string;
+}
+
 export interface Laptop {
   id: string;
   name: string;

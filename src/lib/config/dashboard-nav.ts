@@ -7,6 +7,7 @@ import { Laptop } from "lucide-react";
 import { Smartphone } from "lucide-react";
 import { Mail } from "lucide-react";
 import { Lightbulb } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 
 export interface DashboardNavItem {
   title: string;
@@ -38,6 +39,7 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
     label: "Recursos",
     items: [
       { title: "Colaboradores", href: "/admin/dashboard/employees", icon: UserRound },
+      { title: "Vendedores", href: "/admin/dashboard/vendors", icon: ShoppingBag },
       { title: "Laptops", href: "/admin/dashboard/laptops", icon: Laptop },
       { title: "Celulares", href: "/admin/dashboard/phones", icon: Smartphone },
       { title: "Correos", href: "/admin/dashboard/emails", icon: Mail },
