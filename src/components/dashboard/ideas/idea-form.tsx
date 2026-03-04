@@ -26,11 +26,11 @@ export function IdeaForm({
 }: IdeaFormProps) {
   const [title, setTitle] = useState(initialValues.title ?? "");
   const [description, setDescription] = useState(initialValues.description ?? "");
-  const [category, setCategory] = useState(initialValues.category ?? "");
+  const [category, setCategory] = useState(initialValues.category || "none");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSubmit({ title, description, category });
+    onSubmit({ title, description, category: category === "none" ? "" : category });
   }
 
   return (
@@ -54,7 +54,7 @@ export function IdeaForm({
               <SelectValue placeholder="Sin categoría" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Sin categoría</SelectItem>
+              <SelectItem value="none">Sin categoría</SelectItem>
               {IDEA_CATEGORIES.map((cat) => (
                 <SelectItem key={cat} value={cat}>
                   {cat}
