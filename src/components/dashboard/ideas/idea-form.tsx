@@ -36,7 +36,7 @@ export function IdeaForm({
   return (
     <form onSubmit={handleSubmit} className="w-full space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-1.5 sm:col-span-2">
+        <div className="space-y-1.5">
           <Label htmlFor="title">Título *</Label>
           <Input
             id="title"
