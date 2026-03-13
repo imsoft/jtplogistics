@@ -43,7 +43,8 @@ export async function POST(
     return Response.json({ url: upload.secure_url });
   } catch (e) {
     if (e instanceof Response) throw e;
-    console.error(e);
-    return Response.json({ error: "Error al subir la imagen." }, { status: 500 });
+    const message = e instanceof Error ? e.message : String(e);
+    console.error("[employees/avatar]", message);
+    return Response.json({ error: `Error al subir la imagen: ${message}` }, { status: 500 });
   }
 }

@@ -15,6 +15,8 @@ import { getTasksColumns } from "./tasks-columns";
 import { toast } from "sonner";
 import type { Task, TaskStatus } from "@/types/task.types";
 
+const ALL = "all";
+
 const STATUS_BADGE: Record<TaskStatus, string> = {
   pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
   in_progress: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
@@ -27,8 +29,13 @@ export function DeveloperTasksTable() {
     "Error al cargar tareas"
   );
   const [localTasks, setLocalTasks] = useState<Task[] | null>(null);
+  const [filterStatus, setFilterStatus] = useState<TaskStatus | typeof ALL>(ALL);
 
-  const displayTasks = localTasks ?? tasks;
+  const baseTasks = localTasks ?? tasks;
+  const displayTasks = useMemo(
+    () => filterStatus === ALL ? baseTasks : baseTasks.filter((t) => t.status === filterStatus),
+    [baseTasks, filterStatus]
+  );
 
   const handleStatusChange = useCallback(async (taskId: string, newStatus: TaskStatus) => {
     try {
@@ -65,7 +72,6 @@ export function DeveloperTasksTable() {
                 <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_BADGE[task.status]}`}>
                   {TASK_STATUS_LABELS[task.status]}
                 </span>
-                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {TASK_STATUS_OPTIONS.map((opt) => (
@@ -91,8 +97,23 @@ export function DeveloperTasksTable() {
       columns={columns}
       data={displayTasks}
       filterColumn="search"
-      filterPlaceholder="Buscar por título…"
+      filterPlaceholder="Buscar por descripción…"
       getRowId={(row) => row.id}
+      toolbar={
+        <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as TaskStatus | typeof ALL)}>
+          <SelectTrigger className="w-full sm:w-44">
+            <SelectValue placeholder="Todos los estados" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>Todos los estados</SelectItem>
+            {TASK_STATUS_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {TASK_STATUS_LABELS[opt.value]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      }
     />
   );
 }

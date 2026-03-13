@@ -35,7 +35,13 @@ export async function POST(request: NextRequest) {
     return Response.json({ url: upload.secure_url });
   } catch (e) {
     if (e instanceof Response) throw e;
-    console.error(e);
-    return Response.json({ error: "Error al subir la imagen." }, { status: 500 });
+    const message = e instanceof Error ? e.message : String(e);
+    console.error("[avatar/upload]", message);
+
+    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+      return Response.json({ error: "Cloudinary no está configurado. Verifica las variables de entorno." }, { status: 500 });
+    }
+
+    return Response.json({ error: `Error al subir la imagen: ${message}` }, { status: 500 });
   }
 }
