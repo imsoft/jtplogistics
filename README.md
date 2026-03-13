@@ -1,36 +1,165 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# JTP Logistics
 
-## Getting Started
+Aplicación web para la gestión de rutas, flotas, cotizaciones y equipo de una operación logística. Incluye dashboards por rol (administrador, transportista, colaborador, vendedor), autenticación con Better Auth y base de datos PostgreSQL.
 
-First, run the development server:
+**Dominio:** [jtplogistics.com](https://jtplogistics.com)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## Stack
+
+- **Framework:** [Next.js 16](https://nextjs.org) (App Router, React 19)
+- **Base de datos:** [PostgreSQL](https://www.postgresql.org) con [Prisma](https://www.prisma.io)
+- **Autenticación:** [Better Auth](https://www.better-auth.com) (email/contraseña, sesiones, restablecimiento de contraseña)
+- **UI:** [Tailwind CSS](https://tailwindcss.com), [shadcn/ui](https://ui.shadcn.com), [Radix UI](https://www.radix-ui.com), [Lucide](https://lucide.dev)
+- **Tablas de datos:** [TanStack Table](https://tanstack.com/table) (DataTable con filtros y ordenación)
+- **Otros:** [Cloudinary](https://cloudinary.com) (imágenes), [Resend](https://resend.com) (emails), [Vercel Analytics / Speed Insights](https://vercel.com/docs/analytics)
+
+---
+
+## Funcionalidades por rol
+
+### Administrador
+
+- **Operaciones:** Rutas (CRUD, origen/destino, tarifa objetivo, estado), Cotizador (cotizaciones de transportistas y vendedores), Proveedores (transportistas con perfil y rutas asignadas).
+- **Equipo:** Colaboradores (empleados con perfil y permisos), Vendedores (gestión y cotizaciones).
+- **Activos:** Laptops, Celulares, Cuentas de correo (asignación a usuarios y dispositivos).
+- **Otros:** Ideas (propuestas del equipo), Usuarios (roles, metas, WhatsApp), Perfil, Configuración.
+
+### Transportista (carrier)
+
+- Dashboard, perfil (datos comerciales, RFC, contactos), rutas asignadas y metas por ruta.
+
+### Colaborador
+
+- Dashboard, perfil, ideas (listado y alta de ideas).
+
+### Vendedor
+
+- Dashboard, perfil, cotizaciones (carrier quotes asignadas).
+
+---
+
+## Estructura del proyecto
+
+```
+jtplogistics/
+├── prisma/
+│   ├── schema.prisma    # Modelos (users, routes, profiles, laptops, etc.)
+│   ├── seed.ts          # Datos de prueba (usuarios, rutas, activos)
+│   └── migrations/
+├── src/
+│   ├── app/
+│   │   ├── (auth)/       # login, register, forgot-password, reset-password
+│   │   ├── admin/dashboard/   # Rutas del admin
+│   │   ├── carrier/dashboard/
+│   │   ├── collaborator/dashboard/
+│   │   ├── vendor/dashboard/
+│   │   └── api/          # API routes (auth, admin, carrier, vendor, etc.)
+│   ├── components/       # UI (shadcn + componentes de dashboard)
+│   ├── hooks/
+│   ├── lib/              # auth, db, validators, utils, config, data
+│   └── types/
+├── public/
+├── docs/
+│   └── conventions.md   # Convenciones de BD y datos
+├── instrumentation.ts   # Normalización de BETTER_AUTH_URL al arranque
+└── next.config.ts
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+La interfaz y textos visibles están en **español**; el código (rutas, variables, comentarios) en **inglés**.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Requisitos
 
-## Learn More
+- [Node.js](https://nodejs.org) 20+
+- [pnpm](https://pnpm.io)
+- PostgreSQL (local o [Neon](https://neon.tech), etc.)
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Variables de entorno
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Crear `.env` en la raíz (no commitear). Ejemplo:
 
-## Deploy on Vercel
+```env
+# Base de datos
+DATABASE_URL="postgresql://..."
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Better Auth (producción: usar https://jtplogistics.com o jtplogistics.com)
+BETTER_AUTH_SECRET="..."   # mínimo 32 caracteres (openssl rand -base64 32)
+BETTER_AUTH_URL="http://localhost:3000"
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Opcional: orígenes adicionales (CSRF)
+# BETTER_AUTH_TRUSTED_ORIGINS=https://www.jtplogistics.com
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME="..."
+CLOUDINARY_API_KEY="..."
+CLOUDINARY_API_SECRET="..."
+
+# Resend (emails)
+RESEND_API_KEY="..."
+EMAIL_FROM="JTP Logistics <noreply@jtplogistics.com>"
+```
+
+En Vercel, `VERCEL_URL` se rellena automáticamente y se usa para `trustedOrigins` si hace falta.
+
+---
+
+## Cómo arrancar
+
+```bash
+# Instalar dependencias
+pnpm install
+
+# Generar cliente Prisma
+pnpm db:generate
+
+# Aplicar migraciones
+pnpm db:migrate
+
+# (Opcional) Poblar datos de prueba
+pnpm db:seed
+
+# Desarrollo
+pnpm dev
+```
+
+Abrir [http://localhost:3000](http://localhost:3000). Para probar con datos de prueba, ver el mensaje al final de `pnpm db:seed` (correos y contraseñas por rol).
+
+---
+
+## Scripts
+
+| Comando | Descripción |
+|--------|-------------|
+| `pnpm dev` | Servidor de desarrollo |
+| `pnpm build` | Build de producción |
+| `pnpm start` | Servidor de producción |
+| `pnpm db:generate` | Generar Prisma Client |
+| `pnpm db:migrate` | Migraciones en desarrollo |
+| `pnpm db:migrate:deploy` | Migraciones en producción |
+| `pnpm db:seed` | Ejecutar seed |
+| `pnpm db:studio` | Abrir Prisma Studio |
+
+---
+
+## Despliegue (Vercel)
+
+1. Conectar el repositorio a [Vercel](https://vercel.com).
+2. Configurar las variables de entorno (incluyendo `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` con la URL final, p. ej. `https://jtplogistics.com`).
+3. Desplegar. El build usa `pnpm build`; si `BETTER_AUTH_URL` no tiene protocolo, se normaliza a `https://` en tiempo de arranque.
+
+---
+
+## Convenciones
+
+Reglas de base de datos, nombres y validaciones: [docs/conventions.md](docs/conventions.md).
+
+---
+
+## Licencia
+
+Proyecto privado.
