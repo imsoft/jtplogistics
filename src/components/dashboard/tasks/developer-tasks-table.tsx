@@ -77,7 +77,7 @@ export function DeveloperTasksTable() {
                 </span>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" className="w-44">
                 {TASK_STATUS_OPTIONS.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
