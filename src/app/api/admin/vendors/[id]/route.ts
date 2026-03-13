@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
+import { hashPassword } from "better-auth/crypto";
 
 export function GET(
   _req: Request,
@@ -29,9 +30,10 @@ export function PATCH(
   return adminHandler(async () => {
     const { id } = await params;
     const body = await request.json();
-    const { name, birthDate } = body as {
+    const { name, birthDate, password } = body as {
       name?: string;
       birthDate?: string | null;
+      password?: string;
     };
 
     const u = await prisma.user.findUnique({ where: { id } });
@@ -50,6 +52,14 @@ export function PATCH(
         ...(parsedBirthDate !== undefined && { birthDate: parsedBirthDate }),
       },
     });
+
+    if (password?.trim()) {
+      const hashed = await hashPassword(password.trim());
+      await prisma.account.updateMany({
+        where: { userId: id, providerId: "credential" },
+        data: { password: hashed },
+      });
+    }
 
     return Response.json({ ok: true });
   });
