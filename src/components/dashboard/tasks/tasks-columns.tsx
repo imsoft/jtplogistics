@@ -59,15 +59,6 @@ export function getTasksColumns({ onDelete, adminView = false }: TasksColumnsOpt
         </span>
       ),
     },
-    ...(adminView ? ([
-      {
-        accessorKey: "assigneeName",
-        header: "Desarrollador",
-        cell: ({ row }: { row: { original: Task } }) => (
-          <span className="text-sm">{row.original.assigneeName}</span>
-        ),
-      },
-    ] as ColumnDef<Task>[]) : []),
     {
       accessorKey: "createdAt",
       header: ({ column }) => <SortableColumnHeader column={column} title="Creado" />,

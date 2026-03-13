@@ -10,27 +10,19 @@ import { TaskForm } from "@/components/dashboard/tasks/task-form";
 import { toast } from "sonner";
 import type { Task, TaskFormData } from "@/types/task.types";
 
-interface Developer {
-  id: string;
-  name: string;
-}
-
 export default function EditTaskPage() {
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
   const [task, setTask] = useState<Task | null>(null);
-  const [developers, setDevelopers] = useState<Developer[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    Promise.all([
-      fetch(`/api/admin/tasks`).then((r) => r.ok ? r.json() : []),
-      fetch("/api/admin/users?role=developer").then((r) => r.ok ? r.json() : []),
-    ]).then(([tasks, devs]) => {
-      const found = Array.isArray(tasks) ? tasks.find((t: Task) => t.id === id) : null;
-      setTask(found ?? null);
-      if (Array.isArray(devs)) setDevelopers(devs.map((u: { id: string; name: string }) => ({ id: u.id, name: u.name })));
-    });
+    fetch("/api/admin/tasks")
+      .then((r) => r.ok ? r.json() : [])
+      .then((tasks) => {
+        const found = Array.isArray(tasks) ? tasks.find((t: Task) => t.id === id) : null;
+        setTask(found ?? null);
+      });
   }, [id]);
 
   async function handleSubmit(data: TaskFormData) {
@@ -75,7 +67,7 @@ export default function EditTaskPage() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-base sm:text-lg">Datos de la tarea</CardTitle>
           <CardDescription className="text-xs sm:text-sm">
-            Modifica el título, descripción, estado o el desarrollador asignado.
+            Modifica la descripción o el estado de la tarea.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -84,9 +76,7 @@ export default function EditTaskPage() {
               title: task.title,
               description: task.description ?? "",
               status: task.status,
-              assigneeId: task.assigneeId,
             }}
-            developers={developers}
             submitLabel="Guardar cambios"
             cancelHref="/admin/dashboard/tasks"
             onSubmit={handleSubmit}

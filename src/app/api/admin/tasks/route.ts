@@ -56,13 +56,19 @@ export async function POST(request: NextRequest) {
     const description = body.description ? String(body.description).trim() : null;
     const title = body.title ? String(body.title).trim() : (description?.slice(0, 80) ?? "—");
     const status: TaskStatus = VALID_STATUSES.includes(body.status) ? body.status : "pending";
-    const assigneeId = String(body.assigneeId ?? "").trim();
 
-    if (!assigneeId) return Response.json({ error: "El desarrollador asignado es requerido" }, { status: 400 });
+    const assigneeIdFromBody = body.assigneeId ? String(body.assigneeId).trim() : null;
+    let assigneeId = assigneeIdFromBody;
 
-    const assignee = await prisma.user.findUnique({ where: { id: assigneeId } });
-    if (!assignee || assignee.role !== "developer") {
-      return Response.json({ error: "El usuario asignado no es un desarrollador" }, { status: 400 });
+    if (!assigneeId) {
+      const developer = await prisma.user.findFirst({ where: { role: "developer" }, orderBy: { createdAt: "asc" } });
+      if (!developer) return Response.json({ error: "No hay ningún desarrollador registrado" }, { status: 400 });
+      assigneeId = developer.id;
+    } else {
+      const assignee = await prisma.user.findUnique({ where: { id: assigneeId } });
+      if (!assignee || assignee.role !== "developer") {
+        return Response.json({ error: "El usuario asignado no es un desarrollador" }, { status: 400 });
+      }
     }
 
     const task = await prisma.task.create({

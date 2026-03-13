@@ -15,14 +15,8 @@ import {
 import { TASK_STATUS_OPTIONS } from "@/lib/constants/task-status";
 import type { TaskFormData, TaskStatus } from "@/types/task.types";
 
-interface Developer {
-  id: string;
-  name: string;
-}
-
 interface TaskFormProps {
   initialValues?: Partial<TaskFormData>;
-  developers: Developer[];
   submitLabel: string;
   cancelHref: string;
   onSubmit: (data: TaskFormData) => void;
@@ -31,14 +25,12 @@ interface TaskFormProps {
 
 export function TaskForm({
   initialValues = {},
-  developers,
   submitLabel,
   cancelHref,
   onSubmit,
   isSubmitting = false,
 }: TaskFormProps) {
   const [status, setStatus] = useState<TaskStatus>(initialValues.status ?? "pending");
-  const [assigneeId, setAssigneeId] = useState<string>(initialValues.assigneeId ?? "");
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -49,7 +41,6 @@ export function TaskForm({
       title: description.slice(0, 80) || "—",
       description,
       status,
-      assigneeId,
     });
   }
 
@@ -69,38 +60,20 @@ export function TaskForm({
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label>Desarrollador asignado</Label>
-            <Select value={assigneeId} onValueChange={setAssigneeId} required disabled={isSubmitting}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Seleccionar desarrollador…" />
-              </SelectTrigger>
-              <SelectContent>
-                {developers.map((d) => (
-                  <SelectItem key={d.id} value={d.id}>
-                    {d.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Estado</Label>
-            <Select value={status} onValueChange={(v) => setStatus(v as TaskStatus)} disabled={isSubmitting}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {TASK_STATUS_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="space-y-2 max-w-xs">
+          <Label>Estado</Label>
+          <Select value={status} onValueChange={(v) => setStatus(v as TaskStatus)} disabled={isSubmitting}>
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {TASK_STATUS_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -108,7 +81,7 @@ export function TaskForm({
         <Button type="button" variant="outline" asChild className="w-full sm:w-auto" disabled={isSubmitting}>
           <Link href={cancelHref}>Cancelar</Link>
         </Button>
-        <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting || !assigneeId}>
+        <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting}>
           {isSubmitting ? "Guardando…" : submitLabel}
         </Button>
       </div>

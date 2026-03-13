@@ -17,5 +17,4 @@ export interface TaskFormData {
   title: string;
   description: string;
   status: TaskStatus;
-  assigneeId: string;
 }
