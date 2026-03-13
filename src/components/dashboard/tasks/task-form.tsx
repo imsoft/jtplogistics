@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -45,9 +44,10 @@ export function TaskForm({
     e.preventDefault();
     const form = e.currentTarget;
     const formData = new FormData(form);
+    const description = (formData.get("description") as string)?.trim() ?? "";
     onSubmit({
-      title: (formData.get("title") as string)?.trim() ?? "",
-      description: (formData.get("description") as string)?.trim() ?? "",
+      title: description.slice(0, 80) || "—",
+      description,
       status,
       assigneeId,
     });
@@ -57,22 +57,12 @@ export function TaskForm({
     <form onSubmit={handleSubmit} className="w-full space-y-6">
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="task-title">Título</Label>
-          <Input
-            id="task-title"
-            name="title"
-            required
-            disabled={isSubmitting}
-            defaultValue={initialValues.title ?? ""}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="task-description">Descripción (opcional)</Label>
+          <Label htmlFor="task-description">Descripción</Label>
           <Textarea
             id="task-description"
             name="description"
             rows={4}
+            required
             className="resize-none"
             disabled={isSubmitting}
             defaultValue={initialValues.description ?? ""}

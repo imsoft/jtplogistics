@@ -55,7 +55,7 @@ export function AdminTasksTable() {
         columns={columns}
         data={displayTasks}
         filterColumn="search"
-        filterPlaceholder="Buscar por título o desarrollador…"
+        filterPlaceholder="Buscar por descripción o desarrollador…"
         getRowId={(row) => row.id}
       />
       <AlertDialog open={deleteTask !== null} onOpenChange={(open) => !open && setDeleteTask(null)}>
@@ -63,7 +63,10 @@ export function AdminTasksTable() {
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar tarea?</AlertDialogTitle>
             <AlertDialogDescription>
-              Se eliminará &quot;{deleteTask?.title}&quot;. Esta acción no se puede deshacer.
+              {deleteTask?.description
+                ? `Se eliminará la tarea: "${deleteTask.description.slice(0, 60)}${deleteTask.description.length > 60 ? "…" : ""}". `
+                : "Se eliminará esta tarea. "}
+              Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

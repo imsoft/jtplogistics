@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
 import { TASK_STATUS_LABELS } from "@/lib/constants/task-status";
 import type { Task } from "@/types/task.types";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const STATUS_BADGE: Record<Task["status"], string> = {
   pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
@@ -23,28 +24,29 @@ export function getTasksColumns({ onDelete, adminView = false }: TasksColumnsOpt
   const columns: ColumnDef<Task>[] = [
     {
       id: "search",
-      accessorFn: (row) => `${row.title} ${row.assigneeName}`.toLowerCase(),
+      accessorFn: (row) => `${row.description ?? ""} ${row.assigneeName}`.toLowerCase(),
       header: () => null,
       cell: () => null,
       enableSorting: false,
       enableHiding: false,
     },
     {
-      accessorKey: "title",
-      header: ({ column }) => <SortableColumnHeader column={column} title="Título" />,
-      cell: ({ row }) => (
-        <span className="font-medium">{row.original.title}</span>
-      ),
-    },
-    {
       accessorKey: "description",
       header: "Descripción",
       cell: ({ row }) => {
         const desc = row.original.description;
-        return desc ? (
-          <span className="text-muted-foreground max-w-[240px] truncate block text-sm">{desc}</span>
-        ) : (
-          <span className="text-muted-foreground">—</span>
+        if (!desc) return <span className="text-muted-foreground">—</span>;
+        return (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="font-medium max-w-[280px] truncate block cursor-default sm:max-w-[380px]">
+                {desc}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-xs whitespace-pre-wrap">
+              {desc}
+            </TooltipContent>
+          </Tooltip>
         );
       },
     },

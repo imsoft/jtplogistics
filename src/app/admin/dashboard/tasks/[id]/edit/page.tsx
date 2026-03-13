@@ -66,7 +66,9 @@ export default function EditTaskPage() {
         </Button>
         <div>
           <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Editar tarea</h1>
-          <p className="text-muted-foreground truncate text-xs sm:text-sm">{task.title}</p>
+          <p className="text-muted-foreground truncate text-xs sm:text-sm">
+            {task.description ? task.description.slice(0, 80) : "Sin descripción"}
+          </p>
         </div>
       </div>
       <Card>

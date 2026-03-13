@@ -53,12 +53,11 @@ export async function POST(request: NextRequest) {
     const session = await requireAdmin();
     const body = await request.json();
 
-    const title = String(body.title ?? "").trim();
     const description = body.description ? String(body.description).trim() : null;
+    const title = body.title ? String(body.title).trim() : (description?.slice(0, 80) ?? "—");
     const status: TaskStatus = VALID_STATUSES.includes(body.status) ? body.status : "pending";
     const assigneeId = String(body.assigneeId ?? "").trim();
 
-    if (!title) return Response.json({ error: "El título es requerido" }, { status: 400 });
     if (!assigneeId) return Response.json({ error: "El desarrollador asignado es requerido" }, { status: 400 });
 
     const assignee = await prisma.user.findUnique({ where: { id: assigneeId } });

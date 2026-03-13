@@ -41,8 +41,13 @@ export async function PATCH(
     const body = await request.json();
 
     const data: Record<string, unknown> = {};
-    if (body.title != null) data.title = String(body.title).trim();
-    if (body.description != null) data.description = String(body.description).trim() || null;
+    if (body.description != null) {
+      const desc = String(body.description).trim() || null;
+      data.description = desc;
+      data.title = body.title ? String(body.title).trim() : (desc?.slice(0, 80) ?? "—");
+    } else if (body.title != null) {
+      data.title = String(body.title).trim();
+    }
     if (VALID_STATUSES.includes(body.status)) data.status = body.status;
     if (body.assigneeId != null) {
       const assignee = await prisma.user.findUnique({ where: { id: body.assigneeId } });
