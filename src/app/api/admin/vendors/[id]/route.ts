@@ -8,7 +8,7 @@ export function GET(
   return adminHandler(async () => {
     const { id } = await params;
     const u = await prisma.user.findUnique({ where: { id } });
-    if (!u || u.role !== "vendedor") {
+    if (!u || u.role !== "vendor") {
       return Response.json({ error: "No encontrado" }, { status: 404 });
     }
     return Response.json({
@@ -35,7 +35,7 @@ export function PATCH(
     };
 
     const u = await prisma.user.findUnique({ where: { id } });
-    if (!u || u.role !== "vendedor") {
+    if (!u || u.role !== "vendor") {
       return Response.json({ error: "No encontrado" }, { status: 404 });
     }
 
@@ -62,7 +62,7 @@ export function DELETE(
   return adminHandler(async () => {
     const { id } = await params;
     const u = await prisma.user.findUnique({ where: { id } });
-    if (!u || u.role !== "vendedor") {
+    if (!u || u.role !== "vendor") {
       return Response.json({ error: "No encontrado" }, { status: 404 });
     }
     await prisma.user.delete({ where: { id } });

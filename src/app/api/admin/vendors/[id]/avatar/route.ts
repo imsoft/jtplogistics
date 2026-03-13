@@ -12,7 +12,7 @@ export async function POST(
     const { id } = await params;
 
     const u = await prisma.user.findUnique({ where: { id } });
-    if (!u || u.role !== "vendedor") {
+    if (!u || u.role !== "vendor") {
       return Response.json({ error: "No encontrado" }, { status: 404 });
     }
 

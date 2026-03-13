@@ -22,7 +22,7 @@ Este documento define las reglas que **deben aplicarse de forma consistente** en
 
 ### 1.2 Roles de usuario
 
-- Los roles se guardan **en inglés** en la BD: `admin`, `carrier`, `collaborator` (enum `UserRole` en Prisma).
+- Los roles se guardan **en inglés** en la BD: `admin`, `carrier`, `collaborator`, `vendor` (enum `UserRole` en Prisma).
 - Código y variables en inglés; las etiquetas visibles (Administrador, Transportista, Colaborador) se pueden localizar en el frontend.
 
 ### 1.3 Inconsistencias existentes

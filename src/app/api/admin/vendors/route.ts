@@ -5,7 +5,7 @@ import { createAuthUser } from "@/lib/create-auth-user";
 export function GET() {
   return adminHandler(async () => {
     const vendors = await prisma.user.findMany({
-      where: { role: "vendedor" },
+      where: { role: "vendor" },
       orderBy: { createdAt: "desc" },
     });
     return Response.json(
@@ -46,7 +46,7 @@ export function POST(request: Request) {
     await prisma.user.update({
       where: { id: userId },
       data: {
-        role: "vendedor",
+        role: "vendor",
         ...(birthDate ? { birthDate: new Date(birthDate) } : {}),
       },
     });

@@ -3,7 +3,7 @@
  * Display labels can be localized in the UI.
  */
 
-export const USER_ROLES = ["admin", "carrier", "collaborator", "vendedor"] as const;
+export const USER_ROLES = ["admin", "carrier", "collaborator", "vendor"] as const;
 
 export type UserRole = (typeof USER_ROLES)[number];
 

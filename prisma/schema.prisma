@@ -16,7 +16,7 @@ enum UserRole {
   admin
   carrier
   collaborator
-  vendedor
+  vendor
 }
 
 model User {

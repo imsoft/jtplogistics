@@ -4,5 +4,5 @@ export const USER_ROLE_LABELS: Record<UserRole, string> = {
   admin: "Administrador",
   carrier: "Transportista",
   collaborator: "Colaborador",
-  vendedor: "Vendedor",
+  vendor: "Vendedor",
 };
