@@ -167,6 +167,7 @@ export function RoutesCrud() {
                         <th className="px-4 py-1.5 text-left font-medium">Descripción</th>
                         <th className="px-4 py-1.5 text-left font-medium">Target (MXN)</th>
                         <th className="px-4 py-1.5 text-left font-medium">Estatus</th>
+                        <th className="px-4 py-1.5 text-left font-medium">Creado por</th>
                         <th className="px-4 py-1.5 text-right font-medium">
                           <span className="sr-only">Acciones</span>
                         </th>
@@ -220,6 +221,11 @@ export function RoutesCrud() {
                             </td>
                             <td className="px-4 py-3">
                               {ROUTE_STATUS_LABELS[route.status]}
+                            </td>
+                            <td className="px-4 py-3">
+                              {route.createdByName ?? (
+                                <span className="text-muted-foreground">—</span>
+                              )}
                             </td>
                             <td className="px-4 py-3">
                               <div className="flex justify-end gap-2">
