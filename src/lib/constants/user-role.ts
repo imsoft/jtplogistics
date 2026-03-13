@@ -5,4 +5,5 @@ export const USER_ROLE_LABELS: Record<UserRole, string> = {
   carrier: "Transportista",
   collaborator: "Colaborador",
   vendor: "Vendedor",
+  developer: "Desarrollador",
 };

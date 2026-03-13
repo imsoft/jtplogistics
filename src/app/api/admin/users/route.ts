@@ -40,10 +40,13 @@ function userToJson(u: {
   };
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     await requireAdmin();
+    const { searchParams } = new URL(request.url);
+    const roleFilter = searchParams.get("role") as UserRole | null;
     const users = await prisma.user.findMany({
+      where: roleFilter ? { role: roleFilter } : undefined,
       orderBy: { createdAt: "desc" },
       include: {
         profile: {

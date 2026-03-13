@@ -10,13 +10,20 @@ datasource db {
 }
 
 // ---- Better Auth (tablas mapeadas a snake_case) ----
-// User roles stored in English: admin, carrier, collaborator
+// User roles stored in English: admin, carrier, collaborator, vendor, developer
 
 enum UserRole {
   admin
   carrier
   collaborator
   vendor
+  developer
+}
+
+enum TaskStatus {
+  pending
+  in_progress
+  completed
 }
 
 model User {
@@ -42,6 +49,8 @@ model User {
   assignedEmails   EmailAccountUser[]
   ideas            Idea[]
   createdRoutes    Route[]        @relation("RouteCreatedBy")
+  assignedTasks    Task[]         @relation("TaskAssignee")
+  createdTasks     Task[]         @relation("TaskCreator")
 
   @@map("users")
 }
@@ -270,4 +279,21 @@ model Setting {
   value String @map("value")
 
   @@map("settings")
+}
+
+// ---- App: tareas admin → developer ----
+
+model Task {
+  id          String     @id @default(cuid()) @map("id")
+  title       String     @map("title")
+  description String?    @map("description")
+  status      TaskStatus @default(pending) @map("status")
+  assigneeId  String     @map("assignee_id")
+  assignee    User       @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: Cascade)
+  createdById String     @map("created_by_id")
+  createdBy   User       @relation("TaskCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  @@map("tasks")
 }

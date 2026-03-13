@@ -62,6 +62,10 @@ export function isCollaborator(user: { role?: string | null } | null): boolean {
   return hasRole(user, "collaborator");
 }
 
+export function isDeveloper(user: { role?: string | null } | null): boolean {
+  return hasRole(user, "developer");
+}
+
 export function isVendedor(user: { role?: string | null } | null): boolean {
   return hasRole(user, "vendor");
 }
