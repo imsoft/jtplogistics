@@ -71,10 +71,11 @@ export function DeveloperTasksTable() {
               value={task.status}
               onValueChange={(v) => handleStatusChange(task.id, v as TaskStatus)}
             >
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-[160px] [&_[data-slot=select-value]]:hidden">
                 <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_BADGE[task.status]}`}>
                   {TASK_STATUS_LABELS[task.status]}
                 </span>
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {TASK_STATUS_OPTIONS.map((opt) => (
