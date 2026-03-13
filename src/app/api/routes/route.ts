@@ -39,6 +39,19 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "El origen y destino son requeridos" }, { status: 400 });
     }
 
+    const duplicate = await prisma.route.findFirst({
+      where: {
+        origin: { equals: origin, mode: "insensitive" },
+        destination: { equals: destination, mode: "insensitive" },
+      },
+    });
+    if (duplicate) {
+      return Response.json(
+        { error: `La ruta ${origin} → ${destination} ya está dada de alta.`, code: "ROUTE_EXISTS" },
+        { status: 409 }
+      );
+    }
+
     const route = await (prisma.route.create as unknown as (a: { data: Record<string, unknown>; include: Record<string, unknown> }) => Promise<PrismaRoute>)({
       data: {
         origin,

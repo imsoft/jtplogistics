@@ -4,6 +4,13 @@ import { useMemo, useState, useCallback } from "react";
 import { useAdminFetch } from "@/hooks/use-admin-fetch";
 import { DataTable } from "@/components/ui/data-table";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -14,8 +21,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { getTasksColumns } from "./tasks-columns";
+import { TASK_STATUS_LABELS, TASK_STATUS_OPTIONS } from "@/lib/constants/task-status";
 import { toast } from "sonner";
-import type { Task } from "@/types/task.types";
+import type { Task, TaskStatus } from "@/types/task.types";
+
+const ALL = "all";
 
 export function AdminTasksTable() {
   const { data: tasks, isLoaded, error } = useAdminFetch<Task>(
@@ -24,8 +34,13 @@ export function AdminTasksTable() {
   );
   const [localTasks, setLocalTasks] = useState<Task[] | null>(null);
   const [deleteTask, setDeleteTask] = useState<Task | null>(null);
+  const [filterStatus, setFilterStatus] = useState<TaskStatus | typeof ALL>(ALL);
 
-  const displayTasks = localTasks ?? tasks;
+  const baseTasks = localTasks ?? tasks;
+  const displayTasks = useMemo(
+    () => filterStatus === ALL ? baseTasks : baseTasks.filter((t) => t.status === filterStatus),
+    [baseTasks, filterStatus]
+  );
 
   const handleDelete = useCallback(async () => {
     if (!deleteTask) return;
@@ -55,8 +70,23 @@ export function AdminTasksTable() {
         columns={columns}
         data={displayTasks}
         filterColumn="search"
-        filterPlaceholder="Buscar por descripción o desarrollador…"
+        filterPlaceholder="Buscar por descripción…"
         getRowId={(row) => row.id}
+        toolbar={
+          <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as TaskStatus | typeof ALL)}>
+            <SelectTrigger className="w-full sm:w-44">
+              <SelectValue placeholder="Todos los estados" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>Todos los estados</SelectItem>
+              {TASK_STATUS_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {TASK_STATUS_LABELS[opt.value]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        }
       />
       <AlertDialog open={deleteTask !== null} onOpenChange={(open) => !open && setDeleteTask(null)}>
         <AlertDialogContent>

@@ -11,14 +11,14 @@ import type { RouteFormData } from "@/types/route.types";
 
 export default function NewRoutePage() {
   const router = useRouter();
-  const { addRoute, error: storeError } = useRoutesStore();
+  const { routes, addRoute, error: storeError } = useRoutesStore();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   async function handleSubmit(data: RouteFormData) {
     setSubmitError(null);
     const route = await addRoute(data);
     if (route) router.push("/admin/dashboard/routes");
-    else setSubmitError("No se pudo crear la ruta. Verifica tener permisos de administrador.");
+    else setSubmitError(storeError ?? "No se pudo crear la ruta. Verifica tener permisos de administrador.");
   }
 
   return (
@@ -37,12 +37,13 @@ export default function NewRoutePage() {
         </div>
       </div>
       <div className="w-full min-w-0">
-        {(storeError || submitError) && (
-          <p className="mb-4 text-sm text-destructive">{submitError ?? storeError}</p>
+        {submitError && (
+          <p className="mb-4 text-sm text-destructive">{submitError}</p>
         )}
         <RouteForm
           submitLabel="Crear ruta"
           cancelHref="/admin/dashboard/routes"
+          existingRoutes={routes}
           onSubmit={handleSubmit}
         />
       </div>

@@ -18,6 +18,7 @@ import { parseCityValue, findCityValue } from "@/lib/data/mexico-cities";
 import { ROUTE_STATUS_OPTIONS } from "@/lib/constants/route-status";
 import { UNIT_TYPE_OPTIONS } from "@/lib/constants/unit-type";
 import { formatMxn, formatMxnLive, parseMxn } from "@/lib/utils";
+import { TriangleAlert } from "lucide-react";
 import type { RouteFormData, RouteStatus, UnitType } from "@/types/route.types";
 
 const defaultFormData: RouteFormData = {
@@ -31,8 +32,14 @@ const defaultFormData: RouteFormData = {
   status: "active",
 };
 
+interface ExistingRoute {
+  origin: string;
+  destination: string;
+}
+
 interface RouteFormProps {
   initialValues?: Partial<RouteFormData>;
+  existingRoutes?: ExistingRoute[];
   submitLabel: string;
   cancelHref: string;
   onSubmit: (data: RouteFormData) => void;
@@ -40,6 +47,7 @@ interface RouteFormProps {
 
 export function RouteForm({
   initialValues = {},
+  existingRoutes = [],
   submitLabel,
   cancelHref,
   onSubmit,
@@ -73,6 +81,17 @@ export function RouteForm({
   const values = {
     description: initialValues.description ?? defaultFormData.description,
   };
+
+  const originCity = parseCityValue(origin).city;
+  const destCity = parseCityValue(destination).city;
+  const isDuplicate =
+    !!originCity &&
+    !!destCity &&
+    existingRoutes.some(
+      (r) =>
+        r.origin.toLowerCase() === originCity.toLowerCase() &&
+        r.destination.toLowerCase() === destCity.toLowerCase()
+    );
 
   function handleSubmit(e: { preventDefault(): void; currentTarget: HTMLFormElement }) {
     e.preventDefault();
@@ -127,6 +146,16 @@ export function RouteForm({
             />
           </div>
         </div>
+
+        {isDuplicate && (
+          <div className="flex items-start gap-2 rounded-md border border-yellow-400/50 bg-yellow-50 px-3 py-2 text-sm text-yellow-800 dark:border-yellow-500/30 dark:bg-yellow-900/20 dark:text-yellow-400">
+            <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+            <span>
+              La ruta <strong>{originCity} → {destCity}</strong> ya está dada de alta.
+            </span>
+          </div>
+        )}
+
         <div className="space-y-2">
           <Label htmlFor="route-description">Descripción (opcional)</Label>
           <Textarea
@@ -186,7 +215,9 @@ export function RouteForm({
         </div>
       </div>
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <Button type="submit" className="w-full sm:w-auto">{submitLabel}</Button>
+        <Button type="submit" className="w-full sm:w-auto" disabled={isDuplicate}>
+          {submitLabel}
+        </Button>
         <Button type="button" variant="outline" asChild className="w-full sm:w-auto">
           <Link href={cancelHref}>Cancelar</Link>
         </Button>
