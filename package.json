@@ -12,7 +12,9 @@
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "db:assign-route-creator": "tsx scripts/assign-route-creator.ts",
+    "db:sync-route-destination-states": "tsx scripts/sync-route-destination-states.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

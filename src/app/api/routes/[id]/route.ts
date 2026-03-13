@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireSession, requireAdmin } from "@/lib/auth-server";
 import { type PrismaRoute, VALID_UNIT_TYPES, VALID_STATUSES, routeToJson } from "@/lib/api/route-utils";
+import { getCityState } from "@/lib/data/mexico-cities";
 import type { UnitType, RouteStatus } from "@/types/route.types";
 
 export async function GET(
@@ -44,8 +45,12 @@ export async function PATCH(
 
     const updateData: Record<string, unknown> = {};
     if (origin !== undefined) updateData.origin = origin;
-    if (destination !== undefined) updateData.destination = destination;
-    if (destinationState !== undefined) updateData.destinationState = destinationState || null;
+    if (destination !== undefined) {
+      updateData.destination = destination;
+      const state = destinationState !== undefined ? String(destinationState).trim() : getCityState(destination);
+      updateData.destinationState = state || null;
+    }
+    if (destinationState !== undefined && destination === undefined) updateData.destinationState = destinationState || null;
     if (description !== undefined) updateData.description = description;
     if (target !== undefined) updateData.target = target;
     if (weeklyVolume !== undefined) updateData.weeklyVolume = weeklyVolume;

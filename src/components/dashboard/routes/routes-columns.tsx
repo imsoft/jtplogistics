@@ -112,6 +112,14 @@ export function getRoutesColumns({
             cell: ({ row }: { row: Row<Route> }) =>
               ROUTE_STATUS_LABELS[row.getValue("status") as Route["status"]],
           },
+          {
+            accessorKey: "createdByName",
+            header: "Creado por",
+            cell: ({ row }: { row: Row<Route> }) => {
+              const name = row.original.createdByName;
+              return name ? name : <span className="text-muted-foreground">—</span>;
+            },
+          },
         ] as ColumnDef<Route>[])),
   ];
 

@@ -40,7 +40,12 @@ export function LoginForm() {
         password: data.password,
       });
       if (res.error) {
-        setError(res.error.message ?? "Error al iniciar sesión.");
+        const msg = res.error.message ?? "";
+        const spanishMessage =
+          msg === "Invalid email or password"
+            ? "Correo o contraseña incorrectos."
+            : msg || "Error al iniciar sesión.";
+        setError(spanishMessage);
         return;
       }
       const role = (res.data?.user as SessionUser | undefined)?.role;

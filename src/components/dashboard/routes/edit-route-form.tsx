@@ -52,6 +52,11 @@ export function EditRouteForm({ route }: { route: Route }) {
           <p className="text-muted-foreground truncate text-xs sm:text-sm">
             {route.origin} → {route.destination}
           </p>
+          {route.createdByName && (
+            <p className="text-muted-foreground mt-0.5 text-xs">
+              Creado por: {route.createdByName}
+            </p>
+          )}
         </div>
       </div>
       <Card>

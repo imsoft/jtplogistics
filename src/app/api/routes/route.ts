@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireSession, requireAdmin } from "@/lib/auth-server";
 import { type PrismaRoute, VALID_UNIT_TYPES, VALID_STATUSES, routeToJson } from "@/lib/api/route-utils";
+import { getCityState } from "@/lib/data/mexico-cities";
 import type { UnitType, RouteStatus } from "@/types/route.types";
 
 export async function GET() {
@@ -26,8 +27,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const origin = String(body.origin ?? "").trim();
     const destination = String(body.destination ?? "").trim();
-    const destinationState = body.destinationState != null ? String(body.destinationState).trim() : null;
     const description = body.description != null ? String(body.description).trim() : null;
+    const stateFromBody = body.destinationState != null ? String(body.destinationState).trim() : "";
+    const destinationState = stateFromBody || (destination ? getCityState(destination) : null);
     const target = body.target != null ? Number(body.target) : null;
     const weeklyVolume = body.weeklyVolume != null ? Math.round(Number(body.weeklyVolume)) : null;
     const unitType: UnitType = VALID_UNIT_TYPES.includes(body.unitType) ? body.unitType : "dry_box";
