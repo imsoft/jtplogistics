@@ -44,14 +44,17 @@ export function DeveloperTasksTable() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? `Error ${res.status}`);
+      }
       const updated: Task = await res.json();
       setLocalTasks((prev) =>
         (prev ?? tasks).map((t) => (t.id === updated.id ? updated : t))
       );
       toast.success("Estado actualizado.");
-    } catch {
-      toast.error("No se pudo actualizar el estado.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo actualizar el estado.");
     }
   }, [tasks]);
 

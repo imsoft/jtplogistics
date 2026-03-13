@@ -2,12 +2,44 @@
 
 import { type ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
 import { TASK_STATUS_LABELS } from "@/lib/constants/task-status";
 import type { Task } from "@/types/task.types";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useState } from "react";
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // clipboard not available
+    }
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-6 shrink-0 text-muted-foreground hover:text-foreground"
+          onClick={handleCopy}
+          aria-label="Copiar descripción"
+        >
+          {copied ? <Check className="size-3.5 text-green-600" /> : <Copy className="size-3.5" />}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="top">{copied ? "¡Copiado!" : "Copiar descripción"}</TooltipContent>
+    </Tooltip>
+  );
+}
 
 const STATUS_BADGE: Record<Task["status"], string> = {
   pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
@@ -37,16 +69,19 @@ export function getTasksColumns({ onDelete, adminView = false }: TasksColumnsOpt
         const desc = row.original.description;
         if (!desc) return <span className="text-muted-foreground">—</span>;
         return (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="font-medium max-w-[280px] truncate block cursor-default sm:max-w-[380px]">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="font-medium max-w-[260px] truncate block cursor-default sm:max-w-[360px]">
+                  {desc}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs whitespace-pre-wrap">
                 {desc}
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-xs whitespace-pre-wrap">
-              {desc}
-            </TooltipContent>
-          </Tooltip>
+              </TooltipContent>
+            </Tooltip>
+            <CopyButton text={desc} />
+          </div>
         );
       },
     },

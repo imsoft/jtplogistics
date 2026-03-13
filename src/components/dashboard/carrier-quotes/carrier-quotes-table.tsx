@@ -32,7 +32,7 @@ function computeStats(quotes: CarrierQuote[]) {
     .filter((t): t is number => t != null && !Number.isNaN(t));
   if (targets.length === 0) return { avg: null, venta: null, monto: null };
   const avg = targets.reduce((a, b) => a + b, 0) / targets.length;
-  const venta = avg * 1.25;
+  const venta = avg * 1.30;
   const monto = venta * 1.16;
   return { avg, venta, monto };
 }
