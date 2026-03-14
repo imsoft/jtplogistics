@@ -21,7 +21,7 @@ export default async function HomePage() {
                 priority
               />
             </Link>
-            <div className="hidden sm:mt-8 sm:flex lg:mt-4">
+            <div className="hidden sm:mt-3 sm:flex lg:mt-2">
               <div className="relative rounded-full px-3 py-1 text-sm text-muted-foreground ring-1 ring-foreground/10 hover:ring-foreground/20">
                 Gestión de rutas y flotas para tu operación.{" "}
                 <Link
