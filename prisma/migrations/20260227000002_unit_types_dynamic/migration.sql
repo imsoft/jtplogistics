@@ -1,5 +1,11 @@
+-- Quitar el default que depende del enum (antes de cambiar tipo)
+ALTER TABLE "routes" ALTER COLUMN "unit_type" DROP DEFAULT;
+
 -- Cambiar unit_type de enum a texto plano
 ALTER TABLE "routes" ALTER COLUMN "unit_type" TYPE TEXT USING "unit_type"::TEXT;
+
+-- Restaurar default como texto
+ALTER TABLE "routes" ALTER COLUMN "unit_type" SET DEFAULT 'dry_box';
 
 -- Eliminar el enum UnitType
 DROP TYPE IF EXISTS "UnitType";
