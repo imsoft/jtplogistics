@@ -9,7 +9,7 @@ export default async function HomePage() {
   return (
     <div className="relative min-h-screen bg-background">
       <div className="mx-auto min-h-screen max-w-7xl lg:grid lg:grid-cols-12 lg:gap-x-8 lg:px-8">
-        <div className="px-6 pt-10 pb-12 sm:pb-16 lg:col-span-7 lg:px-0 lg:pt-40 lg:pb-24 xl:col-span-6">
+        <div className="flex items-center px-6 py-12 sm:py-16 lg:col-span-7 lg:px-0 lg:py-0 xl:col-span-6">
           <div className="mx-auto max-w-lg lg:mx-0">
             <Link href="/" className="inline-block">
               <Image
