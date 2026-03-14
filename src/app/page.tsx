@@ -15,9 +15,9 @@ export default async function HomePage() {
               <Image
                 src="/images/logo/jtp-logistics.png"
                 alt="JTP Logistics"
-                width={480}
-                height={120}
-                className="h-56 w-auto sm:h-64 lg:h-72"
+                width={640}
+                height={160}
+                className="h-64 w-auto sm:h-80 lg:h-96"
                 priority
               />
             </Link>
