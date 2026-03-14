@@ -17,15 +17,31 @@ export async function GET() {
   }
 }
 
+function slugify(text: string): string {
+  return text
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_]/g, "")
+    .replace(/_+/g, "_")
+    .replace(/^_|_$/g, "") || "tipo";
+}
+
 export async function POST(request: NextRequest) {
   try {
     await requireAdmin();
     const body = await request.json();
     const name = String(body.name ?? "").trim();
-    const value = String(body.value ?? "").trim().toLowerCase().replace(/\s+/g, "_");
 
-    if (!name || !value) {
-      return Response.json({ error: "Nombre y valor son requeridos" }, { status: 400 });
+    if (!name) {
+      return Response.json({ error: "El nombre es requerido" }, { status: 400 });
+    }
+
+    const value = body.value ? String(body.value).trim().toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "") : slugify(name);
+    if (!value) {
+      return Response.json({ error: "No se pudo generar un identificador válido" }, { status: 400 });
     }
 
     const existing = await prisma.unitTypeDef.findUnique({ where: { value } });

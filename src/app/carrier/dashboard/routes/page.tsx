@@ -4,8 +4,14 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { Check, Minus, MoveRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CityCombobox } from "@/components/dashboard/routes/city-combobox";
-import { parseCityValue } from "@/lib/data/mexico-cities";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { formatMxnLive, formatMxn, parseMxn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -92,12 +98,21 @@ export default function CarrierRoutesPage() {
     loadRoutes();
   }, [loadRoutes]);
 
+  const origins = useMemo(
+    () => [...new Set(routes.map((r) => r.origin))].sort(),
+    [routes]
+  );
+  const destinations = useMemo(() => {
+    if (filterOrigin) {
+      return [...new Set(routes.filter((r) => r.origin === filterOrigin).map((r) => r.destination))].sort();
+    }
+    return [...new Set(routes.map((r) => r.destination))].sort();
+  }, [routes, filterOrigin]);
+
   const filteredRoutes = useMemo(() => {
-    const originCity = parseCityValue(filterOrigin).city;
-    const destCity = parseCityValue(filterDestination).city;
     return routes.filter((r) => {
-      if (originCity && r.origin !== originCity) return false;
-      if (destCity && r.destination !== destCity) return false;
+      if (filterOrigin && r.origin !== filterOrigin) return false;
+      if (filterDestination && r.destination !== filterDestination) return false;
       return true;
     });
   }, [routes, filterOrigin, filterDestination]);
@@ -207,18 +222,48 @@ export default function CarrierRoutesPage() {
         <>
           {/* Filtros */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <CityCombobox
-              id="filter-origin"
-              label="Origen"
-              value={filterOrigin}
-              onValueChange={setFilterOrigin}
-            />
-            <CityCombobox
-              id="filter-destination"
-              label="Destino"
-              value={filterDestination}
-              onValueChange={setFilterDestination}
-            />
+            <div className="space-y-2">
+              <Label htmlFor="filter-origin">Origen</Label>
+              <Select
+                value={filterOrigin ?? "__all__"}
+                onValueChange={(v) => {
+                  setFilterOrigin(v === "__all__" ? null : v);
+                  setFilterDestination(null);
+                }}
+              >
+                <SelectTrigger id="filter-origin" className="w-full">
+                  <SelectValue placeholder="" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">Todos</SelectItem>
+                  {origins.map((o) => (
+                    <SelectItem key={o} value={o}>
+                      {o}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="filter-destination">Destino</Label>
+              <Select
+                value={filterDestination ?? "__all__"}
+                onValueChange={(v) => setFilterDestination(v === "__all__" ? null : v)}
+                disabled={origins.length === 0}
+              >
+                <SelectTrigger id="filter-destination" className="w-full">
+                  <SelectValue placeholder="" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">Todos</SelectItem>
+                  {destinations.map((d) => (
+                    <SelectItem key={d} value={d}>
+                      {d}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-2">
               <span aria-hidden className="invisible block text-sm font-medium leading-none">_</span>
               <Button

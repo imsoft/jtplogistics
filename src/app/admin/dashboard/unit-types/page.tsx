@@ -25,7 +25,6 @@ export default function UnitTypesPage() {
 
   // New form
   const [newName, setNewName] = useState("");
-  const [newValue, setNewValue] = useState("");
   const [isCreating, setIsCreating] = useState(false);
 
   // Inline edit
@@ -51,7 +50,7 @@ export default function UnitTypesPage() {
       const res = await fetch("/api/admin/unit-types", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName, value: newValue }),
+        body: JSON.stringify({ name: newName }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -60,7 +59,6 @@ export default function UnitTypesPage() {
       const created: UnitTypeDef = await res.json();
       setUnitTypes((prev) => [...prev, created]);
       setNewName("");
-      setNewValue("");
       toast.success("Tipo de unidad creado.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Error al crear.");
@@ -176,29 +174,18 @@ export default function UnitTypesPage() {
       </Card>
 
       {/* Formulario nuevo */}
-      <Card className="max-w-md">
+      <Card className="w-full">
         <CardHeader className="space-y-1">
           <CardTitle className="text-base sm:text-lg">Nuevo tipo de unidad</CardTitle>
           <CardDescription className="text-xs sm:text-sm">
-            El valor se usa internamente y no puede cambiarse después.
+            El identificador interno se genera automáticamente a partir del nombre.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleCreate} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="new-name">Nombre (visible)</Label>
-              <Input id="new-name" value={newName} onChange={(e) => setNewName(e.target.value)}  required disabled={isCreating} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="new-value">Valor (identificador único)</Label>
-              <Input
-                id="new-value"
-                value={newValue}
-                onChange={(e) => setNewValue(e.target.value.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, ""))}
-                required
-                disabled={isCreating}
-              />
-              <p className="text-muted-foreground text-xs">Solo letras minúsculas, números y guiones bajos.</p>
+            <div className="space-y-2 max-w-md">
+              <Label htmlFor="new-name">Nombre</Label>
+              <Input id="new-name" value={newName} onChange={(e) => setNewName(e.target.value)} required disabled={isCreating} />
             </div>
             <div className="flex justify-end">
               <Button type="submit" disabled={isCreating} className="gap-2">
