@@ -15,7 +15,6 @@ export type PrismaRoute = {
   createdAt: Date;
 };
 
-export const VALID_UNIT_TYPES: UnitType[] = ["dry_box"];
 export const VALID_STATUSES: RouteStatus[] = ["active", "inactive", "pending"];
 
 export function routeToJson(r: PrismaRoute) {

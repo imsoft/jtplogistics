@@ -11,7 +11,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ROUTE_STATUS_LABELS } from "@/lib/constants/route-status";
-import { UNIT_TYPE_LABELS } from "@/lib/constants/unit-type";
 import { formatMxn } from "@/lib/utils";
 import type { Route } from "@/types/route.types";
 
@@ -63,7 +62,7 @@ export function getRoutesColumns({
             accessorKey: "unitType",
             header: "Tipo de unidad",
             cell: ({ row }: { row: Row<Route> }) =>
-              UNIT_TYPE_LABELS[row.getValue("unitType") as Route["unitType"]],
+              row.getValue("unitType") as string,
           },
           {
             accessorKey: "description",

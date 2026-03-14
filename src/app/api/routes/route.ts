@@ -1,9 +1,9 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireSession, requireAdmin } from "@/lib/auth-server";
-import { type PrismaRoute, VALID_UNIT_TYPES, VALID_STATUSES, routeToJson } from "@/lib/api/route-utils";
+import { type PrismaRoute, VALID_STATUSES, routeToJson } from "@/lib/api/route-utils";
 import { getCityState } from "@/lib/data/mexico-cities";
-import type { UnitType, RouteStatus } from "@/types/route.types";
+import type { RouteStatus } from "@/types/route.types";
 
 export async function GET() {
   try {
@@ -32,7 +32,11 @@ export async function POST(request: NextRequest) {
     const destinationState = stateFromBody || (destination ? getCityState(destination) : null);
     const target = body.target != null ? Number(body.target) : null;
     const weeklyVolume = body.weeklyVolume != null ? Math.round(Number(body.weeklyVolume)) : null;
-    const unitType: UnitType = VALID_UNIT_TYPES.includes(body.unitType) ? body.unitType : "dry_box";
+    const unitTypeValue = body.unitType ? String(body.unitType).trim() : null;
+    const validUnitType = unitTypeValue
+      ? await prisma.unitTypeDef.findUnique({ where: { value: unitTypeValue } })
+      : null;
+    const unitType = validUnitType ? unitTypeValue! : "dry_box";
     const status: RouteStatus = VALID_STATUSES.includes(body.status) ? body.status : "pending";
 
     if (!origin || !destination) {

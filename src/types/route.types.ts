@@ -14,7 +14,7 @@ export interface Route {
 
 export type RouteStatus = "active" | "inactive" | "pending";
 
-export type UnitType = "dry_box";
+export type UnitType = string;
 
 export interface RouteFormData {
   origin: string;

@@ -22,7 +22,6 @@ import { CityCombobox } from "./city-combobox";
 import { useRoutesStore } from "@/hooks/use-routes-store";
 import { parseCityValue } from "@/lib/data/mexico-cities";
 import { formatMxn } from "@/lib/utils";
-import { UNIT_TYPE_LABELS } from "@/lib/constants/unit-type";
 import { ROUTE_STATUS_LABELS } from "@/lib/constants/route-status";
 import type { Route, RouteStatus } from "@/types/route.types";
 import { ROUTE_STATUS_OPTIONS } from "@/lib/constants/route-status";
@@ -194,7 +193,7 @@ export function RoutesCrud() {
                               )}
                             </td>
                             <td className="px-4 py-3">
-                              {UNIT_TYPE_LABELS[route.unitType]}
+                              {route.unitType}
                             </td>
                             <td className="px-4 py-3">
                               {description ? (

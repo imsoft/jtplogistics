@@ -1,9 +1,4 @@
-import type { UnitType } from "@/types/route.types";
-
-export const UNIT_TYPE_LABELS: Record<UnitType, string> = {
-  dry_box: "Caja seca",
-};
-
-export const UNIT_TYPE_OPTIONS: { value: UnitType; label: string }[] = [
+// Fallback estático mientras cargan los tipos dinámicos
+export const UNIT_TYPE_FALLBACK: { value: string; label: string }[] = [
   { value: "dry_box", label: "Caja seca" },
 ];

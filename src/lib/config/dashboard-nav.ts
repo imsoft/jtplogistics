@@ -10,6 +10,8 @@ import { Lightbulb } from "lucide-react";
 import { ShoppingBag } from "lucide-react";
 import { ClipboardList } from "lucide-react";
 import { Settings } from "lucide-react";
+import { Boxes } from "lucide-react";
+import { Users } from "lucide-react";
 
 export interface DashboardNavItem {
   title: string;
@@ -27,8 +29,10 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
     label: "Operaciones",
     items: [
       { title: "Rutas", href: "/admin/dashboard/routes", icon: RouteIcon },
+      { title: "Tipos de unidades", href: "/admin/dashboard/unit-types", icon: Boxes },
       { title: "Cotizador", href: "/admin/dashboard/quotes", icon: Calculator },
       { title: "Proveedores", href: "/admin/dashboard/providers", icon: Truck },
+      { title: "Clientes", href: "/admin/dashboard/clients", icon: Users },
     ],
   },
   {

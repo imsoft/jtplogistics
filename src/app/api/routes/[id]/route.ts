@@ -1,9 +1,9 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireSession, requireAdmin } from "@/lib/auth-server";
-import { type PrismaRoute, VALID_UNIT_TYPES, VALID_STATUSES, routeToJson } from "@/lib/api/route-utils";
+import { type PrismaRoute, VALID_STATUSES, routeToJson } from "@/lib/api/route-utils";
 import { getCityState } from "@/lib/data/mexico-cities";
-import type { UnitType, RouteStatus } from "@/types/route.types";
+import type { RouteStatus } from "@/types/route.types";
 
 export async function GET(
   _request: NextRequest,
@@ -40,7 +40,10 @@ export async function PATCH(
     const description = body.description != null ? String(body.description).trim() : undefined;
     const target = body.target != null ? Number(body.target) : undefined;
     const weeklyVolume = body.weeklyVolume != null ? Math.round(Number(body.weeklyVolume)) : undefined;
-    const unitType: UnitType | undefined = VALID_UNIT_TYPES.includes(body.unitType) ? body.unitType : undefined;
+    const unitTypeRaw = body.unitType ? String(body.unitType).trim() : undefined;
+    const unitType: string | undefined = unitTypeRaw
+      ? ((await prisma.unitTypeDef.findUnique({ where: { value: unitTypeRaw } })) ? unitTypeRaw : undefined)
+      : undefined;
     const status: RouteStatus | undefined = VALID_STATUSES.includes(body.status) ? body.status : undefined;
 
     const updateData: Record<string, unknown> = {};

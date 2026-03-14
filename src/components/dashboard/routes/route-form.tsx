@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ import {
 import { CityCombobox } from "./city-combobox";
 import { parseCityValue, findCityValue } from "@/lib/data/mexico-cities";
 import { ROUTE_STATUS_OPTIONS } from "@/lib/constants/route-status";
-import { UNIT_TYPE_OPTIONS } from "@/lib/constants/unit-type";
+import { UNIT_TYPE_FALLBACK } from "@/lib/constants/unit-type";
 import { formatMxn, formatMxnLive, parseMxn } from "@/lib/utils";
 import { TriangleAlert } from "lucide-react";
 import type { RouteFormData, RouteStatus, UnitType } from "@/types/route.types";
@@ -78,6 +78,14 @@ export function RouteForm({
   const [targetDisplay, setTargetDisplay] = useState<string>(
     initialValues.target != null ? formatMxn(initialValues.target) : ""
   );
+  const [unitTypeOptions, setUnitTypeOptions] = useState(UNIT_TYPE_FALLBACK);
+
+  useEffect(() => {
+    fetch("/api/unit-types")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (Array.isArray(data) && data.length > 0) setUnitTypeOptions(data); })
+      .catch(() => {});
+  }, []);
   const values = {
     description: initialValues.description ?? defaultFormData.description,
   };
@@ -189,7 +197,7 @@ export function RouteForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {UNIT_TYPE_OPTIONS.map((opt) => (
+                {unitTypeOptions.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
