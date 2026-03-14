@@ -116,7 +116,31 @@ export default function UnitTypesPage() {
         </p>
       </div>
 
-      {/* Tabla */}
+      {/* Formulario nuevo */}
+      <Card className="w-full">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-base sm:text-lg">Nuevo tipo de unidad</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">
+            El identificador interno se genera automáticamente a partir del nombre.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleCreate} className="space-y-4">
+            <div className="space-y-2 max-w-md">
+              <Label htmlFor="new-name">Nombre</Label>
+              <Input id="new-name" value={newName} onChange={(e) => setNewName(e.target.value)} required disabled={isCreating} />
+            </div>
+            <div className="flex justify-end">
+              <Button type="submit" disabled={isCreating} className="gap-2">
+                <Plus className="size-4" />
+                {isCreating ? "Creando…" : "Crear tipo"}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Tipos registrados */}
       <Card>
         <CardHeader className="space-y-1">
           <CardTitle className="text-base sm:text-lg">Tipos registrados</CardTitle>
@@ -170,30 +194,6 @@ export default function UnitTypesPage() {
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Formulario nuevo */}
-      <Card className="w-full">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-base sm:text-lg">Nuevo tipo de unidad</CardTitle>
-          <CardDescription className="text-xs sm:text-sm">
-            El identificador interno se genera automáticamente a partir del nombre.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleCreate} className="space-y-4">
-            <div className="space-y-2 max-w-md">
-              <Label htmlFor="new-name">Nombre</Label>
-              <Input id="new-name" value={newName} onChange={(e) => setNewName(e.target.value)} required disabled={isCreating} />
-            </div>
-            <div className="flex justify-end">
-              <Button type="submit" disabled={isCreating} className="gap-2">
-                <Plus className="size-4" />
-                {isCreating ? "Creando…" : "Crear tipo"}
-              </Button>
-            </div>
-          </form>
         </CardContent>
       </Card>
 
