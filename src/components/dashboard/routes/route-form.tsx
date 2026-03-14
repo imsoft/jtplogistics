@@ -28,7 +28,7 @@ const defaultFormData: RouteFormData = {
   description: "",
   target: undefined,
   weeklyVolume: undefined,
-  unitType: "dry_box",
+  unitType: "caja_seca",
   status: "active",
 };
 

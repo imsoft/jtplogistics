@@ -125,7 +125,7 @@ model Route {
   target           Float?         @map("target")
   weeklyVolume     Int?           @map("weekly_volume")
   destinationState String?        @map("destination_state")
-  unitType         String         @default("dry_box") @map("unit_type")
+  unitType         String         @default("caja_seca") @map("unit_type")
   status           RouteStatus    @default(pending) @map("status")
   createdById      String?        @map("created_by_id")
   createdBy        User?          @relation("RouteCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)

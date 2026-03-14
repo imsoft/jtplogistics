@@ -123,7 +123,7 @@ export function RoutesCrud() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={UNIT_FILTER_ALL}>Todos</SelectItem>
-                  <SelectItem value="dry_box">Caja seca</SelectItem>
+                  <SelectItem value="caja_seca">Caja seca</SelectItem>
                 </SelectContent>
               </Select>
             </div>

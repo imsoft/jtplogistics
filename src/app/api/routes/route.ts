@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     const validUnitType = unitTypeValue
       ? await prisma.unitTypeDef.findUnique({ where: { value: unitTypeValue } })
       : null;
-    const unitType = validUnitType ? unitTypeValue! : "dry_box";
+    const unitType = validUnitType ? unitTypeValue! : "caja_seca";
     const status: RouteStatus = VALID_STATUSES.includes(body.status) ? body.status : "pending";
 
     if (!origin || !destination) {

@@ -129,16 +129,16 @@ async function main() {
 
   await prisma.route.createMany({
     data: [
-      { origin: "Ciudad de México", destination: "Monterrey",       description: "Ruta principal CDMX–Regio vía autopista 57D",               target: 12000.0, unitType: "dry_box", status: "active"   },
-      { origin: "Guadalajara",      destination: "Tijuana",          description: "Ruta costera por autopista 15D con escala en Culiacán",     target: 18500.0, unitType: "dry_box", status: "active"   },
-      { origin: "Puebla",           destination: "Veracruz",         description: "Corredor industrial Puebla–Puerto de Veracruz",             target: 6800.0,  unitType: "dry_box", status: "active"   },
-      { origin: "Monterrey",        destination: "Ciudad Juárez",    description: "Ruta frontera norte hacia El Paso, TX",                    target: 9500.0,  unitType: "dry_box", status: "active"   },
-      { origin: "León",             destination: "Mérida",           description: "Ruta peninsular en revisión de tarifas",                   target: 22000.0, unitType: "dry_box", status: "pending"  },
-      { origin: "Saltillo",         destination: "Mazatlán",         description: "Pendiente de asignación de transportista",                 target: 14000.0, unitType: "dry_box", status: "pending"  },
-      { origin: "Querétaro",        destination: "Cancún",           description: "Ruta turística–industrial en negociación",                 target: 28000.0, unitType: "dry_box", status: "pending"  },
-      { origin: "Chihuahua",        destination: "Hermosillo",       description: "Suspendida por cierre temporal de autopista 2",            target: 8200.0,  unitType: "dry_box", status: "inactive" },
-      { origin: "Acapulco",         destination: "Ciudad de México",  description: "Ruta costera pausada por temporada de lluvias",           target: 7500.0,  unitType: "dry_box", status: "inactive" },
-      { origin: "Tampico",          destination: "Villahermosa",     description: "Ruta del golfo inactiva por mantenimiento",                target: 9100.0,  unitType: "dry_box", status: "inactive" },
+      { origin: "Ciudad de México", destination: "Monterrey",       description: "Ruta principal CDMX–Regio vía autopista 57D",               target: 12000.0, unitType: "caja_seca", status: "active"   },
+      { origin: "Guadalajara",      destination: "Tijuana",          description: "Ruta costera por autopista 15D con escala en Culiacán",     target: 18500.0, unitType: "caja_seca", status: "active"   },
+      { origin: "Puebla",           destination: "Veracruz",         description: "Corredor industrial Puebla–Puerto de Veracruz",             target: 6800.0,  unitType: "caja_seca", status: "active"   },
+      { origin: "Monterrey",        destination: "Ciudad Juárez",    description: "Ruta frontera norte hacia El Paso, TX",                    target: 9500.0,  unitType: "caja_seca", status: "active"   },
+      { origin: "León",             destination: "Mérida",           description: "Ruta peninsular en revisión de tarifas",                   target: 22000.0, unitType: "caja_seca", status: "pending"  },
+      { origin: "Saltillo",         destination: "Mazatlán",         description: "Pendiente de asignación de transportista",                 target: 14000.0, unitType: "caja_seca", status: "pending"  },
+      { origin: "Querétaro",        destination: "Cancún",           description: "Ruta turística–industrial en negociación",                 target: 28000.0, unitType: "caja_seca", status: "pending"  },
+      { origin: "Chihuahua",        destination: "Hermosillo",       description: "Suspendida por cierre temporal de autopista 2",            target: 8200.0,  unitType: "caja_seca", status: "inactive" },
+      { origin: "Acapulco",         destination: "Ciudad de México",  description: "Ruta costera pausada por temporada de lluvias",           target: 7500.0,  unitType: "caja_seca", status: "inactive" },
+      { origin: "Tampico",          destination: "Villahermosa",     description: "Ruta del golfo inactiva por mantenimiento",                target: 9100.0,  unitType: "caja_seca", status: "inactive" },
     ],
   });
   console.log("✅ 10 rutas creadas");
