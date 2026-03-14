@@ -9,7 +9,18 @@ export function GET(
     const { id } = await params;
     const u = await prisma.user.findUnique({
       where: { id },
-      include: { employeeProfile: true },
+      include: {
+        employeeProfile: true,
+        assignedLaptops: {
+          include: { emailAccount: { select: { id: true, email: true } } },
+        },
+        assignedPhones: {
+          include: { emailAccount: { select: { id: true, email: true } } },
+        },
+        assignedEmails: {
+          include: { emailAccount: { select: { id: true, type: true, email: true } } },
+        },
+      },
     });
     if (!u || u.role !== "collaborator") {
       return Response.json({ error: "No encontrado" }, { status: 404 });
@@ -25,6 +36,23 @@ export function GET(
       phone: u.employeeProfile?.phone ?? null,
       password: u.employeeProfile?.password ?? null,
       createdAt: u.createdAt.toISOString(),
+      laptops: u.assignedLaptops.map((l) => ({
+        id: l.id,
+        name: l.name,
+        serialNumber: l.serialNumber,
+        emailAccount: l.emailAccount ? { id: l.emailAccount.id, email: l.emailAccount.email } : null,
+      })),
+      phones: u.assignedPhones.map((p) => ({
+        id: p.id,
+        name: p.name,
+        phoneNumber: p.phoneNumber,
+        emailAccount: p.emailAccount ? { id: p.emailAccount.id, email: p.emailAccount.email } : null,
+      })),
+      emailAccounts: u.assignedEmails.map((ea) => ({
+        id: ea.emailAccount.id,
+        type: ea.emailAccount.type,
+        email: ea.emailAccount.email,
+      })),
     });
   });
 }

@@ -10,6 +10,7 @@ export function UserAppSidebar() {
       label="Mi cuenta"
       homeHref="/carrier/dashboard"
       profileHref="/carrier/dashboard/profile"
+      showWhatsAppContact
     />
   );
 }

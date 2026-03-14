@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { Check, Minus, MoveRight } from "lucide-react";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CityCombobox } from "@/components/dashboard/routes/city-combobox";
@@ -58,7 +57,6 @@ export default function CarrierRoutesPage() {
   const [canEditTarget, setCanEditTarget] = useState(false);
   const [canEditRoutes, setCanEditRoutes] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [jtpWhatsapp, setJtpWhatsapp] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const [filterOrigin, setFilterOrigin] = useState<string | null>(null);
@@ -92,10 +90,6 @@ export default function CarrierRoutesPage() {
 
   useEffect(() => {
     loadRoutes();
-    fetch("/api/settings")
-      .then((r) => r.json())
-      .then((data) => { if (data.jtp_whatsapp) setJtpWhatsapp(data.jtp_whatsapp); })
-      .catch(() => {});
   }, [loadRoutes]);
 
   const filteredRoutes = useMemo(() => {
@@ -188,26 +182,11 @@ export default function CarrierRoutesPage() {
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Rutas</h1>
-          <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
-            Selecciona las rutas en las que puedes trabajar y establece tu target.
-          </p>
-        </div>
-        {jtpWhatsapp && (
-          <Button variant="outline" size="sm" asChild className="shrink-0">
-            <a
-              href={`https://wa.me/${jtpWhatsapp.replace(/\D/g, "")}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5"
-            >
-              <Image src="/images/whatsapp/whatsapp.svg" alt="WhatsApp" width={16} height={16} className="size-4" />
-              Contactar JTP
-            </a>
-          </Button>
-        )}
+      <div>
+        <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Rutas</h1>
+        <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
+          Selecciona las rutas en las que puedes trabajar y establece tu target.
+        </p>
       </div>
       {!canEditTarget && isLoaded && (
         <p className="text-xs text-muted-foreground">

@@ -1,3 +1,23 @@
+export interface EmployeeLinkedLaptop {
+  id: string;
+  name: string;
+  serialNumber: string | null;
+  emailAccount: { id: string; email: string } | null;
+}
+
+export interface EmployeeLinkedPhone {
+  id: string;
+  name: string;
+  phoneNumber: string | null;
+  emailAccount: { id: string; email: string } | null;
+}
+
+export interface EmployeeLinkedEmail {
+  id: string;
+  type: string;
+  email: string;
+}
+
 export interface Employee {
   id: string;
   name: string;
@@ -9,6 +29,9 @@ export interface Employee {
   phone: string | null;
   password: string | null;
   createdAt: string;
+  laptops?: EmployeeLinkedLaptop[];
+  phones?: EmployeeLinkedPhone[];
+  emailAccounts?: EmployeeLinkedEmail[];
 }
 
 export interface EmployeeFormData {

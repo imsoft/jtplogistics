@@ -3,8 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut, UserRound, type LucideIcon } from "lucide-react";
-import { useMemo } from "react";
+import { LogOut, type LucideIcon } from "lucide-react";
+import { useMemo, useEffect, useState } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -37,7 +37,10 @@ interface DashboardSidebarProps {
   label: string;
   homeHref: string;
   profileHref: string;
+  showWhatsAppContact?: boolean;
 }
+
+const WHATSAPP_DEFAULT_MESSAGE = "Hola, soy transportista y necesito ayuda con la plataforma JTP Logistics.";
 
 export function DashboardSidebar({
   navItems,
@@ -45,11 +48,21 @@ export function DashboardSidebar({
   label,
   homeHref,
   profileHref,
+  showWhatsAppContact = false,
 }: DashboardSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { state } = useSidebar();
   const { data: session } = useSession();
+  const [jtpWhatsapp, setJtpWhatsapp] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!showWhatsAppContact) return;
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then((data) => { if (data.jtp_whatsapp) setJtpWhatsapp(data.jtp_whatsapp); })
+      .catch(() => {});
+  }, [showWhatsAppContact]);
   const userName = session?.user?.name ?? "Usuario";
   const userImage = session?.user?.image ?? null;
   const userInitials = useMemo(
@@ -157,6 +170,30 @@ export function DashboardSidebar({
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
+          {showWhatsAppContact && jtpWhatsapp && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                tooltip="Contactar JTP (soporte)"
+                className="text-muted-foreground text-xs"
+              >
+                <a
+                  href={`https://wa.me/${jtpWhatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(WHATSAPP_DEFAULT_MESSAGE)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Image
+                    src="/images/whatsapp/whatsapp.svg"
+                    alt="WhatsApp"
+                    width={16}
+                    height={16}
+                    className="size-4"
+                  />
+                  <span>Contactar JTP</span>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip="Cerrar sesión"
