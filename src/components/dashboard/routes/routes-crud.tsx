@@ -20,6 +20,7 @@ import {
 import { RouteDeleteDialog } from "./route-delete-dialog";
 import { CityCombobox } from "./city-combobox";
 import { useRoutesStore } from "@/hooks/use-routes-store";
+import { useUnitTypes } from "@/hooks/use-unit-types";
 import { parseCityValue } from "@/lib/data/mexico-cities";
 import { formatMxn } from "@/lib/utils";
 import { ROUTE_STATUS_LABELS } from "@/lib/constants/route-status";
@@ -31,6 +32,11 @@ const UNIT_FILTER_ALL = "all";
 
 export function RoutesCrud() {
   const { routes, deleteRoute: removeRoute, isLoaded, error } = useRoutesStore();
+  const unitTypes = useUnitTypes();
+  const unitTypeLabel = useMemo(
+    () => Object.fromEntries(unitTypes.map((u) => [u.value, u.label])),
+    [unitTypes]
+  );
   const [deleteRoute, setDeleteRoute] = useState<Route | null>(null);
   const [filterOrigin, setFilterOrigin] = useState<string | null>(null);
   const [filterDestination, setFilterDestination] = useState<string | null>(null);
@@ -123,7 +129,11 @@ export function RoutesCrud() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={UNIT_FILTER_ALL}>Todos</SelectItem>
-                  <SelectItem value="caja_seca">Caja seca</SelectItem>
+                  {unitTypes.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -193,7 +203,7 @@ export function RoutesCrud() {
                               )}
                             </td>
                             <td className="px-4 py-3">
-                              {route.unitType}
+                              {unitTypeLabel[route.unitType] ?? route.unitType}
                             </td>
                             <td className="px-4 py-3">
                               {description ? (
