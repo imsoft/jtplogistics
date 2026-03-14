@@ -22,8 +22,8 @@ export default async function RegisterPage() {
   return (
     <>
       <AuthPageHeader subtitle="Crea tu cuenta" />
-      <Card>
-        <CardHeader className="space-y-1">
+      <Card className="shadow-xl border-border/60">
+        <CardHeader className="space-y-1 pb-2">
           <CardTitle className="text-lg sm:text-xl">Registro</CardTitle>
           <CardDescription>
             Ingresa tus datos para crear una cuenta
@@ -32,8 +32,8 @@ export default async function RegisterPage() {
         <CardContent>
           <RegisterForm />
         </CardContent>
-        <CardFooter className="flex flex-col gap-4">
-          <p className="text-center text-sm text-muted-foreground">
+        <CardFooter className="border-t pt-5">
+          <p className="w-full text-center text-sm text-muted-foreground">
             ¿Ya tienes cuenta?{" "}
             <Link
               href="/login"

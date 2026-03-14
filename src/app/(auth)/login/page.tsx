@@ -16,8 +16,8 @@ export default async function LoginPage() {
   return (
     <>
       <AuthPageHeader subtitle="Inicia sesión en tu cuenta" />
-      <Card>
-        <CardHeader className="space-y-1">
+      <Card className="shadow-xl border-border/60">
+        <CardHeader className="space-y-1 pb-2">
           <CardTitle className="text-lg sm:text-xl">Iniciar sesión</CardTitle>
           <CardDescription>
             Ingresa tus credenciales para acceder a tu cuenta
@@ -27,17 +27,17 @@ export default async function LoginPage() {
           <Suspense>
             <LoginForm />
           </Suspense>
-          <p className="mt-3 text-center">
+          <p className="mt-4 text-center">
             <Link
               href="/forgot-password"
-              className="text-muted-foreground text-sm hover:text-primary hover:underline"
+              className="text-muted-foreground text-sm hover:text-primary hover:underline underline-offset-4"
             >
               ¿Olvidaste tu contraseña?
             </Link>
           </p>
         </CardContent>
-        <CardFooter className="flex flex-col gap-4">
-          <p className="text-center text-sm text-muted-foreground">
+        <CardFooter className="border-t pt-5">
+          <p className="w-full text-center text-sm text-muted-foreground">
             ¿No tienes cuenta?{" "}
             <Link
               href="/register"

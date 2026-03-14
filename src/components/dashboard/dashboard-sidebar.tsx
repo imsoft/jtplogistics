@@ -16,6 +16,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { signOut, useSession } from "@/lib/auth-client";
@@ -63,6 +64,7 @@ export function DashboardSidebar({
       .then((data) => { if (data.jtp_whatsapp) setJtpWhatsapp(data.jtp_whatsapp); })
       .catch(() => {});
   }, [showWhatsAppContact]);
+
   const userName = session?.user?.name ?? "Usuario";
   const userImage = session?.user?.image ?? null;
   const userInitials = useMemo(
@@ -82,11 +84,11 @@ export function DashboardSidebar({
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader>
+      <SidebarHeader className="pb-0">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild size="lg" tooltip="JTP Logistics">
-              <Link href={homeHref} className="flex items-center justify-center">
+            <SidebarMenuButton asChild size="lg" tooltip="JTP Logistics" className="hover:bg-transparent active:bg-transparent">
+              <Link href={homeHref} className="flex items-center justify-center py-1">
                 <Image
                   src="/images/logo/jtp-logistics.png"
                   alt="JTP Logistics"
@@ -99,12 +101,16 @@ export function DashboardSidebar({
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+        <SidebarSeparator className="mt-2" />
       </SidebarHeader>
+
       <SidebarContent>
         {navGroups
           ? navGroups.map((group) => (
               <SidebarGroup key={group.label}>
-                <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+                <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                  {group.label}
+                </SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
                     {group.items.map((item) => (
@@ -127,7 +133,9 @@ export function DashboardSidebar({
             ))
           : (
               <SidebarGroup>
-                <SidebarGroupLabel>{label}</SidebarGroupLabel>
+                <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                  {label}
+                </SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
                     {(navItems ?? []).map((item) => (
@@ -149,24 +157,26 @@ export function DashboardSidebar({
               </SidebarGroup>
             )}
       </SidebarContent>
-      <SidebarFooter>
+
+      <SidebarFooter className="pt-0">
+        <SidebarSeparator className="mb-1" />
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
               isActive={pathname === profileHref}
               tooltip={userName}
-              className="text-muted-foreground text-xs"
+              size="sm"
             >
-              <Link href={profileHref}>
-                <div className="bg-primary text-primary-foreground size-4 shrink-0 rounded-full overflow-hidden flex items-center justify-center text-[8px] font-semibold">
+              <Link href={profileHref} className="flex items-center gap-2.5">
+                <div className="bg-primary text-primary-foreground size-6 shrink-0 rounded-full overflow-hidden flex items-center justify-center text-[10px] font-bold ring-2 ring-primary/20">
                   {userImage ? (
-                    <Image src={userImage} alt={userName} width={16} height={16} className="object-cover w-full h-full" />
+                    <Image src={userImage} alt={userName} width={24} height={24} className="object-cover w-full h-full" />
                   ) : (
                     userInitials
                   )}
                 </div>
-                <span>{userName}</span>
+                <span className="truncate text-sm font-medium">{userName}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -175,7 +185,8 @@ export function DashboardSidebar({
               <SidebarMenuButton
                 asChild
                 tooltip="Contactar JTP (soporte)"
-                className="text-muted-foreground text-xs"
+                size="sm"
+                className="text-muted-foreground hover:text-foreground"
               >
                 <a
                   href={`https://wa.me/${jtpWhatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(WHATSAPP_DEFAULT_MESSAGE)}`}
@@ -197,7 +208,8 @@ export function DashboardSidebar({
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip="Cerrar sesión"
-              className="text-muted-foreground text-xs"
+              size="sm"
+              className="text-muted-foreground hover:text-destructive hover:bg-destructive/8"
               onClick={handleSignOut}
             >
               <LogOut className="size-4" />

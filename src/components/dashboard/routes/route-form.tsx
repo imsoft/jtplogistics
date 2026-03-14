@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -121,113 +122,119 @@ export function RouteForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-6">
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <CityCombobox
-            id="route-origin"
-            label="Origen"
-            value={origin}
-            onValueChange={setOrigin}
-            name="origin"
-            required
-          />
-          <CityCombobox
-            id="route-destination"
-            label="Destino"
-            value={destination}
-            onValueChange={(v) => {
-              setDestination(v);
-              setDestinationState(parseCityValue(v).state);
-            }}
-            name="destination"
-            required
-          />
-          <div className="space-y-2">
-            <Label htmlFor="route-destination-state">Estado del destino</Label>
-            <Input
-              id="route-destination-state"
-              type="text"
-              value={destinationState}
-              readOnly
-              className="w-full bg-muted/50 cursor-default"
+    <form onSubmit={handleSubmit} className="w-full space-y-5">
+      <Card>
+        <CardContent className="pt-6 space-y-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <CityCombobox
+              id="route-origin"
+              label="Origen"
+              value={origin}
+              onValueChange={setOrigin}
+              name="origin"
+              required
             />
-          </div>
-        </div>
-
-        {isDuplicate && (
-          <div className="flex items-start gap-2 rounded-md border border-yellow-400/50 bg-yellow-50 px-3 py-2 text-sm text-yellow-800 dark:border-yellow-500/30 dark:bg-yellow-900/20 dark:text-yellow-400">
-            <TriangleAlert className="mt-0.5 size-4 shrink-0" />
-            <span>
-              La ruta <strong>{originCity} → {destCity}</strong> ya está dada de alta.
-            </span>
-          </div>
-        )}
-
-        <div className="space-y-2">
-          <Label htmlFor="route-description">Descripción (opcional)</Label>
-          <Textarea
-            id="route-description"
-            name="description"
-            defaultValue={values.description}
-            rows={3}
-            className="resize-none"
-          />
-        </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="space-y-2">
-            <Label htmlFor="route-target">Target (MXN)</Label>
-            <Input
-              id="route-target"
-              type="text"
-              inputMode="decimal"
-              value={targetDisplay}
-              onChange={(e) => setTargetDisplay(formatMxnLive(e.target.value))}
-              onBlur={() => {
-                const parsed = parseMxn(targetDisplay);
-                if (parsed != null) setTargetDisplay(formatMxn(parsed));
+            <CityCombobox
+              id="route-destination"
+              label="Destino"
+              value={destination}
+              onValueChange={(v) => {
+                setDestination(v);
+                setDestinationState(parseCityValue(v).state);
               }}
-              className="w-full"
+              name="destination"
+              required
+            />
+            <div className="space-y-2">
+              <Label htmlFor="route-destination-state">Estado del destino</Label>
+              <Input
+                id="route-destination-state"
+                type="text"
+                value={destinationState}
+                readOnly
+                className="w-full bg-muted/50 cursor-default text-muted-foreground"
+              />
+            </div>
+          </div>
+
+          {isDuplicate && (
+            <div className="flex items-start gap-2 rounded-lg border border-yellow-400/50 bg-yellow-50 px-4 py-3 text-sm text-yellow-800 dark:border-yellow-500/30 dark:bg-yellow-900/20 dark:text-yellow-400">
+              <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+              <span>
+                La ruta <strong>{originCity} → {destCity}</strong> ya está dada de alta.
+              </span>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="route-description">Descripción <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+            <Textarea
+              id="route-description"
+              name="description"
+              defaultValue={values.description}
+              rows={3}
+              className="resize-none"
+              placeholder="Notas o detalles adicionales sobre esta ruta…"
             />
           </div>
-          <div className="space-y-2">
-            <Label>Tipo de unidad</Label>
-            <Select value={unitType} onValueChange={(v) => setUnitType(v as UnitType)}>
-              <SelectTrigger id="route-unit-type" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {unitTypeOptions.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="route-target">Target (MXN)</Label>
+              <Input
+                id="route-target"
+                type="text"
+                inputMode="decimal"
+                value={targetDisplay}
+                onChange={(e) => setTargetDisplay(formatMxnLive(e.target.value))}
+                onBlur={() => {
+                  const parsed = parseMxn(targetDisplay);
+                  if (parsed != null) setTargetDisplay(formatMxn(parsed));
+                }}
+                className="w-full"
+                placeholder="0.00"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Tipo de unidad</Label>
+              <Select value={unitType} onValueChange={(v) => setUnitType(v as UnitType)}>
+                <SelectTrigger id="route-unit-type" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {unitTypeOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Estado</Label>
+              <Select value={status} onValueChange={(v) => setStatus(v as RouteStatus)}>
+                <SelectTrigger id="route-status" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROUTE_STATUS_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label>Estado</Label>
-            <Select value={status} onValueChange={(v) => setStatus(v as RouteStatus)}>
-              <SelectTrigger id="route-status" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {ROUTE_STATUS_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
+
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <Button type="submit" className="w-full sm:w-auto" disabled={isDuplicate}>
-          {submitLabel}
-        </Button>
         <Button type="button" variant="outline" asChild className="w-full sm:w-auto">
           <Link href={cancelHref}>Cancelar</Link>
+        </Button>
+        <Button type="submit" className="w-full sm:w-auto" disabled={isDuplicate}>
+          {submitLabel}
         </Button>
       </div>
     </form>

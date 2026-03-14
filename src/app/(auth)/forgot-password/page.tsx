@@ -12,8 +12,8 @@ export default function ForgotPasswordPage() {
   return (
     <>
       <AuthPageHeader subtitle="Restablecer contraseña" />
-      <Card>
-        <CardHeader className="space-y-1">
+      <Card className="shadow-xl border-border/60">
+        <CardHeader className="space-y-1 pb-2">
           <CardTitle className="text-lg sm:text-xl">
             ¿Olvidaste tu contraseña?
           </CardTitle>
@@ -25,8 +25,8 @@ export default function ForgotPasswordPage() {
         <CardContent>
           <ForgotPasswordForm />
         </CardContent>
-        <CardFooter className="flex flex-col gap-4">
-          <p className="text-center text-sm text-muted-foreground">
+        <CardFooter className="border-t pt-5">
+          <p className="w-full text-center text-sm text-muted-foreground">
             ¿Recordaste tu contraseña?{" "}
             <Link
               href="/login"

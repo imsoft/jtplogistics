@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 interface ResourceListPageProps {
   title: string;
@@ -18,8 +19,8 @@ export function ResourceListPage({
   children,
 }: ResourceListPageProps) {
   return (
-    <div className="min-w-0 space-y-4 sm:space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div className="min-w-0 space-y-5 sm:space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <h1 className="text-xl font-bold tracking-tight sm:text-2xl">{title}</h1>
           <p className="text-muted-foreground mt-1 text-xs sm:text-sm">{description}</p>
@@ -31,6 +32,7 @@ export function ResourceListPage({
           </Link>
         </Button>
       </div>
+      <Separator />
       {children}
     </div>
   );
