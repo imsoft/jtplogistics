@@ -15,7 +15,8 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:assign-route-creator": "tsx scripts/assign-route-creator.ts",
     "db:sync-route-destination-states": "tsx scripts/sync-route-destination-states.ts",
-    "db:seed-settings": "tsx scripts/seed-settings.ts"
+    "db:seed-settings": "tsx scripts/seed-settings.ts",
+    "db:create-demo-carrier": "tsx scripts/create-demo-carrier.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

@@ -17,19 +17,29 @@ export function EditJtpWhatsapp() {
     fetch("/api/admin/settings")
       .then((r) => r.json())
       .then((data) => {
-        if (data.jtp_whatsapp) setPhone(data.jtp_whatsapp);
+        const raw = data.jtp_whatsapp ?? "";
+        const digits = raw.replace(/\D/g, "");
+        setPhone(digits.startsWith("52") && digits.length === 12 ? digits.slice(2) : digits);
       })
       .catch(() => {})
       .finally(() => setIsFetching(false));
   }, []);
 
+  function toFullNumber(digits: string): string {
+    const d = digits.replace(/\D/g, "");
+    if (d.length === 10) return `52${d}`;
+    if (d.length === 12 && d.startsWith("52")) return d;
+    return d;
+  }
+
   async function handleSave() {
     setIsLoading(true);
     try {
+      const full = toFullNumber(phone.trim());
       const res = await fetch("/api/admin/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jtp_whatsapp: phone.trim() }),
+        body: JSON.stringify({ jtp_whatsapp: full || phone.trim() }),
       });
       if (!res.ok) throw new Error();
       setIsEditing(false);
@@ -41,8 +51,8 @@ export function EditJtpWhatsapp() {
     }
   }
 
-  const cleaned = phone.replace(/\D/g, "");
-  const waUrl = cleaned ? `https://wa.me/${cleaned}` : null;
+  const full = toFullNumber(phone);
+  const waUrl = full ? `https://wa.me/${full.replace(/\D/g, "")}` : null;
 
   return (
     <Card>
@@ -86,7 +96,8 @@ export function EditJtpWhatsapp() {
               <div className="flex items-center gap-2">
                 <Input
                   type="tel"
-                  placeholder="Ej: 5212345678900"
+                  inputMode="numeric"
+                  placeholder="3315841738"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   disabled={isLoading}

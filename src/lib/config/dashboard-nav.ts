@@ -12,6 +12,7 @@ import { ClipboardList } from "lucide-react";
 import { Settings } from "lucide-react";
 import { Boxes } from "lucide-react";
 import { Users } from "lucide-react";
+import { Copy } from "lucide-react";
 
 export interface DashboardNavItem {
   title: string;
@@ -55,6 +56,7 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
     items: [
       { title: "Ideas", href: "/admin/dashboard/ideas", icon: Lightbulb },
       { title: "Tareas", href: "/admin/dashboard/tasks", icon: ClipboardList },
+      { title: "Cuenta demo", href: "/admin/dashboard/demo-account", icon: Copy },
       { title: "Configuración", href: "/admin/dashboard/settings", icon: Settings },
     ],
   },

@@ -16,20 +16,30 @@ export default function AdminSettingsPage() {
     fetch("/api/admin/settings")
       .then((r) => r.ok ? r.json() : {})
       .then((data: Record<string, string>) => {
-        setWhatsapp(data.jtp_whatsapp ?? "");
+        const raw = data.jtp_whatsapp ?? "";
+        const digits = raw.replace(/\D/g, "");
+        setWhatsapp(digits.startsWith("52") && digits.length === 12 ? digits.slice(2) : digits);
         setIsLoaded(true);
       })
       .catch(() => setIsLoaded(true));
   }, []);
 
+  function toFullNumber(digits: string): string {
+    const d = digits.replace(/\D/g, "");
+    if (d.length === 10) return `52${d}`;
+    if (d.length === 12 && d.startsWith("52")) return d;
+    return d;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsSaving(true);
     try {
+      const full = toFullNumber(whatsapp.trim());
       const res = await fetch("/api/admin/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jtp_whatsapp: whatsapp.trim() }),
+        body: JSON.stringify({ jtp_whatsapp: full }),
       });
       if (!res.ok) throw new Error();
       toast.success("Configuración guardada correctamente.");
@@ -56,7 +66,7 @@ export default function AdminSettingsPage() {
           <CardTitle className="text-base sm:text-lg">WhatsApp de contacto</CardTitle>
           <CardDescription className="text-xs sm:text-sm">
             Número que se muestra a los transportistas como botón de contacto en su panel de rutas.
-            Incluye código de país sin el «+» (ej. 523315841738).
+            Solo los 10 dígitos mexicanos — el prefijo +52 se agrega automáticamente.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -66,7 +76,8 @@ export default function AdminSettingsPage() {
               <Input
                 id="whatsapp"
                 type="tel"
-                placeholder="523315841738"
+                inputMode="numeric"
+                placeholder="3315841738"
                 value={whatsapp}
                 onChange={(e) => setWhatsapp(e.target.value)}
                 disabled={isSaving}

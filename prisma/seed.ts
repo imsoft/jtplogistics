@@ -48,6 +48,9 @@ async function main() {
   const carrier3Id = await createUser("Roberto Juárez", "roberto@logisticasur.com", "Carrier123!", "carrier");
   console.log("✅ Carrier 3 creado:", carrier3Id);
 
+  const demoCarrierId = await createUser("Demo Transportista", "demo@jtp.com.mx", "Demo2026", "carrier");
+  console.log("✅ Cuenta demo transportista creada:", demoCarrierId);
+
   const collabId  = await createUser("Ana García",      "ana@jtplogistics.com",     "Collab123!", "collaborator");
   const collab2Id = await createUser("Luis Ramírez",    "luis@jtplogistics.com",    "Collab123!", "collaborator");
   const collab3Id = await createUser("Sofía Herrera",   "sofia@jtplogistics.com",   "Collab123!", "collaborator");
@@ -248,6 +251,7 @@ async function main() {
 
 Usuarios:
   admin@jtplogistics.com        / Admin123!
+  demo@jtp.com.mx               / Demo2026 (cuenta genérica transportistas)
   carlos@transportesmexico.com  / Carrier123!
   maria@fletesnorte.com         / Carrier123!
   roberto@logisticasur.com      / Carrier123!
