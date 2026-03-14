@@ -84,11 +84,11 @@ export function DashboardSidebar({
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b">
+      <SidebarHeader className="border-b py-1 px-2">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="lg" tooltip="JTP Logistics" className="hover:bg-transparent active:bg-transparent">
-              <Link href={homeHref} className="flex items-center justify-center py-1">
+              <Link href={homeHref} className="flex items-center justify-center">
                 <Image
                   src="/images/logo/jtp-logistics.png"
                   alt="JTP Logistics"
