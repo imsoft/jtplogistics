@@ -160,11 +160,7 @@ export function VendorQuotesTable() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-lg bg-muted/50 p-4">
-                <p className="text-muted-foreground text-xs font-medium">Promedio</p>
-                <p className="text-lg font-semibold">${formatMxn(stats.avg)}</p>
-              </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <div className="rounded-lg bg-muted/50 p-4">
                 <p className="text-muted-foreground text-xs font-medium">Venta</p>
                 <p className="text-lg font-semibold">${formatMxn(stats.venta)}</p>
