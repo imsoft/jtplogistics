@@ -84,7 +84,7 @@ export function DashboardSidebar({
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="pb-0">
+      <SidebarHeader className="border-b">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="lg" tooltip="JTP Logistics" className="hover:bg-transparent active:bg-transparent">
@@ -101,7 +101,6 @@ export function DashboardSidebar({
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-        <SidebarSeparator className="mt-2" />
       </SidebarHeader>
 
       <SidebarContent>
