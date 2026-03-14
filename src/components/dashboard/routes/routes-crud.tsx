@@ -178,7 +178,7 @@ export function RoutesCrud() {
                         return (
                           <tr
                             key={route.id}
-                            className="border-b last:border-b-0 transition-colors hover:bg-muted/30"
+                            className="border-b last:border-b-0 transition-colors hover:bg-hover hover:text-hover-foreground"
                           >
                             <td className="px-4 py-3">
                               <p className="flex items-center gap-1 font-medium">

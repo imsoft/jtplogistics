@@ -314,7 +314,7 @@ export default function CarrierRoutesPage() {
                       return (
                         <div
                           key={route.id}
-                          className="grid grid-cols-[auto_1fr_130px_80px_56px] gap-3 items-center border-b px-3 py-3 last:border-b-0 sm:px-4 hover:bg-muted/30 transition-colors"
+                          className="grid grid-cols-[auto_1fr_130px_80px_56px] gap-3 items-center border-b px-3 py-3 last:border-b-0 sm:px-4 hover:bg-hover hover:text-hover-foreground transition-colors"
                         >
                           <label className="flex cursor-pointer items-center gap-2">
                             <input
