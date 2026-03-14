@@ -1,6 +1,9 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireCarrier } from "@/lib/auth-server";
+import { sendEmail } from "@/lib/email";
+
+const PRICING_EMAIL = "pricing@jtp.com.mx";
 
 // GET  — todas las rutas activas + selección guardada del carrier + permiso de edición
 export async function GET() {
@@ -123,10 +126,68 @@ export async function PUT(request: NextRequest) {
       }
     }
 
+    // Notificación a pricing
+    void notifyPricing(session.user.id, body);
+
     return Response.json({ ok: true });
   } catch (e) {
     if (e instanceof Response) throw e;
     console.error(e);
     return Response.json({ error: "Error interno del servidor" }, { status: 500 });
+  }
+}
+
+async function notifyPricing(
+  carrierId: string,
+  items: { routeId: string; carrierTarget: number | null; carrierWeeklyVolume: number | null }[]
+) {
+  try {
+    if (items.length === 0) return;
+
+    const [carrier, routes] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: carrierId },
+        select: { name: true, email: true },
+      }),
+      prisma.route.findMany({
+        where: { id: { in: items.map((i) => i.routeId) } },
+        select: { id: true, origin: true, destination: true },
+      }),
+    ]);
+
+    const routeMap = new Map(routes.map((r) => [r.id, r]));
+    const now = new Date().toLocaleString("es-MX", {
+      timeZone: "America/Mexico_City",
+      dateStyle: "short",
+      timeStyle: "short",
+    });
+
+    const lineas = items
+      .map((item) => {
+        const r = routeMap.get(item.routeId);
+        if (!r) return null;
+        const target = item.carrierTarget != null
+          ? `$${item.carrierTarget.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`
+          : "Sin target";
+        const vol = item.carrierWeeklyVolume != null ? `${item.carrierWeeklyVolume} unid./sem.` : "—";
+        return `• ${r.origin} → ${r.destination} | Target: ${target} | Volumen: ${vol}`;
+      })
+      .filter(Boolean)
+      .join("\n");
+
+    const text = [
+      `El proveedor ${carrier?.name ?? "desconocido"} (${carrier?.email ?? ""}) guardó o actualizó su licitación el ${now}.`,
+      "",
+      `Rutas (${items.length}):`,
+      lineas,
+    ].join("\n");
+
+    await sendEmail({
+      to: PRICING_EMAIL,
+      subject: `Licitación actualizada — ${carrier?.name ?? carrierId}`,
+      text,
+    });
+  } catch (e) {
+    console.error("[carrier/routes] Error al enviar notificación:", e);
   }
 }

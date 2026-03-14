@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { Check, Minus, MessageCircle, MoveRight } from "lucide-react";
+import { Check, Minus, MoveRight } from "lucide-react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CityCombobox } from "@/components/dashboard/routes/city-combobox";
@@ -202,7 +203,7 @@ export default function CarrierRoutesPage() {
               rel="noopener noreferrer"
               className="flex items-center gap-1.5"
             >
-              <MessageCircle className="size-4" />
+              <Image src="/images/whatsapp/whatsapp.svg" alt="WhatsApp" width={16} height={16} className="size-4" />
               Contactar JTP
             </a>
           </Button>
