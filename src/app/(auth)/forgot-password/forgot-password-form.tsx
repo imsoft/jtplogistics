@@ -67,7 +67,6 @@ export function ForgotPasswordForm() {
           autoComplete="email"
           required
           disabled={isLoading}
-          placeholder="tu@correo.com"
         />
       </div>
       <Button type="submit" className="w-full" size="lg" disabled={isLoading}>

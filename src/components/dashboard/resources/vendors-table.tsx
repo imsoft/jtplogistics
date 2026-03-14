@@ -52,7 +52,6 @@ export function VendorsTable() {
       columns={getColumns()}
       data={vendors}
       filterColumn="search"
-      filterPlaceholder="Buscar por nombre o correo…"
       initialColumnVisibility={{ search: false }}
       getRowId={(row) => row.id}
       onRowClick={(v) => router.push(`/admin/dashboard/vendors/${v.id}`)}

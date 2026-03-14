@@ -82,7 +82,6 @@ export function EmployeesTable() {
       columns={getColumns()}
       data={filtered}
       filterColumn="search"
-      filterPlaceholder="Buscar por nombre, correo, puesto…"
       initialColumnVisibility={{ search: false }}
       getRowId={(row) => row.id}
       onRowClick={(emp) => router.push(`/admin/dashboard/employees/${emp.id}`)}
@@ -90,7 +89,7 @@ export function EmployeesTable() {
         <>
           <Select value={filterDepartment} onValueChange={setFilterDepartment}>
             <SelectTrigger className="w-full sm:w-[160px]">
-              <SelectValue placeholder="Departamento" />
+              <SelectValue placeholder="" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos los depto.</SelectItem>

@@ -13,7 +13,7 @@ export function EmailAccountSelect({
   label = "Correo vinculado",
   value,
   onValueChange,
-  placeholder = "Sin correo",
+  placeholder = "",
 }: EmailAccountSelectProps) {
   return (
     <ResourceSelect

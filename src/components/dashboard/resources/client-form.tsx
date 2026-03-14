@@ -44,7 +44,6 @@ export function ClientForm({
             id="client-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Ej: Empresa ABC"
             required
           />
         </div>
@@ -54,7 +53,6 @@ export function ClientForm({
             id="client-legalName"
             value={legalName}
             onChange={(e) => setLegalName(e.target.value)}
-            placeholder="Ej: Empresa ABC, S.A. de C.V."
           />
         </div>
         <div className="space-y-2">
@@ -63,7 +61,6 @@ export function ClientForm({
             id="client-rfc"
             value={rfc}
             onChange={(e) => setRfc(e.target.value)}
-            placeholder="Ej: EAB123456ABC"
           />
         </div>
         <div className="space-y-2">
@@ -73,7 +70,6 @@ export function ClientForm({
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="contacto@empresa.com"
           />
         </div>
         <div className="space-y-2 sm:col-span-2">
@@ -82,7 +78,6 @@ export function ClientForm({
             id="client-phone"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            placeholder="Ej: 55 1234 5678"
           />
         </div>
         <div className="space-y-2 sm:col-span-2">
@@ -91,7 +86,6 @@ export function ClientForm({
             id="client-address"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            placeholder="Calle, número, colonia, ciudad, estado"
           />
         </div>
         <div className="space-y-2 sm:col-span-2">
@@ -100,7 +94,6 @@ export function ClientForm({
             id="client-notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Información adicional del cliente"
             rows={3}
           />
         </div>

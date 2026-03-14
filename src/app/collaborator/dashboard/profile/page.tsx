@@ -121,7 +121,6 @@ export default function CollaboratorProfilePage() {
               disabled
               value={department ?? ""}
               className="bg-muted"
-              placeholder="Sin asignar"
             />
           </div>
           <div className="space-y-2">
@@ -131,7 +130,6 @@ export default function CollaboratorProfilePage() {
               disabled
               value={position ?? ""}
               className="bg-muted"
-              placeholder="Sin asignar"
             />
           </div>
         </div>

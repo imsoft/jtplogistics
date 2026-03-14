@@ -42,7 +42,6 @@ export function IdeaForm({
             id="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Escribe el título de tu idea"
             required
           />
         </div>
@@ -51,7 +50,7 @@ export function IdeaForm({
           <Label htmlFor="category">Categoría</Label>
           <Select value={category} onValueChange={setCategory}>
             <SelectTrigger id="category" className="w-full">
-              <SelectValue placeholder="Sin categoría" />
+              <SelectValue placeholder="" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">Sin categoría</SelectItem>
@@ -70,7 +69,6 @@ export function IdeaForm({
             id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Describe tu idea con más detalle (opcional)"
             rows={5}
           />
         </div>

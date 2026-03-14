@@ -91,7 +91,6 @@ export function PhonesTable() {
       columns={getColumns()}
       data={filtered}
       filterColumn="search"
-      filterPlaceholder="Buscar por nombre, número, IMEI…"
       initialColumnVisibility={{ search: false }}
       getRowId={(row) => row.id}
       onRowClick={(phone) => router.push(`/admin/dashboard/phones/${phone.id}`)}
@@ -99,7 +98,7 @@ export function PhonesTable() {
         <>
           <Select value={filterAssigned} onValueChange={setFilterAssigned}>
             <SelectTrigger className="w-full sm:w-[150px]">
-              <SelectValue placeholder="Asignación" />
+              <SelectValue placeholder="" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Cualquier asignación</SelectItem>

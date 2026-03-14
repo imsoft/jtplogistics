@@ -97,7 +97,6 @@ export function EditJtpWhatsapp() {
                 <Input
                   type="tel"
                   inputMode="numeric"
-                  placeholder="3315841738"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   disabled={isLoading}

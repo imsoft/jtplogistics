@@ -78,7 +78,6 @@ export function EmailsTable() {
       columns={getColumns()}
       data={filtered}
       filterColumn="search"
-      filterPlaceholder="Buscar por correo, tipo, asignado…"
       initialColumnVisibility={{ search: false }}
       getRowId={(row) => row.id}
       onRowClick={(email) => router.push(`/admin/dashboard/emails/${email.id}`)}
@@ -86,7 +85,7 @@ export function EmailsTable() {
         <>
           <Select value={filterType} onValueChange={setFilterType}>
             <SelectTrigger className="w-full sm:w-[140px]">
-              <SelectValue placeholder="Tipo" />
+              <SelectValue placeholder="" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos los tipos</SelectItem>

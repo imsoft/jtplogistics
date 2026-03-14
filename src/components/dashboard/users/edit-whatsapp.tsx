@@ -73,7 +73,6 @@ export function EditWhatsapp({
         <div className="flex items-center gap-2 pt-1">
           <Input
             type="tel"
-            placeholder="Ej: 5212345678900"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             disabled={isLoading}

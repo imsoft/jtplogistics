@@ -77,7 +77,6 @@ export function UsersTable({ defaultRole }: { defaultRole?: UserRole }) {
       columns={columns}
       data={filteredUsers}
       filterColumn="search"
-      filterPlaceholder="Buscar por nombre, correo o rol…"
       initialColumnVisibility={{ search: false }}
       getRowId={(row) => row.id}
       onRowClick={(user) => router.push(`/admin/dashboard/users/${user.id}`)}
@@ -86,7 +85,7 @@ export function UsersTable({ defaultRole }: { defaultRole?: UserRole }) {
           <>
             <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as RoleFilter)}>
               <SelectTrigger className="w-full sm:w-[160px]">
-                <SelectValue placeholder="Filtrar por rol" />
+                <SelectValue placeholder="" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los roles</SelectItem>

@@ -63,7 +63,6 @@ export function ClientsTable() {
       columns={getColumns()}
       data={clients}
       filterColumn="search"
-      filterPlaceholder="Buscar por nombre, razón social, correo, teléfono…"
       initialColumnVisibility={{ search: false }}
       getRowId={(row) => row.id}
       onRowClick={(client) => router.push(`/admin/dashboard/clients/${client.id}`)}

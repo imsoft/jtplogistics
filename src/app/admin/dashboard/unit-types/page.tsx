@@ -187,7 +187,7 @@ export default function UnitTypesPage() {
           <form onSubmit={handleCreate} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="new-name">Nombre (visible)</Label>
-              <Input id="new-name" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Ej: Caja refrigerada" required disabled={isCreating} />
+              <Input id="new-name" value={newName} onChange={(e) => setNewName(e.target.value)}  required disabled={isCreating} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="new-value">Valor (identificador único)</Label>
@@ -195,7 +195,6 @@ export default function UnitTypesPage() {
                 id="new-value"
                 value={newValue}
                 onChange={(e) => setNewValue(e.target.value.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, ""))}
-                placeholder="Ej: refrigerated_box"
                 required
                 disabled={isCreating}
               />

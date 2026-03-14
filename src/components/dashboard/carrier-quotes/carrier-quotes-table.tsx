@@ -144,7 +144,7 @@ export function CarrierQuotesTable() {
           <Label className="text-xs font-medium">Origen</Label>
           <Select value={selectedOrigin} onValueChange={handleOriginChange}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Selecciona un origen" />
+              <SelectValue placeholder="" />
             </SelectTrigger>
             <SelectContent>
               {origins.map((o) => (
@@ -164,7 +164,7 @@ export function CarrierQuotesTable() {
             disabled={!selectedOrigin}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder={selectedOrigin ? "Selecciona un destino" : "Primero selecciona un origen"} />
+              <SelectValue placeholder="" />
             </SelectTrigger>
             <SelectContent>
               {destinations.map((d) => (
@@ -179,7 +179,6 @@ export function CarrierQuotesTable() {
         <div className="space-y-2">
           <Label className="text-xs font-medium">Buscar</Label>
           <Input
-            placeholder="Nombre, empresa o correo…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             disabled={!selectedRouteId}

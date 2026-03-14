@@ -77,7 +77,6 @@ export default function AdminSettingsPage() {
                 id="whatsapp"
                 type="tel"
                 inputMode="numeric"
-                placeholder="3315841738"
                 value={whatsapp}
                 onChange={(e) => setWhatsapp(e.target.value)}
                 disabled={isSaving}

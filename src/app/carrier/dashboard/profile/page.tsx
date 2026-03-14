@@ -268,7 +268,6 @@ export default function CarrierProfilePage() {
                 <div key={c.idx} className="flex flex-wrap items-center gap-2">
                   <Input
                     type="tel"
-                    placeholder="Número"
                     value={c.value}
                     onChange={(e) => updateContact(c.idx, "value", e.target.value)}
                     disabled={isLoading}
@@ -326,7 +325,6 @@ export default function CarrierProfilePage() {
                 <div key={c.idx} className="flex flex-wrap items-center gap-2">
                   <Input
                     type="email"
-                    placeholder="correo@ejemplo.com"
                     value={c.value}
                     onChange={(e) => updateContact(c.idx, "value", e.target.value)}
                     disabled={isLoading}

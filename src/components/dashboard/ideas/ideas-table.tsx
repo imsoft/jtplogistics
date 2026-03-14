@@ -77,7 +77,6 @@ export function IdeasTable({ isAdmin }: IdeasTableProps) {
       columns={columns}
       data={ideas}
       filterColumn="title"
-      filterPlaceholder="Buscar por título…"
       onRowClick={
         isAdmin
           ? (idea) => router.push(`/admin/dashboard/ideas/${idea.id}`)

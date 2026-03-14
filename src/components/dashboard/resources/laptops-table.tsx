@@ -86,7 +86,6 @@ export function LaptopsTable() {
       columns={getColumns()}
       data={filtered}
       filterColumn="search"
-      filterPlaceholder="Buscar por nombre, serie, asignado…"
       initialColumnVisibility={{ search: false }}
       getRowId={(row) => row.id}
       onRowClick={(laptop) => router.push(`/admin/dashboard/laptops/${laptop.id}`)}
@@ -94,7 +93,7 @@ export function LaptopsTable() {
         <>
           <Select value={filterAssigned} onValueChange={setFilterAssigned}>
             <SelectTrigger className="w-full sm:w-[150px]">
-              <SelectValue placeholder="Asignación" />
+              <SelectValue placeholder="" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Cualquier asignación</SelectItem>

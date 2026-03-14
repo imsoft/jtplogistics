@@ -33,7 +33,7 @@ export function ResourceSelect({
   label,
   value,
   onValueChange,
-  placeholder = "Sin asignar",
+  placeholder = "",
   noneLabel = "Sin asignar",
 }: ResourceSelectProps) {
   const [options, setOptions] = useState<Option[]>([]);

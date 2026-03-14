@@ -108,7 +108,7 @@ export function VendorQuotesTable() {
           <Label className="text-xs font-medium">Origen</Label>
           <Select value={selectedOrigin} onValueChange={handleOriginChange}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Selecciona un origen" />
+              <SelectValue placeholder="" />
             </SelectTrigger>
             <SelectContent>
               {origins.map((o) => (
@@ -128,13 +128,7 @@ export function VendorQuotesTable() {
             disabled={!selectedOrigin}
           >
             <SelectTrigger className="w-full">
-              <SelectValue
-                placeholder={
-                  selectedOrigin
-                    ? "Selecciona un destino"
-                    : "Primero selecciona un origen"
-                }
-              />
+              <SelectValue placeholder="" />
             </SelectTrigger>
             <SelectContent>
               {destinations.map((d) => (

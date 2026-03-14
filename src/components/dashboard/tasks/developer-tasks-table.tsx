@@ -101,12 +101,11 @@ export function DeveloperTasksTable() {
       columns={columns}
       data={displayTasks}
       filterColumn="search"
-      filterPlaceholder="Buscar por descripción…"
       getRowId={(row) => row.id}
       toolbar={
         <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as TaskStatus | typeof ALL)}>
           <SelectTrigger className="w-full sm:w-44">
-            <SelectValue placeholder="Todos los estados" />
+            <SelectValue placeholder="" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={ALL}>Todos los estados</SelectItem>

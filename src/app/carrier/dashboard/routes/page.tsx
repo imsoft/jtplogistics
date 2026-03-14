@@ -332,7 +332,6 @@ export default function CarrierRoutesPage() {
                             type="number"
                             inputMode="numeric"
                             min={0}
-                            placeholder="0"
                             value={weeklyVolumeByRouteId[route.id] ?? ""}
                             onChange={(e) => handleVolumeChange(route.id, e.target.value)}
                             disabled={!isSelected || isLocked}

@@ -13,7 +13,7 @@ export function EmployeeSelect({
   label = "Asignado a",
   value,
   onValueChange,
-  placeholder = "Sin asignar",
+  placeholder = "",
 }: EmployeeSelectProps) {
   return (
     <ResourceSelect
