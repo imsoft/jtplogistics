@@ -92,7 +92,7 @@ export function RoutesCrud() {
         </p>
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_auto]">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_auto] xl:grid-cols-[1fr_1fr_1fr_1fr_auto]">
             <CityCombobox
               id="filter-origin"
               label="Origen"
@@ -142,6 +142,7 @@ export function RoutesCrud() {
               <Button
                 type="button"
                 variant="outline"
+                className="w-full"
                 onClick={() => {
                   setFilterOrigin(null);
                   setFilterDestination(null);

@@ -204,15 +204,15 @@ export function ClientRoutesDialog({ clientId, open, onOpenChange, onSave }: Cli
           )}
         </div>
 
-        <DialogFooter className="flex items-center justify-between gap-2 border-t px-6 py-4">
-          <span className="text-xs text-muted-foreground">
+        <DialogFooter className="flex flex-col-reverse gap-3 border-t px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <span className="text-xs text-muted-foreground text-center sm:text-left">
             {selected.size} ruta{selected.size !== 1 ? "s" : ""} seleccionada{selected.size !== 1 ? "s" : ""}
           </span>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row">
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)} disabled={isSaving}>
               Cancelar
             </Button>
-            <Button onClick={handleSave} disabled={isSaving || !isLoaded}>
+            <Button className="w-full sm:w-auto" onClick={handleSave} disabled={isSaving || !isLoaded}>
               {isSaving ? "Guardando…" : "Guardar"}
             </Button>
           </div>

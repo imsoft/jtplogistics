@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { Check, Minus, MoveRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -203,6 +204,7 @@ export default function CarrierRoutesPage() {
           Selecciona las rutas en las que puedes trabajar y establece tu target.
         </p>
       </div>
+      <Separator />
       {!canEditTarget && isLoaded && (
         <p className="text-xs text-muted-foreground">
           La edición de tu target está deshabilitada. Contacta al administrador.

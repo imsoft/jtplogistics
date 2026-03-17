@@ -70,7 +70,7 @@ export default function ClientProfilePage() {
   return (
     <div className="min-w-0 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2 min-w-0">
           <Button variant="ghost" size="icon" asChild className="shrink-0">
             <Link href="/admin/dashboard/clients" aria-label="Volver a clientes">

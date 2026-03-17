@@ -30,7 +30,7 @@ export function ResourceEditHeader({
 }: ResourceEditHeaderProps) {
   return (
     <div className="space-y-5 sm:space-y-6">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-1.5 min-w-0">
           <Button variant="ghost" size="icon" asChild className="shrink-0 text-muted-foreground hover:text-foreground">
             <Link href={backHref} aria-label={backLabel}>
