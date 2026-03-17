@@ -23,6 +23,18 @@ export function formatPhone(value: string | null | undefined): string {
   return value;
 }
 
+/**
+ * Formatea un IMEI de 15 dígitos como "35 094981 137257 6".
+ */
+export function formatIMEI(value: string | null | undefined): string {
+  if (!value) return "";
+  const d = value.replace(/\D/g, "");
+  if (d.length === 15) {
+    return `${d.slice(0, 2)} ${d.slice(2, 8)} ${d.slice(8, 14)} ${d.slice(14)}`;
+  }
+  return value;
+}
+
 /** Formatea un número como precio en pesos (miles con coma, decimales con punto). */
 export function formatMxn(value: number): string {
   if (Number.isNaN(value) || value == null) return ""

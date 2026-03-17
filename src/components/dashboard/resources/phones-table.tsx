@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { PhoneDevice } from "@/types/resources.types";
-import { formatPhone } from "@/lib/utils";
+import { formatPhone, formatIMEI } from "@/lib/utils";
 
 function getColumns(): ColumnDef<PhoneDevice>[] {
   return [
@@ -43,7 +43,10 @@ function getColumns(): ColumnDef<PhoneDevice>[] {
     {
       accessorKey: "imei",
       header: ({ column }) => <SortableColumnHeader column={column} title="IMEI" />,
-      cell: ({ row }) => row.getValue("imei") ?? <span className="text-muted-foreground">—</span>,
+      cell: ({ row }) => {
+        const v = row.getValue<string | null>("imei");
+        return v ? formatIMEI(v) : <span className="text-muted-foreground">—</span>;
+      },
     },
     {
       id: "assignedTo",
