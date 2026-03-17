@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-server";
 import { USER_ROLE_LABELS } from "@/lib/constants/user-role";
 import { InfoRow } from "@/components/dashboard/users/info-row";
+import { formatPhone } from "@/lib/utils";
 import { TargetDiff } from "@/components/dashboard/users/target-diff";
 import { ToggleCarrierPermissions } from "@/components/dashboard/users/toggle-carrier-permissions";
 import type { UserRole } from "@/types/user.types";
@@ -154,7 +155,7 @@ export default async function UserProfilePage({
                 {phones.map((c) => (
                   <div key={c.id} className="flex flex-col gap-0.5 border-b py-3 last:border-0 sm:grid sm:grid-cols-[140px_1fr] sm:gap-2">
                     <span className="text-muted-foreground text-sm">{c.label ?? "Teléfono"}</span>
-                    <span className="text-sm font-medium">{c.value}</span>
+                    <span className="text-sm font-medium">{formatPhone(c.value)}</span>
                   </div>
                 ))}
               </CardContent>

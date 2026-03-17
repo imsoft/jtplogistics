@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { PhoneDevice } from "@/types/resources.types";
+import { formatPhone } from "@/lib/utils";
 
 function getColumns(): ColumnDef<PhoneDevice>[] {
   return [
@@ -34,7 +35,10 @@ function getColumns(): ColumnDef<PhoneDevice>[] {
     {
       accessorKey: "phoneNumber",
       header: ({ column }) => <SortableColumnHeader column={column} title="Número" />,
-      cell: ({ row }) => row.getValue("phoneNumber") ?? <span className="text-muted-foreground">—</span>,
+      cell: ({ row }) => {
+        const v = row.getValue<string | null>("phoneNumber");
+        return v ? formatPhone(v) : <span className="text-muted-foreground">—</span>;
+      },
     },
     {
       accessorKey: "imei",

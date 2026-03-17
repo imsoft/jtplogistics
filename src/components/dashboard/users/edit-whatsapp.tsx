@@ -5,6 +5,7 @@ import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { formatPhone } from "@/lib/utils";
 
 export function EditWhatsapp({
   userId,
@@ -44,7 +45,7 @@ export function EditWhatsapp({
         <div className="min-w-0">
           <p className="text-sm font-medium">WhatsApp</p>
           <p className="text-muted-foreground text-xs">
-            {phone.trim() ? phone.trim() : "Sin número registrado"}
+            {phone.trim() ? formatPhone(phone.trim()) : "Sin número registrado"}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">

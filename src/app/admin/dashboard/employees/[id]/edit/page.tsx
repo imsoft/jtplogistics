@@ -9,6 +9,7 @@ import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Laptop, Smartphone, Mail, ChevronRight } from "lucide-react";
 import type { Employee } from "@/types/resources.types";
+import { formatPhone } from "@/lib/utils";
 
 function LinkedResource({ href, children }: { href: string; children: React.ReactNode }) {
   return (
@@ -112,7 +113,7 @@ export default function EditEmployeePage() {
                     <LinkedResource key={p.id} href={`/admin/dashboard/phones/${p.id}`}>
                       <span>{p.name}</span>
                       {p.phoneNumber && (
-                        <span className="text-muted-foreground text-xs">{p.phoneNumber}</span>
+                        <span className="text-muted-foreground text-xs">{formatPhone(p.phoneNumber)}</span>
                       )}
                     </LinkedResource>
                   ))}

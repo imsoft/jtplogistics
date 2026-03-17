@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { formatPhone } from "@/lib/utils";
 
 export function EditJtpWhatsapp() {
   const [phone, setPhone] = useState("");
@@ -70,7 +71,7 @@ export function EditJtpWhatsapp() {
           <>
             <div className="flex items-center justify-between gap-4">
               <p className="text-sm font-medium">
-                {phone.trim() ? phone.trim() : <span className="text-muted-foreground">Sin número configurado</span>}
+                {phone.trim() ? formatPhone(phone.trim()) : <span className="text-muted-foreground">Sin número configurado</span>}
               </p>
               <div className="flex shrink-0 items-center gap-2">
                 {waUrl && !isEditing && (

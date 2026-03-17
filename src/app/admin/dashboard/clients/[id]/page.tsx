@@ -11,6 +11,7 @@ import { InfoRow } from "@/components/dashboard/users/info-row";
 import { ClientViewActions } from "@/components/dashboard/clients/client-view-actions";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { useUnitTypes } from "@/hooks/use-unit-types";
+import { formatPhone } from "@/lib/utils";
 import type { Client } from "@/types/client.types";
 
 interface AssignedRoute {
@@ -114,7 +115,7 @@ export default function ClientProfilePage() {
           <CardContent className="px-4 pb-4">
             <InfoRow label="RFC" value={client.rfc} />
             <InfoRow label="Correo" value={client.email} />
-            <InfoRow label="Teléfono" value={client.phone} />
+            <InfoRow label="Teléfono" value={formatPhone(client.phone)} />
             <InfoRow label="Dirección" value={client.address} />
             <InfoRow
               label="Registro"

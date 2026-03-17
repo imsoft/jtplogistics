@@ -6,6 +6,7 @@ import { type ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
 import type { Client } from "@/types/client.types";
+import { formatPhone } from "@/lib/utils";
 
 function getColumns(): ColumnDef<Client>[] {
   return [
@@ -36,7 +37,10 @@ function getColumns(): ColumnDef<Client>[] {
     {
       accessorKey: "phone",
       header: ({ column }) => <SortableColumnHeader column={column} title="Teléfono" />,
-      cell: ({ row }) => row.getValue("phone") ?? <span className="text-muted-foreground">—</span>,
+      cell: ({ row }) => {
+        const v = row.getValue<string | null>("phone");
+        return v ? formatPhone(v) : <span className="text-muted-foreground">—</span>;
+      },
     },
   ];
 }

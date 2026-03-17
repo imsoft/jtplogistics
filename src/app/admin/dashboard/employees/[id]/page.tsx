@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoRow } from "@/components/dashboard/users/info-row";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import type { Employee } from "@/types/resources.types";
+import { formatPhone } from "@/lib/utils";
 
 function initials(name: string) {
   return name.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase();
@@ -84,7 +85,7 @@ export default function EmployeeProfilePage() {
           </CardHeader>
           <CardContent className="px-4 pb-4">
             <InfoRow label="Correo" value={employee.email} />
-            <InfoRow label="Teléfono" value={employee.phone} />
+            <InfoRow label="Teléfono" value={formatPhone(employee.phone)} />
             <InfoRow
               label="Fecha de nacimiento"
               value={employee.birthDate ? formatDate(employee.birthDate) : null}
@@ -138,7 +139,7 @@ export default function EmployeeProfilePage() {
                       className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
                     >
                       <span>{p.name}</span>
-                      {p.phoneNumber && <span className="text-muted-foreground text-xs">{p.phoneNumber}</span>}
+                      {p.phoneNumber && <span className="text-muted-foreground text-xs">{formatPhone(p.phoneNumber)}</span>}
                       <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                     </Link>
                   ))}
