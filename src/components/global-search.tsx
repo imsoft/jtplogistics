@@ -161,7 +161,7 @@ export function GlobalSearch() {
             <CommandEmpty>Sin resultados para &ldquo;{debouncedQuery}&rdquo;.</CommandEmpty>
           )}
           {debouncedQuery.length < 2 && (
-            <CommandEmpty className="text-muted-foreground">
+            <CommandEmpty className="p-4 text-muted-foreground">
               Escribe al menos 2 caracteres para buscar.
             </CommandEmpty>
           )}
