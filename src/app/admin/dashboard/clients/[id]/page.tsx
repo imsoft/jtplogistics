@@ -1,38 +1,28 @@
-import { notFound } from "next/navigation";
+"use client";
+
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth-server";
 import { InfoRow } from "@/components/dashboard/users/info-row";
 import { ClientViewActions } from "@/components/dashboard/clients/client-view-actions";
+import { useResourceEdit } from "@/hooks/use-resource-edit";
+import type { Client } from "@/types/client.types";
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const client = await prisma.client.findUnique({ where: { id }, select: { name: true } });
-  return { title: client ? `${client.name} | JTP Logistics` : "Cliente | JTP Logistics" };
+function initials(name: string) {
+  return name.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase();
 }
 
-export default async function ClientProfilePage({ params }: { params: Promise<{ id: string }> }) {
-  await requireAdmin();
-  const { id } = await params;
-
-  const client = await prisma.client.findUnique({
-    where: { id },
-    include: {
-      clientRoutes: {
-        include: { route: { select: { origin: true, destination: true } } },
-        orderBy: { createdAt: "asc" },
-      },
-    },
+export default function ClientProfilePage() {
+  const { id } = useParams<{ id: string }>();
+  const { data: client, isLoaded, error } = useResourceEdit<Client>({
+    endpoint: "/api/admin/clients",
+    redirectHref: "/admin/dashboard/clients",
   });
 
-  if (!client) notFound();
-
-  const initials = client.name
-    .split(" ").slice(0, 2)
-    .map((n) => n[0]).join("").toUpperCase();
+  if (!isLoaded) return <p className="text-muted-foreground py-6">Cargando…</p>;
+  if (error || !client) return <p className="text-destructive py-6 text-sm">{error ?? "No encontrado"}</p>;
 
   return (
     <div className="min-w-0 space-y-6">
@@ -46,7 +36,7 @@ export default async function ClientProfilePage({ params }: { params: Promise<{ 
           </Button>
           <div className="flex items-center gap-3 min-w-0">
             <div className="bg-primary text-primary-foreground flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold">
-              {initials}
+              {initials(client.name)}
             </div>
             <div className="min-w-0">
               <h1 className="text-xl font-bold tracking-tight sm:text-2xl truncate">{client.name}</h1>
@@ -81,7 +71,7 @@ export default async function ClientProfilePage({ params }: { params: Promise<{ 
             <InfoRow label="Dirección" value={client.address} />
             <InfoRow
               label="Registro"
-              value={client.createdAt.toLocaleDateString("es-MX", {
+              value={new Date(client.createdAt).toLocaleDateString("es-MX", {
                 year: "numeric", month: "long", day: "numeric",
               })}
             />
@@ -101,30 +91,6 @@ export default async function ClientProfilePage({ params }: { params: Promise<{ 
           </Card>
         )}
       </div>
-
-      {/* Rutas asignadas */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Rutas asignadas ({client.clientRoutes.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-4 pb-4">
-          {client.clientRoutes.length === 0 ? (
-            <p className="text-muted-foreground rounded-lg border border-dashed p-4 text-center text-sm">
-              No hay rutas asignadas. Usa el botón "Seleccionar rutas" para asignarlas.
-            </p>
-          ) : (
-            <div>
-              {client.clientRoutes.map((cr) => (
-                <div key={cr.id} className="border-b py-2.5 last:border-0 text-sm font-medium">
-                  {cr.route.origin} → {cr.route.destination}
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }

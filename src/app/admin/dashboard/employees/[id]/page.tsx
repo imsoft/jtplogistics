@@ -1,48 +1,37 @@
-import { notFound } from "next/navigation";
+"use client";
+
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, Pencil, Laptop, Smartphone, Mail, ChevronRight } from "lucide-react";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth-server";
 import { InfoRow } from "@/components/dashboard/users/info-row";
+import { useResourceEdit } from "@/hooks/use-resource-edit";
+import type { Employee } from "@/types/resources.types";
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const user = await prisma.user.findUnique({ where: { id }, select: { name: true } });
-  return { title: user ? `${user.name} | JTP Logistics` : "Colaborador | JTP Logistics" };
+function initials(name: string) {
+  return name.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase();
 }
 
-export default async function EmployeeProfilePage({ params }: { params: Promise<{ id: string }> }) {
-  await requireAdmin();
-  const { id } = await params;
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("es-MX", {
+    year: "numeric", month: "long", day: "numeric",
+  });
+}
 
-  const employee = await prisma.user.findUnique({
-    where: { id },
-    include: {
-      employeeProfile: true,
-      assignedLaptops: {
-        include: { emailAccount: { select: { id: true, email: true } } },
-      },
-      assignedPhones: {
-        include: { emailAccount: { select: { id: true, email: true } } },
-      },
-      assignedEmails: {
-        include: { emailAccount: { select: { id: true, type: true, email: true } } },
-      },
-    },
+export default function EmployeeProfilePage() {
+  const { id } = useParams<{ id: string }>();
+  const { data: employee, isLoaded, error } = useResourceEdit<Employee>({
+    endpoint: "/api/admin/employees",
+    redirectHref: "/admin/dashboard/employees",
   });
 
-  if (!employee || employee.role !== "collaborator") notFound();
+  if (!isLoaded) return <p className="text-muted-foreground py-6">Cargando…</p>;
+  if (error || !employee) return <p className="text-destructive py-6 text-sm">{error ?? "No encontrado"}</p>;
 
-  const initials = employee.name
-    .split(" ").slice(0, 2)
-    .map((n: string) => n[0]).join("").toUpperCase();
-
-  const laptops = employee.assignedLaptops;
-  const phones = employee.assignedPhones;
-  const emailAccounts = employee.assignedEmails.map((ea) => ea.emailAccount);
+  const laptops = employee.laptops ?? [];
+  const phones = employee.phones ?? [];
+  const emailAccounts = employee.emailAccounts ?? [];
   const hasLinks = laptops.length > 0 || phones.length > 0 || emailAccounts.length > 0;
 
   return (
@@ -57,24 +46,22 @@ export default async function EmployeeProfilePage({ params }: { params: Promise<
           </Button>
           <div className="flex items-center gap-3 min-w-0">
             {employee.image ? (
-              <Image
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
                 src={employee.image}
                 alt={employee.name}
-                width={40}
-                height={40}
                 className="size-10 shrink-0 rounded-full object-cover"
               />
             ) : (
               <div className="bg-primary text-primary-foreground flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold">
-                {initials}
+                {initials(employee.name)}
               </div>
             )}
             <div className="min-w-0">
               <h1 className="text-xl font-bold tracking-tight sm:text-2xl truncate">{employee.name}</h1>
-              {(employee.employeeProfile?.position || employee.employeeProfile?.department) && (
+              {(employee.position || employee.department) && (
                 <p className="text-muted-foreground text-xs sm:text-sm truncate">
-                  {[employee.employeeProfile.position, employee.employeeProfile.department]
-                    .filter(Boolean).join(" · ")}
+                  {[employee.position, employee.department].filter(Boolean).join(" · ")}
                 </p>
               )}
             </div>
@@ -97,25 +84,14 @@ export default async function EmployeeProfilePage({ params }: { params: Promise<
           </CardHeader>
           <CardContent className="px-4 pb-4">
             <InfoRow label="Correo" value={employee.email} />
-            <InfoRow label="Teléfono" value={employee.employeeProfile?.phone} />
+            <InfoRow label="Teléfono" value={employee.phone} />
             <InfoRow
               label="Fecha de nacimiento"
-              value={
-                employee.birthDate
-                  ? employee.birthDate.toLocaleDateString("es-MX", {
-                      year: "numeric", month: "long", day: "numeric",
-                    })
-                  : null
-              }
+              value={employee.birthDate ? formatDate(employee.birthDate) : null}
             />
-            <InfoRow label="Puesto" value={employee.employeeProfile?.position} />
-            <InfoRow label="Departamento" value={employee.employeeProfile?.department} />
-            <InfoRow
-              label="Registro"
-              value={employee.createdAt.toLocaleDateString("es-MX", {
-                year: "numeric", month: "long", day: "numeric",
-              })}
-            />
+            <InfoRow label="Puesto" value={employee.position} />
+            <InfoRow label="Departamento" value={employee.department} />
+            <InfoRow label="Registro" value={formatDate(employee.createdAt)} />
           </CardContent>
         </Card>
       </div>

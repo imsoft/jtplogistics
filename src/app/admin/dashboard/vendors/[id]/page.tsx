@@ -1,30 +1,27 @@
-import { notFound } from "next/navigation";
+"use client";
+
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, Pencil } from "lucide-react";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth-server";
 import { InfoRow } from "@/components/dashboard/users/info-row";
+import { useResourceEdit } from "@/hooks/use-resource-edit";
+import type { Vendor } from "@/types/resources.types";
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const user = await prisma.user.findUnique({ where: { id }, select: { name: true } });
-  return { title: user ? `${user.name} | JTP Logistics` : "Vendedor | JTP Logistics" };
+function initials(name: string) {
+  return name.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase();
 }
 
-export default async function VendorProfilePage({ params }: { params: Promise<{ id: string }> }) {
-  await requireAdmin();
-  const { id } = await params;
+export default function VendorProfilePage() {
+  const { id } = useParams<{ id: string }>();
+  const { data: vendor, isLoaded, error } = useResourceEdit<Vendor>({
+    endpoint: "/api/admin/vendors",
+    redirectHref: "/admin/dashboard/vendors",
+  });
 
-  const vendor = await prisma.user.findUnique({ where: { id } });
-
-  if (!vendor || vendor.role !== "vendor") notFound();
-
-  const initials = vendor.name
-    .split(" ").slice(0, 2)
-    .map((n: string) => n[0]).join("").toUpperCase();
+  if (!isLoaded) return <p className="text-muted-foreground py-6">Cargando…</p>;
+  if (error || !vendor) return <p className="text-destructive py-6 text-sm">{error ?? "No encontrado"}</p>;
 
   return (
     <div className="min-w-0 space-y-6">
@@ -38,16 +35,15 @@ export default async function VendorProfilePage({ params }: { params: Promise<{ 
           </Button>
           <div className="flex items-center gap-3 min-w-0">
             {vendor.image ? (
-              <Image
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
                 src={vendor.image}
                 alt={vendor.name}
-                width={40}
-                height={40}
                 className="size-10 shrink-0 rounded-full object-cover"
               />
             ) : (
               <div className="bg-primary text-primary-foreground flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold">
-                {initials}
+                {initials(vendor.name)}
               </div>
             )}
             <div className="min-w-0">
@@ -77,7 +73,7 @@ export default async function VendorProfilePage({ params }: { params: Promise<{ 
               label="Fecha de nacimiento"
               value={
                 vendor.birthDate
-                  ? vendor.birthDate.toLocaleDateString("es-MX", {
+                  ? new Date(vendor.birthDate).toLocaleDateString("es-MX", {
                       year: "numeric", month: "long", day: "numeric",
                     })
                   : null
@@ -85,7 +81,7 @@ export default async function VendorProfilePage({ params }: { params: Promise<{ 
             />
             <InfoRow
               label="Registro"
-              value={vendor.createdAt.toLocaleDateString("es-MX", {
+              value={new Date(vendor.createdAt).toLocaleDateString("es-MX", {
                 year: "numeric", month: "long", day: "numeric",
               })}
             />
