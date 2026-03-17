@@ -17,6 +17,7 @@ export function GET(
       title: idea.title,
       description: idea.description,
       category: idea.category,
+      status: idea.status,
       authorId: idea.authorId,
       authorName: idea.author.name,
       createdAt: idea.createdAt.toISOString(),
@@ -32,14 +33,20 @@ export function PATCH(
   return adminHandler(async () => {
     const { id } = await params;
     const body = await request.json();
-    const { title, description, category } = body as {
+    const { title, description, category, status } = body as {
       title?: string;
       description?: string;
       category?: string;
+      status?: string;
     };
 
     const idea = await prisma.idea.findUnique({ where: { id } });
     if (!idea) return Response.json({ error: "No encontrado" }, { status: 404 });
+
+    const VALID_STATUSES = ["pending", "accepted", "rejected"];
+    if (status !== undefined && !VALID_STATUSES.includes(status)) {
+      return Response.json({ error: "Estado inválido" }, { status: 400 });
+    }
 
     await prisma.idea.update({
       where: { id },
@@ -47,6 +54,7 @@ export function PATCH(
         ...(title !== undefined && { title: title.trim() }),
         ...(description !== undefined && { description: description?.trim() || null }),
         ...(category !== undefined && { category: category?.trim() || null }),
+        ...(status !== undefined && { status }),
       },
     });
 

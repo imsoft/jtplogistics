@@ -13,6 +13,7 @@ export function GET() {
         title: idea.title,
         description: idea.description,
         category: idea.category,
+        status: idea.status,
         authorId: idea.authorId,
         authorName: idea.author.name,
         createdAt: idea.createdAt.toISOString(),

@@ -276,6 +276,7 @@ model Idea {
   title       String   @map("title")
   description String?  @map("description")
   category    String?  @map("category")
+  status      String   @default("pending") @map("status")
   authorId    String   @map("author_id")
   author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now()) @map("created_at")

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { type ColumnDef } from "@tanstack/react-table";
 import { useAdminFetch } from "@/hooks/use-admin-fetch";
 import { DataTable } from "@/components/ui/data-table";
+import { IDEA_CATEGORY_COLORS, IDEA_STATUS_COLORS, IDEA_STATUS_LABELS } from "@/lib/constants/idea-category";
 import type { Idea } from "@/types/idea.types";
 
 interface IdeasTableProps {
@@ -29,14 +30,29 @@ export function IdeasTable({ isAdmin }: IdeasTableProps) {
     {
       accessorKey: "category",
       header: "Categoría",
-      cell: ({ row }) =>
-        row.original.category ? (
-          <span className="bg-secondary text-secondary-foreground rounded-md px-2 py-0.5 text-xs font-medium">
-            {row.original.category}
+      cell: ({ row }) => {
+        const cat = row.original.category;
+        if (!cat) return <span className="text-muted-foreground text-sm">—</span>;
+        const color = IDEA_CATEGORY_COLORS[cat] ?? "bg-secondary text-secondary-foreground";
+        return (
+          <span className={`rounded-md px-2 py-0.5 text-xs font-medium ${color}`}>
+            {cat}
           </span>
-        ) : (
-          <span className="text-muted-foreground text-sm">—</span>
-        ),
+        );
+      },
+    },
+    {
+      accessorKey: "status",
+      header: "Estado",
+      cell: ({ row }) => {
+        const status = row.original.status ?? "pending";
+        const color = IDEA_STATUS_COLORS[status] ?? "bg-secondary text-secondary-foreground";
+        return (
+          <span className={`rounded-md px-2 py-0.5 text-xs font-medium ${color}`}>
+            {IDEA_STATUS_LABELS[status] ?? status}
+          </span>
+        );
+      },
     },
     {
       accessorKey: "authorName",
