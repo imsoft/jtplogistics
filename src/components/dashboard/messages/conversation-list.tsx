@@ -18,6 +18,7 @@ export interface Conversation {
 interface ConversationListProps {
   selectedCarrierId: string | null;
   onSelect: (carrierId: string, carrierName: string) => void;
+  initialCarrierId?: string | null;
 }
 
 function timeAgo(iso: string) {
@@ -38,9 +39,10 @@ function initials(name: string) {
     .join("");
 }
 
-export function ConversationList({ selectedCarrierId, onSelect }: ConversationListProps) {
+export function ConversationList({ selectedCarrierId, onSelect, initialCarrierId }: ConversationListProps) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [autoSelected, setAutoSelected] = useState(false);
 
   const fetchConversations = useCallback(async () => {
     const res = await fetch("/api/messages/conversations");
@@ -50,6 +52,16 @@ export function ConversationList({ selectedCarrierId, onSelect }: ConversationLi
       setIsLoaded(true);
     }
   }, []);
+
+  // Auto-seleccionar cuando carga si viene de notificación
+  useEffect(() => {
+    if (!isLoaded || autoSelected || !initialCarrierId || selectedCarrierId) return;
+    const conv = conversations.find((c) => c.carrierId === initialCarrierId);
+    if (conv) {
+      onSelect(conv.carrierId, conv.carrierName);
+      setAutoSelected(true);
+    }
+  }, [isLoaded, autoSelected, initialCarrierId, selectedCarrierId, conversations, onSelect]);
 
   useEffect(() => {
     fetchConversations();

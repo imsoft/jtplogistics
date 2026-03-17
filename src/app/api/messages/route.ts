@@ -124,13 +124,13 @@ export async function POST(request: NextRequest) {
         type: "new_message",
         title: `Mensaje de ${userName}`,
         body: text.slice(0, 80),
-        href: `/admin/dashboard/messages`,
+        href: `/admin/dashboard/messages?carrierId=${carrierId}`,
       });
       void notifyRole("collaborator", {
         type: "new_message",
         title: `Mensaje de ${userName}`,
         body: text.slice(0, 80),
-        href: `/collaborator/dashboard/messages`,
+        href: `/collaborator/dashboard/messages?carrierId=${carrierId}`,
       });
     } else {
       // Staff escribe → notificar al carrier

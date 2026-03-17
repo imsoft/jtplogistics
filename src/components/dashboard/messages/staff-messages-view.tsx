@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ChevronLeft, MessageSquare } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
 import { ConversationList } from "@/components/dashboard/messages/conversation-list";
@@ -9,6 +10,8 @@ import { Button } from "@/components/ui/button";
 
 export function StaffMessagesView() {
   const { data: session } = useSession();
+  const searchParams = useSearchParams();
+  const initialCarrierId = searchParams.get("carrierId");
   const [selectedCarrierId, setSelectedCarrierId] = useState<string | null>(null);
   const [selectedCarrierName, setSelectedCarrierName] = useState<string>("");
 
@@ -52,6 +55,7 @@ export function StaffMessagesView() {
             <ConversationList
               selectedCarrierId={selectedCarrierId}
               onSelect={handleSelect}
+              initialCarrierId={initialCarrierId}
             />
           </div>
         </div>
