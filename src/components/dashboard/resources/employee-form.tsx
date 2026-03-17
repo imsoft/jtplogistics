@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const DEPARTMENTS = ["Logistica", "Finanzas", "Admin", "TI"] as const;
+const DEPARTMENTS = ["Logística", "Finanzas", "Administración", "Tecnología"] as const;
 import type { Employee, EmployeeFormData } from "@/types/resources.types";
 
 interface EmployeeFormProps {
@@ -100,7 +100,7 @@ export function EmployeeForm({
         <div className="space-y-2">
           <Label htmlFor="emp-department">Departamento</Label>
           <Select value={department} onValueChange={setDepartment}>
-            <SelectTrigger id="emp-department">
+            <SelectTrigger id="emp-department" className="w-full">
               <SelectValue placeholder="Selecciona un departamento" />
             </SelectTrigger>
             <SelectContent>
