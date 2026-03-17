@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   AlertDialog,
@@ -23,10 +23,6 @@ export default function UnitTypesPage() {
   const [unitTypes, setUnitTypes] = useState<UnitTypeDef[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // New form
-  const [newName, setNewName] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
-
   // Inline edit
   const [editId, setEditId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
@@ -42,30 +38,6 @@ export default function UnitTypesPage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
-
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
-    setIsCreating(true);
-    try {
-      const res = await fetch("/api/admin/unit-types", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error ?? "Error al crear.");
-      }
-      const created: UnitTypeDef = await res.json();
-      setUnitTypes((prev) => [...prev, created]);
-      setNewName("");
-      toast.success("Tipo de unidad creado.");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Error al crear.");
-    } finally {
-      setIsCreating(false);
-    }
-  }
 
   async function handleSaveEdit(id: string) {
     setIsSaving(true);
@@ -109,38 +81,21 @@ export default function UnitTypesPage() {
 
   return (
     <div className="min-w-0 space-y-6">
-      <div>
-        <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Tipos de unidades</h1>
-        <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
-          Gestiona los tipos de unidades disponibles al crear rutas.
-        </p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Tipos de unidades</h1>
+          <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
+            Gestiona los tipos de unidades disponibles al crear rutas.
+          </p>
+        </div>
+        <Button asChild className="gap-2 shrink-0">
+          <Link href="/admin/dashboard/unit-types/new">
+            <Plus className="size-4" />
+            Nuevo tipo
+          </Link>
+        </Button>
       </div>
 
-      {/* Formulario nuevo */}
-      <Card className="w-full">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-base sm:text-lg">Nuevo tipo de unidad</CardTitle>
-          <CardDescription className="text-xs sm:text-sm">
-            El identificador interno se genera automáticamente a partir del nombre.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleCreate} className="space-y-4">
-            <div className="space-y-2 max-w-md">
-              <Label htmlFor="new-name">Nombre</Label>
-              <Input id="new-name" value={newName} onChange={(e) => setNewName(e.target.value)} required disabled={isCreating} />
-            </div>
-            <div className="flex justify-end">
-              <Button type="submit" disabled={isCreating} className="gap-2">
-                <Plus className="size-4" />
-                {isCreating ? "Creando…" : "Crear tipo"}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      {/* Tipos registrados */}
       <Card>
         <CardHeader className="space-y-1">
           <CardTitle className="text-base sm:text-lg">Tipos registrados</CardTitle>
@@ -197,7 +152,6 @@ export default function UnitTypesPage() {
         </CardContent>
       </Card>
 
-      {/* Confirmar eliminación */}
       <AlertDialog open={deleteTarget !== null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
