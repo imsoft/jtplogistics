@@ -67,7 +67,7 @@ export default function CarrierUnitTypesPage() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const [activeUnitType, setActiveUnitType] = useState<string>("__all__");
+  const [activeUnitTypes, setActiveUnitTypes] = useState<Set<string>>(new Set());
   const [filterOrigin, setFilterOrigin] = useState<string | null>(null);
   const [filterDestination, setFilterDestination] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -102,11 +102,11 @@ export default function CarrierUnitTypesPage() {
     loadRoutes();
   }, [loadRoutes]);
 
-  // Rutas filtradas por tipo de unidad activo
+  // Rutas filtradas por tipos de unidad seleccionados
   const routesByUnitType = useMemo(() => {
-    if (activeUnitType === "__all__") return routes;
-    return routes.filter((r) => r.unitType === activeUnitType);
-  }, [routes, activeUnitType]);
+    if (activeUnitTypes.size === 0) return routes;
+    return routes.filter((r) => activeUnitTypes.has(r.unitType));
+  }, [routes, activeUnitTypes]);
 
   const origins = useMemo(
     () => [...new Set(routesByUnitType.map((r) => r.origin))].sort(),
@@ -152,8 +152,13 @@ export default function CarrierUnitTypesPage() {
     return counts;
   }, [routes]);
 
-  function handleUnitTypeChange(value: string) {
-    setActiveUnitType(value);
+  function toggleUnitType(value: string) {
+    setActiveUnitTypes((prev) => {
+      const next = new Set(prev);
+      if (next.has(value)) next.delete(value);
+      else next.add(value);
+      return next;
+    });
     setFilterOrigin(null);
     setFilterDestination(null);
   }
@@ -245,39 +250,43 @@ export default function CarrierUnitTypesPage() {
         </p>
       ) : (
         <>
-          {/* Tabs de tipo de unidad */}
+          {/* Filtro multi-selección por tipo de unidad */}
           <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => handleUnitTypeChange("__all__")}
-              className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                activeUnitType === "__all__"
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-input bg-background text-foreground hover:bg-muted"
-              }`}
-            >
-              Todos
-              <span className="ml-1.5 tabular-nums opacity-70">({routes.length})</span>
-            </button>
             {unitTypes
               .filter((ut) => (unitTypeCounts[ut.value] ?? 0) > 0)
-              .map((ut) => (
-                <button
-                  key={ut.value}
-                  type="button"
-                  onClick={() => handleUnitTypeChange(ut.value)}
-                  className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                    activeUnitType === ut.value
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-input bg-background text-foreground hover:bg-muted"
-                  }`}
-                >
-                  {ut.label}
-                  <span className="ml-1.5 tabular-nums opacity-70">
-                    ({unitTypeCounts[ut.value] ?? 0})
-                  </span>
-                </button>
-              ))}
+              .map((ut) => {
+                const isActive = activeUnitTypes.has(ut.value);
+                return (
+                  <button
+                    key={ut.value}
+                    type="button"
+                    onClick={() => toggleUnitType(ut.value)}
+                    className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                      isActive
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-input bg-background text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    {ut.label}
+                    <span className="ml-1.5 tabular-nums opacity-70">
+                      ({unitTypeCounts[ut.value] ?? 0})
+                    </span>
+                  </button>
+                );
+              })}
+            {activeUnitTypes.size > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveUnitTypes(new Set());
+                  setFilterOrigin(null);
+                  setFilterDestination(null);
+                }}
+                className="rounded-full border border-input bg-background px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted"
+              >
+                Limpiar tipos
+              </button>
+            )}
           </div>
 
           {/* Filtros de origen/destino */}

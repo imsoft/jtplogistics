@@ -184,7 +184,6 @@ export function DashboardSidebar({
               <SidebarMenuButton
                 asChild
                 tooltip="Contactar JTP (soporte)"
-                size="sm"
                 className="text-muted-foreground hover:text-foreground"
               >
                 <a
@@ -195,9 +194,9 @@ export function DashboardSidebar({
                   <Image
                     src="/images/whatsapp/whatsapp.svg"
                     alt="WhatsApp"
-                    width={16}
-                    height={16}
-                    className="size-4"
+                    width={20}
+                    height={20}
+                    className="size-5"
                   />
                   <span>Contactar JTP</span>
                 </a>
