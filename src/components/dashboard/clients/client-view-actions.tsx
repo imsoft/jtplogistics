@@ -5,7 +5,12 @@ import { Route as RouteIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ClientRoutesDialog } from "./client-routes-dialog";
 
-export function ClientViewActions({ clientId }: { clientId: string }) {
+interface ClientViewActionsProps {
+  clientId: string;
+  onSave?: () => void;
+}
+
+export function ClientViewActions({ clientId, onSave }: ClientViewActionsProps) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -13,7 +18,7 @@ export function ClientViewActions({ clientId }: { clientId: string }) {
         <RouteIcon className="size-4" />
         Seleccionar rutas
       </Button>
-      <ClientRoutesDialog clientId={clientId} open={open} onOpenChange={setOpen} />
+      <ClientRoutesDialog clientId={clientId} open={open} onOpenChange={setOpen} onSave={onSave} />
     </>
   );
 }

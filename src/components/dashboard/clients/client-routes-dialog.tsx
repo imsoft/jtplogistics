@@ -20,9 +20,10 @@ interface ClientRoutesDialogProps {
   clientId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSave?: () => void;
 }
 
-export function ClientRoutesDialog({ clientId, open, onOpenChange }: ClientRoutesDialogProps) {
+export function ClientRoutesDialog({ clientId, open, onOpenChange, onSave }: ClientRoutesDialogProps) {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isLoaded, setIsLoaded] = useState(false);
@@ -100,6 +101,7 @@ export function ClientRoutesDialog({ clientId, open, onOpenChange }: ClientRoute
       if (!res.ok) throw new Error();
       toast.success("Rutas asignadas correctamente.");
       onOpenChange(false);
+      onSave?.();
     } catch {
       toast.error("No se pudieron guardar las rutas. Intenta de nuevo.");
     } finally {
