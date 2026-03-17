@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { useProfile } from "@/hooks/use-profile";
 import { EditJtpWhatsapp } from "@/components/dashboard/admin/edit-jtp-whatsapp";
@@ -61,7 +62,7 @@ export default function AdminProfilePage() {
         <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Mi perfil</h1>
         <p className="text-muted-foreground mt-1 text-xs sm:text-sm">Información de tu cuenta de administrador.</p>
       </div>
-
+      <Separator />
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Datos personales</CardTitle>

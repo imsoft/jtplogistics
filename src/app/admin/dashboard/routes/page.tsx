@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { RoutesCrud } from "@/components/dashboard/routes/routes-crud";
 
 export const metadata = {
@@ -25,6 +26,7 @@ export default function RoutesPage() {
           </Link>
         </Button>
       </div>
+      <Separator />
       <RoutesCrud />
     </div>
   );

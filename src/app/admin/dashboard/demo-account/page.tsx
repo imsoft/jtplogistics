@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Copy } from "lucide-react";
 import { toast } from "sonner";
 
@@ -41,7 +42,7 @@ export default function DemoAccountPage() {
           Copia esta información para compartirla con transportistas vía WhatsApp.
         </p>
       </div>
-
+      <Separator />
       <Card className="max-w-lg">
         <CardHeader className="space-y-1">
           <CardTitle className="text-base sm:text-lg">Mensaje para WhatsApp</CardTitle>

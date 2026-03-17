@@ -1,3 +1,4 @@
+import { Separator } from "@/components/ui/separator";
 import { UsersTable } from "@/components/dashboard/users/users-table";
 
 export const metadata = {
@@ -17,6 +18,7 @@ export default function UsersPage() {
           correo o rol.
         </p>
       </div>
+      <Separator />
       <UsersTable />
     </div>
   );

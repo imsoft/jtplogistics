@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   AlertDialog,
@@ -95,7 +96,7 @@ export default function UnitTypesPage() {
           </Link>
         </Button>
       </div>
-
+      <Separator />
       <Card>
         <CardHeader className="space-y-1">
           <CardTitle className="text-base sm:text-lg">Tipos registrados</CardTitle>

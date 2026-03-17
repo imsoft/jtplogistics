@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ChevronLeft, MessageSquare } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
+import { Separator } from "@/components/ui/separator";
 import { ConversationList } from "@/components/dashboard/messages/conversation-list";
 import { ChatWindow } from "@/components/dashboard/messages/chat-window";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ export function StaffMessagesView() {
         <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
           Conversaciones con transportistas.
         </p>
+        <Separator className="mt-4" />
       </div>
 
       <div className="flex-1 min-h-0 rounded-lg border overflow-hidden flex">

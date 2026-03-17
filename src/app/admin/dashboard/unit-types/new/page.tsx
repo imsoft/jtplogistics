@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,8 +53,8 @@ export default function NewUnitTypePage() {
           </p>
         </div>
       </div>
-
-      <Card className="max-w-md">
+      <Separator />
+      <Card className="w-full">
         <CardHeader className="space-y-1">
           <CardTitle className="text-base sm:text-lg">Datos del tipo</CardTitle>
           <CardDescription className="text-xs sm:text-sm">

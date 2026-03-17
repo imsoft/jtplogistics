@@ -1,3 +1,4 @@
+import { Separator } from "@/components/ui/separator";
 import { CarrierQuotesTable } from "@/components/dashboard/carrier-quotes/carrier-quotes-table";
 
 export const metadata = {
@@ -17,6 +18,7 @@ export default function CotizadorPage() {
           esa ruta y su target. Al final verás el promedio, venta y monto.
         </p>
       </div>
+      <Separator />
       <CarrierQuotesTable />
     </div>
   );

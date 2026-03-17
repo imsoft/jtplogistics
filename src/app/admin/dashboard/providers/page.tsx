@@ -1,3 +1,4 @@
+import { Separator } from "@/components/ui/separator";
 import { UsersTable } from "@/components/dashboard/users/users-table";
 
 export const metadata = {
@@ -16,6 +17,7 @@ export default function ProvidersPage() {
           Transportistas registrados en la plataforma.
         </p>
       </div>
+      <Separator />
       <UsersTable defaultRole="carrier" />
     </div>
   );

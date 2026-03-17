@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { AdminTasksTable } from "@/components/dashboard/tasks/admin-tasks-table";
 
 export const metadata: Metadata = {
@@ -26,6 +27,7 @@ export default function AdminTasksPage() {
           </Link>
         </Button>
       </div>
+      <Separator />
       <AdminTasksTable />
     </div>
   );
