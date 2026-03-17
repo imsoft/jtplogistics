@@ -6,6 +6,8 @@ import { useRouter, useParams } from "next/navigation";
 interface UseResourceEditOptions {
   endpoint: string;
   redirectHref: string;
+  /** Si se provee, se usa al eliminar en vez de redirectHref */
+  deleteRedirectHref?: string;
 }
 
 interface UseResourceEditResult<T> {
@@ -21,6 +23,7 @@ interface UseResourceEditResult<T> {
 export function useResourceEdit<T>({
   endpoint,
   redirectHref,
+  deleteRedirectHref,
 }: UseResourceEditOptions): UseResourceEditResult<T> {
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
@@ -61,7 +64,7 @@ export function useResourceEdit<T>({
   async function handleDelete() {
     try {
       await fetch(`${endpoint}/${id}`, { method: "DELETE" });
-      router.push(redirectHref);
+      router.push(deleteRedirectHref ?? redirectHref);
     } catch {
       setError("Error al eliminar");
     }

@@ -5,6 +5,9 @@ import { Input } from "@/components/ui/input";
 import { FormActions } from "@/components/ui/form-actions";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const DEPARTMENTS = ["Logistica", "Finanzas", "Admin", "TI"] as const;
 import type { Employee, EmployeeFormData } from "@/types/resources.types";
 
 interface EmployeeFormProps {
@@ -96,11 +99,16 @@ export function EmployeeForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="emp-department">Departamento</Label>
-          <Input
-            id="emp-department"
-            value={department}
-            onChange={(e) => setDepartment(e.target.value)}
-          />
+          <Select value={department} onValueChange={setDepartment}>
+            <SelectTrigger id="emp-department">
+              <SelectValue placeholder="Selecciona un departamento" />
+            </SelectTrigger>
+            <SelectContent>
+              {DEPARTMENTS.map((d) => (
+                <SelectItem key={d} value={d}>{d}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
       <FormActions submitLabel={submitLabel} cancelHref={cancelHref} isSubmitting={isSubmitting} />
