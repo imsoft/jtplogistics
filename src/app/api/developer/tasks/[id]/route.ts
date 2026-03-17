@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireDeveloper } from "@/lib/auth-server";
+import { notify } from "@/lib/notify";
 import type { TaskStatus } from "@/types/task.types";
 
 const VALID_STATUSES: TaskStatus[] = ["pending", "in_progress", "completed"];
@@ -30,6 +31,18 @@ export async function PATCH(
         assignee: { select: { name: true } },
         createdBy: { select: { name: true } },
       },
+    });
+
+    const STATUS_LABELS: Record<string, string> = {
+      pending: "pendiente",
+      in_progress: "en progreso",
+      completed: "completada",
+    };
+    void notify({
+      userId: updated.createdById,
+      type: "task_updated",
+      title: `Tarea ${STATUS_LABELS[updated.status] ?? updated.status}: ${updated.title.slice(0, 50)}`,
+      href: `/admin/dashboard/tasks/${updated.id}/edit`,
     });
 
     return Response.json({

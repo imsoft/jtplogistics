@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { requireSession, requireAdmin } from "@/lib/auth-server";
 import { type PrismaRoute, VALID_STATUSES, routeToJson } from "@/lib/api/route-utils";
 import { getCityState } from "@/lib/data/mexico-cities";
+import { logRoute } from "@/lib/route-log";
+import { alertMatchingCarriers } from "@/lib/carrier-route-alert";
 import type { RouteStatus } from "@/types/route.types";
 
 export async function GET() {
@@ -70,6 +72,22 @@ export async function POST(request: NextRequest) {
       },
       include: { createdBy: { select: { id: true, name: true } } },
     });
+    void logRoute({
+      routeId: route.id,
+      routeLabel: `${origin} → ${destination}`,
+      action: "created",
+      userId: session.user.id,
+      userName: (session.user as { name: string }).name,
+      snapshot: { origin, destination, destinationState, description, target, weeklyVolume, unitType, status },
+    });
+    void alertMatchingCarriers({
+      id: route.id,
+      origin,
+      destination,
+      destinationState: destinationState ?? null,
+      unitType,
+    });
+
     return Response.json(routeToJson(route));
   } catch (e) {
     if (e instanceof Response) throw e;

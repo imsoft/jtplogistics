@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { ResourceEditHeader } from "@/components/dashboard/resources/resource-edit-header";
 import { IdeaForm } from "@/components/dashboard/ideas/idea-form";
@@ -11,6 +12,7 @@ import type { Idea, IdeaStatus } from "@/types/idea.types";
 export default function EditIdeaPage() {
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
+  const [createdTaskId, setCreatedTaskId] = useState<string | null>(null);
 
   const {
     data: idea,
@@ -28,6 +30,7 @@ export default function EditIdeaPage() {
   async function handleStatusChange(newStatus: IdeaStatus) {
     setStatusUpdating(true);
     setStatusError(null);
+    setCreatedTaskId(null);
     try {
       const res = await fetch(`/api/admin/ideas/${idea!.id}`, {
         method: "PATCH",
@@ -35,7 +38,9 @@ export default function EditIdeaPage() {
         body: JSON.stringify({ status: newStatus }),
       });
       if (!res.ok) throw new Error("Error al actualizar estado");
+      const data = await res.json();
       setIdea((prev) => prev ? { ...prev, status: newStatus } : prev);
+      if (data.taskId) setCreatedTaskId(data.taskId);
     } catch {
       setStatusError("No se pudo actualizar el estado");
     } finally {
@@ -100,6 +105,17 @@ export default function EditIdeaPage() {
           </Button>
         )}
         {statusError && <p className="text-destructive text-sm">{statusError}</p>}
+        {createdTaskId && (
+          <p className="text-sm text-green-600 dark:text-green-400">
+            Tarea creada.{" "}
+            <Link
+              href={`/admin/dashboard/tasks/${createdTaskId}/edit`}
+              className="underline underline-offset-2"
+            >
+              Ver tarea →
+            </Link>
+          </p>
+        )}
       </div>
 
       <div className="w-full min-w-0">

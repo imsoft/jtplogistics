@@ -53,6 +53,7 @@ model User {
   createdTasks     Task[]         @relation("TaskCreator")
   sentMessages     Message[]      @relation("SentMessages")
   carrierMessages  Message[]      @relation("CarrierMessages")
+  notifications    Notification[]
 
   @@map("users")
 }
@@ -216,6 +217,24 @@ model ClientRoute {
   @@map("client_routes")
 }
 
+// ---- App: log de cambios en rutas (solo admin) ----
+
+model RouteLog {
+  id         String   @id @default(cuid()) @map("id")
+  routeId    String   @map("route_id")
+  routeLabel String   @map("route_label")
+  action     String   @map("action")
+  userId     String   @map("user_id")
+  userName   String   @map("user_name")
+  changes    String?  @map("changes")
+  snapshot   String?  @map("snapshot")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([routeId])
+  @@index([createdAt])
+  @@map("route_logs")
+}
+
 // ---- App: mensajería interna (carrier ↔ compras/admin) ----
 
 model Message {
@@ -231,6 +250,21 @@ model Message {
 
   @@index([carrierId, createdAt])
   @@map("messages")
+}
+
+model Notification {
+  id        String   @id @default(cuid()) @map("id")
+  userId    String   @map("user_id")
+  type      String   @map("type")
+  title     String   @map("title")
+  body      String?  @map("body")
+  href      String?  @map("href")
+  read      Boolean  @default(false) @map("read")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@map("notifications")
 }
 
 // ---- App: recursos internos (admin CRUD) ----

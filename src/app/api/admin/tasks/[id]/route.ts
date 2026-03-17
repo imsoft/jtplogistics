@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-server";
+import { notify } from "@/lib/notify";
 import type { TaskStatus } from "@/types/task.types";
 
 const VALID_STATUSES: TaskStatus[] = ["pending", "in_progress", "completed"];
@@ -65,6 +66,13 @@ export async function PATCH(
         createdBy: { select: { name: true } },
       },
     });
+    void notify({
+      userId: task.assigneeId,
+      type: "task_updated",
+      title: `Tarea actualizada: ${task.title.slice(0, 55)}`,
+      href: `/developer/dashboard/tasks/${task.id}`,
+    });
+
     return Response.json(taskToJson(task));
   } catch (e) {
     if (e instanceof Response) throw e;

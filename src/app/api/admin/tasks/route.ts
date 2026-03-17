@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-server";
+import { notify } from "@/lib/notify";
 import type { TaskStatus } from "@/types/task.types";
 
 const VALID_STATUSES: TaskStatus[] = ["pending", "in_progress", "completed"];
@@ -77,6 +78,14 @@ export async function POST(request: NextRequest) {
         assignee: { select: { name: true } },
         createdBy: { select: { name: true } },
       },
+    });
+
+    void notify({
+      userId: task.assigneeId,
+      type: "new_task",
+      title: `Nueva tarea: ${task.title.slice(0, 60)}`,
+      body: task.description?.slice(0, 80) ?? undefined,
+      href: `/developer/dashboard/tasks/${task.id}`,
     });
 
     return Response.json(taskToJson(task), { status: 201 });

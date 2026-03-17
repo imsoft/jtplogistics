@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth-server";
+import { notify, notifyRole } from "@/lib/notify";
 
 function isStaff(role: string) {
   return role === "admin" || role === "collaborator";
@@ -115,6 +116,32 @@ export async function POST(request: NextRequest) {
         body: text,
       },
     });
+
+    // Notificaciones
+    if (senderRole === "carrier") {
+      // Carrier escribe → notificar a todos los admin y colaboradores
+      void notifyRole("admin", {
+        type: "new_message",
+        title: `Mensaje de ${userName}`,
+        body: text.slice(0, 80),
+        href: `/admin/dashboard/messages`,
+      });
+      void notifyRole("collaborator", {
+        type: "new_message",
+        title: `Mensaje de ${userName}`,
+        body: text.slice(0, 80),
+        href: `/collaborator/dashboard/messages`,
+      });
+    } else {
+      // Staff escribe → notificar al carrier
+      void notify({
+        userId: carrierId,
+        type: "new_message",
+        title: `Respuesta de ${userName}`,
+        body: text.slice(0, 80),
+        href: `/carrier/dashboard/messages`,
+      });
+    }
 
     return Response.json({
       id: message.id,

@@ -1,16 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, ChevronDown, ChevronRight, History } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RouteForm } from "./route-form";
+import { RouteLogTable } from "./route-log-table";
 import type { Route, RouteFormData } from "@/types/route.types";
 
 export function EditRouteForm({ route }: { route: Route }) {
   const router = useRouter();
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   async function handleSubmit(data: RouteFormData) {
     try {
@@ -83,6 +86,34 @@ export function EditRouteForm({ route }: { route: Route }) {
             onSubmit={handleSubmit}
           />
         </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader
+          className="cursor-pointer select-none py-3"
+          onClick={() => setHistoryOpen((v) => !v)}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <History className="size-4 text-muted-foreground" />
+              <CardTitle className="text-base sm:text-lg">Historial de cambios</CardTitle>
+            </div>
+            {historyOpen
+              ? <ChevronDown className="size-4 text-muted-foreground" />
+              : <ChevronRight className="size-4 text-muted-foreground" />
+            }
+          </div>
+          {!historyOpen && (
+            <CardDescription className="text-xs sm:text-sm">
+              Ver quién modificó esta ruta y cuándo.
+            </CardDescription>
+          )}
+        </CardHeader>
+        {historyOpen && (
+          <CardContent>
+            <RouteLogTable routeId={route.id} />
+          </CardContent>
+        )}
       </Card>
     </div>
   );

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { ideasHandler } from "@/lib/api-handler";
+import { notifyRole } from "@/lib/notify";
 
 export function GET() {
   return ideasHandler(async () => {
@@ -43,6 +44,13 @@ export function POST(request: Request) {
         category: category?.trim() || null,
         authorId: session.user.id,
       },
+    });
+
+    void notifyRole("admin", {
+      type: "new_idea",
+      title: `Nueva idea: ${idea.title.slice(0, 60)}`,
+      body: idea.description?.slice(0, 80) ?? undefined,
+      href: `/admin/dashboard/ideas/${idea.id}`,
     });
 
     return Response.json({ id: idea.id }, { status: 201 });
