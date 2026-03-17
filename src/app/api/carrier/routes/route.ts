@@ -39,6 +39,7 @@ export async function GET() {
         origin: r.origin,
         destination: r.destination,
         description: r.description ?? null,
+        unitType: r.unitType,
         jtpTarget: r.target ?? null,
         selected: selectionMap.has(r.id),
         carrierTarget: selectionMap.get(r.id)?.carrierTarget ?? null,
