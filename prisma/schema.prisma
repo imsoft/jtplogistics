@@ -51,6 +51,8 @@ model User {
   createdRoutes    Route[]        @relation("RouteCreatedBy")
   assignedTasks    Task[]         @relation("TaskAssignee")
   createdTasks     Task[]         @relation("TaskCreator")
+  sentMessages     Message[]      @relation("SentMessages")
+  carrierMessages  Message[]      @relation("CarrierMessages")
 
   @@map("users")
 }
@@ -212,6 +214,23 @@ model ClientRoute {
 
   @@unique([clientId, routeId])
   @@map("client_routes")
+}
+
+// ---- App: mensajería interna (carrier ↔ compras/admin) ----
+
+model Message {
+  id         String   @id @default(cuid()) @map("id")
+  carrierId  String   @map("carrier_id")
+  senderId   String   @map("sender_id")
+  senderName String   @map("sender_name")
+  senderRole String   @map("sender_role")
+  body       String   @map("body")
+  createdAt  DateTime @default(now()) @map("created_at")
+  carrier    User     @relation("CarrierMessages", fields: [carrierId], references: [id], onDelete: Cascade)
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([carrierId, createdAt])
+  @@map("messages")
 }
 
 // ---- App: recursos internos (admin CRUD) ----

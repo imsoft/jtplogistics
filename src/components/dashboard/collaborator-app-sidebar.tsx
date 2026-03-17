@@ -1,9 +1,14 @@
 "use client";
 
-import { User as UserIcon, Lightbulb } from "lucide-react";
+import { User as UserIcon, Lightbulb, MessageSquare } from "lucide-react";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 
 const collaboratorNavItems = [
+  {
+    title: "Mensajes",
+    href: "/collaborator/dashboard/messages",
+    icon: MessageSquare,
+  },
   {
     title: "Perfil",
     href: "/collaborator/dashboard/profile",
