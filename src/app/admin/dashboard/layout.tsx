@@ -2,6 +2,7 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import { AppSidebar } from "@/components/dashboard/app-sidebar";
 import { GlobalSearch } from "@/components/global-search";
 import { NotificationBell } from "@/components/notification-bell";
+import { FloatingChat } from "@/components/floating-chat";
 import { requireAdmin } from "@/lib/auth-server";
 
 export default async function DashboardLayout({
@@ -26,6 +27,7 @@ export default async function DashboardLayout({
         </header>
         <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-6">{children}</div>
       </SidebarInset>
+      <FloatingChat />
     </SidebarProvider>
   );
 }
