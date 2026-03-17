@@ -20,7 +20,7 @@ export default function AdminTasksPage() {
             Lista de tareas asignadas al equipo de desarrollo.
           </p>
         </div>
-        <Button asChild className="w-full sm:w-auto">
+        <Button asChild className="w-full shrink-0 sm:w-fit" size="sm">
           <Link href="/admin/dashboard/tasks/new">
             <Plus className="size-4" />
             Nueva tarea

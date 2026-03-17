@@ -82,14 +82,14 @@ export default function UnitTypesPage() {
 
   return (
     <div className="min-w-0 space-y-6">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Tipos de unidades</h1>
           <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
             Gestiona los tipos de unidades disponibles al crear rutas.
           </p>
         </div>
-        <Button asChild className="gap-2 shrink-0">
+        <Button asChild className="w-full shrink-0 sm:w-fit" size="sm">
           <Link href="/admin/dashboard/unit-types/new">
             <Plus className="size-4" />
             Nuevo tipo
