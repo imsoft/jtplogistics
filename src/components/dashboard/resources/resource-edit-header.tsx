@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ interface ResourceEditHeaderProps {
   deleteTitle: string;
   deleteDescription?: string;
   onDelete: () => void;
+  children?: React.ReactNode;
 }
 
 export function ResourceEditHeader({
@@ -24,6 +26,7 @@ export function ResourceEditHeader({
   deleteTitle,
   deleteDescription,
   onDelete,
+  children,
 }: ResourceEditHeaderProps) {
   return (
     <div className="space-y-5 sm:space-y-6">
@@ -39,11 +42,14 @@ export function ResourceEditHeader({
             <p className="text-muted-foreground truncate text-xs sm:text-sm">{description}</p>
           </div>
         </div>
-        <DeleteConfirmDialog
-          title={deleteTitle}
-          description={deleteDescription}
-          onConfirm={onDelete}
-        />
+        <div className="flex items-center gap-2 shrink-0">
+          {children}
+          <DeleteConfirmDialog
+            title={deleteTitle}
+            description={deleteDescription}
+            onConfirm={onDelete}
+          />
+        </div>
       </div>
       <Separator />
     </div>

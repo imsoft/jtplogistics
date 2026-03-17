@@ -132,6 +132,7 @@ model Route {
   createdAt        DateTime       @default(now()) @map("created_at")
   updatedAt        DateTime       @updatedAt @map("updated_at")
   carrierRoutes    CarrierRoute[]
+  clientRoutes     ClientRoute[]
 
   @@map("routes")
 }
@@ -196,8 +197,21 @@ model Client {
   notes     String?  @map("notes")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  clientRoutes ClientRoute[]
 
   @@map("clients")
+}
+
+model ClientRoute {
+  id        String   @id @default(cuid()) @map("id")
+  clientId  String   @map("client_id")
+  routeId   String   @map("route_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  route     Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, routeId])
+  @@map("client_routes")
 }
 
 // ---- App: recursos internos (admin CRUD) ----
