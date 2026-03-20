@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { Route as RouteIcon } from "lucide-react";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { useUnitTypes } from "@/hooks/use-unit-types";
 import { formatMxnLive, parseMxn, formatMxn } from "@/lib/utils";
 import { toast } from "sonner";
-import type { Client } from "@/types/client.types";
+import type { Client, ClientFormData } from "@/types/client.types";
 
 interface AssignedRoute {
   id: string;
@@ -88,23 +88,36 @@ export default function EditClientPage() {
     loadRoutes();
   }, [loadRoutes]);
 
-  const saveRouteField = useCallback((routeId: string, target: string | undefined, volume: string | undefined) => {
-    const parsedTarget = target?.trim() ? parseMxn(target) : null;
-    const parsedVolume = volume?.trim() ? Math.round(Number(volume)) : null;
+  async function handleFormSubmit(formData: ClientFormData) {
+    // Save route tarifa/volumen changes
+    const routeUpdates = routes.map((route) => {
+      const rawTarget = editTargets[route.id]?.trim();
+      const rawVolume = editVolumes[route.id]?.trim();
+      const parsedTarget = rawTarget ? parseMxn(rawTarget) : null;
+      const parsedVolume = rawVolume ? Math.round(Number(rawVolume)) : null;
 
-    fetch(`/api/admin/clients/${id}/routes`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        routeId,
-        target: parsedTarget != null && !isNaN(parsedTarget) ? parsedTarget : null,
-        weeklyVolume: parsedVolume != null && !isNaN(parsedVolume) ? parsedVolume : null,
-      }),
-    }).then((res) => {
-      if (res.ok) toast.success("Tarifa/volumen guardado");
-      else toast.error("Error al guardar");
-    }).catch(() => toast.error("Error al guardar"));
-  }, [id]);
+      return fetch(`/api/admin/clients/${id}/routes`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          routeId: route.id,
+          target: parsedTarget != null && !isNaN(parsedTarget) ? parsedTarget : null,
+          weeklyVolume: parsedVolume != null && !isNaN(parsedVolume) ? parsedVolume : null,
+        }),
+      });
+    });
+
+    try {
+      const results = await Promise.all(routeUpdates);
+      const allOk = results.every((r) => r.ok);
+      if (!allOk) toast.error("Error al guardar algunas tarifas");
+    } catch {
+      toast.error("Error al guardar tarifas");
+    }
+
+    // Save client data (this handles redirect on success)
+    await handleSubmit(formData);
+  }
 
   function handleTargetChange(routeId: string, value: string) {
     setEditTargets((prev) => ({ ...prev, [routeId]: formatMxnLive(value) }));
@@ -140,94 +153,90 @@ export default function EditClientPage() {
             initialValues={client}
             submitLabel="Guardar cambios"
             cancelHref={`/admin/dashboard/clients/${id}`}
-            onSubmit={handleSubmit}
+            onSubmit={handleFormSubmit}
             isSubmitting={isSubmitting}
-          />
+          >
+            {/* Editable route table — inside the form, before action buttons */}
+            {routesLoaded && routes.length > 0 && (
+              <Card>
+                <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                  <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                    Tarifas y volumen por ruta ({routes.length})
+                  </CardTitle>
+                  <RouteIcon className="size-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent className="px-0 pb-0">
+                  <div className="space-y-0">
+                    {(() => {
+                      const grouped = new Map<string, AssignedRoute[]>();
+                      for (const r of routes) {
+                        const group = grouped.get(r.unitType) ?? [];
+                        group.push(r);
+                        grouped.set(r.unitType, group);
+                      }
+                      return Array.from(grouped.entries()).map(([ut, items]) => (
+                        <div key={ut}>
+                          <div className="border-b bg-muted/60 px-4 py-2">
+                            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                              {unitTypeLabel[ut] ?? ut}
+                            </span>
+                          </div>
+                          <div className="overflow-x-auto">
+                            <div className="min-w-[560px]">
+                              <div className="grid grid-cols-[1fr_minmax(120px,1fr)_minmax(100px,1fr)_minmax(80px,1fr)] gap-x-6 border-b bg-muted/20 px-4 py-1.5 text-xs font-medium text-muted-foreground">
+                                <span>Ruta</span>
+                                <span>Tarifa</span>
+                                <span>Volumen</span>
+                                <span>Estado</span>
+                              </div>
+                              {items.map((route) => (
+                                <div
+                                  key={route.id}
+                                  className="grid grid-cols-[1fr_minmax(120px,1fr)_minmax(100px,1fr)_minmax(80px,1fr)] gap-x-6 items-center border-b px-4 py-3 last:border-0 transition-colors hover:bg-blue-50 dark:hover:bg-blue-950/30"
+                                >
+                                  <div className="min-w-0">
+                                    <p className="truncate text-sm font-medium">
+                                      {route.origin} → {route.destination}
+                                    </p>
+                                    {route.destinationState && (
+                                      <p className="text-muted-foreground text-xs truncate">{route.destinationState}</p>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-muted-foreground text-xs shrink-0">$</span>
+                                    <Input
+                                      type="text"
+                                      inputMode="decimal"
+                                      value={editTargets[route.id] ?? ""}
+                                      onChange={(e) => handleTargetChange(route.id, e.target.value)}
+                                      className="h-7 w-28 text-xs"
+                                    />
+                                  </div>
+                                  <Input
+                                    type="number"
+                                    inputMode="numeric"
+                                    min={0}
+                                    value={editVolumes[route.id] ?? ""}
+                                    onChange={(e) => handleVolumeChange(route.id, e.target.value)}
+                                    className="h-7 w-20 text-xs"
+                                  />
+                                  <Badge variant={STATUS_VARIANT[route.status] ?? "outline"} className="text-xs">
+                                    {STATUS_LABELS[route.status] ?? route.status}
+                                  </Badge>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </ClientForm>
         )}
       </div>
-
-      {/* Editable route table */}
-      {routesLoaded && routes.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3 flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Tarifas y volumen por ruta ({routes.length})
-            </CardTitle>
-            <RouteIcon className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent className="px-0 pb-0">
-            <div className="space-y-0">
-              {(() => {
-                const grouped = new Map<string, AssignedRoute[]>();
-                for (const r of routes) {
-                  const group = grouped.get(r.unitType) ?? [];
-                  group.push(r);
-                  grouped.set(r.unitType, group);
-                }
-                return Array.from(grouped.entries()).map(([ut, items]) => (
-                  <div key={ut}>
-                    <div className="border-b bg-muted/60 px-4 py-2">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        {unitTypeLabel[ut] ?? ut}
-                      </span>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <div className="min-w-[560px]">
-                        <div className="grid grid-cols-[1fr_minmax(120px,1fr)_minmax(100px,1fr)_minmax(80px,1fr)] gap-x-6 border-b bg-muted/20 px-4 py-1.5 text-xs font-medium text-muted-foreground">
-                          <span>Ruta</span>
-                          <span>Tarifa</span>
-                          <span>Volumen</span>
-                          <span>Estado</span>
-                        </div>
-                        {items.map((route) => (
-                          <div
-                            key={route.id}
-                            className="grid grid-cols-[1fr_minmax(120px,1fr)_minmax(100px,1fr)_minmax(80px,1fr)] gap-x-6 items-center border-b px-4 py-3 last:border-0 transition-colors hover:bg-blue-50 dark:hover:bg-blue-950/30"
-                          >
-                            <div className="min-w-0">
-                              <p className="truncate text-sm font-medium">
-                                {route.origin} → {route.destination}
-                              </p>
-                              {route.destinationState && (
-                                <p className="text-muted-foreground text-xs truncate">{route.destinationState}</p>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <span className="text-muted-foreground text-xs shrink-0">$</span>
-                              <Input
-                                type="text"
-                                inputMode="decimal"
-                                value={editTargets[route.id] ?? ""}
-                                onChange={(e) => handleTargetChange(route.id, e.target.value)}
-                                onBlur={() => saveRouteField(route.id, editTargets[route.id], editVolumes[route.id])}
-                                onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                                className="h-7 w-28 text-xs"
-                              />
-                            </div>
-                            <Input
-                              type="number"
-                              inputMode="numeric"
-                              min={0}
-                              value={editVolumes[route.id] ?? ""}
-                              onChange={(e) => handleVolumeChange(route.id, e.target.value)}
-                              onBlur={() => saveRouteField(route.id, editTargets[route.id], editVolumes[route.id])}
-                              onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                              className="h-7 w-20 text-xs"
-                            />
-                            <Badge variant={STATUS_VARIANT[route.status] ?? "outline"} className="text-xs">
-                              {STATUS_LABELS[route.status] ?? route.status}
-                            </Badge>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ));
-              })()}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {id && (
         <ClientRoutesDialog

@@ -13,6 +13,7 @@ interface ClientFormProps {
   cancelHref: string;
   onSubmit: (data: ClientFormData) => void;
   isSubmitting?: boolean;
+  children?: React.ReactNode;
 }
 
 export function ClientForm({
@@ -21,6 +22,7 @@ export function ClientForm({
   cancelHref,
   onSubmit,
   isSubmitting = false,
+  children,
 }: ClientFormProps) {
   const [name, setName] = useState(initialValues.name ?? "");
   const [legalName, setLegalName] = useState(initialValues.legalName ?? "");
@@ -108,6 +110,7 @@ export function ClientForm({
           />
         </div>
       </div>
+      {children}
       <FormActions submitLabel={submitLabel} cancelHref={cancelHref} isSubmitting={isSubmitting} />
     </form>
   );
