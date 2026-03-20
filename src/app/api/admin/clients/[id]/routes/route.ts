@@ -45,10 +45,60 @@ export async function GET(
     return Response.json(
       clientRoutes.map((cr) => ({
         ...cr.route,
+        // Client-specific overrides take precedence
+        target: cr.target ?? cr.route.target,
+        weeklyVolume: cr.weeklyVolume ?? cr.route.weeklyVolume,
+        clientTarget: cr.target,
+        clientWeeklyVolume: cr.weeklyVolume,
         createdByName: cr.route.createdBy?.name ?? null,
         createdBy: undefined,
       }))
     );
+  });
+}
+
+// PATCH — actualiza tarifa/volumen de una ruta del cliente
+// body: { routeId, target, weeklyVolume }
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  return adminHandler(async (session) => {
+    const { id } = await params;
+    const { routeId, target, weeklyVolume } = await request.json();
+
+    if (!routeId) {
+      return Response.json({ error: "routeId es requerido" }, { status: 400 });
+    }
+
+    const clientRoute = await prisma.clientRoute.findUnique({
+      where: { clientId_routeId: { clientId: id, routeId } },
+    });
+
+    if (!clientRoute) {
+      return Response.json({ error: "Ruta no asignada a este cliente" }, { status: 404 });
+    }
+
+    await prisma.clientRoute.update({
+      where: { id: clientRoute.id },
+      data: {
+        target: target != null ? Number(target) : null,
+        weeklyVolume: weeklyVolume != null ? Number(weeklyVolume) : null,
+      },
+    });
+
+    const client = await prisma.client.findUnique({ where: { id }, select: { name: true } });
+
+    void logAudit({
+      resource: "client_routes",
+      resourceId: id,
+      resourceLabel: `${client?.name ?? id} — tarifa/volumen`,
+      action: "updated",
+      userId: session.user.id,
+      userName: session.user.name,
+    });
+
+    return Response.json({ ok: true });
   });
 }
 

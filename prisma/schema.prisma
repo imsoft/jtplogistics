@@ -208,12 +208,14 @@ model Client {
 }
 
 model ClientRoute {
-  id        String   @id @default(cuid()) @map("id")
-  clientId  String   @map("client_id")
-  routeId   String   @map("route_id")
-  createdAt DateTime @default(now()) @map("created_at")
-  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  route     Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  id           String   @id @default(cuid()) @map("id")
+  clientId     String   @map("client_id")
+  routeId      String   @map("route_id")
+  target       Float?   @map("target")
+  weeklyVolume Int?     @map("weekly_volume")
+  createdAt    DateTime @default(now()) @map("created_at")
+  client       Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  route        Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
 
   @@unique([clientId, routeId])
   @@map("client_routes")
