@@ -12,7 +12,7 @@ import { InfoRow } from "@/components/dashboard/users/info-row";
 import { ClientViewActions } from "@/components/dashboard/clients/client-view-actions";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { useUnitTypes } from "@/hooks/use-unit-types";
-import { formatPhone } from "@/lib/utils";
+import { formatPhone, formatMxnLive, parseMxn, formatMxn } from "@/lib/utils";
 import { toast } from "sonner";
 import type { Client } from "@/types/client.types";
 
@@ -75,7 +75,7 @@ export default function ClientProfilePage() {
         const targets: Record<string, string> = {};
         const volumes: Record<string, string> = {};
         for (const r of data) {
-          if (r.clientTarget != null) targets[r.id] = String(r.clientTarget);
+          if (r.clientTarget != null) targets[r.id] = formatMxn(r.clientTarget);
           if (r.clientWeeklyVolume != null) volumes[r.id] = String(r.clientWeeklyVolume);
         }
         setEditTargets(targets);
@@ -90,7 +90,7 @@ export default function ClientProfilePage() {
   }, [loadRoutes]);
 
   const saveRouteField = useCallback((routeId: string, target: string | undefined, volume: string | undefined) => {
-    const parsedTarget = target?.trim() ? Number(target.replace(/,/g, "")) : null;
+    const parsedTarget = target?.trim() ? parseMxn(target) : null;
     const parsedVolume = volume?.trim() ? Math.round(Number(volume)) : null;
 
     fetch(`/api/admin/clients/${id}/routes`, {
@@ -114,7 +114,7 @@ export default function ClientProfilePage() {
   }, [saveRouteField, editTargets, editVolumes]);
 
   function handleTargetChange(routeId: string, value: string) {
-    setEditTargets((prev) => ({ ...prev, [routeId]: value }));
+    setEditTargets((prev) => ({ ...prev, [routeId]: formatMxnLive(value) }));
   }
 
   function handleVolumeChange(routeId: string, value: string) {

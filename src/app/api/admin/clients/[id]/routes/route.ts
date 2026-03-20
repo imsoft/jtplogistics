@@ -45,11 +45,11 @@ export async function GET(
     return Response.json(
       clientRoutes.map((cr) => ({
         ...cr.route,
-        // Client-specific overrides take precedence
-        target: cr.target ?? cr.route.target,
-        weeklyVolume: cr.weeklyVolume ?? cr.route.weeklyVolume,
-        clientTarget: cr.target,
-        clientWeeklyVolume: cr.weeklyVolume,
+        // Only show client-specific values, not route defaults
+        target: cr.target ?? null,
+        weeklyVolume: cr.weeklyVolume ?? null,
+        clientTarget: cr.target ?? null,
+        clientWeeklyVolume: cr.weeklyVolume ?? null,
         createdByName: cr.route.createdBy?.name ?? null,
         createdBy: undefined,
       }))
