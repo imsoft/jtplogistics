@@ -75,8 +75,8 @@ export default function ClientProfilePage() {
         const targets: Record<string, string> = {};
         const volumes: Record<string, string> = {};
         for (const r of data) {
-          if (r.target != null) targets[r.id] = String(r.target);
-          if (r.weeklyVolume != null) volumes[r.id] = String(r.weeklyVolume);
+          if (r.clientTarget != null) targets[r.id] = String(r.clientTarget);
+          if (r.clientWeeklyVolume != null) volumes[r.id] = String(r.clientWeeklyVolume);
         }
         setEditTargets(targets);
         setEditVolumes(volumes);
@@ -264,7 +264,6 @@ export default function ClientProfilePage() {
                                 onChange={(e) => handleTargetChange(route.id, e.target.value)}
                                 onBlur={() => saveRouteField(route.id, editTargets[route.id], editVolumes[route.id])}
                                 onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                                placeholder="—"
                                 className="h-7 w-24 text-xs"
                               />
                             </div>
@@ -276,7 +275,6 @@ export default function ClientProfilePage() {
                               onChange={(e) => handleVolumeChange(route.id, e.target.value)}
                               onBlur={() => saveRouteField(route.id, editTargets[route.id], editVolumes[route.id])}
                               onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                              placeholder="—"
                               className="h-7 w-20 text-xs"
                             />
                             <span className="text-xs text-muted-foreground whitespace-nowrap truncate">
