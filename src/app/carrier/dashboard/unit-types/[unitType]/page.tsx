@@ -17,6 +17,12 @@ import { formatMxnLive, formatMxn, parseMxn } from "@/lib/utils";
 import { useUnitTypes } from "@/hooks/use-unit-types";
 import { toast } from "sonner";
 
+interface RouteSelection {
+  unitType: string;
+  carrierTarget: number | null;
+  carrierWeeklyVolume: number | null;
+}
+
 interface CarrierRouteRow {
   id: string;
   origin: string;
@@ -25,6 +31,7 @@ interface CarrierRouteRow {
   unitType: string;
   jtpTarget: number | null;
   selected: boolean;
+  selections: RouteSelection[];
   carrierTarget: number | null;
   carrierWeeklyVolume: number | null;
   createdAt: string;
@@ -71,6 +78,8 @@ export default function CarrierUnitTypePage() {
 
   const [filterOrigin, setFilterOrigin] = useState<string | null>(null);
   const [filterDestination, setFilterDestination] = useState<string | null>(null);
+
+  // Selection state for THIS unit type page only
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [originalSelected, setOriginalSelected] = useState<Set<string>>(new Set());
   const [targetByRouteId, setTargetByRouteId] = useState<Record<string, string>>({});
@@ -85,36 +94,38 @@ export default function CarrierUnitTypePage() {
 
   const pageTitle = unitTypeLabel[unitType] ?? unitType;
 
-  // Routes for this unit type page
-  const routes = useMemo(
-    () => allRoutes.filter((r) => r.unitType === unitType),
-    [allRoutes, unitType]
-  );
-
   const loadRoutes = useCallback(async () => {
     const data = await fetchCarrierRoutes();
     setCanEditTarget(data.canEditTarget);
     setCanEditRoutes(data.canEditRoutes);
     setAllRoutes(data.routes);
 
+    // Load selections for the current unitType page
     const savedSelected = new Set<string>();
     const savedTargets: Record<string, string> = {};
     const savedVolumes: Record<string, string> = {};
     for (const r of data.routes) {
-      if (r.selected) savedSelected.add(r.id);
-      if (r.carrierTarget != null) savedTargets[r.id] = formatMxn(r.carrierTarget);
-      if (r.carrierWeeklyVolume != null) savedVolumes[r.id] = String(r.carrierWeeklyVolume);
+      const sel = r.selections?.find((s) => s.unitType === unitType);
+      if (sel) {
+        savedSelected.add(r.id);
+        if (sel.carrierTarget != null) savedTargets[r.id] = formatMxn(sel.carrierTarget);
+        if (sel.carrierWeeklyVolume != null) savedVolumes[r.id] = String(sel.carrierWeeklyVolume);
+      }
     }
     setSelected(savedSelected);
     setOriginalSelected(savedSelected);
     setTargetByRouteId(savedTargets);
     setWeeklyVolumeByRouteId(savedVolumes);
     setIsLoaded(true);
-  }, []);
+  }, [unitType]);
 
   useEffect(() => {
+    setIsLoaded(false);
     loadRoutes();
   }, [loadRoutes]);
+
+  // Show ALL routes
+  const routes = allRoutes;
 
   const origins = useMemo(
     () => [...new Set(routes.map((r) => r.origin))].sort(),
@@ -136,6 +147,7 @@ export default function CarrierUnitTypePage() {
     });
   }, [routes, filterOrigin, filterDestination]);
 
+  // Group by origin
   const groupedRoutes = useMemo(() => {
     const map = new Map<string, CarrierRouteRow[]>();
     for (const r of filteredRoutes) {
@@ -151,11 +163,7 @@ export default function CarrierUnitTypePage() {
     [selected, originalSelected]
   );
 
-  // Count selected routes for this unit type only
-  const selectedCount = useMemo(() => {
-    const routeIds = new Set(routes.map((r) => r.id));
-    return [...selected].filter((id) => routeIds.has(id)).length;
-  }, [routes, selected]);
+  const selectedCount = selected.size;
 
   function toggleSelected(routeId: string) {
     setSelected((prev) => {
@@ -186,13 +194,13 @@ export default function CarrierUnitTypePage() {
   async function handleSubmit() {
     setIsSaving(true);
     try {
-      // Send ALL selected routes (across all unit types) so we don't lose other selections
-      const allSelectedRouteIds = [...selected];
-      const body = allSelectedRouteIds.map((routeId) => {
+      // Only send selected routes for THIS unit type page
+      const body = [...selected].map((routeId) => {
         const rawVolume = weeklyVolumeByRouteId[routeId]?.trim();
         const parsedVolume = rawVolume ? Math.round(Number(rawVolume)) : null;
         return {
           routeId,
+          unitType,
           carrierTarget: parseMxn(targetByRouteId[routeId] ?? "") ?? null,
           carrierWeeklyVolume: rawVolume && !isNaN(parsedVolume as number) ? parsedVolume : null,
         };
@@ -205,7 +213,7 @@ export default function CarrierUnitTypePage() {
       });
 
       if (!res.ok) throw new Error("Error al guardar");
-      toast.success("Selecciones guardadas correctamente.");
+      toast.success(`Selecciones de ${pageTitle} guardadas correctamente.`);
       await loadRoutes();
     } catch {
       toast.error("No se pudieron guardar las selecciones. Intenta de nuevo.");
@@ -225,7 +233,7 @@ export default function CarrierUnitTypePage() {
       <div>
         <h1 className="text-xl font-bold tracking-tight sm:text-2xl">{pageTitle}</h1>
         <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
-          Selecciona las rutas disponibles y establece tu target.
+          Selecciona las rutas que ofreces para <strong>{pageTitle}</strong> y establece tu target.
         </p>
       </div>
 
@@ -242,7 +250,7 @@ export default function CarrierUnitTypePage() {
 
       {routes.length === 0 ? (
         <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
-          No hay rutas disponibles para {pageTitle} por el momento.
+          No hay rutas disponibles por el momento.
         </p>
       ) : (
         <>
@@ -403,7 +411,7 @@ export default function CarrierUnitTypePage() {
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:gap-3">
               <span className="text-muted-foreground text-xs text-center sm:text-left">
                 {selectedCount} ruta{selectedCount !== 1 ? "s" : ""} seleccionada
-                {selectedCount !== 1 ? "s" : ""}
+                {selectedCount !== 1 ? "s" : ""} para {pageTitle}
                 {!canEditRoutes && newSelections.size > 0 && (
                   <span className="ml-1">({newSelections.size} nueva{newSelections.size !== 1 ? "s" : ""})</span>
                 )}

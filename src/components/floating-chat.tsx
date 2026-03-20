@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { MessageSquare, X, ChevronLeft } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
 import { ChatWindow } from "@/components/dashboard/messages/chat-window";
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button";
 
 export function FloatingChat() {
   const { data: session } = useSession();
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedCarrierId, setSelectedCarrierId] = useState<string | null>(null);
   const [selectedCarrierName, setSelectedCarrierName] = useState("");
@@ -20,6 +22,9 @@ export function FloatingChat() {
   const isCarrier = role === "carrier";
 
   if (!isStaff && !isCarrier) return null;
+
+  // Hide on messages pages since the user is already there
+  if (pathname.includes("/messages")) return null;
 
   function handleSelect(carrierId: string, carrierName: string) {
     setSelectedCarrierId(carrierId);

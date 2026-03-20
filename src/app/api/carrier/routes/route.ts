@@ -25,12 +25,25 @@ export async function GET() {
       }),
     ]);
 
+    // Group carrier selections by routeId+unitType
+    const selectionKey = (routeId: string, unitType: string) => `${routeId}:${unitType}`;
     const selectionMap = new Map<string, { carrierTarget: number | null; carrierWeeklyVolume: number | null }>(
       carrierRoutes.map((cr) => [
-        cr.routeId,
+        selectionKey(cr.routeId, cr.unitType),
         { carrierTarget: cr.carrierTarget ?? null, carrierWeeklyVolume: cr.carrierWeeklyVolume ?? null },
       ])
     );
+
+    // Also build a set of all selected route IDs (regardless of unitType) for backward compat
+    const selectedRouteIds = new Set(carrierRoutes.map((cr) => cr.routeId));
+
+    // Build per-unitType selection info
+    const selectionsByRoute = new Map<string, { unitType: string; carrierTarget: number | null; carrierWeeklyVolume: number | null }[]>();
+    for (const cr of carrierRoutes) {
+      const list = selectionsByRoute.get(cr.routeId) ?? [];
+      list.push({ unitType: cr.unitType, carrierTarget: cr.carrierTarget ?? null, carrierWeeklyVolume: cr.carrierWeeklyVolume ?? null });
+      selectionsByRoute.set(cr.routeId, list);
+    }
 
     return Response.json({
       canEditTarget: userRecord?.canEditTarget ?? false,
@@ -42,9 +55,10 @@ export async function GET() {
         description: r.description ?? null,
         unitType: r.unitType,
         jtpTarget: r.target ?? null,
-        selected: selectionMap.has(r.id),
-        carrierTarget: selectionMap.get(r.id)?.carrierTarget ?? null,
-        carrierWeeklyVolume: selectionMap.get(r.id)?.carrierWeeklyVolume ?? null,
+        selected: selectedRouteIds.has(r.id),
+        selections: selectionsByRoute.get(r.id) ?? [],
+        carrierTarget: null,
+        carrierWeeklyVolume: null,
         createdAt: r.createdAt.toISOString(),
       })),
     });
@@ -61,11 +75,14 @@ export async function PUT(request: NextRequest) {
   try {
     const session = await requireCarrier();
 
-    const body: { routeId: string; carrierTarget: number | null; carrierWeeklyVolume: number | null }[] = await request.json();
+    const body: { routeId: string; unitType: string; carrierTarget: number | null; carrierWeeklyVolume: number | null }[] = await request.json();
 
     if (!Array.isArray(body)) {
       return Response.json({ error: "El cuerpo debe ser un arreglo" }, { status: 400 });
     }
+
+    // All items should have the same unitType (saving from one page)
+    const pageUnitType = body[0]?.unitType ?? "";
 
     const userRecord = await prisma.user.findUnique({
       where: { id: session.user.id },
@@ -73,44 +90,44 @@ export async function PUT(request: NextRequest) {
     });
 
     if (userRecord?.canEditRoutes) {
-      // Edición completa: reemplaza todo y bloquea
+      // Edición completa: reemplaza selections for this unitType only, preserve others
       let data = body;
       if (!userRecord.canEditTarget) {
         const existingRoutes = await prisma.carrierRoute.findMany({
-          where: { carrierId: session.user.id },
+          where: { carrierId: session.user.id, unitType: pageUnitType },
         });
         const existingTargetMap = new Map(
-          existingRoutes.map((r) => [r.routeId, r.carrierTarget ?? null])
+          existingRoutes.map((r) => [`${r.routeId}:${r.unitType}`, r.carrierTarget ?? null])
         );
         data = body.map((item) => ({
           ...item,
-          carrierTarget: existingTargetMap.get(item.routeId) ?? null,
+          carrierTarget: existingTargetMap.get(`${item.routeId}:${item.unitType}`) ?? null,
         }));
       }
 
       await prisma.$transaction([
-        prisma.carrierRoute.deleteMany({ where: { carrierId: session.user.id } }),
+        // Only delete selections for this unit type page
+        prisma.carrierRoute.deleteMany({
+          where: { carrierId: session.user.id, unitType: pageUnitType },
+        }),
         prisma.carrierRoute.createMany({
           data: data.map((item) => ({
             carrierId: session.user.id,
             routeId: item.routeId,
+            unitType: item.unitType,
             carrierTarget: item.carrierTarget ?? undefined,
             carrierWeeklyVolume: item.carrierWeeklyVolume ?? undefined,
           })),
         }),
-        prisma.user.update({
-          where: { id: session.user.id },
-          data: { canEditRoutes: false },
-        }),
       ]);
     } else {
-      // Solo agrega rutas nuevas (no toca las existentes)
+      // Solo agrega rutas nuevas para este unitType (no toca las existentes)
       const existingRoutes = await prisma.carrierRoute.findMany({
-        where: { carrierId: session.user.id },
+        where: { carrierId: session.user.id, unitType: pageUnitType },
       });
-      const existingRouteIds = new Set(existingRoutes.map((r) => r.routeId));
+      const existingKeys = new Set(existingRoutes.map((r) => `${r.routeId}:${r.unitType}`));
 
-      const newOnes = body.filter((item) => !existingRouteIds.has(item.routeId));
+      const newOnes = body.filter((item) => !existingKeys.has(`${item.routeId}:${item.unitType}`));
 
       if (newOnes.length > 0) {
         const targetData = userRecord?.canEditTarget
@@ -121,6 +138,7 @@ export async function PUT(request: NextRequest) {
           data: targetData.map((item) => ({
             carrierId: session.user.id,
             routeId: item.routeId,
+            unitType: item.unitType,
             carrierTarget: item.carrierTarget ?? undefined,
             carrierWeeklyVolume: item.carrierWeeklyVolume ?? undefined,
           })),
