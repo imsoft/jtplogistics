@@ -18,30 +18,43 @@ export async function GET(request: NextRequest) {
     const q = request.nextUrl.searchParams.get("q")?.trim() ?? "";
     if (q.length < 2) return Response.json([]);
 
-    // Search with both the original query and the accent-stripped version
-    // so "leon" matches "León" and vice versa
-    const qNorm = normalizeSearch(q);
-    const containsOriginal = { contains: q, mode: "insensitive" as const };
-    const containsNorm = { contains: qNorm, mode: "insensitive" as const };
-    const fieldOr = (field: string) =>
-      qNorm !== q.toLowerCase()
-        ? [{ [field]: containsOriginal }, { [field]: containsNorm }]
-        : [{ [field]: containsOriginal }];
+    // Split query into individual words for multi-term matching
+    // and normalize each to strip accents
+    const words = q.split(/\s+/).filter((w) => w.length >= 2);
+    if (words.length === 0) return Response.json([]);
+
+    // Build a "contains" condition for a field that matches either original or normalized term
+    const fieldContains = (field: string, term: string) => {
+      const termNorm = normalizeSearch(term);
+      const conditions = [{ [field]: { contains: term, mode: "insensitive" as const } }];
+      if (termNorm !== term.toLowerCase()) {
+        conditions.push({ [field]: { contains: termNorm, mode: "insensitive" as const } });
+      }
+      return conditions;
+    };
+
+    // For a single term: match any of the given fields
+    const fieldOr = (fields: string[], term: string) =>
+      fields.flatMap((f) => fieldContains(f, term));
+
+    // Each word must match at least one of the given fields (AND of ORs)
+    // e.g. "guadalajara queretaro" → word "guadalajara" matches origin OR destination
+    //   AND word "queretaro" matches origin OR destination
+    const allWordsMatch = (fields: string[]) =>
+      words.map((word) => ({ OR: fieldOr(fields, word) }));
 
     const [routes, carriers, employees, clients, vendors] = await Promise.all([
-      // Rutas: origen → destino
+      // Rutas: each word must match origin OR destination
       prisma.route.findMany({
-        where: {
-          OR: [...fieldOr("origin"), ...fieldOr("destination")],
-        },
-        take: 5,
+        where: { AND: allWordsMatch(["origin", "destination"]) },
+        take: 15,
         select: { id: true, origin: true, destination: true, status: true },
       }),
 
-      // Transportistas
+      // Transportistas: each word must match name OR email
       prisma.user.findMany({
-        where: { role: "carrier", OR: fieldOr("name") },
-        take: 5,
+        where: { role: "carrier", AND: allWordsMatch(["name", "email"]) },
+        take: 10,
         select: { id: true, name: true, email: true },
       }),
 
@@ -49,25 +62,23 @@ export async function GET(request: NextRequest) {
       prisma.user.findMany({
         where: {
           role: { in: ["collaborator", "developer"] },
-          OR: [...fieldOr("name"), ...fieldOr("email")],
+          AND: allWordsMatch(["name", "email"]),
         },
-        take: 5,
+        take: 10,
         select: { id: true, name: true, email: true, role: true },
       }),
 
-      // Clientes
+      // Clientes: each word must match name, legalName OR email
       prisma.client.findMany({
-        where: {
-          OR: [...fieldOr("name"), ...fieldOr("legalName"), ...fieldOr("email")],
-        },
-        take: 5,
+        where: { AND: allWordsMatch(["name", "legalName", "email"]) },
+        take: 10,
         select: { id: true, name: true, email: true },
       }),
 
       // Vendedores
       prisma.user.findMany({
-        where: { role: "vendor", OR: fieldOr("name") },
-        take: 5,
+        where: { role: "vendor", AND: allWordsMatch(["name", "email"]) },
+        take: 10,
         select: { id: true, name: true, email: true },
       }),
     ]);

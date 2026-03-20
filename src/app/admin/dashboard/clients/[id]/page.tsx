@@ -129,28 +129,25 @@ export default function ClientProfilePage() {
           </CardContent>
         </Card>
 
-        {client.detentionConditions && (
+        {(client.detentionConditions || client.notes) && (
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                Condiciones de estadías
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 pb-4">
-              <p className="text-sm whitespace-pre-wrap">{client.detentionConditions}</p>
-            </CardContent>
-          </Card>
-        )}
-
-        {client.notes && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                Notas
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 pb-4">
-              <p className="text-sm whitespace-pre-wrap">{client.notes}</p>
+            <CardContent className="px-4 py-4 space-y-4">
+              {client.detentionConditions && (
+                <div>
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                    Condiciones de estadías
+                  </h3>
+                  <p className="text-sm whitespace-pre-wrap">{client.detentionConditions}</p>
+                </div>
+              )}
+              {client.notes && (
+                <div>
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                    Notas
+                  </h3>
+                  <p className="text-sm whitespace-pre-wrap">{client.notes}</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
@@ -188,8 +185,8 @@ export default function ClientProfilePage() {
                       </span>
                     </div>
                     <div className="overflow-x-auto">
-                      <div className="min-w-[560px]">
-                        <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-x-4 border-b bg-muted/20 px-4 py-1.5 text-xs font-medium text-muted-foreground">
+                      <div className="min-w-[660px]">
+                        <div className="grid grid-cols-[1fr_minmax(100px,1fr)_minmax(100px,1fr)_minmax(120px,1fr)_minmax(80px,1fr)] gap-x-6 border-b bg-muted/20 px-4 py-1.5 text-xs font-medium text-muted-foreground">
                           <span>Ruta</span>
                           <span>Tarifa</span>
                           <span>Volumen</span>
@@ -199,7 +196,7 @@ export default function ClientProfilePage() {
                         {items.map((route) => (
                           <div
                             key={route.id}
-                            className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-x-4 items-center border-b px-4 py-3 last:border-0"
+                            className="grid grid-cols-[1fr_minmax(100px,1fr)_minmax(100px,1fr)_minmax(120px,1fr)_minmax(80px,1fr)] gap-x-6 items-center border-b px-4 py-3 last:border-0 transition-colors hover:bg-blue-50 dark:hover:bg-blue-950/30"
                           >
                             <div className="min-w-0">
                               <p className="truncate text-sm font-medium">
@@ -215,7 +212,7 @@ export default function ClientProfilePage() {
                             <span className="text-xs text-muted-foreground whitespace-nowrap">
                               {route.weeklyVolume != null ? route.weeklyVolume : "—"}
                             </span>
-                            <span className="text-xs text-muted-foreground whitespace-nowrap">
+                            <span className="text-xs text-muted-foreground whitespace-nowrap truncate">
                               {route.createdByName ?? "—"}
                             </span>
                             <Badge variant={STATUS_VARIANT[route.status] ?? "outline"} className="text-xs">

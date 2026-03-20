@@ -150,6 +150,7 @@ export function GlobalSearch() {
         title="Búsqueda global"
         description="Busca rutas, transportistas, empleados, clientes y vendedores"
         showCloseButton={false}
+        shouldFilter={false}
       >
         <CommandInput
           placeholder="Buscar rutas, transportistas, empleados…"
