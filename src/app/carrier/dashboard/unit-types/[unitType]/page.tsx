@@ -163,6 +163,9 @@ export default function CarrierUnitTypePage() {
     [selected, originalSelected]
   );
 
+  // Fully locked: carrier already saved and admin hasn't re-enabled editing
+  const isFullyLocked = !canEditRoutes && originalSelected.size > 0;
+
   const selectedCount = selected.size;
 
   function toggleSelected(routeId: string) {
@@ -226,7 +229,7 @@ export default function CarrierUnitTypePage() {
     return <p className="text-muted-foreground">Cargando…</p>;
   }
 
-  const canSave = canEditRoutes || newSelections.size > 0;
+  const canSave = !isFullyLocked && (canEditRoutes || newSelections.size > 0);
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
@@ -237,14 +240,9 @@ export default function CarrierUnitTypePage() {
         </p>
       </div>
 
-      {!canEditTarget && isLoaded && (
+      {isFullyLocked && isLoaded && (
         <p className="text-xs text-muted-foreground">
-          La edición de tu target está deshabilitada. Contacta al administrador.
-        </p>
-      )}
-      {!canEditRoutes && isLoaded && (
-        <p className="text-xs text-muted-foreground">
-          Las rutas ya guardadas están bloqueadas. Puedes agregar nuevas rutas. Contacta al administrador para modificar las existentes.
+          Tu selección de rutas está bloqueada. Contacta al administrador para poder modificarla.
         </p>
       )}
 
@@ -339,7 +337,7 @@ export default function CarrierUnitTypePage() {
                     {items.map((route) => {
                       const isSelected = selected.has(route.id);
                       const isOriginallySelected = originalSelected.has(route.id);
-                      const isLocked = isOriginallySelected && !canEditRoutes;
+                      const isLocked = isFullyLocked || (isOriginallySelected && !canEditRoutes);
                       const currentTarget = parseMxn(targetByRouteId[route.id] ?? "") ?? null;
 
                       return (
@@ -412,7 +410,7 @@ export default function CarrierUnitTypePage() {
               <span className="text-muted-foreground text-xs text-center sm:text-left">
                 {selectedCount} ruta{selectedCount !== 1 ? "s" : ""} seleccionada
                 {selectedCount !== 1 ? "s" : ""} para {pageTitle}
-                {!canEditRoutes && newSelections.size > 0 && (
+                {!isFullyLocked && !canEditRoutes && newSelections.size > 0 && (
                   <span className="ml-1">({newSelections.size} nueva{newSelections.size !== 1 ? "s" : ""})</span>
                 )}
               </span>

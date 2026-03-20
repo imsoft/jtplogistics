@@ -17,7 +17,11 @@ export async function PATCH(
 
     await prisma.user.update({
       where: { id },
-      data: { canEditRoutes },
+      data: {
+        canEditRoutes,
+        // When enabling route editing, also enable target editing
+        ...(canEditRoutes ? { canEditTarget: true } : { canEditTarget: false }),
+      },
     });
 
     void logAudit({

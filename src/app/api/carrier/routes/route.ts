@@ -149,6 +149,12 @@ export async function PUT(request: NextRequest) {
     // Notificación a pricing
     void notifyPricing(session.user.id, body);
 
+    // After saving, lock editing so the carrier can't modify until admin re-enables
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { canEditRoutes: false, canEditTarget: false },
+    });
+
     void logAudit({
       resource: "carrier_routes", resourceId: session.user.id,
       resourceLabel: `Selección de rutas (${body.length})`,
