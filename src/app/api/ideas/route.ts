@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { ideasHandler } from "@/lib/api-handler";
 import { notifyRole } from "@/lib/notify";
+import { logAudit } from "@/lib/audit-log";
 
 export function GET() {
   return ideasHandler(async () => {
@@ -51,6 +52,11 @@ export function POST(request: Request) {
       title: `Nueva idea: ${idea.title.slice(0, 60)}`,
       body: idea.description?.slice(0, 80) ?? undefined,
       href: `/admin/dashboard/ideas/${idea.id}`,
+    });
+
+    void logAudit({
+      resource: "idea", resourceId: idea.id, resourceLabel: idea.title,
+      action: "created", userId: session.user.id, userName: (session.user as { name: string }).name,
     });
 
     return Response.json({ id: idea.id }, { status: 201 });

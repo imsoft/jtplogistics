@@ -1,11 +1,12 @@
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
+import { logAudit, diffObjects } from "@/lib/audit-log";
 
 export function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const { id } = await params;
     const u = await prisma.user.findUnique({
       where: { id },
@@ -61,7 +62,7 @@ export function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const { id } = await params;
     const body = await request.json();
     const { name, position, department, phone, password, birthDate } = body as {
@@ -73,10 +74,21 @@ export function PATCH(
       birthDate?: string | null;
     };
 
-    const u = await prisma.user.findUnique({ where: { id } });
+    const u = await prisma.user.findUnique({
+      where: { id },
+      include: { employeeProfile: true },
+    });
     if (!u || u.role !== "collaborator") {
       return Response.json({ error: "No encontrado" }, { status: 404 });
     }
+
+    const before = {
+      name: u.name,
+      birthDate: u.birthDate,
+      position: u.employeeProfile?.position,
+      department: u.employeeProfile?.department,
+      phone: u.employeeProfile?.phone,
+    };
 
     const parsedBirthDate = birthDate !== undefined
       ? (birthDate ? new Date(birthDate) : null)
@@ -109,6 +121,45 @@ export function PATCH(
       },
     });
 
+    const updated = await prisma.user.findUnique({
+      where: { id },
+      include: { employeeProfile: true },
+    });
+
+    const after = {
+      name: updated!.name,
+      birthDate: updated!.birthDate,
+      position: updated!.employeeProfile?.position,
+      department: updated!.employeeProfile?.department,
+      phone: updated!.employeeProfile?.phone,
+    };
+
+    const fieldLabels = {
+      name: "Nombre",
+      birthDate: "Fecha de nacimiento",
+      position: "Puesto",
+      department: "Departamento",
+      phone: "Teléfono",
+    };
+
+    const changes = diffObjects(
+      before as Record<string, unknown>,
+      after as Record<string, unknown>,
+      fieldLabels,
+    );
+
+    if (changes.length > 0) {
+      void logAudit({
+        resource: "employee",
+        resourceId: id,
+        resourceLabel: updated!.name ?? u.name ?? "",
+        action: "updated",
+        userId: session.user.id,
+        userName: session.user.name,
+        changes,
+      });
+    }
+
     return Response.json({ ok: true });
   });
 }
@@ -117,13 +168,23 @@ export function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const { id } = await params;
     const u = await prisma.user.findUnique({ where: { id } });
     if (!u || u.role !== "collaborator") {
       return Response.json({ error: "No encontrado" }, { status: 404 });
     }
     await prisma.user.delete({ where: { id } });
+
+    void logAudit({
+      resource: "employee",
+      resourceId: id,
+      resourceLabel: u.name ?? "",
+      action: "deleted",
+      userId: session.user.id,
+      userName: session.user.name,
+    });
+
     return Response.json({ ok: true });
   });
 }

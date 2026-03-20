@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-server";
 import { notify } from "@/lib/notify";
+import { logAudit } from "@/lib/audit-log";
 import type { TaskStatus } from "@/types/task.types";
 
 const VALID_STATUSES: TaskStatus[] = ["pending", "in_progress", "completed"];
@@ -86,6 +87,15 @@ export async function POST(request: NextRequest) {
       title: `Nueva tarea: ${task.title.slice(0, 60)}`,
       body: task.description?.slice(0, 80) ?? undefined,
       href: `/developer/dashboard/tasks/${task.id}`,
+    });
+
+    void logAudit({
+      resource: "task",
+      resourceId: task.id,
+      resourceLabel: task.title,
+      action: "created",
+      userId: session.user.id,
+      userName: session.user.name,
     });
 
     return Response.json(taskToJson(task), { status: 201 });

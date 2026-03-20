@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-server";
+import { logAudit } from "@/lib/audit-log";
 
 // PATCH — activa o desactiva el permiso de editar rutas para un carrier
 // body: { canEditRoutes: boolean }
@@ -9,7 +10,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdmin();
+    const session = await requireAdmin();
 
     const { id } = await params;
     const { canEditRoutes }: { canEditRoutes: boolean } = await request.json();
@@ -17,6 +18,15 @@ export async function PATCH(
     await prisma.user.update({
       where: { id },
       data: { canEditRoutes },
+    });
+
+    void logAudit({
+      resource: "user_setting",
+      resourceId: id,
+      resourceLabel: "Permiso editar rutas",
+      action: "updated",
+      userId: session.user.id,
+      userName: session.user.name,
     });
 
     return Response.json({ ok: true });

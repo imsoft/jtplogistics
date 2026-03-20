@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/auth-server";
 import { normalizeDisplayName } from "@/lib/normalize";
+import { logAudit } from "@/lib/audit-log";
 
 export async function GET() {
   try {
@@ -125,6 +126,11 @@ export async function PATCH(request: NextRequest) {
       where: { profileId: profile.id },
       select: { id: true, type: true, value: true, label: true },
       orderBy: { createdAt: "asc" },
+    });
+
+    void logAudit({
+      resource: "profile", resourceId: userId, resourceLabel: (name ?? session.user.name) as string,
+      action: "updated", userId, userName: (name ?? session.user.name) as string,
     });
 
     return Response.json({

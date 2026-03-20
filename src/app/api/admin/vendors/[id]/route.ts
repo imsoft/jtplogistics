@@ -1,12 +1,13 @@
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
 import { hashPassword } from "better-auth/crypto";
+import { logAudit, diffObjects } from "@/lib/audit-log";
 
 export function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return adminHandler(async () => {
+  return adminHandler(async (_session) => {
     const { id } = await params;
     const u = await prisma.user.findUnique({ where: { id } });
     if (!u || u.role !== "vendor") {
@@ -27,7 +28,7 @@ export function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const { id } = await params;
     const body = await request.json();
     const { name, birthDate, password } = body as {
@@ -40,6 +41,11 @@ export function PATCH(
     if (!u || u.role !== "vendor") {
       return Response.json({ error: "No encontrado" }, { status: 404 });
     }
+
+    const before = {
+      name: u.name,
+      birthDate: u.birthDate ? u.birthDate.toISOString().split("T")[0] : null,
+    };
 
     const parsedBirthDate = birthDate !== undefined
       ? (birthDate ? new Date(birthDate) : null)
@@ -61,6 +67,26 @@ export function PATCH(
       });
     }
 
+    const after = {
+      name: name ?? u.name,
+      birthDate: birthDate !== undefined ? (birthDate ?? null) : (u.birthDate ? u.birthDate.toISOString().split("T")[0] : null),
+    };
+
+    const fieldLabels = { name: "Nombre", birthDate: "Fecha de nacimiento" };
+    const changes = diffObjects(before, after, fieldLabels);
+
+    if (changes.length > 0) {
+      void logAudit({
+        resource: "vendor",
+        resourceId: id,
+        resourceLabel: (name ?? u.name) ?? "",
+        action: "updated",
+        userId: session.user.id,
+        userName: session.user.name,
+        changes,
+      });
+    }
+
     return Response.json({ ok: true });
   });
 }
@@ -69,13 +95,23 @@ export function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const { id } = await params;
     const u = await prisma.user.findUnique({ where: { id } });
     if (!u || u.role !== "vendor") {
       return Response.json({ error: "No encontrado" }, { status: 404 });
     }
     await prisma.user.delete({ where: { id } });
+
+    void logAudit({
+      resource: "vendor",
+      resourceId: id,
+      resourceLabel: u.name ?? "",
+      action: "deleted",
+      userId: session.user.id,
+      userName: session.user.name,
+    });
+
     return Response.json({ ok: true });
   });
 }

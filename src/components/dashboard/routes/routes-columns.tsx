@@ -29,7 +29,8 @@ export function getRoutesColumns({
   const columns: ColumnDef<Route>[] = [
     {
       id: "search",
-      accessorFn: (row) => `${row.origin} ${row.destination}`.toLowerCase(),
+      accessorFn: (row) => `${row.origin} ${row.destination}`,
+      filterFn: "fuzzy",
       header: () => null,
       cell: () => null,
       enableSorting: false,

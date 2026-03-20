@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
+import { logAudit } from "@/lib/audit-log";
 
 export function GET() {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const phones = await prisma.phone.findMany({
       orderBy: { createdAt: "desc" },
       include: {
@@ -28,7 +29,7 @@ export function GET() {
 }
 
 export function POST(request: Request) {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const body = await request.json();
     const { name, phoneNumber, password, imei, assignedToId, emailAccountId } = body as {
       name: string;
@@ -52,6 +53,15 @@ export function POST(request: Request) {
         assignedToId: assignedToId || null,
         emailAccountId: emailAccountId || null,
       },
+    });
+
+    void logAudit({
+      resource: "phone",
+      resourceId: phone.id,
+      resourceLabel: name,
+      action: "created",
+      userId: session.user.id,
+      userName: session.user.name,
     });
 
     return Response.json({ id: phone.id }, { status: 201 });

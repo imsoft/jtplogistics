@@ -32,7 +32,7 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
     label: "Operaciones",
     items: [
       { title: "Rutas", href: "/admin/dashboard/routes", icon: RouteIcon },
-      { title: "Historial de rutas", href: "/admin/dashboard/routes/logs", icon: ScrollText },
+      { title: "Historial de cambios", href: "/admin/dashboard/routes/logs", icon: ScrollText },
       { title: "Tipos de unidades", href: "/admin/dashboard/unit-types", icon: Boxes },
       { title: "Cotizador", href: "/admin/dashboard/quotes", icon: Calculator },
       { title: "Proveedores", href: "/admin/dashboard/providers", icon: Truck },

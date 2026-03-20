@@ -5,6 +5,7 @@ import {
   type ColumnDef,
   type ColumnFiltersState,
   type SortingState,
+  type FilterFn,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -12,6 +13,13 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+
+declare module "@tanstack/react-table" {
+  interface FilterFns {
+    fuzzy: FilterFn<unknown>;
+  }
+}
+import { normalizeSearch } from "@/lib/search";
 import {
   Table,
   TableBody,
@@ -47,6 +55,15 @@ export function DataTable<TData, TValue>({
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
 
+  const fuzzyFilter: FilterFn<TData> = React.useCallback(
+    (row, columnId, filterValue) => {
+      const cellValue = row.getValue(columnId);
+      if (cellValue == null) return false;
+      return normalizeSearch(String(cellValue)).includes(normalizeSearch(String(filterValue)));
+    },
+    []
+  );
+
   const table = useReactTable({
     data,
     columns,
@@ -57,6 +74,8 @@ export function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
+    globalFilterFn: fuzzyFilter,
+    filterFns: { fuzzy: fuzzyFilter },
     initialState: {
       columnVisibility: initialColumnVisibility ?? {},
     },

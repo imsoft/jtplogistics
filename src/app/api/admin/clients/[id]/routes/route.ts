@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
+import { logAudit } from "@/lib/audit-log";
 
 // GET — rutas asignadas al cliente
 // ?idsOnly=true  →  string[]  (retrocompatibilidad con el dialog)
@@ -31,14 +32,23 @@ export async function GET(
             destination: true,
             destinationState: true,
             unitType: true,
+            target: true,
+            weeklyVolume: true,
             status: true,
+            createdBy: { select: { name: true } },
           },
         },
       },
       orderBy: { createdAt: "asc" },
     });
 
-    return Response.json(clientRoutes.map((cr) => cr.route));
+    return Response.json(
+      clientRoutes.map((cr) => ({
+        ...cr.route,
+        createdByName: cr.route.createdBy?.name ?? null,
+        createdBy: undefined,
+      }))
+    );
   });
 }
 
@@ -48,7 +58,7 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const { id } = await params;
     const body: string[] = await request.json();
 
@@ -67,6 +77,15 @@ export async function PUT(
         data: body.map((routeId) => ({ clientId: id, routeId })),
       }),
     ]);
+
+    void logAudit({
+      resource: "client_routes",
+      resourceId: id,
+      resourceLabel: `${client.name} rutas`,
+      action: "updated",
+      userId: session.user.id,
+      userName: session.user.name,
+    });
 
     return Response.json({ ok: true });
   });

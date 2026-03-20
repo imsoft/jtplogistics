@@ -29,10 +29,11 @@ export function ClientForm({
   const [phone, setPhone] = useState(initialValues.phone ?? "");
   const [address, setAddress] = useState(initialValues.address ?? "");
   const [notes, setNotes] = useState(initialValues.notes ?? "");
+  const [detentionConditions, setDetentionConditions] = useState(initialValues.detentionConditions ?? "");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSubmit({ name, legalName, rfc, email, phone, address, notes });
+    onSubmit({ name, legalName, rfc, email, phone, address, notes, detentionConditions });
   }
 
   return (
@@ -86,6 +87,15 @@ export function ClientForm({
             id="client-address"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2 sm:col-span-2">
+          <Label htmlFor="client-detentionConditions">Condiciones de estadías</Label>
+          <Textarea
+            id="client-detentionConditions"
+            value={detentionConditions}
+            onChange={(e) => setDetentionConditions(e.target.value)}
+            rows={3}
           />
         </div>
         <div className="space-y-2 sm:col-span-2">

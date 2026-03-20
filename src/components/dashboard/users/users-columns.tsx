@@ -10,7 +10,8 @@ export function getUsersColumns(): ColumnDef<User>[] {
     {
       id: "search",
       accessorFn: (row) =>
-        `${row.profile?.commercialName ?? ""} ${row.name} ${row.email} ${USER_ROLE_LABELS[row.role]}`.toLowerCase(),
+        `${row.profile?.commercialName ?? ""} ${row.name} ${row.email} ${USER_ROLE_LABELS[row.role]}`,
+      filterFn: "fuzzy",
       header: () => null,
       cell: () => null,
       enableSorting: false,

@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth-server";
 import { notify, notifyRole } from "@/lib/notify";
+import { logAudit } from "@/lib/audit-log";
 
 function isStaff(role: string) {
   return role === "admin" || role === "collaborator";
@@ -142,6 +143,11 @@ export async function POST(request: NextRequest) {
         href: `/carrier/dashboard/messages`,
       });
     }
+
+    void logAudit({
+      resource: "message", resourceId: message.id, resourceLabel: `Mensaje a ${carrierId}`,
+      action: "created", userId, userName,
+    });
 
     return Response.json({
       id: message.id,

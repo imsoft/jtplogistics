@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireDeveloper } from "@/lib/auth-server";
 import { notify } from "@/lib/notify";
+import { logAudit } from "@/lib/audit-log";
 import type { TaskStatus } from "@/types/task.types";
 
 const VALID_STATUSES: TaskStatus[] = ["pending", "in_progress", "completed"];
@@ -38,6 +39,11 @@ export async function PATCH(
       in_progress: "en progreso",
       completed: "completada",
     };
+    void logAudit({
+      resource: "task", resourceId: id, resourceLabel: updated.title,
+      action: "updated", userId: session.user.id, userName: (session.user as { name: string }).name,
+      changes: [{ field: "status", label: "Estado", from: task.status, to: updated.status }],
+    });
     void notify({
       userId: updated.createdById,
       type: "task_updated",

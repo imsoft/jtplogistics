@@ -21,7 +21,8 @@ function getColumns(): ColumnDef<PhoneDevice>[] {
   return [
     {
       id: "search",
-      accessorFn: (row) => `${row.name} ${row.phoneNumber ?? ""} ${row.imei ?? ""} ${row.assignedTo?.name ?? ""} ${row.emailAccount?.email ?? ""}`.toLowerCase(),
+      accessorFn: (row) => `${row.name} ${row.phoneNumber ?? ""} ${row.imei ?? ""} ${row.assignedTo?.name ?? ""} ${row.emailAccount?.email ?? ""}`,
+      filterFn: "fuzzy",
       header: () => null,
       cell: () => null,
       enableSorting: false,

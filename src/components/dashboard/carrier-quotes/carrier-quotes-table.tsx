@@ -16,6 +16,7 @@ import {
 import { getCarrierQuotesColumns } from "./carrier-quotes-columns";
 import type { ActiveRoute, CarrierQuote, CarrierQuotesResponse } from "@/types/carrier-quote.types";
 import { formatMxn } from "@/lib/utils";
+import { fuzzyMatch } from "@/lib/search";
 
 async function fetchQuotes(routeId?: string): Promise<CarrierQuotesResponse> {
   const url = routeId
@@ -112,13 +113,13 @@ export function CarrierQuotesTable() {
 
   const filteredCarriers = useMemo(() => {
     let result = carriers;
-    const q = search.trim().toLowerCase();
+    const q = search.trim();
     if (q) {
       result = result.filter(
         (c) =>
-          c.name.toLowerCase().includes(q) ||
-          c.email.toLowerCase().includes(q) ||
-          (c.company ?? "").toLowerCase().includes(q)
+          fuzzyMatch(c.name, q) ||
+          fuzzyMatch(c.email, q) ||
+          fuzzyMatch(c.company ?? "", q)
       );
     }
     if (filterPrice !== "all" && routeTarget != null) {

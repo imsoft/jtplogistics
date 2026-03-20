@@ -22,7 +22,8 @@ function getColumns(): ColumnDef<EmailAccount>[] {
   return [
     {
       id: "search",
-      accessorFn: (row) => `${row.email} ${row.type} ${row.assignees.map((a) => a.name).join(" ")}`.toLowerCase(),
+      accessorFn: (row) => `${row.email} ${row.type} ${row.assignees.map((a) => a.name).join(" ")}`,
+      filterFn: "fuzzy",
       header: () => null,
       cell: () => null,
       enableSorting: false,

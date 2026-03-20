@@ -56,7 +56,8 @@ export function getTasksColumns({ onDelete, adminView = false }: TasksColumnsOpt
   const columns: ColumnDef<Task>[] = [
     {
       id: "search",
-      accessorFn: (row) => `${row.description ?? ""} ${row.assigneeName}`.toLowerCase(),
+      accessorFn: (row) => `${row.description ?? ""} ${row.assigneeName}`,
+      filterFn: "fuzzy",
       header: () => null,
       cell: () => null,
       enableSorting: false,

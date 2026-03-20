@@ -20,7 +20,8 @@ function getColumns(): ColumnDef<Laptop>[] {
   return [
     {
       id: "search",
-      accessorFn: (row) => `${row.name} ${row.serialNumber ?? ""} ${row.assignedTo?.name ?? ""} ${row.emailAccount?.email ?? ""}`.toLowerCase(),
+      accessorFn: (row) => `${row.name} ${row.serialNumber ?? ""} ${row.assignedTo?.name ?? ""} ${row.emailAccount?.email ?? ""}`,
+      filterFn: "fuzzy",
       header: () => null,
       cell: () => null,
       enableSorting: false,

@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-server";
 import { notify } from "@/lib/notify";
+import { logAudit } from "@/lib/audit-log";
 import type { TaskStatus } from "@/types/task.types";
 
 const VALID_STATUSES: TaskStatus[] = ["pending", "in_progress", "completed"];
@@ -37,7 +38,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdmin();
+    const session = await requireAdmin();
     const { id } = await params;
     const body = await request.json();
 
@@ -73,6 +74,15 @@ export async function PATCH(
       href: `/developer/dashboard/tasks/${task.id}`,
     });
 
+    void logAudit({
+      resource: "task",
+      resourceId: task.id,
+      resourceLabel: task.title,
+      action: "updated",
+      userId: session.user.id,
+      userName: session.user.name,
+    });
+
     return Response.json(taskToJson(task));
   } catch (e) {
     if (e instanceof Response) throw e;
@@ -88,9 +98,20 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdmin();
+    const session = await requireAdmin();
     const { id } = await params;
+    const existing = await prisma.task.findUnique({ where: { id }, select: { title: true } });
     await prisma.task.delete({ where: { id } });
+
+    void logAudit({
+      resource: "task",
+      resourceId: id,
+      resourceLabel: existing?.title ?? id,
+      action: "deleted",
+      userId: session.user.id,
+      userName: session.user.name,
+    });
+
     return new Response(null, { status: 204 });
   } catch (e) {
     if (e instanceof Response) throw e;

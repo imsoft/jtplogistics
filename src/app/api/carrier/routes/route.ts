@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireCarrier } from "@/lib/auth-server";
 import { sendEmail } from "@/lib/email";
+import { logAudit } from "@/lib/audit-log";
 
 const PRICING_EMAIL = "pricing@jtp.com.mx";
 
@@ -129,6 +130,12 @@ export async function PUT(request: NextRequest) {
 
     // Notificación a pricing
     void notifyPricing(session.user.id, body);
+
+    void logAudit({
+      resource: "carrier_routes", resourceId: session.user.id,
+      resourceLabel: `Selección de rutas (${body.length})`,
+      action: "updated", userId: session.user.id, userName: (session.user as { name: string }).name,
+    });
 
     return Response.json({ ok: true });
   } catch (e) {

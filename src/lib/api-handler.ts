@@ -1,14 +1,17 @@
 import { requireAdmin, requireCollaboratorOrAdmin } from "@/lib/auth-server";
 
+export type AdminSession = Awaited<ReturnType<typeof requireAdmin>>;
+
 /**
  * Wraps an admin API route handler with auth check and error handling.
  * Calls requireAdmin() before running fn(); re-throws Response errors (401/403).
+ * The session is passed to fn() for audit logging and user context.
  */
-export function adminHandler(fn: () => Promise<Response>): Promise<Response> {
+export function adminHandler(fn: (session: AdminSession) => Promise<Response>): Promise<Response> {
   return (async () => {
     try {
-      await requireAdmin();
-      return await fn();
+      const session = await requireAdmin();
+      return await fn(session);
     } catch (e) {
       if (e instanceof Response) throw e;
       console.error(e);

@@ -1,9 +1,10 @@
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
 import { createAuthUser } from "@/lib/create-auth-user";
+import { logAudit } from "@/lib/audit-log";
 
 export function GET() {
-  return adminHandler(async () => {
+  return adminHandler(async (_session) => {
     const vendors = await prisma.user.findMany({
       where: { role: "vendor" },
       orderBy: { createdAt: "desc" },
@@ -22,7 +23,7 @@ export function GET() {
 }
 
 export function POST(request: Request) {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const body = await request.json();
     const { name, email, password, birthDate } = body as {
       name: string;
@@ -49,6 +50,15 @@ export function POST(request: Request) {
         role: "vendor",
         ...(birthDate ? { birthDate: new Date(birthDate) } : {}),
       },
+    });
+
+    void logAudit({
+      resource: "vendor",
+      resourceId: userId,
+      resourceLabel: name,
+      action: "created",
+      userId: session.user.id,
+      userName: session.user.name,
     });
 
     return Response.json({ id: userId }, { status: 201 });

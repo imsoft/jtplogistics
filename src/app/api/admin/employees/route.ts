@@ -1,9 +1,10 @@
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
 import { createAuthUser } from "@/lib/create-auth-user";
+import { logAudit } from "@/lib/audit-log";
 
 export function GET() {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const employees = await prisma.user.findMany({
       where: { role: "collaborator" },
       orderBy: { createdAt: "desc" },
@@ -27,7 +28,7 @@ export function GET() {
 }
 
 export function POST(request: Request) {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const body = await request.json();
     const { name, email, password, birthDate, position, department, phone } = body as {
       name: string;
@@ -67,6 +68,15 @@ export function POST(request: Request) {
         phone: phone?.trim() || null,
         password: password,
       },
+    });
+
+    void logAudit({
+      resource: "employee",
+      resourceId: userId,
+      resourceLabel: name,
+      action: "created",
+      userId: session.user.id,
+      userName: session.user.name,
     });
 
     return Response.json({ id: userId }, { status: 201 });

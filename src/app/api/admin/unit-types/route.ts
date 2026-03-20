@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-server";
+import { logAudit } from "@/lib/audit-log";
 
 function toJson(u: { id: string; name: string; value: string; createdAt: Date }) {
   return { id: u.id, name: u.name, value: u.value, createdAt: u.createdAt.toISOString() };
@@ -31,7 +32,7 @@ function slugify(text: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireAdmin();
+    const session = await requireAdmin();
     const body = await request.json();
     const name = String(body.name ?? "").trim();
 
@@ -50,6 +51,16 @@ export async function POST(request: NextRequest) {
     }
 
     const created = await prisma.unitTypeDef.create({ data: { name, value } });
+
+    void logAudit({
+      resource: "unit_type",
+      resourceId: created.id,
+      resourceLabel: name,
+      action: "created",
+      userId: session.user.id,
+      userName: session.user.name,
+    });
+
     return Response.json(toJson(created), { status: 201 });
   } catch (e) {
     if (e instanceof Response) throw e;

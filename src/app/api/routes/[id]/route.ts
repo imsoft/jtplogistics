@@ -4,6 +4,7 @@ import { requireSession, requireAdmin } from "@/lib/auth-server";
 import { type PrismaRoute, VALID_STATUSES, routeToJson } from "@/lib/api/route-utils";
 import { getCityState } from "@/lib/data/mexico-cities";
 import { logRoute, diffSnapshots, type RouteSnapshot } from "@/lib/route-log";
+import { logAudit } from "@/lib/audit-log";
 import type { RouteStatus } from "@/types/route.types";
 
 export async function GET(
@@ -94,6 +95,11 @@ export async function PATCH(
           changes,
           snapshot: afterSnap,
         });
+        void logAudit({
+          resource: "route", resourceId: id, resourceLabel: `${route.origin} → ${route.destination}`,
+          action: "updated", userId: session.user.id, userName: (session.user as { name: string }).name,
+          changes: changes.map((c) => ({ field: c.field, label: c.label, from: c.from, to: c.to })),
+        });
       }
     }
 
@@ -132,6 +138,10 @@ export async function DELETE(
           target: route.target, weeklyVolume: route.weeklyVolume,
           unitType: route.unitType, status: route.status,
         },
+      });
+      void logAudit({
+        resource: "route", resourceId: id, resourceLabel: `${route.origin} → ${route.destination}`,
+        action: "deleted", userId: session.user.id, userName: (session.user as { name: string }).name,
       });
     }
 

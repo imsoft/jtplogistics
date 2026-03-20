@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth-server";
+import { normalizeSearch } from "@/lib/search";
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,16 +18,21 @@ export async function GET(request: NextRequest) {
     const q = request.nextUrl.searchParams.get("q")?.trim() ?? "";
     if (q.length < 2) return Response.json([]);
 
-    const contains = { contains: q, mode: "insensitive" as const };
+    // Search with both the original query and the accent-stripped version
+    // so "leon" matches "León" and vice versa
+    const qNorm = normalizeSearch(q);
+    const containsOriginal = { contains: q, mode: "insensitive" as const };
+    const containsNorm = { contains: qNorm, mode: "insensitive" as const };
+    const fieldOr = (field: string) =>
+      qNorm !== q.toLowerCase()
+        ? [{ [field]: containsOriginal }, { [field]: containsNorm }]
+        : [{ [field]: containsOriginal }];
 
     const [routes, carriers, employees, clients, vendors] = await Promise.all([
       // Rutas: origen → destino
       prisma.route.findMany({
         where: {
-          OR: [
-            { origin: contains },
-            { destination: contains },
-          ],
+          OR: [...fieldOr("origin"), ...fieldOr("destination")],
         },
         take: 5,
         select: { id: true, origin: true, destination: true, status: true },
@@ -34,7 +40,7 @@ export async function GET(request: NextRequest) {
 
       // Transportistas
       prisma.user.findMany({
-        where: { role: "carrier", name: contains },
+        where: { role: "carrier", OR: fieldOr("name") },
         take: 5,
         select: { id: true, name: true, email: true },
       }),
@@ -43,7 +49,7 @@ export async function GET(request: NextRequest) {
       prisma.user.findMany({
         where: {
           role: { in: ["collaborator", "developer"] },
-          OR: [{ name: contains }, { email: contains }],
+          OR: [...fieldOr("name"), ...fieldOr("email")],
         },
         take: 5,
         select: { id: true, name: true, email: true, role: true },
@@ -52,7 +58,7 @@ export async function GET(request: NextRequest) {
       // Clientes
       prisma.client.findMany({
         where: {
-          OR: [{ name: contains }, { legalName: contains }, { email: contains }],
+          OR: [...fieldOr("name"), ...fieldOr("legalName"), ...fieldOr("email")],
         },
         take: 5,
         select: { id: true, name: true, email: true },
@@ -60,7 +66,7 @@ export async function GET(request: NextRequest) {
 
       // Vendedores
       prisma.user.findMany({
-        where: { role: "vendor", name: contains },
+        where: { role: "vendor", OR: fieldOr("name") },
         take: 5,
         select: { id: true, name: true, email: true },
       }),

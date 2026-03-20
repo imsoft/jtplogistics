@@ -13,7 +13,8 @@ function getColumns(): ColumnDef<Client>[] {
     {
       id: "search",
       accessorFn: (row) =>
-        `${row.name} ${row.legalName ?? ""} ${row.email ?? ""} ${row.phone ?? ""} ${row.rfc ?? ""}`.toLowerCase(),
+        `${row.name} ${row.legalName ?? ""} ${row.email ?? ""} ${row.phone ?? ""} ${row.rfc ?? ""}`,
+      filterFn: "fuzzy",
       header: () => null,
       cell: () => null,
       enableSorting: false,

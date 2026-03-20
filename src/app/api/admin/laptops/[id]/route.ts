@@ -1,11 +1,12 @@
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
+import { logAudit } from "@/lib/audit-log";
 
 export function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const { id } = await params;
     const laptop = await prisma.laptop.findUnique({
       where: { id },
@@ -33,7 +34,7 @@ export function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const { id } = await params;
     const body = await request.json();
     const { name, password, serialNumber, assignedToId, emailAccountId } = body as {
@@ -58,6 +59,15 @@ export function PATCH(
       },
     });
 
+    void logAudit({
+      resource: "laptop",
+      resourceId: id,
+      resourceLabel: name ?? laptop.name ?? laptop.serialNumber ?? id,
+      action: "updated",
+      userId: session.user.id,
+      userName: session.user.name,
+    });
+
     return Response.json({ ok: true });
   });
 }
@@ -66,11 +76,21 @@ export function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const { id } = await params;
     const laptop = await prisma.laptop.findUnique({ where: { id } });
     if (!laptop) return Response.json({ error: "No encontrado" }, { status: 404 });
     await prisma.laptop.delete({ where: { id } });
+
+    void logAudit({
+      resource: "laptop",
+      resourceId: id,
+      resourceLabel: laptop.name ?? laptop.serialNumber ?? id,
+      action: "deleted",
+      userId: session.user.id,
+      userName: session.user.name,
+    });
+
     return Response.json({ ok: true });
   });
 }

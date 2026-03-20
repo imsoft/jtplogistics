@@ -1,11 +1,12 @@
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
+import { logAudit } from "@/lib/audit-log";
 
 export function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const { id } = await params;
     const phone = await prisma.phone.findUnique({
       where: { id },
@@ -34,7 +35,7 @@ export function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const { id } = await params;
     const body = await request.json();
     const { name, phoneNumber, password, imei, assignedToId, emailAccountId } = body as {
@@ -61,6 +62,15 @@ export function PATCH(
       },
     });
 
+    void logAudit({
+      resource: "phone",
+      resourceId: id,
+      resourceLabel: name ?? phone.name ?? phone.phoneNumber ?? id,
+      action: "updated",
+      userId: session.user.id,
+      userName: session.user.name,
+    });
+
     return Response.json({ ok: true });
   });
 }
@@ -69,11 +79,21 @@ export function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const { id } = await params;
     const phone = await prisma.phone.findUnique({ where: { id } });
     if (!phone) return Response.json({ error: "No encontrado" }, { status: 404 });
     await prisma.phone.delete({ where: { id } });
+
+    void logAudit({
+      resource: "phone",
+      resourceId: id,
+      resourceLabel: phone.name ?? phone.phoneNumber ?? id,
+      action: "deleted",
+      userId: session.user.id,
+      userName: session.user.name,
+    });
+
     return Response.json({ ok: true });
   });
 }

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
 import { requireAdmin } from "@/lib/auth-server";
 import { notify } from "@/lib/notify";
+import { logAudit } from "@/lib/audit-log";
 
 export function GET(
   _req: Request,
@@ -101,6 +102,15 @@ export function PATCH(
       });
     }
 
+    void logAudit({
+      resource: "idea",
+      resourceId: id,
+      resourceLabel: idea.title,
+      action: "updated",
+      userId: session.user.id,
+      userName: session.user.name,
+    });
+
     return Response.json({ ok: true, taskId });
   });
 }
@@ -109,11 +119,21 @@ export function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const { id } = await params;
     const idea = await prisma.idea.findUnique({ where: { id } });
     if (!idea) return Response.json({ error: "No encontrado" }, { status: 404 });
     await prisma.idea.delete({ where: { id } });
+
+    void logAudit({
+      resource: "idea",
+      resourceId: id,
+      resourceLabel: idea.title,
+      action: "deleted",
+      userId: session.user.id,
+      userName: session.user.name,
+    });
+
     return Response.json({ ok: true });
   });
 }

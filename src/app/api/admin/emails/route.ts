@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
+import { logAudit } from "@/lib/audit-log";
 
 export function GET() {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const emails = await prisma.emailAccount.findMany({
       orderBy: { createdAt: "desc" },
       include: {
@@ -23,7 +24,7 @@ export function GET() {
 }
 
 export function POST(request: Request) {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const body = await request.json();
     const { type, email, password, assigneeIds } = body as {
       type: string;
@@ -45,6 +46,15 @@ export function POST(request: Request) {
           ? { create: assigneeIds.map((userId) => ({ userId })) }
           : undefined,
       },
+    });
+
+    void logAudit({
+      resource: "email",
+      resourceId: account.id,
+      resourceLabel: email,
+      action: "created",
+      userId: session.user.id,
+      userName: session.user.name,
     });
 
     return Response.json({ id: account.id }, { status: 201 });

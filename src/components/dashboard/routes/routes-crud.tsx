@@ -23,6 +23,7 @@ import { useRoutesStore } from "@/hooks/use-routes-store";
 import { useUnitTypes } from "@/hooks/use-unit-types";
 import { parseCityValue } from "@/lib/data/mexico-cities";
 import { formatMxn } from "@/lib/utils";
+import { fuzzyMatch } from "@/lib/search";
 import { ROUTE_STATUS_LABELS } from "@/lib/constants/route-status";
 import type { Route, RouteStatus } from "@/types/route.types";
 import { ROUTE_STATUS_OPTIONS } from "@/lib/constants/route-status";
@@ -59,8 +60,8 @@ export function RoutesCrud() {
     const originCity = parseCityValue(filterOrigin).city;
     const destCity = parseCityValue(filterDestination).city;
     return routes.filter((route) => {
-      if (originCity && !route.origin.toLowerCase().includes(originCity.toLowerCase())) return false;
-      if (destCity && !route.destination.toLowerCase().includes(destCity.toLowerCase())) return false;
+      if (originCity && !fuzzyMatch(route.origin, originCity)) return false;
+      if (destCity && !fuzzyMatch(route.destination, destCity)) return false;
       if (status != null && route.status !== status) return false;
       if (filterUnitType !== UNIT_FILTER_ALL && route.unitType !== filterUnitType) return false;
       return true;

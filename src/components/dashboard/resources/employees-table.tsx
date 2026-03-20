@@ -20,7 +20,8 @@ function getColumns(): ColumnDef<Employee>[] {
   return [
     {
       id: "search",
-      accessorFn: (row) => `${row.name} ${row.email} ${row.position ?? ""} ${row.department ?? ""}`.toLowerCase(),
+      accessorFn: (row) => `${row.name} ${row.email} ${row.position ?? ""} ${row.department ?? ""}`,
+      filterFn: "fuzzy",
       header: () => null,
       cell: () => null,
       enableSorting: false,

@@ -15,6 +15,7 @@ import { ROUTE_STATUS_LABELS } from "@/lib/constants/route-status";
 import { useUnitTypes } from "@/hooks/use-unit-types";
 import { toast } from "sonner";
 import type { Route } from "@/types/route.types";
+import { fuzzyMatch } from "@/lib/search";
 
 interface ClientRoutesDialogProps {
   clientId: string;
@@ -54,14 +55,14 @@ export function ClientRoutesDialog({ clientId, open, onOpenChange, onSave }: Cli
   }, [open, clientId]);
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const q = search.trim();
     if (!q) return routes;
     return routes.filter(
       (r) =>
-        r.origin.toLowerCase().includes(q) ||
-        r.destination.toLowerCase().includes(q) ||
-        (r.destinationState ?? "").toLowerCase().includes(q) ||
-        (r.createdByName ?? "").toLowerCase().includes(q)
+        fuzzyMatch(r.origin, q) ||
+        fuzzyMatch(r.destination, q) ||
+        fuzzyMatch(r.destinationState ?? "", q) ||
+        fuzzyMatch(r.createdByName ?? "", q)
     );
   }, [routes, search]);
 

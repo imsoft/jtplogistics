@@ -11,7 +11,8 @@ function getColumns(): ColumnDef<Vendor>[] {
   return [
     {
       id: "search",
-      accessorFn: (row) => `${row.name} ${row.email}`.toLowerCase(),
+      accessorFn: (row) => `${row.name} ${row.email}`,
+      filterFn: "fuzzy",
       header: () => null,
       cell: () => null,
       enableSorting: false,

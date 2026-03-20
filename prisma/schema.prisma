@@ -198,6 +198,7 @@ model Client {
   phone     String?  @map("phone")
   address   String?  @map("address")
   notes     String?  @map("notes")
+  detentionConditions String? @map("detention_conditions")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   clientRoutes ClientRoute[]
@@ -233,6 +234,24 @@ model RouteLog {
   @@index([routeId])
   @@index([createdAt])
   @@map("route_logs")
+}
+
+// ---- App: auditoría global de cambios ----
+
+model AuditLog {
+  id            String   @id @default(cuid()) @map("id")
+  resource      String   @map("resource")
+  resourceId    String   @map("resource_id")
+  resourceLabel String   @map("resource_label")
+  action        String   @map("action")
+  userId        String   @map("user_id")
+  userName      String   @map("user_name")
+  changes       String?  @map("changes")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([resource])
+  @@index([createdAt])
+  @@map("audit_logs")
 }
 
 // ---- App: mensajería interna (carrier ↔ compras/admin) ----

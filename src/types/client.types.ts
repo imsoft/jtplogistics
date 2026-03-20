@@ -7,6 +7,7 @@ export interface Client {
   phone: string | null;
   address: string | null;
   notes: string | null;
+  detentionConditions: string | null;
   createdAt: string;
 }
 
@@ -18,4 +19,5 @@ export interface ClientFormData {
   phone: string;
   address: string;
   notes: string;
+  detentionConditions: string;
 }

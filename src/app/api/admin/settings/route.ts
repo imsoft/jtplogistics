@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-server";
+import { logAudit } from "@/lib/audit-log";
 
 export async function GET() {
   try {
@@ -18,7 +19,7 @@ export async function GET() {
 
 export async function PATCH(request: NextRequest) {
   try {
-    await requireAdmin();
+    const session = await requireAdmin();
     const body: Record<string, string> = await request.json();
 
     await Promise.all(
@@ -30,6 +31,15 @@ export async function PATCH(request: NextRequest) {
         })
       )
     );
+
+    void logAudit({
+      resource: "settings",
+      resourceId: "global",
+      resourceLabel: "Configuración",
+      action: "updated",
+      userId: session.user.id,
+      userName: session.user.name,
+    });
 
     return Response.json({ ok: true });
   } catch (e) {

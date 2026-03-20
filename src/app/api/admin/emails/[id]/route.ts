@@ -1,11 +1,12 @@
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
+import { logAudit } from "@/lib/audit-log";
 
 export function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const { id } = await params;
     const account = await prisma.emailAccount.findUnique({
       where: { id },
@@ -29,7 +30,7 @@ export function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const { id } = await params;
     const body = await request.json();
     const { type, email, password, assigneeIds } = body as {
@@ -60,6 +61,15 @@ export function PATCH(
       }
     }
 
+    void logAudit({
+      resource: "email",
+      resourceId: id,
+      resourceLabel: email ?? account.email,
+      action: "updated",
+      userId: session.user.id,
+      userName: session.user.name,
+    });
+
     return Response.json({ ok: true });
   });
 }
@@ -68,11 +78,21 @@ export function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const { id } = await params;
     const account = await prisma.emailAccount.findUnique({ where: { id } });
     if (!account) return Response.json({ error: "No encontrado" }, { status: 404 });
     await prisma.emailAccount.delete({ where: { id } });
+
+    void logAudit({
+      resource: "email",
+      resourceId: id,
+      resourceLabel: account.email,
+      action: "deleted",
+      userId: session.user.id,
+      userName: session.user.name,
+    });
+
     return Response.json({ ok: true });
   });
 }

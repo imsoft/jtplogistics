@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
+import { logAudit, diffObjects } from "@/lib/audit-log";
 
 function toJson(c: {
   id: string;
@@ -10,6 +11,7 @@ function toJson(c: {
   phone: string | null;
   address: string | null;
   notes: string | null;
+  detentionConditions: string | null;
   createdAt: Date;
 }) {
   return {
@@ -21,6 +23,7 @@ function toJson(c: {
     phone: c.phone,
     address: c.address,
     notes: c.notes,
+    detentionConditions: c.detentionConditions,
     createdAt: c.createdAt.toISOString(),
   };
 }
@@ -37,14 +40,19 @@ export function GET(
   });
 }
 
+const CLIENT_LABELS: Record<string, string> = {
+  name: "Nombre", legalName: "Razón social", rfc: "RFC", email: "Correo",
+  phone: "Teléfono", address: "Dirección", notes: "Notas", detentionConditions: "Condiciones de estadías",
+};
+
 export function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const { id } = await params;
     const body = await request.json();
-    const { name, legalName, rfc, email, phone, address, notes } = body as {
+    const { name, legalName, rfc, email, phone, address, notes, detentionConditions } = body as {
       name?: string;
       legalName?: string | null;
       rfc?: string | null;
@@ -52,6 +60,7 @@ export function PATCH(
       phone?: string | null;
       address?: string | null;
       notes?: string | null;
+      detentionConditions?: string | null;
     };
 
     const client = await prisma.client.findUnique({ where: { id } });
@@ -61,7 +70,7 @@ export function PATCH(
       return Response.json({ error: "El nombre es requerido" }, { status: 400 });
     }
 
-    await prisma.client.update({
+    const updated = await prisma.client.update({
       where: { id },
       data: {
         ...(name !== undefined && { name: String(name).trim() }),
@@ -71,8 +80,17 @@ export function PATCH(
         ...(phone !== undefined && { phone: phone?.trim() || null }),
         ...(address !== undefined && { address: address?.trim() || null }),
         ...(notes !== undefined && { notes: notes?.trim() || null }),
+        ...(detentionConditions !== undefined && { detentionConditions: detentionConditions?.trim() || null }),
       },
     });
+
+    const changes = diffObjects(client as Record<string, unknown>, updated as Record<string, unknown>, CLIENT_LABELS);
+    if (changes.length > 0) {
+      void logAudit({
+        resource: "client", resourceId: id, resourceLabel: updated.name,
+        action: "updated", userId: session.user.id, userName: session.user.name, changes,
+      });
+    }
 
     return Response.json({ ok: true });
   });
@@ -82,11 +100,15 @@ export function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const { id } = await params;
     const client = await prisma.client.findUnique({ where: { id } });
     if (!client) return Response.json({ error: "No encontrado" }, { status: 404 });
     await prisma.client.delete({ where: { id } });
+    void logAudit({
+      resource: "client", resourceId: id, resourceLabel: client.name,
+      action: "deleted", userId: session.user.id, userName: session.user.name,
+    });
     return Response.json({ ok: true });
   });
 }
