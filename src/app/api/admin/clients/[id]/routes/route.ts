@@ -32,8 +32,6 @@ export async function GET(
             destination: true,
             destinationState: true,
             unitType: true,
-            target: true,
-            weeklyVolume: true,
             status: true,
             createdBy: { select: { name: true } },
           },
@@ -44,14 +42,17 @@ export async function GET(
 
     return Response.json(
       clientRoutes.map((cr) => ({
-        ...cr.route,
-        // Only show client-specific values, not route defaults
+        id: cr.route.id,
+        origin: cr.route.origin,
+        destination: cr.route.destination,
+        destinationState: cr.route.destinationState,
+        unitType: cr.route.unitType,
+        status: cr.route.status,
         target: cr.target ?? null,
         weeklyVolume: cr.weeklyVolume ?? null,
         clientTarget: cr.target ?? null,
         clientWeeklyVolume: cr.weeklyVolume ?? null,
         createdByName: cr.route.createdBy?.name ?? null,
-        createdBy: undefined,
       }))
     );
   });

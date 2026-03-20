@@ -1,19 +1,17 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, Pencil, Route as RouteIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { InfoRow } from "@/components/dashboard/users/info-row";
 import { ClientViewActions } from "@/components/dashboard/clients/client-view-actions";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { useUnitTypes } from "@/hooks/use-unit-types";
-import { formatPhone, formatMxnLive, parseMxn, formatMxn } from "@/lib/utils";
-import { toast } from "sonner";
+import { formatPhone, formatMxn } from "@/lib/utils";
 import type { Client } from "@/types/client.types";
 
 interface AssignedRoute {
@@ -24,8 +22,6 @@ interface AssignedRoute {
   unitType: string;
   target: number | null;
   weeklyVolume: number | null;
-  clientTarget: number | null;
-  clientWeeklyVolume: number | null;
   createdByName: string | null;
   status: string;
 }
@@ -55,9 +51,6 @@ export default function ClientProfilePage() {
 
   const [routes, setRoutes] = useState<AssignedRoute[]>([]);
   const [routesLoaded, setRoutesLoaded] = useState(false);
-  const [editTargets, setEditTargets] = useState<Record<string, string>>({});
-  const [editVolumes, setEditVolumes] = useState<Record<string, string>>({});
-  const saveTimerRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const unitTypes = useUnitTypes();
 
   const unitTypeLabel = useMemo(() => {
@@ -70,56 +63,13 @@ export default function ClientProfilePage() {
     if (!id) return;
     fetch(`/api/admin/clients/${id}/routes?idsOnly=false`)
       .then((r) => (r.ok ? r.json() : []))
-      .then((data: AssignedRoute[]) => {
-        setRoutes(data);
-        const targets: Record<string, string> = {};
-        const volumes: Record<string, string> = {};
-        for (const r of data) {
-          if (r.clientTarget != null) targets[r.id] = formatMxn(r.clientTarget);
-          if (r.clientWeeklyVolume != null) volumes[r.id] = String(r.clientWeeklyVolume);
-        }
-        setEditTargets(targets);
-        setEditVolumes(volumes);
-        setRoutesLoaded(true);
-      })
+      .then((data: AssignedRoute[]) => { setRoutes(data); setRoutesLoaded(true); })
       .catch(() => setRoutesLoaded(true));
   }, [id]);
 
   useEffect(() => {
     loadRoutes();
   }, [loadRoutes]);
-
-  const saveRouteField = useCallback((routeId: string, target: string | undefined, volume: string | undefined) => {
-    const parsedTarget = target?.trim() ? parseMxn(target) : null;
-    const parsedVolume = volume?.trim() ? Math.round(Number(volume)) : null;
-
-    fetch(`/api/admin/clients/${id}/routes`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        routeId,
-        target: parsedTarget != null && !isNaN(parsedTarget) ? parsedTarget : null,
-        weeklyVolume: parsedVolume != null && !isNaN(parsedVolume) ? parsedVolume : null,
-      }),
-    }).then((res) => {
-      if (!res.ok) toast.error("Error al guardar");
-    }).catch(() => toast.error("Error al guardar"));
-  }, [id]);
-
-  const debouncedSave = useCallback((routeId: string) => {
-    if (saveTimerRef.current[routeId]) clearTimeout(saveTimerRef.current[routeId]);
-    saveTimerRef.current[routeId] = setTimeout(() => {
-      saveRouteField(routeId, editTargets[routeId], editVolumes[routeId]);
-    }, 800);
-  }, [saveRouteField, editTargets, editVolumes]);
-
-  function handleTargetChange(routeId: string, value: string) {
-    setEditTargets((prev) => ({ ...prev, [routeId]: formatMxnLive(value) }));
-  }
-
-  function handleVolumeChange(routeId: string, value: string) {
-    setEditVolumes((prev) => ({ ...prev, [routeId]: value }));
-  }
 
   if (!isLoaded) return <p className="text-muted-foreground py-6">Cargando…</p>;
   if (error || !client) return <p className="text-destructive py-6 text-sm">{error ?? "No encontrado"}</p>;
@@ -255,28 +205,12 @@ export default function ClientProfilePage() {
                                 <p className="text-muted-foreground text-xs truncate">{route.destinationState}</p>
                               )}
                             </div>
-                            <div className="flex items-center gap-1">
-                              <span className="text-muted-foreground text-xs shrink-0">$</span>
-                              <Input
-                                type="text"
-                                inputMode="decimal"
-                                value={editTargets[route.id] ?? ""}
-                                onChange={(e) => handleTargetChange(route.id, e.target.value)}
-                                onBlur={() => saveRouteField(route.id, editTargets[route.id], editVolumes[route.id])}
-                                onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                                className="h-7 w-24 text-xs"
-                              />
-                            </div>
-                            <Input
-                              type="number"
-                              inputMode="numeric"
-                              min={0}
-                              value={editVolumes[route.id] ?? ""}
-                              onChange={(e) => handleVolumeChange(route.id, e.target.value)}
-                              onBlur={() => saveRouteField(route.id, editTargets[route.id], editVolumes[route.id])}
-                              onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                              className="h-7 w-20 text-xs"
-                            />
+                            <span className="text-xs text-muted-foreground whitespace-nowrap">
+                              {route.target != null ? `$${formatMxn(route.target)}` : "—"}
+                            </span>
+                            <span className="text-xs text-muted-foreground whitespace-nowrap">
+                              {route.weeklyVolume != null ? route.weeklyVolume : "—"}
+                            </span>
                             <span className="text-xs text-muted-foreground whitespace-nowrap truncate">
                               {route.createdByName ?? "—"}
                             </span>
