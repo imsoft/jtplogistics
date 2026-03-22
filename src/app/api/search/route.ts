@@ -15,6 +15,8 @@ export async function GET(request: NextRequest) {
       return Response.json({ error: "Prohibido" }, { status: 403 });
     }
 
+    const routePrefix = role === "admin" ? "/admin/dashboard" : "/collaborator/dashboard";
+
     const q = request.nextUrl.searchParams.get("q")?.trim() ?? "";
     if (q.length < 2) return Response.json([]);
 
@@ -89,7 +91,7 @@ export async function GET(request: NextRequest) {
         id: r.id,
         label: `${r.origin} → ${r.destination}`,
         sublabel: r.status,
-        href: `/admin/dashboard/routes/${r.id}/edit`,
+        href: `${routePrefix}/routes/${r.id}`,
       })),
       ...carriers.map((u) => ({
         type: "carrier" as const,

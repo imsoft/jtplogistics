@@ -193,11 +193,14 @@ export function RoutesCrud() {
                             className="border-b last:border-b-0 transition-colors hover:bg-hover hover:text-hover-foreground"
                           >
                             <td className="px-4 py-3">
-                              <p className="flex items-center gap-1 font-medium">
+                              <Link
+                                href={`/admin/dashboard/routes/${route.id}`}
+                                className="flex items-center gap-1 font-medium hover:text-primary transition-colors"
+                              >
                                 <span className="truncate">{route.origin}</span>
                                 <MoveRight className="size-3.5 shrink-0 text-muted-foreground" />
                                 <span className="truncate">{route.destination}</span>
-                              </p>
+                              </Link>
                             </td>
                             <td className="px-4 py-3">
                               {route.destinationState ?? (
