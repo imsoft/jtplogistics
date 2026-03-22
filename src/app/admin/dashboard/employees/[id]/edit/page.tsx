@@ -200,7 +200,7 @@ export default function EditEmployeePage() {
                         <div className="flex items-center justify-between gap-4 py-3">
                           <Label
                             htmlFor={`perm-${perm.key}`}
-                            className="flex flex-col gap-0.5 cursor-pointer"
+                            className="flex flex-col items-start gap-0.5 cursor-pointer"
                           >
                             <span className="text-left text-sm font-medium">{perm.label}</span>
                             <span className="text-left text-xs text-muted-foreground font-normal">
