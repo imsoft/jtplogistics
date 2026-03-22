@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/auth-server";
 
-const PUBLIC_KEYS = ["jtp_whatsapp"];
+const PUBLIC_KEYS = ["jtp_whatsapp", "cover_image_url"];
 
 export async function GET() {
   try {

@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { CoverImageUpload } from "@/components/ui/cover-image-upload";
 import { toast } from "sonner";
 
 export default function AdminSettingsPage() {
   const [whatsapp, setWhatsapp] = useState("");
+  const [coverImage, setCoverImage] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -20,6 +22,7 @@ export default function AdminSettingsPage() {
         const raw = data.jtp_whatsapp ?? "";
         const digits = raw.replace(/\D/g, "");
         setWhatsapp(digits.startsWith("52") && digits.length === 12 ? digits.slice(2) : digits);
+        setCoverImage(data.cover_image_url ?? null);
         setIsLoaded(true);
       })
       .catch(() => setIsLoaded(true));
@@ -92,6 +95,24 @@ export default function AdminSettingsPage() {
               </Button>
             </div>
           </form>
+        </CardContent>
+      </Card>
+      <Card className="max-w-lg">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-base sm:text-lg">Imagen de portada</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">
+            Imagen que se muestra en la página de inicio. Haz clic en la imagen para cambiarla.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <CoverImageUpload
+            currentImage={coverImage}
+            endpoint="/api/admin/settings/cover-image"
+            onSuccess={(url) => {
+              setCoverImage(url);
+              toast.success("Imagen de portada actualizada.");
+            }}
+          />
         </CardContent>
       </Card>
     </div>

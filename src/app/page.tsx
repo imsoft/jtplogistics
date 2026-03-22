@@ -2,9 +2,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { redirectIfAuthenticated } from "@/lib/auth-server";
+import { prisma } from "@/lib/db";
+
+const DEFAULT_COVER = "/images/login/login-image.jpg";
 
 export default async function HomePage() {
   await redirectIfAuthenticated();
+
+  const setting = await prisma.setting.findUnique({
+    where: { key: "cover_image_url" },
+  });
+  const coverImage = setting?.value || DEFAULT_COVER;
 
   return (
     <div className="relative min-h-screen bg-background">
@@ -54,7 +62,7 @@ export default async function HomePage() {
         </div>
         <div className="relative aspect-[3/2] w-full lg:col-span-5 lg:-mr-8 lg:aspect-auto xl:absolute xl:inset-0 xl:left-1/2 xl:mr-0">
           <Image
-            src="/images/login/login-image.jpg"
+            src={coverImage}
             alt="JTP Logistics"
             aria-hidden
             fill
