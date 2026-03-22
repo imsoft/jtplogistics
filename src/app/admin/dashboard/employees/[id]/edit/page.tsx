@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
@@ -7,7 +8,10 @@ import { ResourceEditHeader } from "@/components/dashboard/resources/resource-ed
 import { EmployeeForm } from "@/components/dashboard/resources/employee-form";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Laptop, Smartphone, Mail, ChevronRight } from "lucide-react";
+import { toast } from "sonner";
 import type { Employee } from "@/types/resources.types";
 import { formatPhone } from "@/lib/utils";
 
@@ -25,6 +29,7 @@ function LinkedResource({ href, children }: { href: string; children: React.Reac
 
 export default function EditEmployeePage() {
   const { id } = useParams<{ id: string }>();
+  const [permLoading, setPermLoading] = useState<string | null>(null);
 
   const { data: employee, setData, isLoaded, error, isSubmitting, handleSubmit, handleDelete } =
     useResourceEdit<Employee>({
@@ -32,6 +37,24 @@ export default function EditEmployeePage() {
       redirectHref: `/admin/dashboard/employees/${id}`,
       deleteRedirectHref: "/admin/dashboard/employees",
     });
+
+  async function togglePermission(field: "canViewMessages" | "canViewIdeas", value: boolean) {
+    setPermLoading(field);
+    try {
+      const res = await fetch(`/api/admin/employees/${id}/permissions`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [field]: value }),
+      });
+      if (!res.ok) throw new Error();
+      setData((prev) => (prev ? { ...prev, [field]: value } : prev));
+      toast.success("Permiso actualizado.");
+    } catch {
+      toast.error("No se pudo actualizar el permiso.");
+    } finally {
+      setPermLoading(null);
+    }
+  }
 
   if (!isLoaded) return <p className="text-muted-foreground">Cargando…</p>;
 
@@ -136,6 +159,46 @@ export default function EditEmployeePage() {
                 </div>
               </div>
             )}
+          </CardContent>
+        </Card>
+      )}
+      {employee && (
+        <Card>
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-base sm:text-lg">Permisos</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
+              Controla qué secciones puede ver y utilizar este colaborador.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <Label htmlFor="perm-messages" className="flex flex-col gap-1">
+                <span className="text-sm font-medium">Mensajes</span>
+                <span className="text-xs text-muted-foreground font-normal">
+                  Permite ver y enviar mensajes a transportistas.
+                </span>
+              </Label>
+              <Switch
+                id="perm-messages"
+                checked={employee.canViewMessages}
+                disabled={permLoading !== null}
+                onCheckedChange={(v) => togglePermission("canViewMessages", v)}
+              />
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <Label htmlFor="perm-ideas" className="flex flex-col gap-1">
+                <span className="text-sm font-medium">Ideas</span>
+                <span className="text-xs text-muted-foreground font-normal">
+                  Permite ver y enviar ideas al equipo.
+                </span>
+              </Label>
+              <Switch
+                id="perm-ideas"
+                checked={employee.canViewIdeas}
+                disabled={permLoading !== null}
+                onCheckedChange={(v) => togglePermission("canViewIdeas", v)}
+              />
+            </div>
           </CardContent>
         </Card>
       )}

@@ -28,6 +28,8 @@ export interface Employee {
   department: string | null;
   phone: string | null;
   password: string | null;
+  canViewMessages: boolean;
+  canViewIdeas: boolean;
   createdAt: string;
   laptops?: EmployeeLinkedLaptop[];
   phones?: EmployeeLinkedPhone[];

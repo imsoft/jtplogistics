@@ -36,6 +36,8 @@ export function GET(
       department: u.employeeProfile?.department ?? null,
       phone: u.employeeProfile?.phone ?? null,
       password: u.employeeProfile?.password ?? null,
+      canViewMessages: u.canViewMessages,
+      canViewIdeas: u.canViewIdeas,
       createdAt: u.createdAt.toISOString(),
       laptops: u.assignedLaptops.map((l) => ({
         id: l.id,

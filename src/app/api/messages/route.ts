@@ -8,6 +8,19 @@ function isStaff(role: string) {
   return role === "admin" || role === "collaborator";
 }
 
+async function checkMessagesPermission(userId: string, role: string) {
+  if (role === "collaborator") {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { canViewMessages: true },
+    });
+    if (!user?.canViewMessages) {
+      return Response.json({ error: "No tienes permiso para ver mensajes" }, { status: 403 });
+    }
+  }
+  return null;
+}
+
 // GET /api/messages?carrierId=xxx
 // carrier: solo sus propios mensajes
 // collaborator/admin: cualquier carrierId
@@ -19,6 +32,10 @@ export async function GET(request: NextRequest) {
     }
 
     const { role, id: userId } = session.user as { role: string; id: string };
+
+    const denied = await checkMessagesPermission(userId, role);
+    if (denied) return denied;
+
     const carrierId = request.nextUrl.searchParams.get("carrierId");
 
     let targetCarrierId: string;
@@ -73,6 +90,9 @@ export async function POST(request: NextRequest) {
       id: string;
       name: string;
     };
+
+    const denied = await checkMessagesPermission(userId, role);
+    if (denied) return denied;
 
     const body = await request.json();
     const text = String(body.body ?? "").trim();
