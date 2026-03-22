@@ -10,10 +10,29 @@ import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { Laptop, Smartphone, Mail, ChevronRight } from "lucide-react";
-import { toast } from "sonner";
-import type { Employee } from "@/types/resources.types";
+import type { Employee, EmployeeFormData } from "@/types/resources.types";
 import { formatPhone } from "@/lib/utils";
+
+const PERMISSION_FIELDS = [
+  { key: "canViewRoutes", label: "Rutas", desc: "Ver y consultar rutas." },
+  { key: "canViewRouteLogs", label: "Historial de cambios", desc: "Ver el historial de cambios de rutas." },
+  { key: "canViewUnitTypes", label: "Tipos de unidades", desc: "Ver los tipos de unidades." },
+  { key: "canViewQuotes", label: "Cotizador", desc: "Usar el cotizador de rutas." },
+  { key: "canViewProviders", label: "Proveedores", desc: "Ver proveedores y transportistas." },
+  { key: "canViewClients", label: "Clientes", desc: "Ver clientes y sus rutas." },
+  { key: "canViewEmployees", label: "Colaboradores", desc: "Ver otros colaboradores." },
+  { key: "canViewVendors", label: "Vendedores", desc: "Ver vendedores." },
+  { key: "canViewLaptops", label: "Laptops", desc: "Ver laptops asignadas." },
+  { key: "canViewPhones", label: "Celulares", desc: "Ver celulares asignados." },
+  { key: "canViewEmails", label: "Correos", desc: "Ver cuentas de correo." },
+  { key: "canViewMessages", label: "Mensajes", desc: "Ver y enviar mensajes a transportistas." },
+  { key: "canViewIdeas", label: "Ideas", desc: "Ver y enviar ideas al equipo." },
+  { key: "canViewTasks", label: "Tareas", desc: "Ver tareas asignadas." },
+] as const;
+
+type PermissionKey = (typeof PERMISSION_FIELDS)[number]["key"];
 
 function LinkedResource({ href, children }: { href: string; children: React.ReactNode }) {
   return (
@@ -29,7 +48,6 @@ function LinkedResource({ href, children }: { href: string; children: React.Reac
 
 export default function EditEmployeePage() {
   const { id } = useParams<{ id: string }>();
-  const [permLoading, setPermLoading] = useState<string | null>(null);
 
   const { data: employee, setData, isLoaded, error, isSubmitting, handleSubmit, handleDelete } =
     useResourceEdit<Employee>({
@@ -38,22 +56,25 @@ export default function EditEmployeePage() {
       deleteRedirectHref: "/admin/dashboard/employees",
     });
 
-  async function togglePermission(field: "canViewMessages" | "canViewIdeas", value: boolean) {
-    setPermLoading(field);
-    try {
-      const res = await fetch(`/api/admin/employees/${id}/permissions`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [field]: value }),
-      });
-      if (!res.ok) throw new Error();
-      setData((prev) => (prev ? { ...prev, [field]: value } : prev));
-      toast.success("Permiso actualizado.");
-    } catch {
-      toast.error("No se pudo actualizar el permiso.");
-    } finally {
-      setPermLoading(null);
+  // Local permission state, initialized from employee data
+  const [permissions, setPermissions] = useState<Record<PermissionKey, boolean> | null>(null);
+
+  // Initialize permissions when employee loads
+  if (employee && permissions === null) {
+    const initial: Record<string, boolean> = {};
+    for (const f of PERMISSION_FIELDS) {
+      initial[f.key] = employee[f.key];
     }
+    setPermissions(initial as Record<PermissionKey, boolean>);
+  }
+
+  function togglePerm(key: PermissionKey) {
+    setPermissions((prev) => prev ? { ...prev, [key]: !prev[key] } : prev);
+  }
+
+  function onSubmit(formData: EmployeeFormData) {
+    // Merge permissions into form data
+    handleSubmit({ ...formData, ...permissions });
   }
 
   if (!isLoaded) return <p className="text-muted-foreground">Cargando…</p>;
@@ -93,115 +114,114 @@ export default function EditEmployeePage() {
             initialValues={employee}
             submitLabel="Guardar cambios"
             cancelHref={`/admin/dashboard/employees/${id}`}
-            onSubmit={handleSubmit}
+            onSubmit={onSubmit}
             isSubmitting={isSubmitting}
-          />
+          >
+            {/* Recursos vinculados */}
+            {hasLinks && (
+              <Card>
+                <CardHeader className="space-y-1">
+                  <CardTitle className="text-left text-base sm:text-lg">Recursos vinculados</CardTitle>
+                  <CardDescription className="text-left text-xs sm:text-sm">
+                    Laptops, celulares y correos asignados a este colaborador.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {laptops.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="flex items-center gap-2 text-left text-sm font-medium">
+                        <Laptop className="size-4" />
+                        Laptops ({laptops.length})
+                      </h4>
+                      <div className="space-y-1">
+                        {laptops.map((l) => (
+                          <LinkedResource key={l.id} href={`/admin/dashboard/laptops/${l.id}`}>
+                            <span>{l.name}</span>
+                            {l.serialNumber && (
+                              <span className="text-muted-foreground text-xs">{l.serialNumber}</span>
+                            )}
+                          </LinkedResource>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {phones.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="flex items-center gap-2 text-left text-sm font-medium">
+                        <Smartphone className="size-4" />
+                        Celulares ({phones.length})
+                      </h4>
+                      <div className="space-y-1">
+                        {phones.map((p) => (
+                          <LinkedResource key={p.id} href={`/admin/dashboard/phones/${p.id}`}>
+                            <span>{p.name}</span>
+                            {p.phoneNumber && (
+                              <span className="text-muted-foreground text-xs">{formatPhone(p.phoneNumber)}</span>
+                            )}
+                          </LinkedResource>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {emailAccounts.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="flex items-center gap-2 text-left text-sm font-medium">
+                        <Mail className="size-4" />
+                        Correos ({emailAccounts.length})
+                      </h4>
+                      <div className="space-y-1">
+                        {emailAccounts.map((ea) => (
+                          <LinkedResource key={ea.id} href={`/admin/dashboard/emails/${ea.id}`}>
+                            <span>{ea.email}</span>
+                            <span className="text-muted-foreground text-xs">{ea.type}</span>
+                          </LinkedResource>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Permisos */}
+            {permissions && (
+              <Card>
+                <CardHeader className="space-y-1">
+                  <CardTitle className="text-left text-base sm:text-lg">Permisos</CardTitle>
+                  <CardDescription className="text-left text-xs sm:text-sm">
+                    Controla qué secciones puede ver y utilizar este colaborador.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-0">
+                    {PERMISSION_FIELDS.map((perm, i) => (
+                      <div key={perm.key}>
+                        {i > 0 && <Separator />}
+                        <div className="flex items-center justify-between gap-4 py-3">
+                          <Label
+                            htmlFor={`perm-${perm.key}`}
+                            className="flex flex-col gap-0.5 cursor-pointer"
+                          >
+                            <span className="text-left text-sm font-medium">{perm.label}</span>
+                            <span className="text-left text-xs text-muted-foreground font-normal">
+                              {perm.desc}
+                            </span>
+                          </Label>
+                          <Switch
+                            id={`perm-${perm.key}`}
+                            checked={permissions[perm.key]}
+                            onCheckedChange={() => togglePerm(perm.key)}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </EmployeeForm>
         )}
       </div>
-      {hasLinks && (
-        <Card>
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-base sm:text-lg">Recursos vinculados</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">
-              Laptops, celulares y correos asignados a este colaborador.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {laptops.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="flex items-center gap-2 text-sm font-medium">
-                  <Laptop className="size-4" />
-                  Laptops ({laptops.length})
-                </h4>
-                <div className="space-y-1">
-                  {laptops.map((l) => (
-                    <LinkedResource key={l.id} href={`/admin/dashboard/laptops/${l.id}`}>
-                      <span>{l.name}</span>
-                      {l.serialNumber && (
-                        <span className="text-muted-foreground text-xs">{l.serialNumber}</span>
-                      )}
-                    </LinkedResource>
-                  ))}
-                </div>
-              </div>
-            )}
-            {phones.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="flex items-center gap-2 text-sm font-medium">
-                  <Smartphone className="size-4" />
-                  Celulares ({phones.length})
-                </h4>
-                <div className="space-y-1">
-                  {phones.map((p) => (
-                    <LinkedResource key={p.id} href={`/admin/dashboard/phones/${p.id}`}>
-                      <span>{p.name}</span>
-                      {p.phoneNumber && (
-                        <span className="text-muted-foreground text-xs">{formatPhone(p.phoneNumber)}</span>
-                      )}
-                    </LinkedResource>
-                  ))}
-                </div>
-              </div>
-            )}
-            {emailAccounts.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="flex items-center gap-2 text-sm font-medium">
-                  <Mail className="size-4" />
-                  Correos ({emailAccounts.length})
-                </h4>
-                <div className="space-y-1">
-                  {emailAccounts.map((ea) => (
-                    <LinkedResource key={ea.id} href={`/admin/dashboard/emails/${ea.id}`}>
-                      <span>{ea.email}</span>
-                      <span className="text-muted-foreground text-xs">{ea.type}</span>
-                    </LinkedResource>
-                  ))}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-      {employee && (
-        <Card>
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-base sm:text-lg">Permisos</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">
-              Controla qué secciones puede ver y utilizar este colaborador.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between gap-4">
-              <Label htmlFor="perm-messages" className="flex flex-col gap-1">
-                <span className="text-sm font-medium">Mensajes</span>
-                <span className="text-xs text-muted-foreground font-normal">
-                  Permite ver y enviar mensajes a transportistas.
-                </span>
-              </Label>
-              <Switch
-                id="perm-messages"
-                checked={employee.canViewMessages}
-                disabled={permLoading !== null}
-                onCheckedChange={(v) => togglePermission("canViewMessages", v)}
-              />
-            </div>
-            <div className="flex items-center justify-between gap-4">
-              <Label htmlFor="perm-ideas" className="flex flex-col gap-1">
-                <span className="text-sm font-medium">Ideas</span>
-                <span className="text-xs text-muted-foreground font-normal">
-                  Permite ver y enviar ideas al equipo.
-                </span>
-              </Label>
-              <Switch
-                id="perm-ideas"
-                checked={employee.canViewIdeas}
-                disabled={permLoading !== null}
-                onCheckedChange={(v) => togglePermission("canViewIdeas", v)}
-              />
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

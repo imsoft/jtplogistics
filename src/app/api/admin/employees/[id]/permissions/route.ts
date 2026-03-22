@@ -3,12 +3,29 @@ import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-server";
 import { logAudit } from "@/lib/audit-log";
 
-const ALLOWED_FIELDS = ["canViewMessages", "canViewIdeas"] as const;
+const ALLOWED_FIELDS = [
+  "canViewMessages", "canViewIdeas", "canViewRoutes", "canViewRouteLogs",
+  "canViewUnitTypes", "canViewQuotes", "canViewProviders", "canViewClients",
+  "canViewEmployees", "canViewVendors", "canViewLaptops", "canViewPhones",
+  "canViewEmails", "canViewTasks",
+] as const;
 type PermissionField = (typeof ALLOWED_FIELDS)[number];
 
 const FIELD_LABELS: Record<PermissionField, string> = {
-  canViewMessages: "Ver mensajes",
-  canViewIdeas: "Ver ideas",
+  canViewMessages: "Mensajes",
+  canViewIdeas: "Ideas",
+  canViewRoutes: "Rutas",
+  canViewRouteLogs: "Historial de cambios",
+  canViewUnitTypes: "Tipos de unidades",
+  canViewQuotes: "Cotizador",
+  canViewProviders: "Proveedores",
+  canViewClients: "Clientes",
+  canViewEmployees: "Colaboradores",
+  canViewVendors: "Vendedores",
+  canViewLaptops: "Laptops",
+  canViewPhones: "Celulares",
+  canViewEmails: "Correos",
+  canViewTasks: "Tareas",
 };
 
 export async function PATCH(

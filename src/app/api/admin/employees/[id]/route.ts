@@ -38,6 +38,18 @@ export function GET(
       password: u.employeeProfile?.password ?? null,
       canViewMessages: u.canViewMessages,
       canViewIdeas: u.canViewIdeas,
+      canViewRoutes: u.canViewRoutes,
+      canViewRouteLogs: u.canViewRouteLogs,
+      canViewUnitTypes: u.canViewUnitTypes,
+      canViewQuotes: u.canViewQuotes,
+      canViewProviders: u.canViewProviders,
+      canViewClients: u.canViewClients,
+      canViewEmployees: u.canViewEmployees,
+      canViewVendors: u.canViewVendors,
+      canViewLaptops: u.canViewLaptops,
+      canViewPhones: u.canViewPhones,
+      canViewEmails: u.canViewEmails,
+      canViewTasks: u.canViewTasks,
       createdAt: u.createdAt.toISOString(),
       laptops: u.assignedLaptops.map((l) => ({
         id: l.id,
@@ -76,6 +88,30 @@ export function PATCH(
       birthDate?: string | null;
     };
 
+    const PERMISSION_FIELDS = [
+      "canViewMessages", "canViewIdeas", "canViewRoutes", "canViewRouteLogs",
+      "canViewUnitTypes", "canViewQuotes", "canViewProviders", "canViewClients",
+      "canViewEmployees", "canViewVendors", "canViewLaptops", "canViewPhones",
+      "canViewEmails", "canViewTasks",
+    ] as const;
+
+    const PERMISSION_LABELS: Record<string, string> = {
+      canViewMessages: "Mensajes",
+      canViewIdeas: "Ideas",
+      canViewRoutes: "Rutas",
+      canViewRouteLogs: "Historial de cambios",
+      canViewUnitTypes: "Tipos de unidades",
+      canViewQuotes: "Cotizador",
+      canViewProviders: "Proveedores",
+      canViewClients: "Clientes",
+      canViewEmployees: "Colaboradores",
+      canViewVendors: "Vendedores",
+      canViewLaptops: "Laptops",
+      canViewPhones: "Celulares",
+      canViewEmails: "Correos",
+      canViewTasks: "Tareas",
+    };
+
     const u = await prisma.user.findUnique({
       where: { id },
       include: { employeeProfile: true },
@@ -84,26 +120,29 @@ export function PATCH(
       return Response.json({ error: "No encontrado" }, { status: 404 });
     }
 
-    const before = {
+    const before: Record<string, unknown> = {
       name: u.name,
       birthDate: u.birthDate,
       position: u.employeeProfile?.position,
       department: u.employeeProfile?.department,
       phone: u.employeeProfile?.phone,
     };
+    for (const f of PERMISSION_FIELDS) before[f] = u[f];
 
     const parsedBirthDate = birthDate !== undefined
       ? (birthDate ? new Date(birthDate) : null)
       : undefined;
 
-    if (name || parsedBirthDate !== undefined) {
-      await prisma.user.update({
-        where: { id },
-        data: {
-          ...(name && { name }),
-          ...(parsedBirthDate !== undefined && { birthDate: parsedBirthDate }),
-        },
-      });
+    // Build user update data (profile fields + permissions)
+    const userUpdate: Record<string, unknown> = {};
+    if (name) userUpdate.name = name;
+    if (parsedBirthDate !== undefined) userUpdate.birthDate = parsedBirthDate;
+    for (const f of PERMISSION_FIELDS) {
+      if (typeof body[f] === "boolean") userUpdate[f] = body[f];
+    }
+
+    if (Object.keys(userUpdate).length > 0) {
+      await prisma.user.update({ where: { id }, data: userUpdate });
     }
 
     await prisma.employeeProfile.upsert({
@@ -128,27 +167,29 @@ export function PATCH(
       include: { employeeProfile: true },
     });
 
-    const after = {
+    const after: Record<string, unknown> = {
       name: updated!.name,
       birthDate: updated!.birthDate,
       position: updated!.employeeProfile?.position,
       department: updated!.employeeProfile?.department,
       phone: updated!.employeeProfile?.phone,
     };
+    for (const f of PERMISSION_FIELDS) after[f] = updated![f];
 
-    const fieldLabels = {
+    const fieldLabels: Record<string, string> = {
       name: "Nombre",
       birthDate: "Fecha de nacimiento",
       position: "Puesto",
       department: "Departamento",
       phone: "Teléfono",
+      ...PERMISSION_LABELS,
     };
 
-    const changes = diffObjects(
-      before as Record<string, unknown>,
-      after as Record<string, unknown>,
-      fieldLabels,
-    );
+    const permFormatter = (v: unknown) => (v ? "Activado" : "Desactivado");
+    const formatters: Record<string, (v: unknown) => string | null> = {};
+    for (const f of PERMISSION_FIELDS) formatters[f] = permFormatter;
+
+    const changes = diffObjects(before, after, fieldLabels, formatters);
 
     if (changes.length > 0) {
       void logAudit({

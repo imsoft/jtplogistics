@@ -17,6 +17,7 @@ interface EmployeeFormProps {
   isNew?: boolean;
   onSubmit: (data: EmployeeFormData) => void;
   isSubmitting?: boolean;
+  children?: React.ReactNode;
 }
 
 export function EmployeeForm({
@@ -26,6 +27,7 @@ export function EmployeeForm({
   isNew = false,
   onSubmit,
   isSubmitting = false,
+  children,
 }: EmployeeFormProps) {
   const [name, setName] = useState(initialValues.name ?? "");
   const [email, setEmail] = useState(initialValues.email ?? "");
@@ -111,6 +113,7 @@ export function EmployeeForm({
           </Select>
         </div>
       </div>
+      {children}
       <FormActions submitLabel={submitLabel} cancelHref={cancelHref} isSubmitting={isSubmitting} />
     </form>
   );

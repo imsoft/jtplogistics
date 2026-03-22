@@ -30,6 +30,18 @@ export interface Employee {
   password: string | null;
   canViewMessages: boolean;
   canViewIdeas: boolean;
+  canViewRoutes: boolean;
+  canViewRouteLogs: boolean;
+  canViewUnitTypes: boolean;
+  canViewQuotes: boolean;
+  canViewProviders: boolean;
+  canViewClients: boolean;
+  canViewEmployees: boolean;
+  canViewVendors: boolean;
+  canViewLaptops: boolean;
+  canViewPhones: boolean;
+  canViewEmails: boolean;
+  canViewTasks: boolean;
   createdAt: string;
   laptops?: EmployeeLinkedLaptop[];
   phones?: EmployeeLinkedPhone[];

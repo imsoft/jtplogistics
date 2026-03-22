@@ -1,31 +1,93 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { User as UserIcon, Lightbulb, MessageSquare } from "lucide-react";
-import { DashboardSidebar, type NavItem } from "@/components/dashboard/dashboard-sidebar";
+import {
+  User as UserIcon,
+  Lightbulb,
+  MessageSquare,
+  Route as RouteIcon,
+  ScrollText,
+  Boxes,
+  Calculator,
+  Truck,
+  Users,
+  UserRound,
+  ShoppingBag,
+  Laptop,
+  Smartphone,
+  Mail,
+  ClipboardList,
+} from "lucide-react";
+import { DashboardSidebar, type NavItem, type NavGroup } from "@/components/dashboard/dashboard-sidebar";
 
 interface Permissions {
   canViewMessages: boolean;
   canViewIdeas: boolean;
+  canViewRoutes: boolean;
+  canViewRouteLogs: boolean;
+  canViewUnitTypes: boolean;
+  canViewQuotes: boolean;
+  canViewProviders: boolean;
+  canViewClients: boolean;
+  canViewEmployees: boolean;
+  canViewVendors: boolean;
+  canViewLaptops: boolean;
+  canViewPhones: boolean;
+  canViewEmails: boolean;
+  canViewTasks: boolean;
 }
 
-const allNavItems: (NavItem & { permission?: keyof Permissions })[] = [
+const BASE = "/collaborator/dashboard";
+
+interface PermNavItem extends NavItem {
+  permission?: keyof Permissions;
+}
+
+interface PermNavGroup {
+  label: string;
+  items: PermNavItem[];
+}
+
+const allNavGroups: PermNavGroup[] = [
   {
-    title: "Mensajes",
-    href: "/collaborator/dashboard/messages",
-    icon: MessageSquare,
-    permission: "canViewMessages",
+    label: "Operaciones",
+    items: [
+      { title: "Rutas", href: `${BASE}/routes`, icon: RouteIcon, permission: "canViewRoutes" },
+      { title: "Historial de cambios", href: `${BASE}/route-logs`, icon: ScrollText, permission: "canViewRouteLogs" },
+      { title: "Tipos de unidades", href: `${BASE}/unit-types`, icon: Boxes, permission: "canViewUnitTypes" },
+      { title: "Cotizador", href: `${BASE}/quotes`, icon: Calculator, permission: "canViewQuotes" },
+      { title: "Proveedores", href: `${BASE}/providers`, icon: Truck, permission: "canViewProviders" },
+      { title: "Clientes", href: `${BASE}/clients`, icon: Users, permission: "canViewClients" },
+    ],
   },
   {
-    title: "Perfil",
-    href: "/collaborator/dashboard/profile",
-    icon: UserIcon,
+    label: "Equipo",
+    items: [
+      { title: "Colaboradores", href: `${BASE}/employees`, icon: UserRound, permission: "canViewEmployees" },
+      { title: "Vendedores", href: `${BASE}/vendors`, icon: ShoppingBag, permission: "canViewVendors" },
+    ],
   },
   {
-    title: "Ideas",
-    href: "/collaborator/dashboard/ideas",
-    icon: Lightbulb,
-    permission: "canViewIdeas",
+    label: "Activos",
+    items: [
+      { title: "Laptops", href: `${BASE}/laptops`, icon: Laptop, permission: "canViewLaptops" },
+      { title: "Celulares", href: `${BASE}/phones`, icon: Smartphone, permission: "canViewPhones" },
+      { title: "Correos", href: `${BASE}/emails`, icon: Mail, permission: "canViewEmails" },
+    ],
+  },
+  {
+    label: "Otros",
+    items: [
+      { title: "Mensajes", href: `${BASE}/messages`, icon: MessageSquare, permission: "canViewMessages" },
+      { title: "Ideas", href: `${BASE}/ideas`, icon: Lightbulb, permission: "canViewIdeas" },
+      { title: "Tareas", href: `${BASE}/tasks`, icon: ClipboardList, permission: "canViewTasks" },
+    ],
+  },
+  {
+    label: "Mi cuenta",
+    items: [
+      { title: "Perfil", href: `${BASE}/profile`, icon: UserIcon },
+    ],
   },
 ];
 
@@ -41,18 +103,23 @@ export function CollaboratorAppSidebar() {
       .catch(() => {});
   }, []);
 
-  const navItems = allNavItems.filter((item) => {
-    if (!item.permission) return true;
-    if (!permissions) return true; // show all while loading
-    return permissions[item.permission];
-  });
+  const navGroups: NavGroup[] = allNavGroups
+    .map((group) => ({
+      label: group.label,
+      items: group.items.filter((item) => {
+        if (!item.permission) return true;
+        if (!permissions) return false; // hide until loaded
+        return permissions[item.permission];
+      }),
+    }))
+    .filter((group) => group.items.length > 0);
 
   return (
     <DashboardSidebar
-      navItems={navItems}
-      label="Mi cuenta"
-      homeHref="/collaborator/dashboard/profile"
-      profileHref="/collaborator/dashboard/profile"
+      navGroups={navGroups}
+      label="Mi panel"
+      homeHref={`${BASE}/profile`}
+      profileHref={`${BASE}/profile`}
     />
   );
 }
