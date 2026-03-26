@@ -5,6 +5,8 @@ import { logAudit } from "@/lib/audit-log";
 function toJson(c: {
   id: string;
   name: string;
+  contactName?: string | null;
+  position?: string | null;
   legalName: string | null;
   rfc: string | null;
   email: string | null;
@@ -17,6 +19,8 @@ function toJson(c: {
   return {
     id: c.id,
     name: c.name,
+    contactName: c.contactName ?? null,
+    position: c.position ?? null,
     legalName: c.legalName,
     rfc: c.rfc,
     email: c.email,
@@ -40,8 +44,10 @@ export function GET() {
 export function POST(request: Request) {
   return adminHandler(async (session) => {
     const body = await request.json();
-    const { name, legalName, rfc, email, phone, address, notes, detentionConditions } = body as {
+    const { name, contactName, position, legalName, rfc, email, phone, address, notes, detentionConditions } = body as {
       name: string;
+      contactName?: string;
+      position?: string;
       legalName?: string;
       rfc?: string;
       email?: string;
@@ -58,6 +64,8 @@ export function POST(request: Request) {
     const client = await prisma.client.create({
       data: {
         name: String(name).trim(),
+        contactName: contactName?.trim() || null,
+        position: position?.trim() || null,
         legalName: legalName?.trim() || null,
         rfc: rfc?.trim() || null,
         email: email?.trim() || null,

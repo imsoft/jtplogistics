@@ -13,7 +13,7 @@ function getColumns(): ColumnDef<Client>[] {
     {
       id: "search",
       accessorFn: (row) =>
-        `${row.name} ${row.legalName ?? ""} ${row.email ?? ""} ${row.phone ?? ""} ${row.rfc ?? ""}`,
+        `${row.name} ${row.contactName ?? ""} ${row.position ?? ""} ${row.legalName ?? ""} ${row.email ?? ""} ${row.phone ?? ""} ${row.rfc ?? ""}`,
       filterFn: "fuzzy",
       header: () => null,
       cell: () => null,
@@ -24,6 +24,16 @@ function getColumns(): ColumnDef<Client>[] {
       accessorKey: "name",
       header: ({ column }) => <SortableColumnHeader column={column} title="Nombre" />,
       cell: ({ row }) => <span className="font-medium">{row.getValue("name")}</span>,
+    },
+    {
+      accessorKey: "contactName",
+      header: ({ column }) => <SortableColumnHeader column={column} title="Nombre de contacto" />,
+      cell: ({ row }) => row.getValue("contactName") ?? <span className="text-muted-foreground">—</span>,
+    },
+    {
+      accessorKey: "position",
+      header: ({ column }) => <SortableColumnHeader column={column} title="Puesto" />,
+      cell: ({ row }) => row.getValue("position") ?? <span className="text-muted-foreground">—</span>,
     },
     {
       accessorKey: "legalName",

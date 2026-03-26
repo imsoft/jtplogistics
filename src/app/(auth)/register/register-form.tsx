@@ -13,11 +13,12 @@ import { normalizeEmail } from "@/lib/normalize";
 import { validateRegisterForm } from "@/lib/validators/auth";
 import type { RegisterFormData } from "@/types/auth.types";
 
+const PROFILE_SAVE_RETRIES = 2;
+
 export function RegisterForm() {
   const router = useRouter();
   const { isLoading, error, setError, submit } = useFormSubmit();
   const [emailValue, setEmailValue] = useState("");
-  const isJtp = normalizeEmail(emailValue).endsWith("@jtp.com.mx");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -40,29 +41,41 @@ export function RegisterForm() {
 
     await submit(async () => {
       const normalizedEmail = normalizeEmail(data.email);
-      const role = normalizedEmail.endsWith("@jtp.com.mx") ? "collaborator" : "carrier";
 
       const res = await signUp.email({
         name: data.name,
         email: normalizedEmail,
         password: data.password,
-        role,
+        role: "carrier",
       });
       if (res.error) {
         setError(res.error.message ?? "Error al crear la cuenta.");
         return;
       }
 
-      // Guardar razón social y teléfono en el perfil (solo para carriers)
-      if (!isJtp) {
-        await fetch("/api/profile", {
+      let profileSaved = false;
+      for (let attempt = 0; attempt < PROFILE_SAVE_RETRIES; attempt += 1) {
+        const profileRes = await fetch("/api/profile", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            // En registro público de transportista, si no hay nombre comercial dedicado
+            // inicializamos con la razón social para que no quede vacío en perfil.
+            commercialName: data.legalName,
             legalName: data.legalName,
             contacts: [{ type: "phone", value: data.phone, label: "Teléfono" }],
           }),
         });
+        if (profileRes.ok) {
+          profileSaved = true;
+          break;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+
+      if (!profileSaved) {
+        setError("La cuenta se creó, pero no se pudieron guardar todos los datos del perfil. Intenta guardar de nuevo desde tu perfil.");
+        return;
       }
 
       router.push("/");
@@ -72,19 +85,17 @@ export function RegisterForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && <FormAlert variant="error" message={error} />}
-      {!isJtp && (
-        <div className="space-y-2">
-          <Label htmlFor="legalName">Razón social</Label>
-          <Input
-            id="legalName"
-            name="legalName"
-            type="text"
-            autoComplete="organization"
-            required
-            disabled={isLoading}
-          />
-        </div>
-      )}
+      <div className="space-y-2">
+        <Label htmlFor="legalName">Razón social</Label>
+        <Input
+          id="legalName"
+          name="legalName"
+          type="text"
+          autoComplete="organization"
+          required
+          disabled={isLoading}
+        />
+      </div>
       <div className="space-y-2">
         <Label htmlFor="name">Nombre</Label>
         <Input
@@ -96,19 +107,17 @@ export function RegisterForm() {
           disabled={isLoading}
         />
       </div>
-      {!isJtp && (
-        <div className="space-y-2">
-          <Label htmlFor="phone">Teléfono</Label>
-          <Input
-            id="phone"
-            name="phone"
-            type="tel"
-            autoComplete="tel"
-            required
-            disabled={isLoading}
-          />
-        </div>
-      )}
+      <div className="space-y-2">
+        <Label htmlFor="phone">Teléfono</Label>
+        <Input
+          id="phone"
+          name="phone"
+          type="tel"
+          autoComplete="tel"
+          required
+          disabled={isLoading}
+        />
+      </div>
       <div className="space-y-2">
         <Label htmlFor="email">Correo electrónico</Label>
         <Input

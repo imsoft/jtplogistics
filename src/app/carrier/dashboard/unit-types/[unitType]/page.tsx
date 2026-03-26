@@ -124,8 +124,11 @@ export default function CarrierUnitTypePage() {
     loadRoutes();
   }, [loadRoutes]);
 
-  // Show ALL routes
-  const routes = allRoutes;
+  // Show only routes for the current unit type
+  const routes = useMemo(
+    () => allRoutes.filter((route) => route.unitType === unitType),
+    [allRoutes, unitType]
+  );
 
   const origins = useMemo(
     () => [...new Set(routes.map((r) => r.origin))].sort(),

@@ -20,7 +20,7 @@ export const auth = betterAuth({
       role: {
         type: "string",
         required: true,
-        defaultValue: "collaborator",
+        defaultValue: "carrier",
         input: false,
         fieldName: "role",
       },

@@ -186,7 +186,7 @@ export default function EditClientPage() {
                               <div className="grid grid-cols-[1fr_minmax(120px,1fr)_minmax(100px,1fr)_minmax(80px,1fr)] gap-x-6 border-b bg-muted/20 px-4 py-1.5 text-xs font-medium text-muted-foreground">
                                 <span>Ruta</span>
                                 <span>Tarifa</span>
-                                <span>Volumen</span>
+                                <span>Vol/sem</span>
                                 <span>Estado</span>
                               </div>
                               {items.map((route) => (

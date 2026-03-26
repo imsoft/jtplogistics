@@ -7,6 +7,7 @@ import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { ResourceEditHeader } from "@/components/dashboard/resources/resource-edit-header";
 import { EmployeeForm } from "@/components/dashboard/resources/employee-form";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -70,6 +71,17 @@ export default function EditEmployeePage() {
 
   function togglePerm(key: PermissionKey) {
     setPermissions((prev) => prev ? { ...prev, [key]: !prev[key] } : prev);
+  }
+
+  function setAllPermissions(value: boolean) {
+    setPermissions((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev };
+      for (const perm of PERMISSION_FIELDS) {
+        next[perm.key] = value;
+      }
+      return next;
+    });
   }
 
   function onSubmit(formData: EmployeeFormData) {
@@ -187,7 +199,27 @@ export default function EditEmployeePage() {
             {permissions && (
               <Card>
                 <CardHeader className="space-y-1">
-                  <CardTitle className="text-left text-base sm:text-lg">Permisos</CardTitle>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <CardTitle className="text-left text-base sm:text-lg">Permisos</CardTitle>
+                    <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full sm:w-auto"
+                        onClick={() => setAllPermissions(false)}
+                      >
+                        Quitar todos
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="default"
+                        className="w-full sm:w-auto"
+                        onClick={() => setAllPermissions(true)}
+                      >
+                        Seleccionar todos
+                      </Button>
+                    </div>
+                  </div>
                   <CardDescription className="text-left text-xs sm:text-sm">
                     Controla qué secciones puede ver y utilizar este colaborador.
                   </CardDescription>

@@ -47,6 +47,17 @@ export async function requireCarrier() {
   return session;
 }
 
+export async function requireCarrierOrVendor() {
+  const session = await requireSession();
+  if (session.user.role !== "carrier" && session.user.role !== "vendor") {
+    throw new Response(JSON.stringify({ error: "Prohibido" }), {
+      status: 403,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  return session;
+}
+
 export async function requireCollaboratorOrAdmin() {
   const session = await requireSession();
   if (session.user.role !== "collaborator" && session.user.role !== "admin") {

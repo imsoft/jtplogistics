@@ -13,6 +13,7 @@ export function GET() {
       vendors.map((u) => ({
         id: u.id,
         name: u.name,
+        position: u.position,
         email: u.email,
         image: u.image,
         birthDate: u.birthDate ? u.birthDate.toISOString().split("T")[0] : null,
@@ -25,8 +26,9 @@ export function GET() {
 export function POST(request: Request) {
   return adminHandler(async (session) => {
     const body = await request.json();
-    const { name, email, password, birthDate } = body as {
+    const { name, position, email, password, birthDate } = body as {
       name: string;
+      position?: string;
       email: string;
       password: string;
       birthDate?: string | null;
@@ -48,6 +50,7 @@ export function POST(request: Request) {
       where: { id: userId },
       data: {
         role: "vendor",
+        position: position?.trim() || null,
         ...(birthDate ? { birthDate: new Date(birthDate) } : {}),
       },
     });

@@ -61,6 +61,7 @@ export interface EmployeeFormData {
 export interface Vendor {
   id: string;
   name: string;
+  position: string | null;
   email: string;
   image: string | null;
   birthDate: string | null;
@@ -69,6 +70,7 @@ export interface Vendor {
 
 export interface VendorFormData {
   name: string;
+  position: string;
   email: string;
   password: string;
   birthDate: string;

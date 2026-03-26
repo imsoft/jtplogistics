@@ -68,6 +68,7 @@ export default function VendorProfilePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4">
+            <InfoRow label="Puesto" value={vendor.position} />
             <InfoRow label="Correo" value={vendor.email} />
             <InfoRow
               label="Fecha de nacimiento"

@@ -1,6 +1,8 @@
 export interface Client {
   id: string;
   name: string;
+  contactName: string | null;
+  position: string | null;
   legalName: string | null;
   rfc: string | null;
   email: string | null;
@@ -13,6 +15,8 @@ export interface Client {
 
 export interface ClientFormData {
   name: string;
+  contactName: string;
+  position: string;
   legalName: string;
   rfc: string;
   email: string;

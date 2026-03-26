@@ -115,6 +115,8 @@ export default function ClientProfilePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4">
+            <InfoRow label="Nombre de contacto" value={client.contactName} />
+            <InfoRow label="Puesto" value={client.position} />
             <InfoRow label="RFC" value={client.rfc} />
             <InfoRow label="Correo" value={client.email} />
             <InfoRow label="Teléfono" value={formatPhone(client.phone)} />
@@ -188,7 +190,7 @@ export default function ClientProfilePage() {
                         <div className="grid grid-cols-[1fr_minmax(100px,1fr)_minmax(100px,1fr)_minmax(120px,1fr)_minmax(80px,1fr)] gap-x-6 border-b bg-muted/20 px-4 py-1.5 text-xs font-medium text-muted-foreground">
                           <span>Ruta</span>
                           <span>Tarifa</span>
-                          <span>Volumen</span>
+                          <span>Vol/sem</span>
                           <span>Creado por</span>
                           <span>Estado</span>
                         </div>

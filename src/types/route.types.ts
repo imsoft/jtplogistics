@@ -24,5 +24,6 @@ export interface RouteFormData {
   target?: number;
   weeklyVolume?: number;
   unitType: UnitType;
+  unitTargets: Array<{ unitType: UnitType; target?: number }>;
   status: RouteStatus;
 }

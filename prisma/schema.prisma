@@ -30,6 +30,7 @@ model User {
   id            String         @id @default(cuid()) @map("id")
   name          String         @map("name")
   email         String         @unique @map("email")
+  position      String?        @map("position")
   emailVerified Boolean        @map("email_verified")
   image         String?        @map("image")
   birthDate     DateTime?      @map("birth_date")
@@ -58,6 +59,7 @@ model User {
   profile          Profile?
   carrierRoutes    CarrierRoute[]
   employeeProfile  EmployeeProfile?
+  ownedCollaborators EmployeeProfile[] @relation("CollaboratorOwner")
   assignedLaptops  Laptop[]
   assignedPhones   Phone[]
   assignedEmails   EmailAccountUser[]
@@ -207,6 +209,8 @@ model Contact {
 model Client {
   id        String   @id @default(cuid()) @map("id")
   name      String   @map("name")
+  contactName String? @map("contact_name")
+  position  String?  @map("position")
   legalName String?  @map("legal_name")
   rfc       String?  @map("rfc")
   email     String?  @map("email")
@@ -309,11 +313,14 @@ model EmployeeProfile {
   id         String  @id @default(cuid()) @map("id")
   userId     String  @unique @map("user_id")
   user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ownerUserId String? @map("owner_user_id")
+  owner      User?   @relation("CollaboratorOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
   position   String? @map("position")
   department String? @map("department")
   phone      String? @map("phone")
   password   String? @map("password")
 
+  @@index([ownerUserId])
   @@map("employee_profiles")
 }
 

@@ -42,10 +42,28 @@ export async function PATCH(
     const description = body.description != null ? String(body.description).trim() : undefined;
     const target = body.target != null ? Number(body.target) : undefined;
     const weeklyVolume = body.weeklyVolume != null ? Math.round(Number(body.weeklyVolume)) : undefined;
-    const unitTypeRaw = body.unitType ? String(body.unitType).trim() : undefined;
-    const unitType: string | undefined = unitTypeRaw
-      ? ((await prisma.unitTypeDef.findUnique({ where: { value: unitTypeRaw } })) ? unitTypeRaw : undefined)
-      : undefined;
+    const unitTargetsRaw: Array<{ unitType?: unknown; target?: unknown }> = Array.isArray(body.unitTargets) ? body.unitTargets : [];
+    const normalizedUnitTargets = (
+      unitTargetsRaw.length > 0
+        ? unitTargetsRaw
+        : [{ unitType: body.unitType, target: body.target }]
+    )
+      .map((item: { unitType?: unknown; target?: unknown }) => ({
+        unitType: String(item?.unitType ?? "").trim(),
+        target: item?.target != null ? Number(item.target) : null,
+      }))
+      .filter((item) => item.unitType);
+    const validUnitTypes = await prisma.unitTypeDef.findMany({
+      where: { value: { in: normalizedUnitTargets.map((ut) => ut.unitType) } },
+      select: { value: true },
+    });
+    const validSet = new Set(validUnitTypes.map((u) => u.value));
+    const unitTargets = normalizedUnitTargets
+      .map((item) => ({
+        unitType: validSet.has(item.unitType) ? item.unitType : "caja_seca",
+        target: item.target,
+      }))
+      .filter((item, index, arr) => arr.findIndex((x) => x.unitType === item.unitType) === index);
     const status: RouteStatus | undefined = VALID_STATUSES.includes(body.status) ? body.status : undefined;
 
     const updateData: Record<string, unknown> = {};
@@ -59,7 +77,8 @@ export async function PATCH(
     if (description !== undefined) updateData.description = description;
     if (target !== undefined) updateData.target = target;
     if (weeklyVolume !== undefined) updateData.weeklyVolume = weeklyVolume;
-    if (unitType !== undefined) updateData.unitType = unitType;
+    if (unitTargets[0]?.unitType) updateData.unitType = unitTargets[0].unitType;
+    if (unitTargets[0]) updateData.target = unitTargets[0].target;
     if (status !== undefined) updateData.status = status;
 
     // Snapshot antes del cambio para el diff
@@ -70,6 +89,35 @@ export async function PATCH(
       data: updateData,
       include: { createdBy: { select: { id: true, name: true } } },
     });
+
+    if (unitTargets.length > 1) {
+      for (const extra of unitTargets.slice(1)) {
+        const exists = await prisma.route.findFirst({
+          where: {
+            id: { not: id },
+            origin: { equals: route.origin, mode: "insensitive" },
+            destination: { equals: route.destination, mode: "insensitive" },
+            unitType: extra.unitType,
+          },
+          select: { id: true },
+        });
+        if (!exists) {
+          await prisma.route.create({
+            data: {
+              origin: route.origin,
+              destination: route.destination,
+              destinationState: route.destinationState,
+              description: route.description,
+              target: extra.target,
+              weeklyVolume: route.weeklyVolume,
+              unitType: extra.unitType,
+              status: route.status as RouteStatus,
+              createdById: session.user.id,
+            },
+          });
+        }
+      }
+    }
 
     if (before) {
       const beforeSnap: RouteSnapshot = {

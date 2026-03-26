@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { normalizePayloadToLowercase } from "@/lib/text-case";
 
 interface UseResourceEditOptions {
   endpoint: string;
@@ -43,10 +44,11 @@ export function useResourceEdit<T>({
     setError(null);
     setIsSubmitting(true);
     try {
+      const normalizedData = normalizePayloadToLowercase(formData);
       const res = await fetch(`${endpoint}/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(normalizedData),
       });
       if (!res.ok) {
         const body = await res.json();

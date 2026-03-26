@@ -5,6 +5,8 @@ import { logAudit, diffObjects } from "@/lib/audit-log";
 function toJson(c: {
   id: string;
   name: string;
+  contactName?: string | null;
+  position?: string | null;
   legalName: string | null;
   rfc: string | null;
   email: string | null;
@@ -17,6 +19,8 @@ function toJson(c: {
   return {
     id: c.id,
     name: c.name,
+    contactName: c.contactName ?? null,
+    position: c.position ?? null,
     legalName: c.legalName,
     rfc: c.rfc,
     email: c.email,
@@ -42,6 +46,8 @@ export function GET(
 
 const CLIENT_LABELS: Record<string, string> = {
   name: "Nombre", legalName: "Razón social", rfc: "RFC", email: "Correo",
+  contactName: "Nombre de contacto",
+  position: "Puesto",
   phone: "Teléfono", address: "Dirección", notes: "Notas", detentionConditions: "Condiciones de estadías",
 };
 
@@ -52,8 +58,10 @@ export function PATCH(
   return adminHandler(async (session) => {
     const { id } = await params;
     const body = await request.json();
-    const { name, legalName, rfc, email, phone, address, notes, detentionConditions } = body as {
+    const { name, contactName, position, legalName, rfc, email, phone, address, notes, detentionConditions } = body as {
       name?: string;
+      contactName?: string | null;
+      position?: string | null;
       legalName?: string | null;
       rfc?: string | null;
       email?: string | null;
@@ -74,6 +82,8 @@ export function PATCH(
       where: { id },
       data: {
         ...(name !== undefined && { name: String(name).trim() }),
+        ...(contactName !== undefined && { contactName: contactName?.trim() || null }),
+        ...(position !== undefined && { position: position?.trim() || null }),
         ...(legalName !== undefined && { legalName: legalName?.trim() || null }),
         ...(rfc !== undefined && { rfc: rfc?.trim() || null }),
         ...(email !== undefined && { email: email?.trim() || null }),

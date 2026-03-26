@@ -28,6 +28,7 @@ export function EditRouteForm({ route }: { route: Route }) {
           target: data.target,
           weeklyVolume: data.weeklyVolume,
           unitType: data.unitType,
+          unitTargets: data.unitTargets,
           status: data.status,
         }),
       });
@@ -79,6 +80,7 @@ export function EditRouteForm({ route }: { route: Route }) {
               target: route.target,
               weeklyVolume: route.weeklyVolume,
               unitType: route.unitType,
+              unitTargets: [{ unitType: route.unitType, target: route.target }],
               status: route.status,
             }}
             submitLabel="Guardar cambios"

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { normalizePayloadToLowercase } from "@/lib/text-case";
 
 interface UseResourceCreateOptions {
   endpoint: string;
@@ -17,10 +18,11 @@ export function useResourceCreate({ endpoint, redirectHref }: UseResourceCreateO
     setError(null);
     setIsSubmitting(true);
     try {
+      const normalizedData = normalizePayloadToLowercase(data);
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(normalizedData),
       });
       if (!res.ok) {
         const body = await res.json();

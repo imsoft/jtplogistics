@@ -25,13 +25,14 @@ export function VendorForm({
   isSubmitting = false,
 }: VendorFormProps) {
   const [name, setName] = useState(initialValues.name ?? "");
+  const [position, setPosition] = useState(initialValues.position ?? "");
   const [email, setEmail] = useState(initialValues.email ?? "");
   const [password, setPassword] = useState("");
   const [birthDate, setBirthDate] = useState(initialValues.birthDate ?? "");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSubmit({ name, email, password, birthDate });
+    onSubmit({ name, position, email, password, birthDate });
   }
 
   return (
@@ -55,6 +56,14 @@ export function VendorForm({
             onChange={(e) => setEmail(e.target.value)}
             required
             disabled={!isNew}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="v-position">Puesto</Label>
+          <Input
+            id="v-position"
+            value={position}
+            onChange={(e) => setPosition(e.target.value)}
           />
         </div>
         <div className="space-y-2">

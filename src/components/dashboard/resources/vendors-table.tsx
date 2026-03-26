@@ -11,7 +11,7 @@ function getColumns(): ColumnDef<Vendor>[] {
   return [
     {
       id: "search",
-      accessorFn: (row) => `${row.name} ${row.email}`,
+      accessorFn: (row) => `${row.name} ${row.position ?? ""} ${row.email}`,
       filterFn: "fuzzy",
       header: () => null,
       cell: () => null,
@@ -22,6 +22,11 @@ function getColumns(): ColumnDef<Vendor>[] {
       accessorKey: "name",
       header: ({ column }) => <SortableColumnHeader column={column} title="Nombre" />,
       cell: ({ row }) => <span className="font-medium">{row.getValue("name")}</span>,
+    },
+    {
+      accessorKey: "position",
+      header: ({ column }) => <SortableColumnHeader column={column} title="Puesto" />,
+      cell: ({ row }) => row.getValue("position") ?? <span className="text-muted-foreground">—</span>,
     },
     {
       accessorKey: "email",

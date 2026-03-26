@@ -49,6 +49,7 @@ export function useRoutesStore() {
             target: data.target,
             weeklyVolume: data.weeklyVolume,
             unitType: data.unitType,
+            unitTargets: data.unitTargets,
             status: data.status,
           }),
         });
@@ -56,9 +57,10 @@ export function useRoutesStore() {
           const err = await res.json().catch(() => ({}));
           throw new Error(err.error ?? "Error al crear la ruta");
         }
-        const route = await res.json();
-        setRoutes((prev) => [route, ...prev]);
-        return route;
+        const body = await res.json();
+        const createdRoutes = Array.isArray(body.routes) ? body.routes : [body];
+        setRoutes((prev) => [...createdRoutes, ...prev]);
+        return createdRoutes[0] ?? null;
       } catch (e) {
         setError(e instanceof Error ? e.message : "Error al crear la ruta");
         return null;
@@ -82,6 +84,7 @@ export function useRoutesStore() {
             target: data.target,
             weeklyVolume: data.weeklyVolume,
             unitType: data.unitType,
+            unitTargets: data.unitTargets,
             status: data.status,
           }),
         });

@@ -16,6 +16,7 @@ export function GET(
     return Response.json({
       id: u.id,
       name: u.name,
+      position: u.position,
       email: u.email,
       image: u.image,
       birthDate: u.birthDate ? u.birthDate.toISOString().split("T")[0] : null,
@@ -31,8 +32,9 @@ export function PATCH(
   return adminHandler(async (session) => {
     const { id } = await params;
     const body = await request.json();
-    const { name, birthDate, password } = body as {
+    const { name, position, birthDate, password } = body as {
       name?: string;
+      position?: string | null;
       birthDate?: string | null;
       password?: string;
     };
@@ -44,6 +46,7 @@ export function PATCH(
 
     const before = {
       name: u.name,
+      position: u.position,
       birthDate: u.birthDate ? u.birthDate.toISOString().split("T")[0] : null,
     };
 
@@ -55,6 +58,7 @@ export function PATCH(
       where: { id },
       data: {
         ...(name && { name }),
+        ...(position !== undefined && { position: position?.trim() || null }),
         ...(parsedBirthDate !== undefined && { birthDate: parsedBirthDate }),
       },
     });
@@ -69,10 +73,11 @@ export function PATCH(
 
     const after = {
       name: name ?? u.name,
+      position: position !== undefined ? (position || null) : u.position,
       birthDate: birthDate !== undefined ? (birthDate ?? null) : (u.birthDate ? u.birthDate.toISOString().split("T")[0] : null),
     };
 
-    const fieldLabels = { name: "Nombre", birthDate: "Fecha de nacimiento" };
+    const fieldLabels = { name: "Nombre", position: "Puesto", birthDate: "Fecha de nacimiento" };
     const changes = diffObjects(before, after, fieldLabels);
 
     if (changes.length > 0) {

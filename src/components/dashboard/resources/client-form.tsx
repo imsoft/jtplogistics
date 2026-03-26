@@ -25,6 +25,8 @@ export function ClientForm({
   children,
 }: ClientFormProps) {
   const [name, setName] = useState(initialValues.name ?? "");
+  const [contactName, setContactName] = useState(initialValues.contactName ?? "");
+  const [position, setPosition] = useState(initialValues.position ?? "");
   const [legalName, setLegalName] = useState(initialValues.legalName ?? "");
   const [rfc, setRfc] = useState(initialValues.rfc ?? "");
   const [email, setEmail] = useState(initialValues.email ?? "");
@@ -35,7 +37,7 @@ export function ClientForm({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSubmit({ name, legalName, rfc, email, phone, address, notes, detentionConditions });
+    onSubmit({ name, contactName, position, legalName, rfc, email, phone, address, notes, detentionConditions });
   }
 
   return (
@@ -56,6 +58,22 @@ export function ClientForm({
             id="client-legalName"
             value={legalName}
             onChange={(e) => setLegalName(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="client-contactName">Nombre de contacto</Label>
+          <Input
+            id="client-contactName"
+            value={contactName}
+            onChange={(e) => setContactName(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="client-position">Puesto</Label>
+          <Input
+            id="client-position"
+            value={position}
+            onChange={(e) => setPosition(e.target.value)}
           />
         </div>
         <div className="space-y-2">

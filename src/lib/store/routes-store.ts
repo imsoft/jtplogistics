@@ -24,13 +24,14 @@ export function setStoredRoutes(routes: Route[]): void {
 }
 
 export function createRouteFromForm(data: RouteFormData): Route {
+  const firstUnit = data.unitTargets?.[0];
   return {
     id: createId(),
     origin: data.origin.trim(),
     destination: data.destination.trim(),
     description: data.description?.trim() || undefined,
-    target: data.target,
-    unitType: data.unitType,
+    target: firstUnit?.target ?? data.target,
+    unitType: firstUnit?.unitType ?? data.unitType,
     status: data.status,
     createdAt: new Date().toISOString(),
   };

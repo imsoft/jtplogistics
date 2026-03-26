@@ -30,12 +30,14 @@ const defaultFormData: RouteFormData = {
   target: undefined,
   weeklyVolume: undefined,
   unitType: "caja_seca",
+  unitTargets: [{ unitType: "caja_seca", target: undefined }],
   status: "active",
 };
 
 interface ExistingRoute {
   origin: string;
   destination: string;
+  unitType: string;
 }
 
 interface RouteFormProps {
@@ -56,8 +58,14 @@ export function RouteForm({
   const [status, setStatus] = useState<RouteStatus>(
     initialValues.status ?? defaultFormData.status
   );
-  const [unitType, setUnitType] = useState<UnitType>(
-    initialValues.unitType ?? defaultFormData.unitType
+  const [unitTargets, setUnitTargets] = useState<Array<{ unitType: UnitType; targetDisplay: string }>>(
+    (initialValues.unitTargets && initialValues.unitTargets.length > 0
+      ? initialValues.unitTargets
+      : [{ unitType: initialValues.unitType ?? defaultFormData.unitType, target: initialValues.target }]
+    ).map((item) => ({
+      unitType: item.unitType,
+      targetDisplay: item.target != null ? formatMxn(item.target) : "",
+    }))
   );
   // Store full "State|City" values so each city is unambiguous
   const [origin, setOrigin] = useState<string | null>(
@@ -76,9 +84,6 @@ export function RouteForm({
   const [destinationState, setDestinationState] = useState<string>(
     initialValues.destinationState?.trim() || ""
   );
-  const [targetDisplay, setTargetDisplay] = useState<string>(
-    initialValues.target != null ? formatMxn(initialValues.target) : ""
-  );
   const [unitTypeOptions, setUnitTypeOptions] = useState(UNIT_TYPE_FALLBACK);
 
   useEffect(() => {
@@ -93,32 +98,52 @@ export function RouteForm({
 
   const originCity = parseCityValue(origin).city;
   const destCity = parseCityValue(destination).city;
+  const duplicateUnitTypes = unitTargets
+    .map((ut) => ut.unitType)
+    .filter((value, index, arr) => arr.indexOf(value) !== index);
+
   const isDuplicate =
     !!originCity &&
     !!destCity &&
-    existingRoutes.some(
-      (r) =>
-        r.origin.toLowerCase() === originCity.toLowerCase() &&
-        r.destination.toLowerCase() === destCity.toLowerCase()
+    unitTargets.some((ut) =>
+      existingRoutes.some(
+        (r) =>
+          r.origin.toLowerCase() === originCity.toLowerCase() &&
+          r.destination.toLowerCase() === destCity.toLowerCase() &&
+          r.unitType === ut.unitType
+      )
     );
 
   function handleSubmit(e: { preventDefault(): void; currentTarget: HTMLFormElement }) {
     e.preventDefault();
     const form = e.currentTarget;
     const formData = new FormData(form);
-    const parsedTarget = parseMxn(targetDisplay);
     const { city: originCity } = parseCityValue(origin);
     const { city: destCity, state: destState } = parseCityValue(destination);
+    const normalizedUnitTargets = unitTargets.map((item) => ({
+      unitType: item.unitType,
+      target: parseMxn(item.targetDisplay),
+    }));
     const data: RouteFormData = {
       origin: originCity,
       destination: destCity,
       destinationState: destState || destinationState.trim(),
       description: (formData.get("description") as string)?.trim() ?? "",
-      target: parsedTarget,
-      unitType,
+      target: normalizedUnitTargets[0]?.target,
+      unitType: normalizedUnitTargets[0]?.unitType ?? "caja_seca",
+      unitTargets: normalizedUnitTargets,
       status,
     };
     onSubmit(data);
+  }
+
+  function addUnitTargetRow() {
+    const first = unitTypeOptions[0]?.value ?? "caja_seca";
+    setUnitTargets((prev) => [...prev, { unitType: first, targetDisplay: "" }]);
+  }
+
+  function removeUnitTargetRow(index: number) {
+    setUnitTargets((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== index)));
   }
 
   return (
@@ -178,38 +203,67 @@ export function RouteForm({
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="space-y-2">
-              <Label htmlFor="route-target">Target (MXN)</Label>
-              <Input
-                id="route-target"
-                type="text"
-                inputMode="decimal"
-                value={targetDisplay}
-                onChange={(e) => setTargetDisplay(formatMxnLive(e.target.value))}
-                onBlur={() => {
-                  const parsed = parseMxn(targetDisplay);
-                  if (parsed != null) setTargetDisplay(formatMxn(parsed));
-                }}
-                className="w-full"
-                placeholder="0.00"
-              />
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <Label>Tipos de unidad y target</Label>
+              <Button type="button" variant="outline" onClick={addUnitTargetRow}>
+                Agregar tipo
+              </Button>
             </div>
-            <div className="space-y-2">
-              <Label>Tipo de unidad</Label>
-              <Select value={unitType} onValueChange={(v) => setUnitType(v as UnitType)}>
-                <SelectTrigger id="route-unit-type" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {unitTypeOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="space-y-3">
+              {unitTargets.map((row, index) => (
+                <div key={`${row.unitType}-${index}`} className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_auto]">
+                  <Select
+                    value={row.unitType}
+                    onValueChange={(v) =>
+                      setUnitTargets((prev) => prev.map((item, i) => (i === index ? { ...item, unitType: v as UnitType } : item)))
+                    }
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {unitTypeOptions.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    type="text"
+                    inputMode="decimal"
+                    value={row.targetDisplay}
+                    onChange={(e) =>
+                      setUnitTargets((prev) =>
+                        prev.map((item, i) => (i === index ? { ...item, targetDisplay: formatMxnLive(e.target.value) } : item))
+                      )
+                    }
+                    onBlur={() =>
+                      setUnitTargets((prev) =>
+                        prev.map((item, i) => {
+                          if (i !== index) return item;
+                          const parsed = parseMxn(item.targetDisplay);
+                          return { ...item, targetDisplay: parsed != null ? formatMxn(parsed) : "" };
+                        })
+                      )
+                    }
+                    className="w-full"
+                    placeholder="Target (MXN)"
+                  />
+                  <Button type="button" variant="outline" onClick={() => removeUnitTargetRow(index)} disabled={unitTargets.length <= 1}>
+                    Quitar
+                  </Button>
+                </div>
+              ))}
             </div>
+            {duplicateUnitTypes.length > 0 && (
+              <p className="text-sm text-destructive">
+                No repitas tipos de unidad en la misma ruta.
+              </p>
+            )}
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Estado</Label>
               <Select value={status} onValueChange={(v) => setStatus(v as RouteStatus)}>
@@ -233,7 +287,7 @@ export function RouteForm({
         <Button type="button" variant="outline" asChild className="w-full sm:w-auto">
           <Link href={cancelHref}>Cancelar</Link>
         </Button>
-        <Button type="submit" className="w-full sm:w-auto" disabled={isDuplicate}>
+        <Button type="submit" className="w-full sm:w-auto" disabled={isDuplicate || duplicateUnitTypes.length > 0}>
           {submitLabel}
         </Button>
       </div>

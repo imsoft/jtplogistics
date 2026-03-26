@@ -161,5 +161,6 @@
     @apply bg-background text-foreground min-h-screen overflow-x-hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-transform: uppercase;
   }
 }
