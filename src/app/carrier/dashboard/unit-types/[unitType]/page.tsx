@@ -40,12 +40,13 @@ interface CarrierRouteRow {
 interface CarrierRoutesResponse {
   canEditTarget: boolean;
   canEditRoutes: boolean;
+  canAddRoutes: boolean;
   routes: CarrierRouteRow[];
 }
 
 async function fetchCarrierRoutes(): Promise<CarrierRoutesResponse> {
   const res = await fetch("/api/carrier/routes");
-  if (!res.ok) return { canEditTarget: false, canEditRoutes: false, routes: [] };
+  if (!res.ok) return { canEditTarget: false, canEditRoutes: false, canAddRoutes: false, routes: [] };
   return res.json();
 }
 
@@ -73,8 +74,11 @@ export default function CarrierUnitTypePage() {
   const [allRoutes, setAllRoutes] = useState<CarrierRouteRow[]>([]);
   const [canEditTarget, setCanEditTarget] = useState(false);
   const [canEditRoutes, setCanEditRoutes] = useState(false);
+  const [canAddRoutes, setCanAddRoutes] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isRequestingEditUnlock, setIsRequestingEditUnlock] = useState(false);
+  const [isRequestingAddUnlock, setIsRequestingAddUnlock] = useState(false);
 
   const [filterOrigin, setFilterOrigin] = useState<string | null>(null);
   const [filterDestination, setFilterDestination] = useState<string | null>(null);
@@ -98,6 +102,7 @@ export default function CarrierUnitTypePage() {
     const data = await fetchCarrierRoutes();
     setCanEditTarget(data.canEditTarget);
     setCanEditRoutes(data.canEditRoutes);
+    setCanAddRoutes(data.canAddRoutes);
     setAllRoutes(data.routes);
 
     // Load selections for the current unitType page
@@ -212,19 +217,41 @@ export default function CarrierUnitTypePage() {
         };
       });
 
-      const res = await fetch("/api/carrier/routes", {
+      const res = await fetch(`/api/carrier/routes?unitType=${encodeURIComponent(unitType)}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
 
-      if (!res.ok) throw new Error("Error al guardar");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? "Error al guardar");
+      }
       toast.success(`Selecciones de ${pageTitle} guardadas correctamente.`);
       await loadRoutes();
-    } catch {
-      toast.error("No se pudieron guardar las selecciones. Intenta de nuevo.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudieron guardar las selecciones. Intenta de nuevo.");
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function requestUnlock(type: "edit_existing" | "add_new") {
+    if (type === "edit_existing") setIsRequestingEditUnlock(true);
+    else setIsRequestingAddUnlock(true);
+    try {
+      const res = await fetch("/api/carrier/routes/unlock-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type }),
+      });
+      if (!res.ok) throw new Error("No se pudo enviar la solicitud");
+      toast.success("Solicitud enviada al administrador.");
+    } catch {
+      toast.error("No se pudo enviar la solicitud. Intenta de nuevo.");
+    } finally {
+      if (type === "edit_existing") setIsRequestingEditUnlock(false);
+      else setIsRequestingAddUnlock(false);
     }
   }
 
@@ -232,7 +259,11 @@ export default function CarrierUnitTypePage() {
     return <p className="text-muted-foreground">Cargando…</p>;
   }
 
-  const canSave = !isFullyLocked && (canEditRoutes || newSelections.size > 0);
+  const canSave = !isFullyLocked && (
+    canEditRoutes
+      ? (canAddRoutes || newSelections.size === 0)
+      : (canAddRoutes && newSelections.size > 0)
+  );
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
@@ -243,10 +274,43 @@ export default function CarrierUnitTypePage() {
         </p>
       </div>
 
-      {isFullyLocked && isLoaded && (
-        <p className="text-xs text-muted-foreground">
-          Tu selección de rutas está bloqueada. Contacta al administrador para poder modificarla.
-        </p>
+      {isLoaded && (!canEditRoutes || !canAddRoutes) && (
+        <div className="space-y-2 rounded-lg border p-3 sm:p-4">
+          {!canEditRoutes && (
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs text-muted-foreground">
+                No puedes editar rutas ya seleccionadas ni su target hasta autorización del administrador.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => requestUnlock("edit_existing")}
+                disabled={isRequestingEditUnlock}
+                className="w-full sm:w-auto"
+              >
+                {isRequestingEditUnlock ? "Enviando…" : "Solicitar desbloqueo de edición"}
+              </Button>
+            </div>
+          )}
+          {!canAddRoutes && (
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs text-muted-foreground">
+                No puedes agregar rutas nuevas hasta autorización del administrador.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => requestUnlock("add_new")}
+                disabled={isRequestingAddUnlock}
+                className="w-full sm:w-auto"
+              >
+                {isRequestingAddUnlock ? "Enviando…" : "Solicitar desbloqueo para agregar"}
+              </Button>
+            </div>
+          )}
+        </div>
       )}
 
       {routes.length === 0 ? (

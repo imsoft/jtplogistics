@@ -21,7 +21,7 @@ export async function GET() {
       }),
       prisma.user.findUnique({
         where: { id: session.user.id },
-        select: { canEditTarget: true, canEditRoutes: true },
+        select: { canEditTarget: true, canEditRoutes: true, canAddRoutes: true },
       }),
     ]);
 
@@ -48,6 +48,7 @@ export async function GET() {
     return Response.json({
       canEditTarget: userRecord?.canEditTarget ?? false,
       canEditRoutes: userRecord?.canEditRoutes ?? false,
+      canAddRoutes: userRecord?.canAddRoutes ?? false,
       routes: routes.map((r) => ({
         id: r.id,
         origin: r.origin,
@@ -82,20 +83,44 @@ export async function PUT(request: NextRequest) {
     }
 
     // All items should have the same unitType (saving from one page)
-    const pageUnitType = body[0]?.unitType ?? "";
+    const pageUnitType = request.nextUrl.searchParams.get("unitType") ?? body[0]?.unitType ?? "";
 
     const userRecord = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { canEditTarget: true, canEditRoutes: true },
+      select: { canEditTarget: true, canEditRoutes: true, canAddRoutes: true },
     });
+
+    const existingRoutes = await prisma.carrierRoute.findMany({
+      where: { carrierId: session.user.id, unitType: pageUnitType },
+    });
+    const existingMap = new Map(existingRoutes.map((r) => [`${r.routeId}:${r.unitType}`, r]));
+    const incomingMap = new Map(body.map((r) => [`${r.routeId}:${r.unitType}`, r]));
+    const newOnes = body.filter((item) => !existingMap.has(`${item.routeId}:${item.unitType}`));
+    const removedExisting = existingRoutes.filter((item) => !incomingMap.has(`${item.routeId}:${item.unitType}`));
+    const changedExisting = body.filter((item) => {
+      const prev = existingMap.get(`${item.routeId}:${item.unitType}`);
+      if (!prev) return false;
+      return (prev.carrierTarget ?? null) !== (item.carrierTarget ?? null)
+        || (prev.carrierWeeklyVolume ?? null) !== (item.carrierWeeklyVolume ?? null);
+    });
+
+    if (!userRecord?.canAddRoutes && newOnes.length > 0) {
+      return Response.json(
+        { error: "No tienes autorización para agregar rutas nuevas. Solicita desbloqueo al administrador." },
+        { status: 403 }
+      );
+    }
+    if (!userRecord?.canEditRoutes && (removedExisting.length > 0 || changedExisting.length > 0)) {
+      return Response.json(
+        { error: "No tienes autorización para editar rutas ya seleccionadas. Solicita desbloqueo al administrador." },
+        { status: 403 }
+      );
+    }
 
     if (userRecord?.canEditRoutes) {
       // Edición completa: reemplaza selections for this unitType only, preserve others
       let data = body;
       if (!userRecord.canEditTarget) {
-        const existingRoutes = await prisma.carrierRoute.findMany({
-          where: { carrierId: session.user.id, unitType: pageUnitType },
-        });
         const existingTargetMap = new Map(
           existingRoutes.map((r) => [`${r.routeId}:${r.unitType}`, r.carrierTarget ?? null])
         );
@@ -122,17 +147,13 @@ export async function PUT(request: NextRequest) {
       ]);
     } else {
       // Solo agrega rutas nuevas para este unitType (no toca las existentes)
-      const existingRoutes = await prisma.carrierRoute.findMany({
-        where: { carrierId: session.user.id, unitType: pageUnitType },
-      });
       const existingKeys = new Set(existingRoutes.map((r) => `${r.routeId}:${r.unitType}`));
+      const unlockedNewOnes = body.filter((item) => !existingKeys.has(`${item.routeId}:${item.unitType}`));
 
-      const newOnes = body.filter((item) => !existingKeys.has(`${item.routeId}:${item.unitType}`));
-
-      if (newOnes.length > 0) {
+      if (unlockedNewOnes.length > 0) {
         const targetData = userRecord?.canEditTarget
-          ? newOnes
-          : newOnes.map((item) => ({ ...item, carrierTarget: null }));
+          ? unlockedNewOnes
+          : unlockedNewOnes.map((item) => ({ ...item, carrierTarget: null }));
 
         await prisma.carrierRoute.createMany({
           data: targetData.map((item) => ({
@@ -149,10 +170,11 @@ export async function PUT(request: NextRequest) {
     // Notificación a pricing
     void notifyPricing(session.user.id, body);
 
-    // After saving, lock editing so the carrier can't modify until admin re-enables
+    // After saving, lock both flows so the carrier needs admin authorization:
+    // 1) editar existentes, 2) agregar nuevas.
     await prisma.user.update({
       where: { id: session.user.id },
-      data: { canEditRoutes: false, canEditTarget: false },
+      data: { canEditRoutes: false, canEditTarget: false, canAddRoutes: false },
     });
 
     void logAudit({

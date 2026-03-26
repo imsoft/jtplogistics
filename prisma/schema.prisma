@@ -37,6 +37,7 @@ model User {
   role          UserRole       @default(collaborator) @map("role")
   canEditTarget Boolean        @default(true) @map("can_edit_target")
   canEditRoutes  Boolean        @default(true) @map("can_edit_routes")
+  canAddRoutes   Boolean        @default(true) @map("can_add_routes")
   canViewMessages   Boolean       @default(false) @map("can_view_messages")
   canViewIdeas      Boolean       @default(false) @map("can_view_ideas")
   canViewRoutes     Boolean       @default(false) @map("can_view_routes")

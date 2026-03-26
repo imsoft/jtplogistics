@@ -195,6 +195,7 @@ export default async function UserProfilePage({
               userId={user.id}
               initialCanEditRoutes={user.canEditRoutes}
               initialCanEditTarget={user.canEditTarget}
+              initialCanAddRoutes={user.canAddRoutes}
             />
           </CardContent>
           <CardContent className="px-0 pb-0">
