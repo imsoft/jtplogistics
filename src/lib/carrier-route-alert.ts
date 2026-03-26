@@ -62,7 +62,9 @@ export async function alertMatchingCarriers(route: NewRouteInfo): Promise<void> 
     if (matched.length === 0) return;
 
     const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
-    const routeHref = `${APP_URL}/carrier/dashboard/routes`;
+    // Llevamos al transportista a la pantalla correcta de tipos de unidad
+    // para que vea rutas ya seleccionadas (targets/volúmenes) y la nueva oferta.
+    const routeHref = `${APP_URL}/carrier/dashboard/unit-types/${route.unitType}`;
     const routeLabel = `${route.origin} → ${route.destination}`;
     const stateSuffix = route.destinationState ? ` (${route.destinationState})` : "";
 

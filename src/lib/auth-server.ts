@@ -97,7 +97,7 @@ export async function redirectIfAuthenticated() {
   if (!session) return;
   const role = (session.user as SessionUser).role;
   if (role === "admin") redirect("/admin/dashboard");
-  else if (role === "carrier") redirect("/carrier/dashboard/routes");
+  else if (role === "carrier") redirect("/carrier/dashboard/unit-types/caja_seca");
   else if (role === "collaborator") redirect("/collaborator/dashboard");
   else if (role === "vendor") redirect("/vendor/dashboard/quotes");
   else if (role === "developer") redirect("/developer/dashboard");
