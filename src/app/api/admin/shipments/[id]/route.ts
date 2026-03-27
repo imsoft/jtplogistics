@@ -20,6 +20,7 @@ function toJson(s: {
   comments: string | null;
   incident: string | null;
   incidentType: string | null;
+  status: string;
   createdAt: Date;
 }) {
   return {
@@ -40,6 +41,7 @@ function toJson(s: {
     comments: s.comments,
     incident: s.incident,
     incidentType: s.incidentType,
+    status: s.status,
     createdAt: s.createdAt.toISOString(),
   };
 }
@@ -73,6 +75,7 @@ const SHIPMENT_LABELS: Record<string, string> = {
   comments: "Comentarios",
   incident: "Incidencia",
   incidentType: "Tipo de incidencia",
+  status: "Estado",
 };
 
 export function PATCH(
@@ -85,7 +88,7 @@ export function PATCH(
     const {
       eco, client, origin, destination, product,
       pickupDate, deliveryDate, legalName, operatorName,
-      truck, trailer, unit, phone, comments, incident, incidentType,
+      truck, trailer, unit, phone, comments, incident, incidentType, status,
     } = body as Record<string, string | null | undefined>;
 
     const shipment = await prisma.shipment.findUnique({ where: { id } });
@@ -108,6 +111,10 @@ export function PATCH(
     if (comments !== undefined) data.comments = (comments as string)?.trim() || null;
     if (incident !== undefined) data.incident = (incident as string)?.trim() || null;
     if (incidentType !== undefined) data.incidentType = (incidentType as string)?.trim() || null;
+    if (status !== undefined) {
+      const validStatuses = ["pending", "delivered", "delivered_with_delay", "not_delivered", "at_risk", "returned"];
+      if (status && validStatuses.includes(status)) data.status = status;
+    }
 
     const updated = await prisma.shipment.update({ where: { id }, data });
 

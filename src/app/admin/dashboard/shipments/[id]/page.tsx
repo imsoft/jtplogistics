@@ -4,8 +4,10 @@ import Link from "next/link";
 import { ChevronLeft, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { InfoRow } from "@/components/dashboard/users/info-row";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
+import { SHIPMENT_STATUS_CONFIG } from "@/components/dashboard/resources/shipments-table";
 import type { Shipment } from "@/types/shipment.types";
 
 function fmtDate(iso: string | null) {
@@ -39,7 +41,15 @@ export default function ShipmentProfilePage() {
             </Link>
           </Button>
           <div className="min-w-0">
-            <h1 className="text-xl font-bold tracking-tight sm:text-2xl truncate">{title}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold tracking-tight sm:text-2xl truncate">{title}</h1>
+              <Badge
+                variant="outline"
+                className={`shrink-0 whitespace-nowrap text-xs font-medium border-0 ${SHIPMENT_STATUS_CONFIG[shipment.status]?.badgeClass ?? ""}`}
+              >
+                {SHIPMENT_STATUS_CONFIG[shipment.status]?.label ?? shipment.status}
+              </Badge>
+            </div>
             {shipment.legalName && (
               <p className="text-muted-foreground text-xs sm:text-sm truncate">{shipment.legalName}</p>
             )}

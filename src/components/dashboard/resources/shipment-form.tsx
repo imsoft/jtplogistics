@@ -5,12 +5,29 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormActions } from "@/components/ui/form-actions";
 import { Label } from "@/components/ui/label";
-import type { Shipment, ShipmentFormData } from "@/types/shipment.types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { SHIPMENT_STATUS_CONFIG } from "@/components/dashboard/resources/shipments-table";
+import type { Shipment, ShipmentFormData, ShipmentStatus } from "@/types/shipment.types";
 
 function toDateInput(iso: string | null | undefined): string {
   if (!iso) return "";
   return iso.slice(0, 10);
 }
+
+const STATUS_OPTIONS: { value: ShipmentStatus; label: string }[] = [
+  { value: "pending", label: SHIPMENT_STATUS_CONFIG.pending.label },
+  { value: "delivered", label: SHIPMENT_STATUS_CONFIG.delivered.label },
+  { value: "delivered_with_delay", label: SHIPMENT_STATUS_CONFIG.delivered_with_delay.label },
+  { value: "not_delivered", label: SHIPMENT_STATUS_CONFIG.not_delivered.label },
+  { value: "at_risk", label: SHIPMENT_STATUS_CONFIG.at_risk.label },
+  { value: "returned", label: SHIPMENT_STATUS_CONFIG.returned.label },
+];
 
 interface ShipmentFormProps {
   initialValues?: Partial<Shipment>;
@@ -43,19 +60,40 @@ export function ShipmentForm({
   const [comments, setComments] = useState(initialValues.comments ?? "");
   const [incident, setIncident] = useState(initialValues.incident ?? "");
   const [incidentType, setIncidentType] = useState(initialValues.incidentType ?? "");
+  const [status, setStatus] = useState<ShipmentStatus>(initialValues.status ?? "pending");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     onSubmit({
       eco, client, origin, destination, product,
       pickupDate, deliveryDate, legalName, operatorName,
-      truck, trailer, unit, phone, comments, incident, incidentType,
+      truck, trailer, unit, phone, comments, incident, incidentType, status,
     });
   }
 
   return (
     <form onSubmit={handleSubmit} className="w-full space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-2">
+          <Label htmlFor="shipment-status">Estado</Label>
+          <Select value={status} onValueChange={(v) => setStatus(v as ShipmentStatus)}>
+            <SelectTrigger id="shipment-status">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  <span className="flex items-center gap-2">
+                    <span
+                      className={`inline-block size-2.5 rounded-full ${SHIPMENT_STATUS_CONFIG[opt.value].badgeClass}`}
+                    />
+                    {opt.label}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-eco">ECO</Label>
           <Input id="shipment-eco" value={eco} onChange={(e) => setEco(e.target.value)} />

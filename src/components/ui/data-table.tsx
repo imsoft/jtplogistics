@@ -39,6 +39,7 @@ interface DataTableProps<TData, TValue> {
   initialColumnVisibility?: Record<string, boolean>;
   getRowId?: (row: TData) => string;
   onRowClick?: (row: TData) => void;
+  getRowClassName?: (row: TData) => string;
   toolbar?: React.ReactNode;
 }
 
@@ -50,6 +51,7 @@ export function DataTable<TData, TValue>({
   initialColumnVisibility,
   getRowId,
   onRowClick,
+  getRowClassName,
   toolbar,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -133,7 +135,7 @@ export function DataTable<TData, TValue>({
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
                   onClick={() => onRowClick?.(row.original)}
-                  className={onRowClick ? "cursor-pointer hover:bg-hover hover:text-hover-foreground" : ""}
+                  className={`${onRowClick ? "cursor-pointer hover:bg-hover hover:text-hover-foreground" : ""} ${getRowClassName?.(row.original) ?? ""}`.trim()}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

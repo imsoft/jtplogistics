@@ -420,26 +420,36 @@ model Setting {
 
 // ---- App: tabla de embarques (admin CRUD) ----
 
+enum ShipmentStatus {
+  pending
+  delivered
+  delivered_with_delay
+  not_delivered
+  at_risk
+  returned
+}
+
 model Shipment {
-  id             String    @id @default(cuid()) @map("id")
-  eco            String?   @map("eco")
-  client         String?   @map("client")
-  origin         String?   @map("origin")
-  destination    String?   @map("destination")
-  product        String?   @map("product")
-  pickupDate     DateTime? @map("pickup_date")
-  deliveryDate   DateTime? @map("delivery_date")
-  legalName      String?   @map("legal_name")
-  operatorName   String?   @map("operator_name")
-  truck          String?   @map("truck")
-  trailer        String?   @map("trailer")
-  unit           String?   @map("unit")
-  phone          String?   @map("phone")
-  comments       String?   @map("comments")
-  incident       String?   @map("incident")
-  incidentType   String?   @map("incident_type")
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
+  id             String         @id @default(cuid()) @map("id")
+  eco            String?        @map("eco")
+  client         String?        @map("client")
+  origin         String?        @map("origin")
+  destination    String?        @map("destination")
+  product        String?        @map("product")
+  pickupDate     DateTime?      @map("pickup_date")
+  deliveryDate   DateTime?      @map("delivery_date")
+  legalName      String?        @map("legal_name")
+  operatorName   String?        @map("operator_name")
+  truck          String?        @map("truck")
+  trailer        String?        @map("trailer")
+  unit           String?        @map("unit")
+  phone          String?        @map("phone")
+  comments       String?        @map("comments")
+  incident       String?        @map("incident")
+  incidentType   String?        @map("incident_type")
+  status         ShipmentStatus @default(pending) @map("status")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
 
   @@map("shipments")
 }

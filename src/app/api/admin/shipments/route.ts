@@ -20,6 +20,7 @@ function toJson(s: {
   comments: string | null;
   incident: string | null;
   incidentType: string | null;
+  status: string;
   createdAt: Date;
 }) {
   return {
@@ -40,6 +41,7 @@ function toJson(s: {
     comments: s.comments,
     incident: s.incident,
     incidentType: s.incidentType,
+    status: s.status,
     createdAt: s.createdAt.toISOString(),
   };
 }
@@ -59,8 +61,10 @@ export function POST(request: Request) {
     const {
       eco, client, origin, destination, product,
       pickupDate, deliveryDate, legalName, operatorName,
-      truck, trailer, unit, phone, comments, incident, incidentType,
+      truck, trailer, unit, phone, comments, incident, incidentType, status,
     } = body as Record<string, string | undefined>;
+
+    const validStatuses = ["pending", "delivered", "delivered_with_delay", "not_delivered", "at_risk", "returned"];
 
     const shipment = await prisma.shipment.create({
       data: {
@@ -80,6 +84,7 @@ export function POST(request: Request) {
         comments: comments?.trim() || null,
         incident: incident?.trim() || null,
         incidentType: incidentType?.trim() || null,
+        ...(status && validStatuses.includes(status) && { status: status as "pending" }),
       },
     });
 

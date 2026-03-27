@@ -1,3 +1,11 @@
+export type ShipmentStatus =
+  | "pending"
+  | "delivered"
+  | "delivered_with_delay"
+  | "not_delivered"
+  | "at_risk"
+  | "returned";
+
 export interface Shipment {
   id: string;
   eco: string | null;
@@ -16,6 +24,7 @@ export interface Shipment {
   comments: string | null;
   incident: string | null;
   incidentType: string | null;
+  status: ShipmentStatus;
   createdAt: string;
 }
 
@@ -36,4 +45,5 @@ export interface ShipmentFormData {
   comments: string;
   incident: string;
   incidentType: string;
+  status: ShipmentStatus;
 }
