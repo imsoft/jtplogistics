@@ -52,6 +52,8 @@ model User {
   canViewPhones     Boolean       @default(false) @map("can_view_phones")
   canViewEmails     Boolean       @default(false) @map("can_view_emails")
   canViewTasks      Boolean       @default(false) @map("can_view_tasks")
+  canViewShipments  Boolean       @default(false) @map("can_view_shipments")
+  canViewFinances   Boolean       @default(false) @map("can_view_finances")
   whatsappPhone  String?        @map("whatsapp_phone")
   createdAt     DateTime       @map("created_at")
   updatedAt     DateTime       @map("updated_at")
@@ -414,6 +416,60 @@ model Setting {
   value String @map("value")
 
   @@map("settings")
+}
+
+// ---- App: tabla de embarques (admin CRUD) ----
+
+model Shipment {
+  id             String    @id @default(cuid()) @map("id")
+  eco            String?   @map("eco")
+  client         String?   @map("client")
+  origin         String?   @map("origin")
+  destination    String?   @map("destination")
+  product        String?   @map("product")
+  pickupDate     DateTime? @map("pickup_date")
+  deliveryDate   DateTime? @map("delivery_date")
+  legalName      String?   @map("legal_name")
+  operatorName   String?   @map("operator_name")
+  truck          String?   @map("truck")
+  trailer        String?   @map("trailer")
+  unit           String?   @map("unit")
+  phone          String?   @map("phone")
+  comments       String?   @map("comments")
+  incident       String?   @map("incident")
+  incidentType   String?   @map("incident_type")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@map("shipments")
+}
+
+// ---- App: tabla de finanzas (admin CRUD) ----
+
+model Finance {
+  id             String    @id @default(cuid()) @map("id")
+  eco            String?   @map("eco")
+  client         String?   @map("client")
+  origin         String?   @map("origin")
+  destination    String?   @map("destination")
+  sale           Float?    @map("sale")
+  product        String?   @map("product")
+  pickupDate     DateTime? @map("pickup_date")
+  deliveryDate   DateTime? @map("delivery_date")
+  legalName      String?   @map("legal_name")
+  cost           Float?    @map("cost")
+  operatorName   String?   @map("operator_name")
+  truck          String?   @map("truck")
+  trailer        String?   @map("trailer")
+  unit           String?   @map("unit")
+  phone          String?   @map("phone")
+  comments       String?   @map("comments")
+  incident       String?   @map("incident")
+  incidentType   String?   @map("incident_type")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@map("finances")
 }
 
 // ---- App: tareas admin → developer ----
