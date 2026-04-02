@@ -47,7 +47,7 @@ export const SHIPMENT_STATUS_CONFIG: Record<
     rowClass: "bg-red-50 dark:bg-red-950/40",
   },
   returned: {
-    label: "Retornado",
+    label: "Cerrado",
     badgeClass: "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200",
     rowClass: "bg-pink-50 dark:bg-pink-950/40",
   },

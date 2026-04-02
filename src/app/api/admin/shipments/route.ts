@@ -47,10 +47,68 @@ function toJson(s: {
 }
 
 export function GET() {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const shipments = await prisma.shipment.findMany({
       orderBy: { createdAt: "desc" },
     });
+
+    // Cuando un embarque ya está en estado "Cerrado" (returned), aseguramos que exista su registro en finanzas.
+    // Esto cubre también embarques que ya estaban cerrados antes de activar la lógica de transferencia.
+    for (const shipment of shipments) {
+      if (shipment.status !== "returned") continue;
+
+      const canDedupByCore =
+        shipment.eco && shipment.client && shipment.origin && shipment.destination;
+
+      if (!canDedupByCore) continue;
+
+      const existing = await prisma.finance.findFirst({
+        where: {
+          eco: shipment.eco,
+          client: shipment.client,
+          origin: shipment.origin,
+          destination: shipment.destination,
+          ...(shipment.pickupDate ? { pickupDate: shipment.pickupDate } : {}),
+          ...(shipment.deliveryDate ? { deliveryDate: shipment.deliveryDate } : {}),
+        },
+        select: { id: true },
+      });
+
+      if (existing) continue;
+
+      const finance = await prisma.finance.create({
+        data: {
+          eco: shipment.eco ?? null,
+          client: shipment.client ?? null,
+          origin: shipment.origin ?? null,
+          destination: shipment.destination ?? null,
+          sale: null,
+          product: shipment.product ?? null,
+          pickupDate: shipment.pickupDate ?? null,
+          deliveryDate: shipment.deliveryDate ?? null,
+          legalName: shipment.legalName ?? null,
+          cost: null,
+          operatorName: shipment.operatorName ?? null,
+          truck: shipment.truck ?? null,
+          trailer: shipment.trailer ?? null,
+          unit: shipment.unit ?? null,
+          phone: shipment.phone ?? null,
+          comments: shipment.comments ?? null,
+          incident: shipment.incident ?? null,
+          incidentType: shipment.incidentType ?? null,
+        },
+      });
+
+      void logAudit({
+        resource: "finance",
+        resourceId: finance.id,
+        resourceLabel: `${finance.eco ?? ""} – ${finance.origin ?? ""} → ${finance.destination ?? ""}`.trim(),
+        action: "created",
+        userId: session.user.id,
+        userName: session.user.name,
+      });
+    }
+
     return Response.json(shipments.map(toJson));
   });
 }

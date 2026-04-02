@@ -59,7 +59,7 @@ export default function ShipmentProfilePage() {
           <Button asChild>
             <Link href={`/admin/dashboard/shipments/${shipment.id}/edit`}>
               <Pencil className="size-4" />
-              Editar
+              {shipment.status === "returned" ? "Reabrir para editar" : "Editar"}
             </Link>
           </Button>
         </div>

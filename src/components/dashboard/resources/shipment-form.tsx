@@ -61,6 +61,7 @@ export function ShipmentForm({
   const [incident, setIncident] = useState(initialValues.incident ?? "");
   const [incidentType, setIncidentType] = useState(initialValues.incidentType ?? "");
   const [status, setStatus] = useState<ShipmentStatus>(initialValues.status ?? "pending");
+  const isClosed = status === "returned";
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -96,70 +97,118 @@ export function ShipmentForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-eco">ECO</Label>
-          <Input id="shipment-eco" value={eco} onChange={(e) => setEco(e.target.value)} />
+          <Input id="shipment-eco" value={eco} disabled={isClosed} onChange={(e) => setEco(e.target.value)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-client">Cliente</Label>
-          <Input id="shipment-client" value={client} onChange={(e) => setClient(e.target.value)} />
+          <Input
+            id="shipment-client"
+            value={client}
+            disabled={isClosed}
+            onChange={(e) => setClient(e.target.value)}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-legalName">Razón social</Label>
-          <Input id="shipment-legalName" value={legalName} onChange={(e) => setLegalName(e.target.value)} />
+          <Input
+            id="shipment-legalName"
+            value={legalName}
+            disabled={isClosed}
+            onChange={(e) => setLegalName(e.target.value)}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-origin">Origen</Label>
-          <Input id="shipment-origin" value={origin} onChange={(e) => setOrigin(e.target.value)} />
+          <Input id="shipment-origin" value={origin} disabled={isClosed} onChange={(e) => setOrigin(e.target.value)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-destination">Destino</Label>
-          <Input id="shipment-destination" value={destination} onChange={(e) => setDestination(e.target.value)} />
+          <Input
+            id="shipment-destination"
+            value={destination}
+            disabled={isClosed}
+            onChange={(e) => setDestination(e.target.value)}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-product">Producto</Label>
-          <Input id="shipment-product" value={product} onChange={(e) => setProduct(e.target.value)} />
+          <Input id="shipment-product" value={product} disabled={isClosed} onChange={(e) => setProduct(e.target.value)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-pickupDate">Recolección</Label>
-          <Input id="shipment-pickupDate" type="date" value={pickupDate} onChange={(e) => setPickupDate(e.target.value)} />
+          <Input
+            id="shipment-pickupDate"
+            type="date"
+            value={pickupDate}
+            disabled={isClosed}
+            onChange={(e) => setPickupDate(e.target.value)}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-deliveryDate">Entrega</Label>
-          <Input id="shipment-deliveryDate" type="date" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)} />
+          <Input
+            id="shipment-deliveryDate"
+            type="date"
+            value={deliveryDate}
+            disabled={isClosed}
+            onChange={(e) => setDeliveryDate(e.target.value)}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-operatorName">Nombre operador</Label>
-          <Input id="shipment-operatorName" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} />
+          <Input
+            id="shipment-operatorName"
+            value={operatorName}
+            disabled={isClosed}
+            onChange={(e) => setOperatorName(e.target.value)}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-truck">Tracto</Label>
-          <Input id="shipment-truck" value={truck} onChange={(e) => setTruck(e.target.value)} />
+          <Input id="shipment-truck" value={truck} disabled={isClosed} onChange={(e) => setTruck(e.target.value)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-trailer">Caja</Label>
-          <Input id="shipment-trailer" value={trailer} onChange={(e) => setTrailer(e.target.value)} />
+          <Input id="shipment-trailer" value={trailer} disabled={isClosed} onChange={(e) => setTrailer(e.target.value)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-unit">Unidad</Label>
-          <Input id="shipment-unit" value={unit} onChange={(e) => setUnit(e.target.value)} />
+          <Input id="shipment-unit" value={unit} disabled={isClosed} onChange={(e) => setUnit(e.target.value)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-phone">Celular</Label>
-          <Input id="shipment-phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <Input id="shipment-phone" value={phone} disabled={isClosed} onChange={(e) => setPhone(e.target.value)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-incident">Incidencia</Label>
-          <Input id="shipment-incident" value={incident} onChange={(e) => setIncident(e.target.value)} />
+          <Input id="shipment-incident" value={incident} disabled={isClosed} onChange={(e) => setIncident(e.target.value)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-incidentType">Tipo de incidencia</Label>
-          <Input id="shipment-incidentType" value={incidentType} onChange={(e) => setIncidentType(e.target.value)} />
+          <Input
+            id="shipment-incidentType"
+            value={incidentType}
+            disabled={isClosed}
+            onChange={(e) => setIncidentType(e.target.value)}
+          />
         </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="shipment-comments">Comentarios</Label>
-        <Textarea id="shipment-comments" value={comments} onChange={(e) => setComments(e.target.value)} rows={3} />
+        <Textarea
+          id="shipment-comments"
+          value={comments}
+          disabled={isClosed}
+          onChange={(e) => setComments(e.target.value)}
+          rows={3}
+        />
       </div>
-      <FormActions submitLabel={submitLabel} cancelHref={cancelHref} isSubmitting={isSubmitting} />
+      <FormActions
+        submitLabel={submitLabel}
+        cancelHref={cancelHref}
+        isSubmitting={isSubmitting}
+        submitDisabled={isClosed}
+      />
     </form>
   );
 }

@@ -15,6 +15,7 @@ interface ResourceEditHeaderProps {
   deleteTitle: string;
   deleteDescription?: string;
   onDelete: () => void;
+  showDelete?: boolean;
   children?: React.ReactNode;
 }
 
@@ -26,6 +27,7 @@ export function ResourceEditHeader({
   deleteTitle,
   deleteDescription,
   onDelete,
+  showDelete = true,
   children,
 }: ResourceEditHeaderProps) {
   return (
@@ -44,11 +46,13 @@ export function ResourceEditHeader({
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {children}
-          <DeleteConfirmDialog
-            title={deleteTitle}
-            description={deleteDescription}
-            onConfirm={onDelete}
-          />
+          {showDelete && (
+            <DeleteConfirmDialog
+              title={deleteTitle}
+              description={deleteDescription}
+              onConfirm={onDelete}
+            />
+          )}
         </div>
       </div>
       <Separator />

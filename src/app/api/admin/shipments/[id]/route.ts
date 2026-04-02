@@ -78,6 +78,9 @@ const SHIPMENT_LABELS: Record<string, string> = {
   status: "Estado",
 };
 
+const VALID_STATUSES = ["pending", "delivered", "delivered_with_delay", "not_delivered", "at_risk", "returned"] as const;
+const SHIPMENT_CLOSED_STATUS: (typeof VALID_STATUSES)[number] = "returned";
+
 export function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -93,6 +96,21 @@ export function PATCH(
 
     const shipment = await prisma.shipment.findUnique({ where: { id } });
     if (!shipment) return Response.json({ error: "No encontrado" }, { status: 404 });
+
+    const nextStatus =
+      status !== undefined && status && VALID_STATUSES.includes(status as (typeof VALID_STATUSES)[number])
+        ? (status as (typeof VALID_STATUSES)[number])
+        : shipment.status;
+
+    // Regla: cuando el embarque está cerrado, no se permite modificar nada más
+    // (ni siquiera guardando el mismo estado). Para editar, primero hay que reabrirlo
+    // cambiando el estado a una opción distinta de "Cerrado".
+    if (shipment.status === SHIPMENT_CLOSED_STATUS && nextStatus === SHIPMENT_CLOSED_STATUS) {
+      return Response.json(
+        { error: "El embarque está cerrado y no se puede modificar. Para editar, reabre el embarque cambiando el estado." },
+        { status: 403 },
+      );
+    }
 
     const data: Record<string, unknown> = {};
     if (eco !== undefined) data.eco = (eco as string)?.trim() || null;
@@ -112,8 +130,70 @@ export function PATCH(
     if (incident !== undefined) data.incident = (incident as string)?.trim() || null;
     if (incidentType !== undefined) data.incidentType = (incidentType as string)?.trim() || null;
     if (status !== undefined) {
-      const validStatuses = ["pending", "delivered", "delivered_with_delay", "not_delivered", "at_risk", "returned"];
-      if (status && validStatuses.includes(status)) data.status = status;
+      if (status && VALID_STATUSES.includes(status as (typeof VALID_STATUSES)[number])) data.status = status;
+    }
+
+    // Si el embarque acaba de pasar a "Cerrado", se crea automáticamente el registro en finanzas.
+    const isClosingNow = shipment.status !== SHIPMENT_CLOSED_STATUS && nextStatus === SHIPMENT_CLOSED_STATUS;
+    if (isClosingNow) {
+      const merged = { ...shipment, ...data } as typeof shipment;
+
+      const canDedup =
+        merged.eco &&
+        merged.client &&
+        merged.origin &&
+        merged.destination &&
+        merged.pickupDate &&
+        merged.deliveryDate;
+
+      let existing: { id: string } | null = null;
+      if (canDedup) {
+        existing = await prisma.finance.findFirst({
+          where: {
+            eco: merged.eco,
+            client: merged.client,
+            origin: merged.origin,
+            destination: merged.destination,
+            pickupDate: merged.pickupDate,
+            deliveryDate: merged.deliveryDate,
+          },
+          select: { id: true },
+        });
+      }
+
+      if (!existing) {
+        const finance = await prisma.finance.create({
+          data: {
+            eco: merged.eco ?? null,
+            client: merged.client ?? null,
+            origin: merged.origin ?? null,
+            destination: merged.destination ?? null,
+            sale: null,
+            product: merged.product ?? null,
+            pickupDate: merged.pickupDate ?? null,
+            deliveryDate: merged.deliveryDate ?? null,
+            legalName: merged.legalName ?? null,
+            cost: null,
+            operatorName: merged.operatorName ?? null,
+            truck: merged.truck ?? null,
+            trailer: merged.trailer ?? null,
+            unit: merged.unit ?? null,
+            phone: merged.phone ?? null,
+            comments: merged.comments ?? null,
+            incident: merged.incident ?? null,
+            incidentType: merged.incidentType ?? null,
+          },
+        });
+
+        void logAudit({
+          resource: "finance",
+          resourceId: finance.id,
+          resourceLabel: `${finance.eco ?? ""} – ${finance.origin ?? ""} → ${finance.destination ?? ""}`.trim(),
+          action: "created",
+          userId: session.user.id,
+          userName: session.user.name,
+        });
+      }
     }
 
     const updated = await prisma.shipment.update({ where: { id }, data });
@@ -147,6 +227,12 @@ export function DELETE(
     const { id } = await params;
     const shipment = await prisma.shipment.findUnique({ where: { id } });
     if (!shipment) return Response.json({ error: "No encontrado" }, { status: 404 });
+    if (shipment.status === SHIPMENT_CLOSED_STATUS) {
+      return Response.json(
+        { error: "El embarque está cerrado y no se puede eliminar. Para ello, reabre el embarque cambiando el estado." },
+        { status: 403 },
+      );
+    }
     await prisma.shipment.delete({ where: { id } });
     void logAudit({
       resource: "shipment",

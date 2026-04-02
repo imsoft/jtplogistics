@@ -5,12 +5,18 @@ interface FormActionsProps {
   submitLabel: string;
   cancelHref: string;
   isSubmitting?: boolean;
+  submitDisabled?: boolean;
 }
 
-export function FormActions({ submitLabel, cancelHref, isSubmitting = false }: FormActionsProps) {
+export function FormActions({
+  submitLabel,
+  cancelHref,
+  isSubmitting = false,
+  submitDisabled = false,
+}: FormActionsProps) {
   return (
     <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-      <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting}>
+      <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting || submitDisabled}>
         {submitLabel}
       </Button>
       <Button type="button" variant="outline" asChild className="w-full sm:w-auto">

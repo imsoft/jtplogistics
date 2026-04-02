@@ -32,9 +32,16 @@ export default function EditShipmentPage() {
         deleteTitle="¿Eliminar embarque?"
         deleteDescription="Esta acción no se puede deshacer."
         onDelete={handleDelete}
+        showDelete={shipment?.status !== "returned"}
       />
 
       <div className="w-full min-w-0">
+        {shipment?.status === "returned" && (
+          <p className="mb-4 text-sm text-muted-foreground">
+            Este embarque está cerrado. Para poder guardar cambios, reabre el embarque cambiando
+            el estado a una opción distinta de “Cerrado”.
+          </p>
+        )}
         {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
         {shipment && (
           <ShipmentForm
