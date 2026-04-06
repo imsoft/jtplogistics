@@ -70,7 +70,7 @@ export default function CollaboratorProfilePage() {
     <div className="min-w-0 space-y-6">
       <div>
         <h1 className="page-heading">Mi perfil</h1>
-        <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
+        <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
           Actualiza tu nombre, fecha de nacimiento y foto de perfil.
         </p>
       </div>

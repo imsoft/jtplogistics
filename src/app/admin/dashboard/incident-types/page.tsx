@@ -129,7 +129,7 @@ export default function IncidentTypesPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="page-heading">Tipos de incidencia</h1>
-          <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
+          <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
             Gestiona los tipos de incidencia disponibles al registrar embarques y finanzas.
           </p>
         </div>

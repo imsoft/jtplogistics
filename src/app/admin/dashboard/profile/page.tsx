@@ -49,18 +49,24 @@ export default function AdminProfilePage() {
   }
 
   if (isFetching) {
-    return <p className="text-muted-foreground">Cargando…</p>;
+    return (
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Cargando…</p>
+    );
   }
 
   if (fetchError) {
-    return <p className="text-sm text-destructive">{fetchError}</p>;
+    return (
+      <p className="text-xs font-semibold uppercase tracking-wide text-destructive">{fetchError}</p>
+    );
   }
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
       <div>
         <h1 className="page-heading">Mi perfil</h1>
-        <p className="text-muted-foreground mt-1 text-xs sm:text-sm">Información de tu cuenta de administrador.</p>
+        <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
+          Información de tu cuenta de administrador.
+        </p>
       </div>
       <Separator />
       <Card>
@@ -76,8 +82,10 @@ export default function AdminProfilePage() {
               size={80}
             />
             <div>
-              <p className="text-sm font-medium">{data?.name}</p>
-              <p className="text-muted-foreground text-xs">Haz clic en la foto para cambiarla</p>
+              <p className="text-sm font-semibold uppercase tracking-wide">{data?.name}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Haz clic en la foto para cambiarla
+              </p>
             </div>
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -104,8 +112,14 @@ export default function AdminProfilePage() {
               />
             </div>
 
-            {error && <p className="text-destructive text-sm">{error}</p>}
-            {success && <p className="text-sm text-green-600">Perfil actualizado correctamente.</p>}
+            {error && (
+              <p className="text-xs font-semibold uppercase tracking-wide text-destructive">{error}</p>
+            )}
+            {success && (
+              <p className="text-xs font-semibold uppercase tracking-wide text-green-600 dark:text-green-500">
+                Perfil actualizado correctamente.
+              </p>
+            )}
 
             <div className="flex justify-end">
               <Button type="submit" disabled={isLoading}>

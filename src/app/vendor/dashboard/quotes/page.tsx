@@ -12,7 +12,7 @@ export default function VendorCotizadorPage() {
         <h1 className="page-heading">
           Cotizador
         </h1>
-        <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
+        <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
           Filtra por origen y destino para ver el resumen de precios y tu comisión.
         </p>
       </div>

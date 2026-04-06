@@ -223,7 +223,7 @@ export function DashboardSidebar({
                     userInitials
                   )}
                 </div>
-                <span className="truncate text-sm font-medium normal-case">{userName}</span>
+                <span className="truncate text-sm font-semibold uppercase tracking-wide">{userName}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

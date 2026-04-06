@@ -13,7 +13,7 @@ export default function ProvidersPage() {
         <h1 className="page-heading">
           Proveedores
         </h1>
-        <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
+        <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
           Transportistas registrados en la plataforma.
         </p>
       </div>

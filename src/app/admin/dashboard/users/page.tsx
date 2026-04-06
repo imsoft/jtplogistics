@@ -13,7 +13,7 @@ export default function UsersPage() {
         <h1 className="page-heading">
           Usuarios
         </h1>
-        <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
+        <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
           Usuarios registrados en la aplicación. Puedes filtrar por nombre,
           correo o rol.
         </p>

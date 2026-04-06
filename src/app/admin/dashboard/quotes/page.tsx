@@ -13,7 +13,7 @@ export default function CotizadorPage() {
         <h1 className="page-heading">
           Cotizador
         </h1>
-        <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
+        <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
           Filtra por origen y destino para ver los transportistas que tienen
           esa ruta y su target. Al final verás el promedio, venta y monto.
         </p>

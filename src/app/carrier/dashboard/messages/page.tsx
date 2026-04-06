@@ -14,7 +14,7 @@ export default function CarrierMessagesPage() {
     <div className="min-w-0 flex flex-col" style={{ height: "calc(100vh - 8rem)" }}>
       <div className="mb-4">
         <h1 className="page-heading">Mensajes</h1>
-        <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
+        <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
           Chatea con el equipo de compras de JTP Logistics.
         </p>
       </div>

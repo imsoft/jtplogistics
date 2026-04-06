@@ -60,7 +60,7 @@ export default function AdminSettingsPage() {
     <div className="min-w-0 space-y-4 sm:space-y-6">
       <div>
         <h1 className="page-heading">Configuración</h1>
-        <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
+        <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
           Ajustes generales de la plataforma.
         </p>
       </div>
