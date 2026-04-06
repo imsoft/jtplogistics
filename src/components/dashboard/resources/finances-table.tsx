@@ -1,10 +1,20 @@
 "use client";
 
+import { useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { FileDown } from "lucide-react";
+import { toast } from "sonner";
 import { useAdminFetch } from "@/hooks/use-admin-fetch";
 import { type ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
+import { Button } from "@/components/ui/button";
+import {
+  downloadXlsxFromAoa,
+  excelExportFilename,
+  financesToExcelAoa,
+} from "@/lib/excel-export";
+import { FINANCE_TARIFF_COST_LABEL, FINANCE_TARIFF_SALE_LABEL } from "@/lib/constants/finance-tariff-labels";
 import { formatMxn } from "@/lib/utils";
 import type { Finance } from "@/types/finance.types";
 
@@ -51,18 +61,38 @@ function getColumns(): ColumnDef<Finance>[] {
     },
     {
       accessorKey: "sale",
-      header: ({ column }) => <SortableColumnHeader column={column} title="Venta" />,
+      header: ({ column }) => (
+        <SortableColumnHeader
+          column={column}
+          title={FINANCE_TARIFF_SALE_LABEL}
+          className="h-auto min-h-8 max-w-[min(100%,220px)] whitespace-normal py-1.5 text-left font-medium leading-tight"
+        />
+      ),
       cell: ({ row }) => {
         const v = row.getValue<number | null>("sale");
-        return v != null ? `$${formatMxn(v)}` : <span className="text-muted-foreground">—</span>;
+        return v != null ? (
+          <span className="whitespace-nowrap font-medium tabular-nums">${formatMxn(v)}</span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        );
       },
     },
     {
       accessorKey: "cost",
-      header: ({ column }) => <SortableColumnHeader column={column} title="Costo" />,
+      header: ({ column }) => (
+        <SortableColumnHeader
+          column={column}
+          title={FINANCE_TARIFF_COST_LABEL}
+          className="h-auto min-h-8 max-w-[min(100%,220px)] whitespace-normal py-1.5 text-left font-medium leading-tight"
+        />
+      ),
       cell: ({ row }) => {
         const v = row.getValue<number | null>("cost");
-        return v != null ? `$${formatMxn(v)}` : <span className="text-muted-foreground">—</span>;
+        return v != null ? (
+          <span className="whitespace-nowrap font-medium tabular-nums">${formatMxn(v)}</span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        );
       },
     },
     {
@@ -96,6 +126,12 @@ export function FinancesTable() {
     "Error al cargar finanzas"
   );
 
+  const exportToExcel = useCallback(() => {
+    const aoa = financesToExcelAoa(finances);
+    downloadXlsxFromAoa(excelExportFilename("finanzas"), "Finanzas", aoa);
+    toast.success("Archivo Excel descargado.");
+  }, [finances]);
+
   if (!isLoaded) return <p className="text-muted-foreground">Cargando…</p>;
   if (error) return <p className="text-destructive text-sm">{error}</p>;
   if (finances.length === 0) {
@@ -111,9 +147,22 @@ export function FinancesTable() {
       columns={getColumns()}
       data={finances}
       filterColumn="search"
+      filterPlaceholder="Buscar…"
       initialColumnVisibility={{ search: false }}
       getRowId={(row) => row.id}
       onRowClick={(finance) => router.push(`/admin/dashboard/finances/${finance.id}`)}
+      toolbar={
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full gap-2 sm:w-auto"
+          onClick={exportToExcel}
+          disabled={finances.length === 0}
+        >
+          <FileDown className="size-4 shrink-0" />
+          Exportar Excel
+        </Button>
+      }
     />
   );
 }

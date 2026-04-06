@@ -29,7 +29,13 @@ export async function PATCH(
       userName: session.user.name,
     });
 
-    return Response.json({ id: updated.id, name: updated.name, value: updated.value, createdAt: updated.createdAt.toISOString() });
+    return Response.json({
+      id: updated.id,
+      name: updated.name,
+      value: updated.value,
+      sortOrder: updated.sortOrder,
+      createdAt: updated.createdAt.toISOString(),
+    });
   } catch (e) {
     if (e instanceof Response) throw e;
     if (e && typeof e === "object" && "code" in e && e.code === "P2025") {

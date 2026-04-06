@@ -2,6 +2,16 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -19,6 +29,7 @@ import {
 import { Pencil, Trash2, Check, X, Plus } from "lucide-react";
 import { toast } from "sonner";
 import type { UnitTypeDef } from "@/types/unit-type.types";
+import { SortableUnitTypeRow } from "@/components/dashboard/unit-types/sortable-unit-type-row";
 
 export default function UnitTypesPage() {
   const [unitTypes, setUnitTypes] = useState<UnitTypeDef[]>([]);
@@ -31,6 +42,11 @@ export default function UnitTypesPage() {
 
   // Delete confirm
   const [deleteTarget, setDeleteTarget] = useState<UnitTypeDef | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   const load = useCallback(async () => {
     const res = await fetch("/api/admin/unit-types");
@@ -61,6 +77,34 @@ export default function UnitTypesPage() {
     } finally {
       setIsSaving(false);
     }
+  }
+
+  const persistOrder = useCallback(async (orderedIds: string[]) => {
+    const res = await fetch("/api/admin/unit-types/reorder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderedIds }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error ?? "Error al guardar el orden.");
+    }
+  }, []);
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = unitTypes.findIndex((u) => u.id === active.id);
+    const newIndex = unitTypes.findIndex((u) => u.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+    const next = arrayMove(unitTypes, oldIndex, newIndex);
+    setUnitTypes(next);
+    void persistOrder(next.map((u) => u.id))
+      .then(() => toast.success("Orden actualizado."))
+      .catch((e) => {
+        toast.error(e instanceof Error ? e.message : "No se pudo guardar el orden.");
+        void load();
+      });
   }
 
   async function handleDelete() {
@@ -101,7 +145,9 @@ export default function UnitTypesPage() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-base sm:text-lg">Tipos registrados</CardTitle>
           <CardDescription className="text-xs sm:text-sm">
-            Haz clic en el lápiz para editar el nombre. El valor (identificador) no se puede cambiar.
+            Arrastra el ícono de la izquierda para definir el orden en toda la aplicación (menús, listas y
+            transportistas). Haz clic en el lápiz para editar el nombre. El valor (identificador) no se puede
+            cambiar.
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -110,45 +156,52 @@ export default function UnitTypesPage() {
           ) : unitTypes.length === 0 ? (
             <p className="text-muted-foreground p-4 text-sm">No hay tipos de unidades registrados.</p>
           ) : (
-            <div className="divide-y">
-              {unitTypes.map((u) => (
-                <div key={u.id} className="flex items-center gap-3 px-4 py-3">
-                  {editId === u.id ? (
-                    <>
-                      <Input
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        className="h-8 flex-1"
-                        disabled={isSaving}
-                        autoFocus
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleSaveEdit(u.id);
-                          if (e.key === "Escape") setEditId(null);
-                        }}
-                      />
-                      <span className="text-muted-foreground shrink-0 font-mono text-xs">{u.value}</span>
-                      <Button size="icon" variant="ghost" className="size-8 text-green-600 hover:text-green-700" onClick={() => handleSaveEdit(u.id)} disabled={isSaving}>
-                        <Check className="size-4" />
-                      </Button>
-                      <Button size="icon" variant="ghost" className="size-8" onClick={() => setEditId(null)} disabled={isSaving}>
-                        <X className="size-4" />
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <span className="flex-1 font-medium">{u.name}</span>
-                      <span className="text-muted-foreground shrink-0 font-mono text-xs">{u.value}</span>
-                      <Button size="icon" variant="ghost" className="size-8" aria-label="Editar" onClick={() => { setEditId(u.id); setEditName(u.name); }}>
-                        <Pencil className="size-4" />
-                      </Button>
-                      <Button size="icon" variant="ghost" className="size-8 text-destructive hover:bg-destructive/10 hover:text-destructive" aria-label="Eliminar" onClick={() => setDeleteTarget(u)}>
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </>
-                  )}
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext
+                items={unitTypes.map((u) => u.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="divide-y">
+                  {unitTypes.map((u) => (
+                    <SortableUnitTypeRow key={u.id} id={u.id} disabled={editId !== null}>
+                      {editId === u.id ? (
+                        <>
+                          <Input
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            className="h-8 flex-1"
+                            disabled={isSaving}
+                            autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleSaveEdit(u.id);
+                              if (e.key === "Escape") setEditId(null);
+                            }}
+                          />
+                          <span className="text-muted-foreground shrink-0 font-mono text-xs">{u.value}</span>
+                          <Button size="icon" variant="ghost" className="size-8 text-green-600 hover:text-green-700" onClick={() => handleSaveEdit(u.id)} disabled={isSaving}>
+                            <Check className="size-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="size-8" onClick={() => setEditId(null)} disabled={isSaving}>
+                            <X className="size-4" />
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="flex-1 font-medium">{u.name}</span>
+                          <span className="text-muted-foreground shrink-0 font-mono text-xs">{u.value}</span>
+                          <Button size="icon" variant="ghost" className="size-8" aria-label="Editar" onClick={() => { setEditId(u.id); setEditName(u.name); }}>
+                            <Pencil className="size-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="size-8 text-destructive hover:bg-destructive/10 hover:text-destructive" aria-label="Eliminar" onClick={() => setDeleteTarget(u)}>
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </>
+                      )}
+                    </SortableUnitTypeRow>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </SortableContext>
+            </DndContext>
           )}
         </CardContent>
       </Card>

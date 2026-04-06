@@ -2,15 +2,22 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-server";
 import { logAudit } from "@/lib/audit-log";
+import { unitTypeDefOrderBy } from "@/lib/prisma/unit-type-order";
 
-function toJson(u: { id: string; name: string; value: string; createdAt: Date }) {
-  return { id: u.id, name: u.name, value: u.value, createdAt: u.createdAt.toISOString() };
+function toJson(u: { id: string; name: string; value: string; sortOrder: number; createdAt: Date }) {
+  return {
+    id: u.id,
+    name: u.name,
+    value: u.value,
+    sortOrder: u.sortOrder,
+    createdAt: u.createdAt.toISOString(),
+  };
 }
 
 export async function GET() {
   try {
     await requireAdmin();
-    const types = await prisma.unitTypeDef.findMany({ orderBy: { createdAt: "asc" } });
+    const types = await prisma.unitTypeDef.findMany({ orderBy: unitTypeDefOrderBy });
     return Response.json(types.map(toJson));
   } catch (e) {
     if (e instanceof Response) throw e;
@@ -50,7 +57,11 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: `El valor "${value}" ya existe.` }, { status: 409 });
     }
 
-    const created = await prisma.unitTypeDef.create({ data: { name, value } });
+    const agg = await prisma.unitTypeDef.aggregate({ _max: { sortOrder: true } });
+    const nextOrder = (agg._max.sortOrder ?? -1) + 1;
+    const created = await prisma.unitTypeDef.create({
+      data: { name, value, sortOrder: nextOrder },
+    });
 
     void logAudit({
       resource: "unit_type",

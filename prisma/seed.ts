@@ -141,6 +141,16 @@ async function main() {
       { origin: "Tampico",          destination: "Villahermosa",     description: "Ruta del golfo inactiva por mantenimiento",                target: 9100.0,  unitType: "caja_seca", status: "inactive" },
     ],
   });
+  const seededRoutes = await prisma.route.findMany({
+    select: { id: true, unitType: true, target: true },
+  });
+  await prisma.routeUnitTarget.createMany({
+    data: seededRoutes.map((r) => ({
+      routeId: r.id,
+      unitType: r.unitType,
+      target: r.target,
+    })),
+  });
   console.log("✅ 10 rutas creadas");
 
   // ── Selecciones de rutas por carrier ──────────────────────────────────────

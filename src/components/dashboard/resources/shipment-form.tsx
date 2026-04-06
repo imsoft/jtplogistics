@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormActions } from "@/components/ui/form-actions";
@@ -13,6 +13,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SHIPMENT_STATUS_CONFIG } from "@/components/dashboard/resources/shipments-table";
+import { useUnitTypes } from "@/hooks/use-unit-types";
+import { useIncidentTypes } from "@/hooks/use-incident-types";
+import { getIncidentSelectOptions } from "@/lib/incident-yes-no";
+import type { Route } from "@/types/route.types";
 import type { Shipment, ShipmentFormData, ShipmentStatus } from "@/types/shipment.types";
 
 function toDateInput(iso: string | null | undefined): string {
@@ -63,6 +67,74 @@ export function ShipmentForm({
   const [status, setStatus] = useState<ShipmentStatus>(initialValues.status ?? "pending");
   const isClosed = status === "returned";
 
+  const [routes, setRoutes] = useState<Route[]>([]);
+  const unitTypes = useUnitTypes();
+  const incidentTypes = useIncidentTypes();
+
+  useEffect(() => {
+    fetch("/api/routes")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: unknown) => {
+        setRoutes(Array.isArray(data) ? (data as Route[]) : []);
+      })
+      .catch(() => setRoutes([]));
+  }, []);
+
+  const origins = useMemo(() => {
+    const s = new Set(routes.map((r) => r.origin).filter(Boolean));
+    return [...s].sort((a, b) => a.localeCompare(b, "es"));
+  }, [routes]);
+
+  const destinationsForOrigin = useMemo(() => {
+    if (!origin) return [];
+    const s = new Set(
+      routes.filter((r) => r.origin === origin).map((r) => r.destination).filter(Boolean)
+    );
+    return [...s].sort((a, b) => a.localeCompare(b, "es"));
+  }, [routes, origin]);
+
+  const originOptions = useMemo(() => {
+    const o = origin.trim();
+    if (o && !origins.includes(o)) return [o, ...origins];
+    return origins;
+  }, [origins, origin]);
+
+  const destinationOptions = useMemo(() => {
+    const d = destination.trim();
+    const base = destinationsForOrigin;
+    if (d && !base.includes(d)) return [d, ...base];
+    return base;
+  }, [destinationsForOrigin, destination]);
+
+  const unitOptions = useMemo(() => {
+    const u = unit.trim();
+    const values = unitTypes.map((t) => t.value);
+    if (u && !values.includes(u)) {
+      return [{ value: u, label: u }, ...unitTypes];
+    }
+    return unitTypes;
+  }, [unitTypes, unit]);
+
+  const incidentSelectOptions = useMemo(() => getIncidentSelectOptions(incident), [incident]);
+
+  const incidentTypeOptions = useMemo(() => {
+    const t = incidentType.trim();
+    const values = incidentTypes.map((x) => x.value);
+    if (t && !values.includes(t)) {
+      return [{ value: t, label: t }, ...incidentTypes];
+    }
+    return incidentTypes;
+  }, [incidentTypes, incidentType]);
+
+  const onOriginChange = useCallback(
+    (v: string) => {
+      setOrigin(v);
+      const dests = routes.filter((r) => r.origin === v).map((r) => r.destination);
+      setDestination((prev) => (prev && dests.includes(prev) ? prev : ""));
+    },
+    [routes]
+  );
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     onSubmit({
@@ -109,26 +181,56 @@ export function ShipmentForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="shipment-legalName">Razón social</Label>
-          <Input
-            id="shipment-legalName"
-            value={legalName}
-            disabled={isClosed}
-            onChange={(e) => setLegalName(e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
           <Label htmlFor="shipment-origin">Origen</Label>
-          <Input id="shipment-origin" value={origin} disabled={isClosed} onChange={(e) => setOrigin(e.target.value)} />
+          <Select
+            value={origin || undefined}
+            onValueChange={onOriginChange}
+            disabled={isClosed || originOptions.length === 0}
+          >
+            <SelectTrigger id="shipment-origin" className="w-full">
+              <SelectValue
+                placeholder={
+                  originOptions.length === 0
+                    ? "No hay rutas — créalas en Rutas"
+                    : "Selecciona origen"
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {originOptions.map((o) => (
+                <SelectItem key={o} value={o}>
+                  {o}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-destination">Destino</Label>
-          <Input
-            id="shipment-destination"
-            value={destination}
-            disabled={isClosed}
-            onChange={(e) => setDestination(e.target.value)}
-          />
+          <Select
+            value={destination || undefined}
+            onValueChange={setDestination}
+            disabled={isClosed || !origin.trim() || destinationOptions.length === 0}
+          >
+            <SelectTrigger id="shipment-destination" className="w-full">
+              <SelectValue
+                placeholder={
+                  !origin.trim()
+                    ? "Primero elige origen"
+                    : destinationOptions.length === 0
+                      ? "Sin destinos para ese origen"
+                      : "Selecciona destino"
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {destinationOptions.map((d) => (
+                <SelectItem key={d} value={d}>
+                  {d}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-product">Producto</Label>
@@ -154,8 +256,17 @@ export function ShipmentForm({
             onChange={(e) => setDeliveryDate(e.target.value)}
           />
         </div>
+        <div className="space-y-2 sm:col-span-2 lg:col-span-3">
+          <Label htmlFor="shipment-legalName">Razón social del proveedor</Label>
+          <Input
+            id="shipment-legalName"
+            value={legalName}
+            disabled={isClosed}
+            onChange={(e) => setLegalName(e.target.value)}
+          />
+        </div>
         <div className="space-y-2">
-          <Label htmlFor="shipment-operatorName">Nombre operador</Label>
+          <Label htmlFor="shipment-operatorName">Proveedor</Label>
           <Input
             id="shipment-operatorName"
             value={operatorName}
@@ -173,24 +284,32 @@ export function ShipmentForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-unit">Unidad</Label>
-          <Input id="shipment-unit" value={unit} disabled={isClosed} onChange={(e) => setUnit(e.target.value)} />
+          <Select
+            value={unit || undefined}
+            onValueChange={setUnit}
+            disabled={isClosed || unitOptions.length === 0}
+          >
+            <SelectTrigger id="shipment-unit" className="w-full">
+              <SelectValue
+                placeholder={
+                  unitOptions.length === 0
+                    ? "No hay tipos de unidad"
+                    : "Selecciona tipo de unidad"
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {unitOptions.map((ut) => (
+                <SelectItem key={ut.value} value={ut.value}>
+                  {ut.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-phone">Celular</Label>
           <Input id="shipment-phone" value={phone} disabled={isClosed} onChange={(e) => setPhone(e.target.value)} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="shipment-incident">Incidencia</Label>
-          <Input id="shipment-incident" value={incident} disabled={isClosed} onChange={(e) => setIncident(e.target.value)} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="shipment-incidentType">Tipo de incidencia</Label>
-          <Input
-            id="shipment-incidentType"
-            value={incidentType}
-            disabled={isClosed}
-            onChange={(e) => setIncidentType(e.target.value)}
-          />
         </div>
       </div>
       <div className="space-y-2">
@@ -202,6 +321,48 @@ export function ShipmentForm({
           onChange={(e) => setComments(e.target.value)}
           rows={3}
         />
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="shipment-incident">Incidencia</Label>
+          <Select value={incident || undefined} onValueChange={setIncident} disabled={isClosed}>
+            <SelectTrigger id="shipment-incident">
+              <SelectValue placeholder="Selecciona Sí o No" />
+            </SelectTrigger>
+            <SelectContent>
+              {incidentSelectOptions.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="shipment-incidentType">Tipo de incidencia</Label>
+          <Select
+            value={incidentType || undefined}
+            onValueChange={setIncidentType}
+            disabled={isClosed}
+          >
+            <SelectTrigger id="shipment-incidentType">
+              <SelectValue
+                placeholder={
+                  incidentTypeOptions.length === 0
+                    ? "No hay tipos de incidencia"
+                    : "Selecciona tipo de incidencia"
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {incidentTypeOptions.map((it) => (
+                <SelectItem key={it.value} value={it.value}>
+                  {it.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       <FormActions
         submitLabel={submitLabel}

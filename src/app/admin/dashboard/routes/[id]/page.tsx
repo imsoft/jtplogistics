@@ -56,6 +56,7 @@ interface RouteDetail {
   target: number | null;
   weeklyVolume: number | null;
   unitType: string;
+  unitTargets?: { unitType: string; target: number | null }[];
   status: RouteStatus;
   createdByName: string | null;
   createdAt: string;
@@ -173,7 +174,13 @@ export default function RouteDetailPage() {
             <InfoRow label="Estado destino" value={route.destinationState} />
             <InfoRow
               label="Tipo de unidad"
-              value={unitTypeLabel[route.unitType] ?? route.unitType}
+              value={
+                route.unitTargets && route.unitTargets.length > 1
+                  ? route.unitTargets
+                      .map((u) => unitTypeLabel[u.unitType] ?? u.unitType)
+                      .join(", ")
+                  : unitTypeLabel[route.unitType] ?? route.unitType
+              }
             />
             <InfoRow
               label="Estatus"
@@ -191,12 +198,22 @@ export default function RouteDetailPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4">
-            <InfoRow
-              label="Target (MXN)"
-              value={
-                route.target != null ? `$${formatMxn(route.target)}` : null
-              }
-            />
+            {route.unitTargets && route.unitTargets.length > 1 ? (
+              route.unitTargets.map((u) => (
+                <InfoRow
+                  key={u.unitType}
+                  label={`Target (${unitTypeLabel[u.unitType] ?? u.unitType})`}
+                  value={u.target != null ? `$${formatMxn(u.target)}` : null}
+                />
+              ))
+            ) : (
+              <InfoRow
+                label="Target (MXN)"
+                value={
+                  route.target != null ? `$${formatMxn(route.target)}` : null
+                }
+              />
+            )}
             <InfoRow
               label="Volumen semanal"
               value={route.weeklyVolume != null ? route.weeklyVolume : null}

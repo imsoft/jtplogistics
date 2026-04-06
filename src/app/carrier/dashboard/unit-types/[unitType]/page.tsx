@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatMxnLive, formatMxn, parseMxn } from "@/lib/utils";
 import { useUnitTypes } from "@/hooks/use-unit-types";
 import { toast } from "sonner";
@@ -29,6 +30,8 @@ interface CarrierRouteRow {
   destination: string;
   description: string | null;
   unitType: string;
+  /** Targets por tipo de unidad (una sola ruta puede tener varios). */
+  unitTargets: { unitType: string; target: number | null }[];
   jtpTarget: number | null;
   selected: boolean;
   selections: RouteSelection[];
@@ -98,6 +101,11 @@ export default function CarrierUnitTypePage() {
 
   const pageTitle = unitTypeLabel[unitType] ?? unitType;
 
+  const hasAnySelectionGlobally = useMemo(
+    () => allRoutes.some((r) => r.selections.length > 0),
+    [allRoutes]
+  );
+
   const loadRoutes = useCallback(async () => {
     const data = await fetchCarrierRoutes();
     setCanEditTarget(data.canEditTarget);
@@ -129,10 +137,23 @@ export default function CarrierUnitTypePage() {
     loadRoutes();
   }, [loadRoutes]);
 
-  // Show only routes for the current unit type
+  // Rutas que incluyen este tipo de unidad (perfil de la ruta, no filas duplicadas)
   const routes = useMemo(
-    () => allRoutes.filter((route) => route.unitType === unitType),
+    () =>
+      allRoutes.filter((route) =>
+        route.unitTargets?.some((t) => t.unitType === unitType) ?? route.unitType === unitType
+      ),
     [allRoutes, unitType]
+  );
+
+  const jtpTargetForPage = useCallback(
+    (route: CarrierRouteRow): number | null => {
+      const fromList = route.unitTargets?.find((t) => t.unitType === unitType);
+      if (fromList && fromList.target != null) return fromList.target;
+      if (route.unitType === unitType && route.jtpTarget != null) return route.jtpTarget;
+      return null;
+    },
+    [unitType]
   );
 
   const origins = useMemo(
@@ -273,6 +294,19 @@ export default function CarrierUnitTypePage() {
           Selecciona las rutas que ofreces para <strong>{pageTitle}</strong> y establece tu target.
         </p>
       </div>
+
+      {isLoaded && !hasAnySelectionGlobally && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardHeader className="space-y-1 py-3 sm:py-4">
+            <CardTitle className="text-base">Primer paso: tus rutas</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
+              Marca las rutas que operas, completa tu target y volumen semanal, y guarda. Repite en cada
+              tipo de unidad que manejes. Cuando termines, en <strong>Inicio</strong> verás el resumen de
+              toda tu operación.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      )}
 
       {isLoaded && (!canEditRoutes || !canAddRoutes) && (
         <div className="space-y-2 rounded-lg border p-3 sm:p-4">
@@ -460,7 +494,7 @@ export default function CarrierUnitTypePage() {
                           />
 
                           <div className="flex items-center justify-center">
-                            <TargetDiff jtpTarget={route.jtpTarget} carrierTarget={currentTarget} />
+                            <TargetDiff jtpTarget={jtpTargetForPage(route)} carrierTarget={currentTarget} />
                           </div>
                         </div>
                       );

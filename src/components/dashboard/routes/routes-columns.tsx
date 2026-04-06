@@ -62,8 +62,13 @@ export function getRoutesColumns({
           {
             accessorKey: "unitType",
             header: "Tipo de unidad",
-            cell: ({ row }: { row: Row<Route> }) =>
-              row.getValue("unitType") as string,
+            cell: ({ row }: { row: Row<Route> }) => {
+              const r = row.original;
+              if (r.unitTargets && r.unitTargets.length > 1) {
+                return r.unitTargets.map((u) => u.unitType).join(", ");
+              }
+              return r.unitType;
+            },
           },
           {
             accessorKey: "description",

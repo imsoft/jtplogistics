@@ -15,6 +15,7 @@ export async function GET() {
       prisma.route.findMany({
         where: { status: "active" },
         orderBy: { createdAt: "desc" },
+        include: { unitTargets: true },
       }),
       prisma.carrierRoute.findMany({
         where: { carrierId: session.user.id },
@@ -49,19 +50,29 @@ export async function GET() {
       canEditTarget: userRecord?.canEditTarget ?? false,
       canEditRoutes: userRecord?.canEditRoutes ?? false,
       canAddRoutes: userRecord?.canAddRoutes ?? false,
-      routes: routes.map((r) => ({
-        id: r.id,
-        origin: r.origin,
-        destination: r.destination,
-        description: r.description ?? null,
-        unitType: r.unitType,
-        jtpTarget: r.target ?? null,
-        selected: selectedRouteIds.has(r.id),
-        selections: selectionsByRoute.get(r.id) ?? [],
-        carrierTarget: null,
-        carrierWeeklyVolume: null,
-        createdAt: r.createdAt.toISOString(),
-      })),
+      routes: routes.map((r) => {
+        const unitTargets =
+          r.unitTargets.length > 0
+            ? r.unitTargets.map((u) => ({
+                unitType: u.unitType,
+                target: u.target,
+              }))
+            : [{ unitType: r.unitType, target: r.target }];
+        return {
+          id: r.id,
+          origin: r.origin,
+          destination: r.destination,
+          description: r.description ?? null,
+          unitType: r.unitType,
+          unitTargets,
+          jtpTarget: r.target ?? null,
+          selected: selectedRouteIds.has(r.id),
+          selections: selectionsByRoute.get(r.id) ?? [],
+          carrierTarget: null,
+          carrierWeeklyVolume: null,
+          createdAt: r.createdAt.toISOString(),
+        };
+      }),
     });
   } catch (e) {
     if (e instanceof Response) throw e;

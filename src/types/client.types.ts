@@ -10,6 +10,7 @@ export interface Client {
   address: string | null;
   notes: string | null;
   detentionConditions: string | null;
+  productTypes: string[];
   createdAt: string;
 }
 
@@ -24,4 +25,5 @@ export interface ClientFormData {
   address: string;
   notes: string;
   detentionConditions: string;
+  productTypes: string[];
 }

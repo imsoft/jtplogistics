@@ -11,9 +11,13 @@ const SENSITIVE_KEYS = new Set([
   "apikey",
 ]);
 
+/** Campos cuyos strings no deben pasarse a minúsculas (p. ej. nombres propios de producto). */
+const PRESERVE_CASE_KEYS = new Set(["producttypes"]);
+
 function shouldSkipLowercaseForKey(key?: string): boolean {
   if (!key) return false;
   const normalizedKey = key.replace(/[^a-z]/gi, "").toLowerCase();
+  if (PRESERVE_CASE_KEYS.has(normalizedKey)) return true;
   return SENSITIVE_KEYS.has(normalizedKey);
 }
 

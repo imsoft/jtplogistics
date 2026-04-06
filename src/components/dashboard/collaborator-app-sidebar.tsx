@@ -57,6 +57,7 @@ const allNavGroups: PermNavGroup[] = [
       { title: "Tipos de unidades", href: `${BASE}/unit-types`, icon: Boxes, permission: "canViewUnitTypes" },
       { title: "Cotizador", href: `${BASE}/quotes`, icon: Calculator, permission: "canViewQuotes" },
       { title: "Proveedores", href: `${BASE}/providers`, icon: Truck, permission: "canViewProviders" },
+      { title: "Mensajes", href: `${BASE}/messages`, icon: MessageSquare, permission: "canViewMessages" },
       { title: "Clientes", href: `${BASE}/clients`, icon: Users, permission: "canViewClients" },
     ],
   },
@@ -78,7 +79,6 @@ const allNavGroups: PermNavGroup[] = [
   {
     label: "Otros",
     items: [
-      { title: "Mensajes", href: `${BASE}/messages`, icon: MessageSquare, permission: "canViewMessages" },
       { title: "Ideas", href: `${BASE}/ideas`, icon: Lightbulb, permission: "canViewIdeas" },
       { title: "Tareas", href: `${BASE}/tasks`, icon: ClipboardList, permission: "canViewTasks" },
     ],

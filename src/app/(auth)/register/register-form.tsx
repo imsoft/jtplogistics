@@ -78,7 +78,7 @@ export function RegisterForm() {
         return;
       }
 
-      router.push("/");
+      router.push("/carrier/dashboard");
     });
   }
 

@@ -63,7 +63,13 @@ export function RoutesCrud() {
       if (originCity && !fuzzyMatch(route.origin, originCity)) return false;
       if (destCity && !fuzzyMatch(route.destination, destCity)) return false;
       if (status != null && route.status !== status) return false;
-      if (filterUnitType !== UNIT_FILTER_ALL && route.unitType !== filterUnitType) return false;
+      if (filterUnitType !== UNIT_FILTER_ALL) {
+        const matches =
+          route.unitTargets != null && route.unitTargets.length > 0
+            ? route.unitTargets.some((u) => u.unitType === filterUnitType)
+            : route.unitType === filterUnitType;
+        if (!matches) return false;
+      }
       return true;
     });
   }, [routes, filterOrigin, filterDestination, filterStatus, filterUnitType]);
@@ -208,7 +214,11 @@ export function RoutesCrud() {
                               )}
                             </td>
                             <td className="px-4 py-3">
-                              {unitTypeLabel[route.unitType] ?? route.unitType}
+                              {route.unitTargets && route.unitTargets.length > 1
+                                ? route.unitTargets
+                                    .map((u) => unitTypeLabel[u.unitType] ?? u.unitType)
+                                    .join(", ")
+                                : unitTypeLabel[route.unitType] ?? route.unitType}
                             </td>
                             <td className="px-4 py-3">
                               {description ? (

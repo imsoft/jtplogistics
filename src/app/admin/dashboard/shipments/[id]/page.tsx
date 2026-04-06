@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { ChevronLeft, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { InfoRow } from "@/components/dashboard/users/info-row";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
+import { useUnitTypes } from "@/hooks/use-unit-types";
+import { useIncidentTypes } from "@/hooks/use-incident-types";
+import { formatIncidentYesNo } from "@/lib/incident-yes-no";
+import { getIncidentTypeLabel } from "@/lib/incident-type-label";
 import { SHIPMENT_STATUS_CONFIG } from "@/components/dashboard/resources/shipments-table";
 import type { Shipment } from "@/types/shipment.types";
 
@@ -24,6 +29,18 @@ export default function ShipmentProfilePage() {
     endpoint: "/api/admin/shipments",
     redirectHref: "/admin/dashboard/shipments",
   });
+  const unitTypes = useUnitTypes();
+  const incidentTypes = useIncidentTypes();
+
+  const unitLabel = useMemo(() => {
+    if (!shipment?.unit?.trim()) return null;
+    return unitTypes.find((t) => t.value === shipment.unit)?.label ?? shipment.unit;
+  }, [shipment?.unit, unitTypes]);
+
+  const incidentTypeLabel = useMemo(() => {
+    if (!shipment?.incidentType?.trim()) return null;
+    return getIncidentTypeLabel(shipment.incidentType, incidentTypes);
+  }, [shipment?.incidentType, incidentTypes]);
 
   if (!isLoaded) return <p className="text-muted-foreground py-6">Cargando…</p>;
   if (error || !shipment) return <p className="text-destructive py-6 text-sm">{error ?? "No encontrado"}</p>;
@@ -51,7 +68,9 @@ export default function ShipmentProfilePage() {
               </Badge>
             </div>
             {shipment.legalName && (
-              <p className="text-muted-foreground text-xs sm:text-sm truncate">{shipment.legalName}</p>
+              <p className="text-muted-foreground text-xs sm:text-sm truncate" title={shipment.legalName}>
+                Razón social del proveedor: {shipment.legalName}
+              </p>
             )}
           </div>
         </div>
@@ -75,27 +94,27 @@ export default function ShipmentProfilePage() {
           <CardContent className="px-4 pb-4">
             <InfoRow label="ECO" value={shipment.eco} />
             <InfoRow label="Cliente" value={shipment.client} />
-            <InfoRow label="Razón social" value={shipment.legalName} />
             <InfoRow label="Origen" value={shipment.origin} />
             <InfoRow label="Destino" value={shipment.destination} />
             <InfoRow label="Producto" value={shipment.product} />
             <InfoRow label="Recolección" value={fmtDate(shipment.pickupDate)} />
             <InfoRow label="Entrega" value={fmtDate(shipment.deliveryDate)} />
+            <InfoRow label="Razón social del proveedor" value={shipment.legalName} />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Operador y unidad
+              Proveedor y unidad
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4">
-            <InfoRow label="Nombre operador" value={shipment.operatorName} />
+            <InfoRow label="Proveedor" value={shipment.operatorName} />
             <InfoRow label="Celular" value={shipment.phone} />
             <InfoRow label="Tracto" value={shipment.truck} />
             <InfoRow label="Caja" value={shipment.trailer} />
-            <InfoRow label="Unidad" value={shipment.unit} />
+            <InfoRow label="Unidad" value={unitLabel} />
           </CardContent>
         </Card>
       </div>
@@ -103,12 +122,20 @@ export default function ShipmentProfilePage() {
       {(shipment.comments || shipment.incident || shipment.incidentType) && (
         <Card>
           <CardContent className="px-4 py-4 space-y-4">
+            {shipment.comments && (
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                  Comentarios
+                </h3>
+                <p className="text-sm whitespace-pre-wrap">{shipment.comments}</p>
+              </div>
+            )}
             {shipment.incident && (
               <div>
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                   Incidencia
                 </h3>
-                <p className="text-sm whitespace-pre-wrap">{shipment.incident}</p>
+                <p className="text-sm whitespace-pre-wrap">{formatIncidentYesNo(shipment.incident)}</p>
               </div>
             )}
             {shipment.incidentType && (
@@ -116,15 +143,7 @@ export default function ShipmentProfilePage() {
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                   Tipo de incidencia
                 </h3>
-                <p className="text-sm whitespace-pre-wrap">{shipment.incidentType}</p>
-              </div>
-            )}
-            {shipment.comments && (
-              <div>
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                  Comentarios
-                </h3>
-                <p className="text-sm whitespace-pre-wrap">{shipment.comments}</p>
+                <p className="text-sm whitespace-pre-wrap">{incidentTypeLabel}</p>
               </div>
             )}
           </CardContent>

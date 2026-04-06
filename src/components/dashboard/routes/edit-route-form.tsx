@@ -80,7 +80,10 @@ export function EditRouteForm({ route }: { route: Route }) {
               target: route.target,
               weeklyVolume: route.weeklyVolume,
               unitType: route.unitType,
-              unitTargets: [{ unitType: route.unitType, target: route.target }],
+              unitTargets:
+                route.unitTargets && route.unitTargets.length > 0
+                  ? route.unitTargets
+                  : [{ unitType: route.unitType, target: route.target }],
               status: route.status,
             }}
             submitLabel="Guardar cambios"

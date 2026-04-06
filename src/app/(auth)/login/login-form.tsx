@@ -52,7 +52,7 @@ export function LoginForm() {
       if (role === "admin") {
         router.push("/admin/dashboard");
       } else if (role === "carrier") {
-        router.push("/carrier/dashboard/unit-types/caja_seca");
+        router.push("/carrier/dashboard");
       } else {
         router.push("/");
       }

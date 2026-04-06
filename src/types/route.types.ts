@@ -7,6 +7,8 @@ export interface Route {
   target?: number;
   weeklyVolume?: number;
   unitType: UnitType;
+  /** Tipos de unidad y targets de la ruta (una sola fila en BD). */
+  unitTargets?: Array<{ unitType: UnitType; target?: number }>;
   status: RouteStatus;
   createdByName?: string;
   createdAt: string;

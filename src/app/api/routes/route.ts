@@ -13,7 +13,10 @@ export async function GET() {
     await requireSession();
     const routes = await prisma.route.findMany({
       orderBy: { createdAt: "desc" },
-      include: { createdBy: { select: { id: true, name: true } } },
+      include: {
+        createdBy: { select: { id: true, name: true } },
+        unitTargets: true,
+      },
     });
     return Response.json((routes as unknown as PrismaRoute[]).map(routeToJson));
   } catch (e) {
@@ -66,50 +69,81 @@ export async function POST(request: NextRequest) {
     if (unitTargets.length === 0) {
       return Response.json({ error: "Selecciona al menos un tipo de unidad" }, { status: 400 });
     }
-    const existing = await prisma.route.findMany({
+
+    const sameOdRoutes = await prisma.route.findMany({
       where: {
         origin: { equals: origin, mode: "insensitive" },
         destination: { equals: destination, mode: "insensitive" },
-        unitType: { in: unitTargets.map((ut) => ut.unitType) },
       },
-      select: { unitType: true },
+      include: { unitTargets: true },
     });
-    if (existing.length > 0) {
-      return Response.json(
-        { error: `Ya existe la ruta ${origin} → ${destination} para uno de los tipos seleccionados.`, code: "ROUTE_EXISTS" },
-        { status: 409 }
-      );
+    for (const er of sameOdRoutes) {
+      const types =
+        er.unitTargets.length > 0 ? er.unitTargets.map((u) => u.unitType) : [er.unitType];
+      for (const ut of unitTargets) {
+        if (types.includes(ut.unitType)) {
+          return Response.json(
+            {
+              error: `Ya existe la ruta ${origin} → ${destination} para uno de los tipos seleccionados.`,
+              code: "ROUTE_EXISTS",
+            },
+            { status: 409 }
+          );
+        }
+      }
     }
 
-    const createdRoutes: PrismaRoute[] = [];
-    for (const ut of unitTargets) {
-      const route = await (prisma.route.create as unknown as (a: { data: Record<string, unknown>; include: Record<string, unknown> }) => Promise<PrismaRoute>)({
-        data: {
-          origin,
-          destination,
-          destinationState: destinationState || undefined,
-          description: description || undefined,
-          target: ut.target ?? target ?? undefined,
-          weeklyVolume: weeklyVolume ?? undefined,
-          unitType: ut.unitType,
-          status,
-          createdById: session.user.id,
+    const first = unitTargets[0];
+    const route = await prisma.route.create({
+      data: {
+        origin,
+        destination,
+        destinationState: destinationState || undefined,
+        description: description || undefined,
+        target: first.target ?? target ?? undefined,
+        weeklyVolume: weeklyVolume ?? undefined,
+        unitType: first.unitType,
+        status,
+        createdById: session.user.id,
+        unitTargets: {
+          create: unitTargets.map((ut) => ({
+            unitType: ut.unitType,
+            target: ut.target ?? undefined,
+          })),
         },
-        include: { createdBy: { select: { id: true, name: true } } },
-      });
-      createdRoutes.push(route);
-      void logRoute({
-        routeId: route.id,
-        routeLabel: `${origin} → ${destination}`,
-        action: "created",
-        userId: session.user.id,
-        userName: (session.user as { name: string }).name,
-        snapshot: { origin, destination, destinationState, description, target: route.target, weeklyVolume, unitType: ut.unitType, status },
-      });
-      void logAudit({
-        resource: "route", resourceId: route.id, resourceLabel: `${origin} → ${destination}`,
-        action: "created", userId: session.user.id, userName: (session.user as { name: string }).name,
-      });
+      },
+      include: {
+        createdBy: { select: { id: true, name: true } },
+        unitTargets: true,
+      },
+    });
+
+    void logRoute({
+      routeId: route.id,
+      routeLabel: `${origin} → ${destination}`,
+      action: "created",
+      userId: session.user.id,
+      userName: (session.user as { name: string }).name,
+      snapshot: {
+        origin,
+        destination,
+        destinationState,
+        description,
+        target: route.target,
+        weeklyVolume,
+        unitType: route.unitType,
+        status,
+      },
+    });
+    void logAudit({
+      resource: "route",
+      resourceId: route.id,
+      resourceLabel: `${origin} → ${destination}`,
+      action: "created",
+      userId: session.user.id,
+      userName: (session.user as { name: string }).name,
+    });
+    for (const ut of unitTargets) {
       void alertMatchingCarriers({
         id: route.id,
         origin,
@@ -119,7 +153,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return Response.json({ routes: createdRoutes.map(routeToJson) });
+    return Response.json({ routes: [routeToJson(route as unknown as PrismaRoute)] });
   } catch (e) {
     if (e instanceof Response) throw e;
     console.error(e);

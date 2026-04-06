@@ -122,6 +122,22 @@ export default function ClientProfilePage() {
             <InfoRow label="Teléfono" value={formatPhone(client.phone)} />
             <InfoRow label="Dirección" value={client.address} />
             <InfoRow
+              label="Tipos de producto"
+              value={
+                client.productTypes.length > 0 ? (
+                  <span className="flex flex-wrap gap-1.5">
+                    {client.productTypes.map((t) => (
+                      <Badge key={t} variant="secondary" className="font-normal">
+                        {t}
+                      </Badge>
+                    ))}
+                  </span>
+                ) : (
+                  "—"
+                )
+              }
+            />
+            <InfoRow
               label="Registro"
               value={new Date(client.createdAt).toLocaleDateString("es-MX", {
                 year: "numeric", month: "long", day: "numeric",

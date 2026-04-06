@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormActions } from "@/components/ui/form-actions";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { CLIENT_PRODUCT_TYPE_SUGGESTIONS } from "@/lib/constants/client-product-types";
+import { mergeClientProductTypes, partitionClientProductTypes } from "@/lib/client-product-utils";
 import type { Client, ClientFormData } from "@/types/client.types";
 
 interface ClientFormProps {
@@ -35,9 +38,37 @@ export function ClientForm({
   const [notes, setNotes] = useState(initialValues.notes ?? "");
   const [detentionConditions, setDetentionConditions] = useState(initialValues.detentionConditions ?? "");
 
+  const [selectedSuggestions, setSelectedSuggestions] = useState<Set<string>>(() => {
+    const { suggestionSet } = partitionClientProductTypes(initialValues.productTypes);
+    return suggestionSet;
+  });
+  const [otherProductTypes, setOtherProductTypes] = useState(() => {
+    const { otherText } = partitionClientProductTypes(initialValues.productTypes);
+    return otherText;
+  });
+
+  useEffect(() => {
+    const { suggestionSet, otherText } = partitionClientProductTypes(initialValues.productTypes);
+    setSelectedSuggestions(suggestionSet);
+    setOtherProductTypes(otherText);
+  }, [initialValues.productTypes]);
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSubmit({ name, contactName, position, legalName, rfc, email, phone, address, notes, detentionConditions });
+    const productTypes = mergeClientProductTypes([...selectedSuggestions], otherProductTypes);
+    onSubmit({
+      name,
+      contactName,
+      position,
+      legalName,
+      rfc,
+      email,
+      phone,
+      address,
+      notes,
+      detentionConditions,
+      productTypes,
+    });
   }
 
   return (
@@ -109,6 +140,51 @@ export function ClientForm({
             onChange={(e) => setAddress(e.target.value)}
           />
         </div>
+
+        <div className="space-y-3 sm:col-span-2">
+          <div>
+            <Label className="text-base">Tipos de producto que maneja</Label>
+            <p className="text-muted-foreground text-xs mt-0.5">
+              Marca las categorías que apliquen y añade otros en el campo de texto si hace falta.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {CLIENT_PRODUCT_TYPE_SUGGESTIONS.map((suggestion, idx) => {
+              const id = `client-product-${idx}`;
+              return (
+                <div key={suggestion} className="flex items-center gap-2">
+                  <Checkbox
+                    id={id}
+                    checked={selectedSuggestions.has(suggestion)}
+                    onCheckedChange={(checked) => {
+                      setSelectedSuggestions((prev) => {
+                        const next = new Set(prev);
+                        if (checked === true) next.add(suggestion);
+                        else next.delete(suggestion);
+                        return next;
+                      });
+                    }}
+                  />
+                  <Label htmlFor={id} className="cursor-pointer font-normal leading-snug">
+                    {suggestion}
+                  </Label>
+                </div>
+              );
+            })}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="client-other-product-types">Otros tipos</Label>
+            <Textarea
+              id="client-other-product-types"
+              value={otherProductTypes}
+              onChange={(e) => setOtherProductTypes(e.target.value)}
+              placeholder="Separados por coma o un tipo por línea"
+              rows={2}
+              className="resize-y min-h-[60px]"
+            />
+          </div>
+        </div>
+
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="client-detentionConditions">Condiciones de estadías</Label>
           <Textarea

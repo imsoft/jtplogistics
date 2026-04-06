@@ -133,30 +133,54 @@ model UnitTypeDef {
   id        String   @id @default(cuid()) @map("id")
   name      String   @map("name")
   value     String   @unique @map("value")
+  sortOrder Int      @default(0) @map("sort_order")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("unit_types")
 }
 
+model IncidentTypeDef {
+  id        String   @id @default(cuid()) @map("id")
+  name      String   @map("name")
+  value     String   @unique @map("value")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("incident_types")
+}
+
 model Route {
-  id               String         @id @default(cuid()) @map("id")
-  origin           String         @map("origin")
-  destination      String         @map("destination")
-  description      String?        @map("description")
-  target           Float?         @map("target")
-  weeklyVolume     Int?           @map("weekly_volume")
-  destinationState String?        @map("destination_state")
-  unitType         String         @default("caja_seca") @map("unit_type")
-  status           RouteStatus    @default(pending) @map("status")
-  createdById      String?        @map("created_by_id")
-  createdBy        User?          @relation("RouteCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
-  createdAt        DateTime       @default(now()) @map("created_at")
-  updatedAt        DateTime       @updatedAt @map("updated_at")
+  id               String             @id @default(cuid()) @map("id")
+  origin           String             @map("origin")
+  destination      String             @map("destination")
+  description      String?            @map("description")
+  target           Float?             @map("target")
+  weeklyVolume     Int?               @map("weekly_volume")
+  destinationState String?            @map("destination_state")
+  unitType         String             @default("caja_seca") @map("unit_type")
+  status           RouteStatus        @default(pending) @map("status")
+  createdById      String?            @map("created_by_id")
+  createdBy        User?              @relation("RouteCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
   carrierRoutes    CarrierRoute[]
   clientRoutes     ClientRoute[]
+  unitTargets      RouteUnitTarget[]
 
   @@map("routes")
+}
+
+model RouteUnitTarget {
+  id       String  @id @default(cuid()) @map("id")
+  routeId  String  @map("route_id")
+  route    Route   @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  unitType String  @map("unit_type")
+  target   Float?  @map("target")
+
+  @@unique([routeId, unitType])
+  @@map("route_unit_targets")
 }
 
 model CarrierRoute {
@@ -221,6 +245,7 @@ model Client {
   address   String?  @map("address")
   notes     String?  @map("notes")
   detentionConditions String? @map("detention_conditions")
+  productTypes String[] @default([]) @map("product_types")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   clientRoutes ClientRoute[]

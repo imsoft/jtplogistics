@@ -13,6 +13,7 @@ export async function GET(
     const route = await prisma.route.findUnique({
       where: { id },
       include: {
+        unitTargets: true,
         createdBy: { select: { id: true, name: true } },
         carrierRoutes: {
           include: {
@@ -33,6 +34,14 @@ export async function GET(
       return Response.json({ error: "No encontrado" }, { status: 404 });
     }
 
+    const unitTargets =
+      route.unitTargets.length > 0
+        ? route.unitTargets.map((u) => ({
+            unitType: u.unitType,
+            target: u.target,
+          }))
+        : [{ unitType: route.unitType, target: route.target }];
+
     return Response.json({
       id: route.id,
       origin: route.origin,
@@ -42,6 +51,7 @@ export async function GET(
       target: route.target,
       weeklyVolume: route.weeklyVolume,
       unitType: route.unitType,
+      unitTargets,
       status: route.status,
       createdByName: route.createdBy?.name ?? null,
       createdAt: route.createdAt.toISOString(),

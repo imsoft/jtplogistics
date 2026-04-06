@@ -7,7 +7,19 @@ import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RouteForm } from "@/components/dashboard/routes/route-form";
 import { useRoutesStore } from "@/hooks/use-routes-store";
-import type { RouteFormData } from "@/types/route.types";
+import type { Route, RouteFormData } from "@/types/route.types";
+
+function routeToExistingPairs(r: Route) {
+  const pairs =
+    r.unitTargets && r.unitTargets.length > 0
+      ? r.unitTargets
+      : [{ unitType: r.unitType, target: r.target }];
+  return pairs.map((ut) => ({
+    origin: r.origin,
+    destination: r.destination,
+    unitType: ut.unitType,
+  }));
+}
 
 export default function NewRoutePage() {
   const router = useRouter();
@@ -43,7 +55,7 @@ export default function NewRoutePage() {
         <RouteForm
           submitLabel="Crear ruta"
           cancelHref="/admin/dashboard/routes"
-          existingRoutes={routes}
+          existingRoutes={routes.flatMap(routeToExistingPairs)}
           onSubmit={handleSubmit}
         />
       </div>

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
 import { logAudit, diffObjects } from "@/lib/audit-log";
+import { parseClientProductTypes } from "@/lib/parse-client-product-types";
 
 function toJson(c: {
   id: string;
@@ -14,6 +15,7 @@ function toJson(c: {
   address: string | null;
   notes: string | null;
   detentionConditions: string | null;
+  productTypes: string[];
   createdAt: Date;
 }) {
   return {
@@ -28,6 +30,7 @@ function toJson(c: {
     address: c.address,
     notes: c.notes,
     detentionConditions: c.detentionConditions,
+    productTypes: c.productTypes ?? [],
     createdAt: c.createdAt.toISOString(),
   };
 }
@@ -49,6 +52,7 @@ const CLIENT_LABELS: Record<string, string> = {
   contactName: "Nombre de contacto",
   position: "Puesto",
   phone: "Teléfono", address: "Dirección", notes: "Notas", detentionConditions: "Condiciones de estadías",
+  productTypes: "Tipos de producto",
 };
 
 export function PATCH(
@@ -58,7 +62,7 @@ export function PATCH(
   return adminHandler(async (session) => {
     const { id } = await params;
     const body = await request.json();
-    const { name, contactName, position, legalName, rfc, email, phone, address, notes, detentionConditions } = body as {
+    const { name, contactName, position, legalName, rfc, email, phone, address, notes, detentionConditions, productTypes } = body as {
       name?: string;
       contactName?: string | null;
       position?: string | null;
@@ -69,6 +73,7 @@ export function PATCH(
       address?: string | null;
       notes?: string | null;
       detentionConditions?: string | null;
+      productTypes?: unknown;
     };
 
     const client = await prisma.client.findUnique({ where: { id } });
@@ -91,6 +96,7 @@ export function PATCH(
         ...(address !== undefined && { address: address?.trim() || null }),
         ...(notes !== undefined && { notes: notes?.trim() || null }),
         ...(detentionConditions !== undefined && { detentionConditions: detentionConditions?.trim() || null }),
+        ...(productTypes !== undefined && { productTypes: parseClientProductTypes(productTypes) }),
       },
     });
 

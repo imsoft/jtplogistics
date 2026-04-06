@@ -5,6 +5,11 @@ import { useAdminFetch } from "@/hooks/use-admin-fetch";
 import { type ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { Client } from "@/types/client.types";
 import { formatPhone } from "@/lib/utils";
 
@@ -13,7 +18,7 @@ function getColumns(): ColumnDef<Client>[] {
     {
       id: "search",
       accessorFn: (row) =>
-        `${row.name} ${row.contactName ?? ""} ${row.position ?? ""} ${row.legalName ?? ""} ${row.email ?? ""} ${row.phone ?? ""} ${row.rfc ?? ""}`,
+        `${row.name} ${row.contactName ?? ""} ${row.position ?? ""} ${row.legalName ?? ""} ${row.email ?? ""} ${row.phone ?? ""} ${row.rfc ?? ""} ${(row.productTypes ?? []).join(" ")}`,
       filterFn: "fuzzy",
       header: () => null,
       cell: () => null,
@@ -39,6 +44,26 @@ function getColumns(): ColumnDef<Client>[] {
       accessorKey: "legalName",
       header: ({ column }) => <SortableColumnHeader column={column} title="Razón social" />,
       cell: ({ row }) => row.getValue("legalName") ?? <span className="text-muted-foreground">—</span>,
+    },
+    {
+      accessorKey: "productTypes",
+      header: ({ column }) => <SortableColumnHeader column={column} title="Tipos de producto" />,
+      cell: ({ row }) => {
+        const types = row.original.productTypes ?? [];
+        if (types.length === 0) return <span className="text-muted-foreground">—</span>;
+        const text = types.join(", ");
+        const short = text.length > 56 ? `${text.slice(0, 56)}…` : text;
+        return (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="block max-w-[220px] cursor-default truncate sm:max-w-[280px]">{short}</span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-xs whitespace-pre-wrap">
+              {text}
+            </TooltipContent>
+          </Tooltip>
+        );
+      },
     },
     {
       accessorKey: "email",
@@ -78,6 +103,7 @@ export function ClientsTable() {
       columns={getColumns()}
       data={clients}
       filterColumn="search"
+      filterPlaceholder="Buscar…"
       initialColumnVisibility={{ search: false }}
       getRowId={(row) => row.id}
       onRowClick={(client) => router.push(`/admin/dashboard/clients/${client.id}`)}

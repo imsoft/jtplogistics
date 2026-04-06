@@ -1,11 +1,16 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { ChevronLeft, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoRow } from "@/components/dashboard/users/info-row";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
+import { useIncidentTypes } from "@/hooks/use-incident-types";
+import { formatIncidentYesNo } from "@/lib/incident-yes-no";
+import { getIncidentTypeLabel } from "@/lib/incident-type-label";
+import { FINANCE_TARIFF_COST_LABEL, FINANCE_TARIFF_SALE_LABEL } from "@/lib/constants/finance-tariff-labels";
 import { formatMxn } from "@/lib/utils";
 import type { Finance } from "@/types/finance.types";
 
@@ -23,6 +28,12 @@ export default function FinanceProfilePage() {
     endpoint: "/api/admin/finances",
     redirectHref: "/admin/dashboard/finances",
   });
+  const incidentTypes = useIncidentTypes();
+
+  const incidentTypeLabel = useMemo(() => {
+    if (!finance?.incidentType?.trim()) return null;
+    return getIncidentTypeLabel(finance.incidentType, incidentTypes);
+  }, [finance, incidentTypes]);
 
   if (!isLoaded) return <p className="text-muted-foreground py-6">Cargando…</p>;
   if (error || !finance) return <p className="text-destructive py-6 text-sm">{error ?? "No encontrado"}</p>;
@@ -70,8 +81,14 @@ export default function FinanceProfilePage() {
             <InfoRow label="Origen" value={finance.origin} />
             <InfoRow label="Destino" value={finance.destination} />
             <InfoRow label="Producto" value={finance.product} />
-            <InfoRow label="Venta" value={finance.sale != null ? `$${formatMxn(finance.sale)}` : null} />
-            <InfoRow label="Costo" value={finance.cost != null ? `$${formatMxn(finance.cost)}` : null} />
+            <InfoRow
+              label={FINANCE_TARIFF_SALE_LABEL}
+              value={finance.sale != null ? `$${formatMxn(finance.sale)}` : null}
+            />
+            <InfoRow
+              label={FINANCE_TARIFF_COST_LABEL}
+              value={finance.cost != null ? `$${formatMxn(finance.cost)}` : null}
+            />
             <InfoRow label="Recolección" value={fmtDate(finance.pickupDate)} />
             <InfoRow label="Entrega" value={fmtDate(finance.deliveryDate)} />
           </CardContent>
@@ -101,7 +118,7 @@ export default function FinanceProfilePage() {
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                   Incidencia
                 </h3>
-                <p className="text-sm whitespace-pre-wrap">{finance.incident}</p>
+                <p className="text-sm whitespace-pre-wrap">{formatIncidentYesNo(finance.incident)}</p>
               </div>
             )}
             {finance.incidentType && (
@@ -109,7 +126,7 @@ export default function FinanceProfilePage() {
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                   Tipo de incidencia
                 </h3>
-                <p className="text-sm whitespace-pre-wrap">{finance.incidentType}</p>
+                <p className="text-sm whitespace-pre-wrap">{incidentTypeLabel}</p>
               </div>
             )}
             {finance.comments && (

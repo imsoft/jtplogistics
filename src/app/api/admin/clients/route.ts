@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
 import { logAudit } from "@/lib/audit-log";
+import { parseClientProductTypes } from "@/lib/parse-client-product-types";
 
 function toJson(c: {
   id: string;
@@ -14,6 +15,7 @@ function toJson(c: {
   address: string | null;
   notes: string | null;
   detentionConditions: string | null;
+  productTypes: string[];
   createdAt: Date;
 }) {
   return {
@@ -28,6 +30,7 @@ function toJson(c: {
     address: c.address,
     notes: c.notes,
     detentionConditions: c.detentionConditions,
+    productTypes: c.productTypes ?? [],
     createdAt: c.createdAt.toISOString(),
   };
 }
@@ -44,7 +47,7 @@ export function GET() {
 export function POST(request: Request) {
   return adminHandler(async (session) => {
     const body = await request.json();
-    const { name, contactName, position, legalName, rfc, email, phone, address, notes, detentionConditions } = body as {
+    const { name, contactName, position, legalName, rfc, email, phone, address, notes, detentionConditions, productTypes } = body as {
       name: string;
       contactName?: string;
       position?: string;
@@ -55,6 +58,7 @@ export function POST(request: Request) {
       address?: string;
       notes?: string;
       detentionConditions?: string;
+      productTypes?: unknown;
     };
 
     if (!name || !String(name).trim()) {
@@ -73,6 +77,7 @@ export function POST(request: Request) {
         address: address?.trim() || null,
         notes: notes?.trim() || null,
         detentionConditions: detentionConditions?.trim() || null,
+        productTypes: parseClientProductTypes(productTypes),
       },
     });
 

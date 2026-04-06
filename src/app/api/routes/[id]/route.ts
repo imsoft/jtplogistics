@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireSession, requireAdmin } from "@/lib/auth-server";
 import { type PrismaRoute, VALID_STATUSES, routeToJson } from "@/lib/api/route-utils";
@@ -16,7 +17,10 @@ export async function GET(
     const { id } = await params;
     const route = await prisma.route.findUnique({
       where: { id },
-      include: { createdBy: { select: { id: true, name: true } } },
+      include: {
+        createdBy: { select: { id: true, name: true } },
+        unitTargets: true,
+      },
     });
     if (!route) return Response.json({ error: "No encontrado" }, { status: 404 });
     return Response.json(routeToJson(route as unknown as PrismaRoute));
@@ -84,40 +88,27 @@ export async function PATCH(
     // Snapshot antes del cambio para el diff
     const before = await prisma.route.findUnique({ where: { id } });
 
-    const route = await (prisma.route.update as unknown as (a: { where: { id: string }; data: Record<string, unknown>; include: Record<string, unknown> }) => Promise<PrismaRoute>)({
-      where: { id },
-      data: updateData,
-      include: { createdBy: { select: { id: true, name: true } } },
-    });
-
-    if (unitTargets.length > 1) {
-      for (const extra of unitTargets.slice(1)) {
-        const exists = await prisma.route.findFirst({
-          where: {
-            id: { not: id },
-            origin: { equals: route.origin, mode: "insensitive" },
-            destination: { equals: route.destination, mode: "insensitive" },
-            unitType: extra.unitType,
-          },
-          select: { id: true },
-        });
-        if (!exists) {
-          await prisma.route.create({
-            data: {
-              origin: route.origin,
-              destination: route.destination,
-              destinationState: route.destinationState,
-              description: route.description,
-              target: extra.target,
-              weeklyVolume: route.weeklyVolume,
-              unitType: extra.unitType,
-              status: route.status as RouteStatus,
-              createdById: session.user.id,
-            },
-          });
-        }
-      }
+    const dataPatch: Record<string, unknown> = { ...updateData };
+    if (unitTargets.length > 0) {
+      dataPatch.unitType = unitTargets[0].unitType;
+      dataPatch.target = unitTargets[0].target;
+      dataPatch.unitTargets = {
+        deleteMany: {},
+        create: unitTargets.map((ut) => ({
+          unitType: ut.unitType,
+          target: ut.target ?? undefined,
+        })),
+      };
     }
+
+    const route = await prisma.route.update({
+      where: { id },
+      data: dataPatch as Prisma.RouteUpdateInput,
+      include: {
+        createdBy: { select: { id: true, name: true } },
+        unitTargets: true,
+      },
+    });
 
     if (before) {
       const beforeSnap: RouteSnapshot = {
@@ -151,7 +142,7 @@ export async function PATCH(
       }
     }
 
-    return Response.json(routeToJson(route));
+    return Response.json(routeToJson(route as unknown as PrismaRoute));
   } catch (e) {
     if (e instanceof Response) throw e;
     if (e && typeof e === "object" && "code" in e && e.code === "P2025") {

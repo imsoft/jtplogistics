@@ -31,7 +31,10 @@ export default async function EditRoutePage({
 
   const route = await prisma.route.findUnique({
     where: { id },
-    include: { createdBy: { select: { id: true, name: true } } },
+    include: {
+      createdBy: { select: { id: true, name: true } },
+      unitTargets: true,
+    },
   });
 
   if (!route) notFound();
