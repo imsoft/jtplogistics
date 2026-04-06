@@ -145,11 +145,13 @@ async function main() {
     select: { id: true, unitType: true, target: true },
   });
   await prisma.routeUnitTarget.createMany({
-    data: seededRoutes.map((r) => ({
-      routeId: r.id,
-      unitType: r.unitType,
-      target: r.target,
-    })),
+    data: seededRoutes.map(
+      (r: (typeof seededRoutes)[number]) => ({
+        routeId: r.id,
+        unitType: r.unitType,
+        target: r.target,
+      })
+    ),
   });
   console.log("✅ 10 rutas creadas");
 

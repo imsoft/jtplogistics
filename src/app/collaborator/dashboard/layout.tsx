@@ -3,6 +3,7 @@ import { CollaboratorAppSidebar } from "@/components/dashboard/collaborator-app-
 import { GlobalSearch } from "@/components/global-search";
 import { NotificationBell } from "@/components/notification-bell";
 import { FloatingChat } from "@/components/floating-chat";
+import { dashboardMainWithFloatingChatClassName } from "@/lib/dashboard-shell";
 
 export default function CollaboratorDashboardLayout({
   children,
@@ -22,7 +23,7 @@ export default function CollaboratorDashboardLayout({
           <NotificationBell />
           <GlobalSearch />
         </header>
-        <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-6">{children}</div>
+        <div className={dashboardMainWithFloatingChatClassName}>{children}</div>
       </SidebarInset>
       <FloatingChat />
     </SidebarProvider>

@@ -12,6 +12,27 @@ import { TargetDiff } from "@/components/dashboard/users/target-diff";
 import { ToggleCarrierPermissions } from "@/components/dashboard/users/toggle-carrier-permissions";
 import type { UserRole } from "@/types/user.types";
 
+/** Alineado con el modelo Contact de Prisma (tipado explícito para el include del perfil). */
+type ProfileContact = {
+  id: string;
+  profileId: string;
+  type: "phone" | "email";
+  value: string;
+  label: string | null;
+  createdAt: Date;
+};
+
+type CarrierRouteListItem = {
+  id: string;
+  carrierTarget: number | null;
+  route: {
+    origin: string;
+    destination: string;
+    description: string | null;
+    target: number | null;
+  };
+};
+
 export async function generateMetadata({
   params,
 }: {
@@ -60,8 +81,10 @@ export default async function UserProfilePage({
 
   const isCarrier = user.role === "carrier";
 
-  const phones = user.profile?.contacts.filter((c) => c.type === "phone") ?? [];
-  const emails = user.profile?.contacts.filter((c) => c.type === "email") ?? [];
+  const contacts = (user.profile?.contacts ?? []) as ProfileContact[];
+  const phones = contacts.filter((c) => c.type === "phone");
+  const emails = contacts.filter((c) => c.type === "email");
+  const carrierRoutes = user.carrierRoutes as CarrierRouteListItem[];
 
   return (
     <div className="min-w-0 space-y-6">
@@ -187,7 +210,7 @@ export default async function UserProfilePage({
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Rutas seleccionadas ({user.carrierRoutes.length})
+              Rutas seleccionadas ({carrierRoutes.length})
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4 pt-0 space-y-2">
@@ -199,7 +222,7 @@ export default async function UserProfilePage({
             />
           </CardContent>
           <CardContent className="px-0 pb-0">
-            {user.carrierRoutes.length === 0 ? (
+            {carrierRoutes.length === 0 ? (
               <p className="text-muted-foreground rounded-lg border border-dashed mx-4 mb-4 p-4 text-center text-sm">
                 Este transportista no ha seleccionado ninguna ruta.
               </p>
@@ -212,7 +235,7 @@ export default async function UserProfilePage({
                   <span>Target carrier</span>
                   <span>Dif.</span>
                 </div>
-                {user.carrierRoutes.map((cr) => (
+                {carrierRoutes.map((cr) => (
                   <div
                     key={cr.id}
                     className="grid grid-cols-[1fr_120px_120px_72px] gap-3 items-center border-b px-4 py-3 last:border-0"

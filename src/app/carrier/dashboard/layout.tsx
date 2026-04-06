@@ -2,6 +2,7 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import { UserAppSidebar } from "@/components/dashboard/user-app-sidebar";
 import { NotificationBell } from "@/components/notification-bell";
 import { FloatingChat } from "@/components/floating-chat";
+import { dashboardMainWithFloatingChatClassName } from "@/lib/dashboard-shell";
 
 export default function CarrierDashboardLayout({
   children,
@@ -20,7 +21,7 @@ export default function CarrierDashboardLayout({
           </span>
           <NotificationBell />
         </header>
-        <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-6">{children}</div>
+        <div className={dashboardMainWithFloatingChatClassName}>{children}</div>
       </SidebarInset>
       <FloatingChat />
     </SidebarProvider>

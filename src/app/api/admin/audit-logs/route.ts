@@ -23,7 +23,7 @@ export function GET(request: NextRequest) {
 
     return Response.json({
       total,
-      logs: logs.map((l) => ({
+      logs: logs.map((l: (typeof logs)[number]) => ({
         id: l.id,
         resource: l.resource,
         resourceId: l.resourceId,
