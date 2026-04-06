@@ -59,7 +59,7 @@ export default function AdminSettingsPage() {
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Configuración</h1>
+        <h1 className="page-heading">Configuración</h1>
         <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
           Ajustes generales de la plataforma.
         </p>

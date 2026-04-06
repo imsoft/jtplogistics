@@ -40,8 +40,10 @@ export function ResourceEditHeader({
             </Link>
           </Button>
           <div className="min-w-0">
-            <h1 className="text-xl font-bold tracking-tight sm:text-2xl truncate">{title}</h1>
-            <p className="text-muted-foreground truncate text-xs sm:text-sm">{description}</p>
+            <h1 className="page-heading truncate">{title}</h1>
+            <p className="truncate text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-xs">
+              {description}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">

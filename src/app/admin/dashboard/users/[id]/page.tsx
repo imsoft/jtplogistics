@@ -77,7 +77,7 @@ export default async function UserProfilePage({
             {initials}
           </div>
           <div className="min-w-0">
-            <h1 className="text-xl font-bold tracking-tight sm:text-2xl truncate">
+            <h1 className="page-heading truncate">
               {user.profile?.commercialName ?? user.name}
             </h1>
             {user.profile?.commercialName && (

@@ -44,7 +44,7 @@ export default function NewTaskPage() {
           </Link>
         </Button>
         <div>
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Nueva tarea</h1>
+          <h1 className="page-heading">Nueva tarea</h1>
           <p className="text-muted-foreground text-xs sm:text-sm">
             Crea una nueva tarea para el desarrollador.
           </p>

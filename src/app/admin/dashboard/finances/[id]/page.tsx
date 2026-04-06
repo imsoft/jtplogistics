@@ -51,7 +51,7 @@ export default function FinanceProfilePage() {
             </Link>
           </Button>
           <div className="min-w-0">
-            <h1 className="text-xl font-bold tracking-tight sm:text-2xl truncate">{title}</h1>
+            <h1 className="page-heading truncate">{title}</h1>
             {finance.legalName && (
               <p className="text-muted-foreground text-xs sm:text-sm truncate">{finance.legalName}</p>
             )}

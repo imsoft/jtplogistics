@@ -138,7 +138,7 @@ export default function CarrierProfilePage() {
   if (isFetching) {
     return (
       <div className="min-w-0 space-y-4">
-        <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Mi perfil</h1>
+        <h1 className="page-heading">Mi perfil</h1>
         <p className="text-muted-foreground text-sm">Cargando…</p>
       </div>
     );
@@ -147,7 +147,7 @@ export default function CarrierProfilePage() {
   if (fetchError) {
     return (
       <div className="min-w-0 space-y-4">
-        <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Mi perfil</h1>
+        <h1 className="page-heading">Mi perfil</h1>
         <p className="text-sm text-destructive">{fetchError}</p>
       </div>
     );
@@ -159,7 +159,7 @@ export default function CarrierProfilePage() {
   return (
     <div className="min-w-0 space-y-6">
       <div>
-        <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Mi perfil</h1>
+        <h1 className="page-heading">Mi perfil</h1>
         <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
           Actualiza tu información de contacto y datos de empresa.
         </p>

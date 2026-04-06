@@ -117,7 +117,7 @@ export function DashboardSidebar({
         {navGroups
           ? navGroups.map((group) => (
               <SidebarGroup key={group.label}>
-                <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                <SidebarGroupLabel className="text-muted-foreground/60">
                   {group.label}
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
@@ -180,7 +180,7 @@ export function DashboardSidebar({
             ))
           : (
               <SidebarGroup>
-                <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                <SidebarGroupLabel className="text-muted-foreground/60">
                   {label}
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
@@ -223,7 +223,7 @@ export function DashboardSidebar({
                     userInitials
                   )}
                 </div>
-                <span className="truncate text-sm font-medium">{userName}</span>
+                <span className="truncate text-sm font-medium normal-case">{userName}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

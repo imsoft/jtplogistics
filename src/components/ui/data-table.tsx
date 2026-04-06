@@ -151,7 +151,7 @@ export function DataTable<TData, TValue>({
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center"
+                  className="h-24 text-center text-xs font-medium uppercase tracking-wide text-muted-foreground"
                 >
                   No hay resultados.
                 </TableCell>
@@ -162,7 +162,7 @@ export function DataTable<TData, TValue>({
       </div>
       {table.getPageCount() > 1 && (
         <div className="flex flex-wrap items-center justify-end gap-2 py-2">
-          <p className="text-muted-foreground w-full text-center text-xs sm:w-auto sm:text-left sm:text-sm">
+          <p className="text-muted-foreground w-full text-center text-xs font-medium uppercase tracking-wide sm:w-auto sm:text-left">
             Página {table.getState().pagination.pageIndex + 1} de{" "}
             {table.getPageCount()}
           </p>

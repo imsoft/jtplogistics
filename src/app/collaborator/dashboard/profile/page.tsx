@@ -60,7 +60,7 @@ export default function CollaboratorProfilePage() {
   if (!isLoaded) {
     return (
       <div className="min-w-0 space-y-4">
-        <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Mi perfil</h1>
+        <h1 className="page-heading">Mi perfil</h1>
         <p className="text-muted-foreground text-sm">Cargando…</p>
       </div>
     );
@@ -69,7 +69,7 @@ export default function CollaboratorProfilePage() {
   return (
     <div className="min-w-0 space-y-6">
       <div>
-        <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Mi perfil</h1>
+        <h1 className="page-heading">Mi perfil</h1>
         <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
           Actualiza tu nombre, fecha de nacimiento y foto de perfil.
         </p>

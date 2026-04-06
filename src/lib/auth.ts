@@ -4,12 +4,14 @@
  * User role: admin | carrier | collaborator (stored in English).
  */
 
-import { betterAuth } from "better-auth";
+import { betterAuth, APIError } from "better-auth";
+import { createAuthMiddleware } from "@better-auth/core/api";
 import { nextCookies } from "better-auth/next-js";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { getAuthBaseUrl, getTrustedOrigins } from "@/lib/auth-utils";
+import { validateSignUpEmailPayload } from "@/lib/validators/registration-abuse";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -44,5 +46,17 @@ export const auth = betterAuth({
   baseURL: getAuthBaseUrl(),
   basePath: "/api/auth",
   trustedOrigins: getTrustedOrigins(),
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== "/sign-up/email") return;
+      const body = ctx.body as { name?: string; email?: string } | undefined;
+      const name = typeof body?.name === "string" ? body.name : "";
+      const email = typeof body?.email === "string" ? body.email : "";
+      const check = validateSignUpEmailPayload({ name, email });
+      if (!check.ok) {
+        throw new APIError("BAD_REQUEST", { message: check.message });
+      }
+    }),
+  },
   plugins: [nextCookies()],
 });

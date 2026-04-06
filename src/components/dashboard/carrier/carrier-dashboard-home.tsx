@@ -102,7 +102,7 @@ export function CarrierDashboardHome() {
   return (
     <div className="space-y-6 sm:space-y-8">
       <div>
-        <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Inicio</h1>
+        <h1 className="page-heading">Inicio</h1>
         <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
           Resumen de las rutas que ofreces y los targets que registraste.
         </p>

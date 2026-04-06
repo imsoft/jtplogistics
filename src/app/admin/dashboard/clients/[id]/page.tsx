@@ -89,7 +89,7 @@ export default function ClientProfilePage() {
               {initials(client.name)}
             </div>
             <div className="min-w-0">
-              <h1 className="text-xl font-bold tracking-tight sm:text-2xl truncate">{client.name}</h1>
+              <h1 className="page-heading truncate">{client.name}</h1>
               {client.legalName && (
                 <p className="text-muted-foreground text-xs sm:text-sm truncate">{client.legalName}</p>
               )}

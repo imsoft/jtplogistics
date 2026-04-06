@@ -12,7 +12,7 @@ export default async function AuditLogsPage() {
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Historial de cambios</h1>
+        <h1 className="page-heading">Historial de cambios</h1>
         <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
           Todos los cambios registrados en la plataforma: creaciones, modificaciones y eliminaciones.
         </p>

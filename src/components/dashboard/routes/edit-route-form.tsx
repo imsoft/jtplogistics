@@ -52,7 +52,7 @@ export function EditRouteForm({ route }: { route: Route }) {
           </Link>
         </Button>
         <div className="min-w-0">
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Editar ruta</h1>
+          <h1 className="page-heading">Editar ruta</h1>
           <p className="text-muted-foreground truncate text-xs sm:text-sm">
             {route.origin} → {route.destination}
           </p>

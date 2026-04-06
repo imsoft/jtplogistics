@@ -59,7 +59,7 @@ export default function ShipmentProfilePage() {
           </Button>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold tracking-tight sm:text-2xl truncate">{title}</h1>
+              <h1 className="page-heading truncate">{title}</h1>
               <Badge
                 variant="outline"
                 className={`shrink-0 whitespace-nowrap text-xs font-medium border-0 ${SHIPMENT_STATUS_CONFIG[shipment.status]?.badgeClass ?? ""}`}

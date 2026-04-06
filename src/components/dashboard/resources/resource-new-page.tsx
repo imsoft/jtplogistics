@@ -31,13 +31,17 @@ export function ResourceNewPage({
           </Link>
         </Button>
         <div className="min-w-0">
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">{title}</h1>
-          <p className="text-muted-foreground truncate text-xs sm:text-sm">{description}</p>
+          <h1 className="page-heading">{title}</h1>
+          <p className="truncate text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-xs">
+            {description}
+          </p>
         </div>
       </div>
       <Separator />
       <div className="w-full min-w-0">
-        {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+        {error && (
+          <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-destructive">{error}</p>
+        )}
         {children}
       </div>
     </div>

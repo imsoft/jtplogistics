@@ -47,7 +47,7 @@ export default function NewIncidentTypePage() {
           </Link>
         </Button>
         <div>
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Nuevo tipo de incidencia</h1>
+          <h1 className="page-heading">Nuevo tipo de incidencia</h1>
           <p className="text-muted-foreground mt-0.5 text-xs sm:text-sm">
             El identificador interno se genera automáticamente a partir del nombre.
           </p>

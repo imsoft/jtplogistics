@@ -57,7 +57,7 @@ export default function EditTaskPage() {
           </Link>
         </Button>
         <div>
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Editar tarea</h1>
+          <h1 className="page-heading">Editar tarea</h1>
           <p className="text-muted-foreground truncate text-xs sm:text-sm">
             {task.description ? task.description.slice(0, 80) : "Sin descripción"}
           </p>

@@ -132,7 +132,7 @@ export default function RouteDetailPage() {
             </Link>
           </Button>
           <div className="min-w-0">
-            <h1 className="flex items-center gap-2 text-xl font-bold tracking-tight sm:text-2xl">
+            <h1 className="page-heading flex items-center gap-2">
               <span className="truncate">{route.origin}</span>
               <MoveRight className="size-5 shrink-0 text-muted-foreground" />
               <span className="truncate">{route.destination}</span>

@@ -10,7 +10,7 @@ export default function OfflinePage() {
         <WifiOff className="size-10 text-muted-foreground" />
       </div>
       <div className="space-y-2">
-        <h1 className="text-2xl font-bold tracking-tight">Sin conexión</h1>
+        <h1 className="text-2xl font-bold uppercase tracking-wide">Sin conexión</h1>
         <p className="text-muted-foreground max-w-sm text-sm">
           No hay conexión a internet. Revisa tu red y vuelve a intentarlo.
         </p>

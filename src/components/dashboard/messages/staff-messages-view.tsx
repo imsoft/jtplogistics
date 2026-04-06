@@ -33,7 +33,7 @@ export function StaffMessagesView() {
   return (
     <div className="min-w-0 flex flex-col" style={{ height: "calc(100vh - 8rem)" }}>
       <div className="mb-4">
-        <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Mensajes</h1>
+        <h1 className="page-heading">Mensajes</h1>
         <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
           Conversaciones con transportistas.
         </p>

@@ -47,7 +47,7 @@ export default function VendorProfilePage() {
               </div>
             )}
             <div className="min-w-0">
-              <h1 className="text-xl font-bold tracking-tight sm:text-2xl truncate">{vendor.name}</h1>
+              <h1 className="page-heading truncate">{vendor.name}</h1>
               <p className="text-muted-foreground text-xs sm:text-sm truncate">{vendor.email}</p>
             </div>
           </div>

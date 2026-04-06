@@ -149,6 +149,12 @@
   --hover-foreground: oklch(0.92 0.012 264.376);
 }
 
+@layer components {
+  .page-heading {
+    @apply text-xl font-bold uppercase tracking-wide sm:text-2xl;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -161,6 +167,5 @@
     @apply bg-background text-foreground min-h-screen overflow-x-hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    text-transform: uppercase;
   }
 }

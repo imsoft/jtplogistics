@@ -10,7 +10,7 @@ export const metadata = {
 export default function DashboardPage() {
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
-      <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Dashboard</h1>
+      <h1 className="page-heading">Dashboard</h1>
       <p className="text-muted-foreground text-sm sm:text-base">
         Bienvenido al panel de administración. Gestiona rutas y recursos desde el
         menú lateral.

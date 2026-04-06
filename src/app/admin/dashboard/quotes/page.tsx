@@ -10,7 +10,7 @@ export default function CotizadorPage() {
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
       <div className="min-w-0">
-        <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
+        <h1 className="page-heading">
           Cotizador
         </h1>
         <p className="text-muted-foreground mt-1 text-xs sm:text-sm">

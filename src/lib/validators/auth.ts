@@ -5,6 +5,10 @@ import type {
   ResetPasswordFormData,
   AuthValidationResult,
 } from "@/types/auth.types";
+import {
+  validateRegistrationDisplayName,
+  validateRegistrationEmail,
+} from "@/lib/validators/registration-abuse";
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -27,6 +31,16 @@ export function validateRegisterForm(data: RegisterFormData): AuthValidationResu
   if (data.password.length < MIN_PASSWORD_LENGTH) {
     return { success: false, error: "La contraseña debe tener al menos 8 caracteres." };
   }
+
+  const legal = validateRegistrationDisplayName(data.legalName.trim(), "La razón social");
+  if (!legal.ok) return { success: false, error: legal.message };
+
+  const person = validateRegistrationDisplayName(data.name.trim(), "El nombre");
+  if (!person.ok) return { success: false, error: person.message };
+
+  const emailCheck = validateRegistrationEmail(data.email.trim());
+  if (!emailCheck.ok) return { success: false, error: emailCheck.message };
+
   return { success: true };
 }
 

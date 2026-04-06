@@ -18,7 +18,9 @@ export function AuthPageHeader({ subtitle }: AuthPageHeaderProps) {
           priority
         />
       </Link>
-      <p className="mt-3 text-sm text-muted-foreground">{subtitle}</p>
+      <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
+        {subtitle}
+      </p>
     </div>
   );
 }

@@ -15,7 +15,7 @@ export default function AdminTasksPage() {
     <div className="min-w-0 space-y-4 sm:space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Tareas</h1>
+          <h1 className="page-heading">Tareas</h1>
           <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
             Lista de tareas asignadas al equipo de desarrollo.
           </p>

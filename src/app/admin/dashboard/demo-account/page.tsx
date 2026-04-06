@@ -37,7 +37,7 @@ export default function DemoAccountPage() {
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Cuenta demo</h1>
+        <h1 className="page-heading">Cuenta demo</h1>
         <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
           Copia esta información para compartirla con transportistas vía WhatsApp.
         </p>

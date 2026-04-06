@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/auth-server";
 import { normalizeDisplayName } from "@/lib/normalize";
 import { logAudit } from "@/lib/audit-log";
+import { validateCarrierProfilePayload } from "@/lib/validators/registration-abuse";
 
 export async function GET() {
   try {
@@ -78,6 +79,16 @@ export async function PATCH(request: NextRequest) {
     const address = body.address != null ? String(body.address).trim() || null : undefined;
     const contacts: { type: "phone" | "email"; value: string; label?: string }[] =
       Array.isArray(body.contacts) ? body.contacts : [];
+
+    const abuse = validateCarrierProfilePayload({
+      name,
+      commercialName,
+      legalName,
+      contacts,
+    });
+    if (!abuse.ok) {
+      return Response.json({ error: abuse.message }, { status: 400 });
+    }
 
     if (name !== undefined || birthDate !== undefined) {
       await prisma.user.update({

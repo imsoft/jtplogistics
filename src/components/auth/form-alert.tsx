@@ -11,7 +11,7 @@ export function FormAlert({ message, variant, className }: FormAlertProps) {
     <div
       role={variant === "error" ? "alert" : "status"}
       className={cn(
-        "rounded-md border px-3 py-2 text-sm",
+        "rounded-md border px-3 py-2 text-xs font-semibold uppercase tracking-wide",
         variant === "error"
           ? "border-destructive/50 bg-destructive/10 text-destructive"
           : "border-green-500/50 bg-green-500/10 text-green-700 dark:text-green-400",

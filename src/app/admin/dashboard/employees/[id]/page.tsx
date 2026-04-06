@@ -59,7 +59,7 @@ export default function EmployeeProfilePage() {
               </div>
             )}
             <div className="min-w-0">
-              <h1 className="text-xl font-bold tracking-tight sm:text-2xl truncate">{employee.name}</h1>
+              <h1 className="page-heading truncate">{employee.name}</h1>
               {(employee.position || employee.department) && (
                 <p className="text-muted-foreground text-xs sm:text-sm truncate">
                   {[employee.position, employee.department].filter(Boolean).join(" · ")}
