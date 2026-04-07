@@ -6,8 +6,8 @@ import { Separator } from "@/components/ui/separator";
 interface ResourceListPageProps {
   title: string;
   description: string;
-  newHref: string;
-  newLabel: string;
+  newHref?: string;
+  newLabel?: string;
   children: React.ReactNode;
 }
 
@@ -27,12 +27,14 @@ export function ResourceListPage({
             {description}
           </p>
         </div>
-        <Button asChild className="w-full shrink-0 sm:w-fit" size="sm">
-          <Link href={newHref}>
-            <Plus className="size-4" />
-            {newLabel}
-          </Link>
-        </Button>
+        {newHref && newLabel ? (
+          <Button asChild className="w-full shrink-0 sm:w-fit" size="sm">
+            <Link href={newHref}>
+              <Plus className="size-4" />
+              {newLabel}
+            </Link>
+          </Button>
+        ) : null}
       </div>
       <Separator />
       {children}

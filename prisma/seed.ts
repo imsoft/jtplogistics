@@ -34,6 +34,29 @@ async function createUser(
 async function main() {
   console.log("🌱 Iniciando seed...\n");
 
+  // ── Tipos de incidencia (ejemplos; no borra los que ya existan) ───────────
+
+  const incidentExamples = [
+    { name: "Retraso en entrega", value: "retraso_entrega", sortOrder: 0 },
+    { name: "Daño en mercancía", value: "dano_mercancia", sortOrder: 1 },
+    { name: "Falta de documentación", value: "falta_documentacion", sortOrder: 2 },
+    { name: "Demora en carga", value: "demora_carga", sortOrder: 3 },
+    { name: "Demora en descarga", value: "demora_descarga", sortOrder: 4 },
+    { name: "Unidad en avería", value: "unidad_averia", sortOrder: 5 },
+    { name: "Accidente en tránsito", value: "accidente_transito", sortOrder: 6 },
+    { name: "Robo o hurto", value: "robo_hurto", sortOrder: 7 },
+    { name: "Cliente no disponible", value: "cliente_no_disponible", sortOrder: 8 },
+    { name: "Cambio de ruta o destino", value: "cambio_ruta_destino", sortOrder: 9 },
+  ] as const;
+
+  const { count } = await prisma.incidentTypeDef.createMany({
+    data: [...incidentExamples],
+    skipDuplicates: true,
+  });
+  console.log(
+    `✅ Tipos de incidencia: ${count} filas nuevas (los demás ya existían; nada se eliminó)`
+  );
+
   // ── Usuarios ──────────────────────────────────────────────────────────────
 
   const adminId = await createUser("Administrador JTP", "admin@jtplogistics.com", "Admin123!", "admin");

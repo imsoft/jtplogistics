@@ -18,6 +18,7 @@ import { useIncidentTypes } from "@/hooks/use-incident-types";
 import { getIncidentSelectOptions } from "@/lib/incident-yes-no";
 import type { Route } from "@/types/route.types";
 import type { Shipment, ShipmentFormData, ShipmentStatus } from "@/types/shipment.types";
+import type { Client } from "@/types/client.types";
 
 function toDateInput(iso: string | null | undefined): string {
   if (!iso) return "";
@@ -68,6 +69,7 @@ export function ShipmentForm({
   const isClosed = status === "returned";
 
   const [routes, setRoutes] = useState<Route[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const unitTypes = useUnitTypes();
   const incidentTypes = useIncidentTypes();
 
@@ -78,6 +80,15 @@ export function ShipmentForm({
         setRoutes(Array.isArray(data) ? (data as Route[]) : []);
       })
       .catch(() => setRoutes([]));
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/admin/clients")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: unknown) => {
+        setClients(Array.isArray(data) ? (data as Client[]) : []);
+      })
+      .catch(() => setClients([]));
   }, []);
 
   const origins = useMemo(() => {
@@ -105,6 +116,14 @@ export function ShipmentForm({
     if (d && !base.includes(d)) return [d, ...base];
     return base;
   }, [destinationsForOrigin, destination]);
+
+  const clientOptions = useMemo(() => {
+    const names = clients.map((c) => c.name).filter(Boolean);
+    const unique = [...new Set(names)].sort((a, b) => a.localeCompare(b, "es"));
+    const current = client.trim();
+    if (current && !unique.includes(current)) return [current, ...unique];
+    return unique;
+  }, [clients, client]);
 
   const unitOptions = useMemo(() => {
     const u = unit.trim();
@@ -150,7 +169,7 @@ export function ShipmentForm({
         <div className="space-y-2">
           <Label htmlFor="shipment-status">Estado</Label>
           <Select value={status} onValueChange={(v) => setStatus(v as ShipmentStatus)}>
-            <SelectTrigger id="shipment-status">
+            <SelectTrigger id="shipment-status" className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -173,12 +192,28 @@ export function ShipmentForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-client">Cliente</Label>
-          <Input
-            id="shipment-client"
-            value={client}
-            disabled={isClosed}
-            onChange={(e) => setClient(e.target.value)}
-          />
+          <Select
+            value={client || undefined}
+            onValueChange={setClient}
+            disabled={isClosed || clientOptions.length === 0}
+          >
+            <SelectTrigger id="shipment-client" className="w-full">
+              <SelectValue
+                placeholder={
+                  clientOptions.length === 0
+                    ? "No hay clientes registrados"
+                    : "Selecciona cliente"
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {clientOptions.map((clientName) => (
+                <SelectItem key={clientName} value={clientName}>
+                  {clientName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-origin">Origen</Label>
@@ -326,7 +361,7 @@ export function ShipmentForm({
         <div className="space-y-2">
           <Label htmlFor="shipment-incident">Incidencia</Label>
           <Select value={incident || undefined} onValueChange={setIncident} disabled={isClosed}>
-            <SelectTrigger id="shipment-incident">
+            <SelectTrigger id="shipment-incident" className="w-full">
               <SelectValue placeholder="Selecciona Sí o No" />
             </SelectTrigger>
             <SelectContent>
@@ -345,7 +380,7 @@ export function ShipmentForm({
             onValueChange={setIncidentType}
             disabled={isClosed}
           >
-            <SelectTrigger id="shipment-incidentType">
+            <SelectTrigger id="shipment-incidentType" className="w-full">
               <SelectValue
                 placeholder={
                   incidentTypeOptions.length === 0

@@ -7,4 +7,4 @@
  * fija en la esquina del viewport, no por falta de max-width.
  */
 export const dashboardMainWithFloatingChatClassName =
-  "flex min-w-0 flex-1 flex-col min-h-0 px-4 pt-4 pb-28 pe-24 sm:px-6 sm:pt-6 sm:pb-32 sm:pe-28";
+  "flex min-w-0 flex-1 flex-col min-h-0 px-4 pt-4 pb-28 pe-4 sm:px-6 sm:pt-6 sm:pb-32 sm:pe-6 xl:pe-24";

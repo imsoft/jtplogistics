@@ -10,9 +10,7 @@ export default function FinancesPage() {
   return (
     <ResourceListPage
       title="Tabla de finanzas"
-      description="Registros de finanzas en el sistema."
-      newHref="/admin/dashboard/finances/new"
-      newLabel="Nuevo registro"
+      description="Registros de finanzas generados automáticamente cuando un embarque se cierra."
     >
       <FinancesTable />
     </ResourceListPage>
