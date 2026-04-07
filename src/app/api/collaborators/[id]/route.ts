@@ -30,7 +30,7 @@ export async function GET(
       position: user.employeeProfile?.position ?? null,
       department: user.employeeProfile?.department ?? null,
       phone: user.employeeProfile?.phone ?? null,
-      password: user.employeeProfile?.password ?? null,
+      hasPasswordReference: Boolean(user.employeeProfile?.password?.trim()),
       createdAt: user.createdAt.toISOString(),
     });
   } catch (e) {

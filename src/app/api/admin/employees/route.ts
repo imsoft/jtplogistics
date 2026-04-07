@@ -20,7 +20,7 @@ export function GET() {
         position: u.employeeProfile?.position ?? null,
         department: u.employeeProfile?.department ?? null,
         phone: u.employeeProfile?.phone ?? null,
-        password: u.employeeProfile?.password ?? null,
+        hasPasswordReference: Boolean(u.employeeProfile?.password?.trim()),
         createdAt: u.createdAt.toISOString(),
       }))
     );
@@ -66,7 +66,7 @@ export function POST(request: Request) {
         position: position?.trim() || null,
         department: department?.trim() || null,
         phone: phone?.trim() || null,
-        password: password,
+        password: null,
       },
     });
 

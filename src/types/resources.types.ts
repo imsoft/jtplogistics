@@ -27,7 +27,8 @@ export interface Employee {
   position: string | null;
   department: string | null;
   phone: string | null;
-  password: string | null;
+  /** Indica si hay nota de contraseña guardada (el valor nunca se expone por API). */
+  hasPasswordReference?: boolean;
   canViewMessages: boolean;
   canViewIdeas: boolean;
   canViewRoutes: boolean;
@@ -51,7 +52,8 @@ export interface Employee {
 export interface EmployeeFormData {
   name: string;
   email: string;
-  password: string;
+  /** En alta es obligatoria vía UI; en edición omitir si no se cambia la nota guardada. */
+  password?: string;
   birthDate: string;
   position: string;
   department: string;

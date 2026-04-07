@@ -35,7 +35,7 @@ export function GET(
       position: u.employeeProfile?.position ?? null,
       department: u.employeeProfile?.department ?? null,
       phone: u.employeeProfile?.phone ?? null,
-      password: u.employeeProfile?.password ?? null,
+      hasPasswordReference: Boolean(u.employeeProfile?.password?.trim()),
       canViewMessages: u.canViewMessages,
       canViewIdeas: u.canViewIdeas,
       canViewRoutes: u.canViewRoutes,

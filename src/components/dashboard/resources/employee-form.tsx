@@ -31,7 +31,7 @@ export function EmployeeForm({
 }: EmployeeFormProps) {
   const [name, setName] = useState(initialValues.name ?? "");
   const [email, setEmail] = useState(initialValues.email ?? "");
-  const [password, setPassword] = useState(initialValues.password ?? "");
+  const [password, setPassword] = useState("");
   const [birthDate, setBirthDate] = useState(initialValues.birthDate ?? "");
   const [position, setPosition] = useState(initialValues.position ?? "");
   const [department, setDepartment] = useState(initialValues.department ?? "");
@@ -39,7 +39,15 @@ export function EmployeeForm({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSubmit({ name, email, password, birthDate, position, department, phone });
+    const base = { name, email, birthDate, position, department, phone };
+    if (isNew) {
+      onSubmit({ ...base, password });
+    } else {
+      onSubmit({
+        ...base,
+        ...(password.trim() ? { password: password.trim() } : {}),
+      });
+    }
   }
 
   return (
@@ -66,13 +74,28 @@ export function EmployeeForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="emp-password">{isNew ? "Contraseña" : "Contraseña (referencia)"}</Label>
+          <Label htmlFor="emp-password">
+            {isNew ? "Contraseña de acceso" : "Nota de contraseña (opcional)"}
+          </Label>
           <PasswordInput
             id="emp-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required={isNew}
+            autoComplete={isNew ? "new-password" : "off"}
+            placeholder={
+              isNew
+                ? undefined
+                : initialValues.hasPasswordReference
+                  ? "Deja vacío para no cambiar la nota guardada"
+                  : "Opcional: referencia interna (no es la contraseña de acceso)"
+            }
           />
+          {!isNew && initialValues.hasPasswordReference ? (
+            <p className="text-muted-foreground text-xs">
+              Hay una nota guardada. Escribe una nueva solo si quieres reemplazarla.
+            </p>
+          ) : null}
         </div>
         <div className="space-y-2">
           <Label htmlFor="emp-birthDate">Fecha de nacimiento</Label>

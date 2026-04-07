@@ -26,7 +26,7 @@ export async function GET() {
         position: u.employeeProfile?.position ?? null,
         department: u.employeeProfile?.department ?? null,
         phone: u.employeeProfile?.phone ?? null,
-        password: u.employeeProfile?.password ?? null,
+        hasPasswordReference: Boolean(u.employeeProfile?.password?.trim()),
         createdAt: u.createdAt.toISOString(),
       }))
     );
@@ -78,7 +78,8 @@ export async function POST(request: Request) {
         position: position?.trim() || null,
         department: department?.trim() || null,
         phone: phone?.trim() || null,
-        password,
+        // No duplicar la contraseña de acceso en perfil; solo nota opcional vía PATCH.
+        password: null,
       },
     });
 
