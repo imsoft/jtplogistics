@@ -112,6 +112,18 @@ export function CarrierDashboardHome() {
         <p className="text-sm text-destructive">{error}</p>
       )}
 
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-lg border border-dashed p-4 sm:p-5">
+        <div className="min-w-0">
+          <p className="text-sm font-medium">¿Quieres añadir o cambiar rutas?</p>
+          <p className="text-muted-foreground text-xs sm:text-sm">
+            Edición según los permisos que te haya asignado el administrador.
+          </p>
+        </div>
+        <Button variant="outline" asChild className="w-full shrink-0 sm:w-auto">
+          <Link href="/carrier/dashboard/unit-types">Ir a tipos de unidad</Link>
+        </Button>
+      </div>
+
       <div className="grid gap-3 sm:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
@@ -187,18 +199,6 @@ export function CarrierDashboardHome() {
           )}
         </CardContent>
       </Card>
-
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-lg border border-dashed p-4 sm:p-5">
-        <div className="min-w-0">
-          <p className="text-sm font-medium">¿Quieres añadir o cambiar rutas?</p>
-          <p className="text-muted-foreground text-xs sm:text-sm">
-            Edición según los permisos que te haya asignado el administrador.
-          </p>
-        </div>
-        <Button variant="outline" asChild className="w-full shrink-0 sm:w-auto">
-          <Link href="/carrier/dashboard/unit-types">Ir a tipos de unidad</Link>
-        </Button>
-      </div>
     </div>
   );
 }
