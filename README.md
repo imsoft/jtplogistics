@@ -21,7 +21,9 @@ Aplicación web para la gestión de rutas, flotas, cotizaciones y equipo de una 
 
 ### Administrador
 
-- **Operaciones:** Rutas (CRUD, origen/destino, tarifa objetivo, estado), Cotizador (cotizaciones de transportistas y vendedores), Proveedores (transportistas con perfil y rutas asignadas).
+- **Operaciones:** Rutas (CRUD, origen/destino, tarifa objetivo, estado), Tipos de unidad, Tipos de incidencia, Embarques y tabla de finanzas.
+- **Reglas operativas:** los registros de finanzas se generan automáticamente cuando un embarque se cierra.
+- **Comercial:** Cotizador (cotizaciones de transportistas y vendedores), Proveedores (transportistas con perfil y rutas asignadas), Clientes.
 - **Equipo:** Colaboradores (empleados con perfil y permisos), Vendedores (gestión y cotizaciones).
 - **Activos:** Laptops, Celulares, Cuentas de correo (asignación a usuarios y dispositivos).
 - **Otros:** Ideas (propuestas del equipo), Usuarios (roles, metas, WhatsApp), Perfil, Configuración.
@@ -123,6 +125,12 @@ pnpm db:migrate
 # (Opcional) Poblar datos de prueba
 pnpm db:seed
 
+# (Opcional) Sembrar configuración de portada/branding
+pnpm db:seed-settings
+
+# (Opcional) Crear cuenta demo transportista
+pnpm db:create-demo-carrier
+
 # Desarrollo
 pnpm dev
 ```
@@ -142,7 +150,18 @@ Abrir [http://localhost:3000](http://localhost:3000). Para probar con datos de p
 | `pnpm db:migrate` | Migraciones en desarrollo |
 | `pnpm db:migrate:deploy` | Migraciones en producción |
 | `pnpm db:seed` | Ejecutar seed |
+| `pnpm db:seed-settings` | Seed de ajustes/configuración |
+| `pnpm db:create-demo-carrier` | Crear cuenta demo transportista |
+| `pnpm db:assign-route-creator` | Asignar creador a rutas existentes |
+| `pnpm db:sync-route-destination-states` | Sincronizar estados destino de rutas |
 | `pnpm db:studio` | Abrir Prisma Studio |
+
+---
+
+## Notas de operación
+
+- **Finanzas:** no se recomienda alta manual; el flujo principal es generar registros al cerrar embarques.
+- **Seed:** incluye ejemplos de tipos de incidencia con inserción no destructiva (`skipDuplicates`), pero el script también reinicia otras entidades de prueba.
 
 ---
 
