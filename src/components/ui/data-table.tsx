@@ -110,8 +110,8 @@ export function DataTable<TData, TValue>({
           {toolbar}
         </div>
       )}
-      <div className="w-full overflow-x-auto overflow-y-hidden rounded-md border">
-        <Table className="w-full min-w-full">
+      <div className="w-full max-w-full overflow-x-auto rounded-md border">
+        <Table className="w-full min-w-max">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>

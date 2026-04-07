@@ -20,7 +20,7 @@ export function ResourceListPage({
 }: ResourceListPageProps) {
   return (
     <div className="min-w-0 space-y-5 sm:space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div className="min-w-0">
           <h1 className="page-heading">{title}</h1>
           <p className="text-muted-foreground mt-1 text-[10px] font-semibold uppercase tracking-wide sm:text-xs">
@@ -28,7 +28,7 @@ export function ResourceListPage({
           </p>
         </div>
         {newHref && newLabel ? (
-          <Button asChild className="w-full shrink-0 sm:w-fit" size="sm">
+          <Button asChild className="w-full shrink-0 sm:ml-auto sm:w-fit" size="sm">
             <Link href={newHref}>
               <Plus className="size-4" />
               {newLabel}
