@@ -100,7 +100,7 @@ export default function AdminProfilePage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Correo electrónico</Label>
-              <Input id="email" value={data?.email ?? ""} disabled />
+              <Input id="email" type="email" value={data?.email ?? ""} disabled />
             </div>
             <div className="space-y-2">
               <Label htmlFor="birthDate">Fecha de nacimiento</Label>

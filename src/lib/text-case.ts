@@ -12,7 +12,7 @@ const SENSITIVE_KEYS = new Set([
 ]);
 
 /** Campos cuyos strings no deben pasarse a minúsculas (p. ej. nombres propios de producto). */
-const PRESERVE_CASE_KEYS = new Set(["producttypes"]);
+const PRESERVE_CASE_KEYS = new Set(["producttypes", "title", "description"]);
 
 function shouldSkipLowercaseForKey(key?: string): boolean {
   if (!key) return false;

@@ -53,6 +53,7 @@ const RESOURCE_LABELS: Record<string, string> = {
   carrier_routes: "Selección de rutas",
   message: "Mensaje",
   profile: "Perfil",
+  carrier_suggestion: "Sugerencia de transportista",
 };
 
 function formatDateTime(iso: string) {

@@ -13,6 +13,16 @@ export function formatIncidentYesNo(value: string | null | undefined): string {
   return raw;
 }
 
+/**
+ * Solo si hubo incidencia (Sí u otro valor distinto de «no» y no vacío) debe poder elegirse el tipo.
+ */
+export function incidentAllowsIncidentType(incident: string): boolean {
+  const v = incident.trim().toLowerCase();
+  if (v === "") return false;
+  if (v === "no") return false;
+  return true;
+}
+
 /** Opciones para el Select (Sí/No; si el valor guardado no es estándar, se añade una fila). */
 export function getIncidentSelectOptions(incident: string) {
   const v = incident.trim();

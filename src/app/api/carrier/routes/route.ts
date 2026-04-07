@@ -181,11 +181,11 @@ export async function PUT(request: NextRequest) {
     // Notificación a pricing
     void notifyPricing(session.user.id, body);
 
-    // After saving, lock both flows so the carrier needs admin authorization:
-    // 1) editar existentes, 2) agregar nuevas.
+    // Tras guardar: se bloquea editar lo ya guardado (targets y desmarcar).
+    // Sigue pudiendo agregar rutas nuevas mientras canAddRoutes sea true.
     await prisma.user.update({
       where: { id: session.user.id },
-      data: { canEditRoutes: false, canEditTarget: false, canAddRoutes: false },
+      data: { canEditRoutes: false, canEditTarget: false },
     });
 
     void logAudit({

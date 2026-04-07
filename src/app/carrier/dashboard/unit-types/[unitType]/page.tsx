@@ -192,9 +192,6 @@ export default function CarrierUnitTypePage() {
     [selected, originalSelected]
   );
 
-  // Fully locked: carrier already saved and admin hasn't re-enabled editing
-  const isFullyLocked = !canEditRoutes && originalSelected.size > 0;
-
   const selectedCount = selected.size;
 
   function toggleSelected(routeId: string) {
@@ -280,11 +277,9 @@ export default function CarrierUnitTypePage() {
     return <p className="text-muted-foreground">Cargando…</p>;
   }
 
-  const canSave = !isFullyLocked && (
-    canEditRoutes
-      ? (canAddRoutes || newSelections.size === 0)
-      : (canAddRoutes && newSelections.size > 0)
-  );
+  const canSave = canEditRoutes
+    ? canAddRoutes || newSelections.size === 0
+    : canAddRoutes && newSelections.size > 0;
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
@@ -438,7 +433,10 @@ export default function CarrierUnitTypePage() {
                     {items.map((route) => {
                       const isSelected = selected.has(route.id);
                       const isOriginallySelected = originalSelected.has(route.id);
-                      const isLocked = isFullyLocked || (isOriginallySelected && !canEditRoutes);
+                      const checkboxDisabled =
+                        (isOriginallySelected && !canEditRoutes) ||
+                        (!isOriginallySelected && !canAddRoutes);
+                      const rowSavedLocked = isOriginallySelected && !canEditRoutes;
                       const currentTarget = parseMxn(targetByRouteId[route.id] ?? "") ?? null;
 
                       return (
@@ -451,7 +449,7 @@ export default function CarrierUnitTypePage() {
                               type="checkbox"
                               checked={isSelected}
                               onChange={() => toggleSelected(route.id)}
-                              disabled={isLocked}
+                              disabled={checkboxDisabled}
                               className="size-4 rounded border-input accent-primary disabled:cursor-not-allowed disabled:opacity-50"
                               aria-label={`Seleccionar ${route.origin} a ${route.destination}`}
                             />
@@ -476,7 +474,7 @@ export default function CarrierUnitTypePage() {
                               value={targetByRouteId[route.id] ?? ""}
                               onChange={(e) => handleTargetChange(route.id, e.target.value)}
                               onBlur={() => handleTargetBlur(route.id)}
-                              disabled={!canEditTarget || !isSelected || isLocked}
+                              disabled={!canEditTarget || !isSelected || rowSavedLocked}
                               className="h-8 min-w-0 w-full text-sm"
                               aria-label={`Mi target para ${route.origin} a ${route.destination}`}
                             />
@@ -488,7 +486,7 @@ export default function CarrierUnitTypePage() {
                             min={0}
                             value={weeklyVolumeByRouteId[route.id] ?? ""}
                             onChange={(e) => handleVolumeChange(route.id, e.target.value)}
-                            disabled={!isSelected || isLocked}
+                            disabled={!isSelected || rowSavedLocked}
                             className="h-8 w-full text-sm"
                             aria-label={`Volumen semanal para ${route.origin} a ${route.destination}`}
                           />
@@ -511,7 +509,7 @@ export default function CarrierUnitTypePage() {
               <span className="text-muted-foreground text-xs text-center sm:text-left">
                 {selectedCount} ruta{selectedCount !== 1 ? "s" : ""} seleccionada
                 {selectedCount !== 1 ? "s" : ""} para {pageTitle}
-                {!isFullyLocked && !canEditRoutes && newSelections.size > 0 && (
+                {!canEditRoutes && canAddRoutes && newSelections.size > 0 && (
                   <span className="ml-1">({newSelections.size} nueva{newSelections.size !== 1 ? "s" : ""})</span>
                 )}
               </span>

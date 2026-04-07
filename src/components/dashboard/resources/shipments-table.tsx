@@ -95,7 +95,7 @@ function getColumns(incidentTypes: { value: string; label: string }[]): ColumnDe
       id: "search",
       accessorFn: (row) => {
         const itLabel = getIncidentTypeLabel(row.incidentType, incidentTypes);
-        return `${row.eco ?? ""} ${row.client ?? ""} ${row.legalName ?? ""} ${row.origin ?? ""} ${row.destination ?? ""} ${row.product ?? ""} ${row.operatorName ?? ""} ${row.truck ?? ""} ${row.trailer ?? ""} ${row.unit ?? ""} ${row.phone ?? ""} ${row.comments ?? ""} ${row.incident ?? ""} ${row.incidentType ?? ""} ${itLabel}`;
+        return `${row.eco ?? ""} ${row.client ?? ""} ${row.legalName ?? ""} ${row.origin ?? ""} ${row.destination ?? ""} ${row.product ?? ""} ${row.truck ?? ""} ${row.trailer ?? ""} ${row.unit ?? ""} ${row.phone ?? ""} ${row.comments ?? ""} ${row.incident ?? ""} ${row.incidentType ?? ""} ${itLabel}`;
       },
       filterFn: "fuzzy",
       header: () => null,
@@ -136,20 +136,6 @@ function getColumns(incidentTypes: { value: string; label: string }[]): ColumnDe
       },
     },
     {
-      accessorKey: "operatorName",
-      header: ({ column }) => <SortableColumnHeader column={column} title="Proveedor" />,
-      cell: ({ row }) => {
-        const v = row.getValue<string | null>("operatorName");
-        return v ? (
-          <span className="block max-w-[180px] truncate sm:max-w-[220px]" title={v}>
-            {v}
-          </span>
-        ) : (
-          <span className="text-muted-foreground">—</span>
-        );
-      },
-    },
-    {
       accessorKey: "origin",
       header: ({ column }) => <SortableColumnHeader column={column} title="Origen" />,
       cell: ({ row }) => row.getValue("origin") ?? <span className="text-muted-foreground">—</span>,
@@ -178,7 +164,7 @@ function getColumns(incidentTypes: { value: string; label: string }[]): ColumnDe
     {
       accessorKey: "legalName",
       header: ({ column }) => (
-        <SortableColumnHeader column={column} title="Razón social" />
+        <SortableColumnHeader column={column} title="Proveedor" />
       ),
       cell: ({ row }) => {
         const v = row.getValue<string | null>("legalName");

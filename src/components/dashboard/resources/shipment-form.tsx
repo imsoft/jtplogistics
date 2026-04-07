@@ -15,10 +15,12 @@ import {
 import { SHIPMENT_STATUS_CONFIG } from "@/components/dashboard/resources/shipments-table";
 import { useUnitTypes } from "@/hooks/use-unit-types";
 import { useIncidentTypes } from "@/hooks/use-incident-types";
-import { getIncidentSelectOptions } from "@/lib/incident-yes-no";
+import { getIncidentSelectOptions, incidentAllowsIncidentType } from "@/lib/incident-yes-no";
+import { carrierProviderSelectOptions } from "@/lib/carrier-provider-options";
 import type { Route } from "@/types/route.types";
 import type { Shipment, ShipmentFormData, ShipmentStatus } from "@/types/shipment.types";
 import type { Client } from "@/types/client.types";
+import type { User } from "@/types/user.types";
 
 function toDateInput(iso: string | null | undefined): string {
   if (!iso) return "";
@@ -57,7 +59,6 @@ export function ShipmentForm({
   const [pickupDate, setPickupDate] = useState(toDateInput(initialValues.pickupDate));
   const [deliveryDate, setDeliveryDate] = useState(toDateInput(initialValues.deliveryDate));
   const [legalName, setLegalName] = useState(initialValues.legalName ?? "");
-  const [operatorName, setOperatorName] = useState(initialValues.operatorName ?? "");
   const [truck, setTruck] = useState(initialValues.truck ?? "");
   const [trailer, setTrailer] = useState(initialValues.trailer ?? "");
   const [unit, setUnit] = useState(initialValues.unit ?? "");
@@ -70,6 +71,7 @@ export function ShipmentForm({
 
   const [routes, setRoutes] = useState<Route[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
+  const [carriers, setCarriers] = useState<User[]>([]);
   const unitTypes = useUnitTypes();
   const incidentTypes = useIncidentTypes();
 
@@ -89,6 +91,15 @@ export function ShipmentForm({
         setClients(Array.isArray(data) ? (data as Client[]) : []);
       })
       .catch(() => setClients([]));
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/admin/users?role=carrier")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: unknown) => {
+        setCarriers(Array.isArray(data) ? (data as User[]) : []);
+      })
+      .catch(() => setCarriers([]));
   }, []);
 
   const origins = useMemo(() => {
@@ -125,6 +136,13 @@ export function ShipmentForm({
     return unique;
   }, [clients, client]);
 
+  const carrierOptions = useMemo(() => {
+    const base = carrierProviderSelectOptions(carriers);
+    const current = legalName.trim();
+    if (current && !base.includes(current)) return [current, ...base];
+    return base;
+  }, [carriers, legalName]);
+
   const unitOptions = useMemo(() => {
     const u = unit.trim();
     const values = unitTypes.map((t) => t.value);
@@ -145,6 +163,12 @@ export function ShipmentForm({
     return incidentTypes;
   }, [incidentTypes, incidentType]);
 
+  const canPickIncidentType = incidentAllowsIncidentType(incident);
+
+  useEffect(() => {
+    if (!incidentAllowsIncidentType(incident)) setIncidentType("");
+  }, [incident]);
+
   const onOriginChange = useCallback(
     (v: string) => {
       setOrigin(v);
@@ -157,9 +181,23 @@ export function ShipmentForm({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     onSubmit({
-      eco, client, origin, destination, product,
-      pickupDate, deliveryDate, legalName, operatorName,
-      truck, trailer, unit, phone, comments, incident, incidentType, status,
+      eco,
+      client,
+      origin,
+      destination,
+      product,
+      pickupDate,
+      deliveryDate,
+      legalName,
+      operatorName: initialValues.operatorName ?? "",
+      truck,
+      trailer,
+      unit,
+      phone,
+      comments,
+      incident,
+      incidentType: canPickIncidentType ? incidentType : "",
+      status,
     });
   }
 
@@ -292,22 +330,29 @@ export function ShipmentForm({
           />
         </div>
         <div className="space-y-2 sm:col-span-2 lg:col-span-3">
-          <Label htmlFor="shipment-legalName">Razón social del proveedor</Label>
-          <Input
-            id="shipment-legalName"
-            value={legalName}
-            disabled={isClosed}
-            onChange={(e) => setLegalName(e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="shipment-operatorName">Proveedor</Label>
-          <Input
-            id="shipment-operatorName"
-            value={operatorName}
-            disabled={isClosed}
-            onChange={(e) => setOperatorName(e.target.value)}
-          />
+          <Label htmlFor="shipment-legalName">Proveedor (transportista)</Label>
+          <Select
+            value={legalName || undefined}
+            onValueChange={setLegalName}
+            disabled={isClosed || carrierOptions.length === 0}
+          >
+            <SelectTrigger id="shipment-legalName" className="w-full">
+              <SelectValue
+                placeholder={
+                  carrierOptions.length === 0
+                    ? "No hay transportistas — regístralos en Proveedores"
+                    : "Selecciona transportista"
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {carrierOptions.map((name) => (
+                <SelectItem key={name} value={name}>
+                  {name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-truck">Tracto</Label>
@@ -360,7 +405,14 @@ export function ShipmentForm({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="shipment-incident">Incidencia</Label>
-          <Select value={incident || undefined} onValueChange={setIncident} disabled={isClosed}>
+          <Select
+            value={incident || undefined}
+            onValueChange={(v) => {
+              setIncident(v);
+              if (!incidentAllowsIncidentType(v)) setIncidentType("");
+            }}
+            disabled={isClosed}
+          >
             <SelectTrigger id="shipment-incident" className="w-full">
               <SelectValue placeholder="Selecciona Sí o No" />
             </SelectTrigger>
@@ -376,16 +428,18 @@ export function ShipmentForm({
         <div className="space-y-2">
           <Label htmlFor="shipment-incidentType">Tipo de incidencia</Label>
           <Select
-            value={incidentType || undefined}
+            value={canPickIncidentType ? incidentType || undefined : undefined}
             onValueChange={setIncidentType}
-            disabled={isClosed}
+            disabled={isClosed || !canPickIncidentType}
           >
             <SelectTrigger id="shipment-incidentType" className="w-full">
               <SelectValue
                 placeholder={
-                  incidentTypeOptions.length === 0
-                    ? "No hay tipos de incidencia"
-                    : "Selecciona tipo de incidencia"
+                  !canPickIncidentType
+                    ? "Indica primero si hubo incidencia (Sí)"
+                    : incidentTypeOptions.length === 0
+                      ? "No hay tipos de incidencia"
+                      : "Selecciona tipo de incidencia"
                 }
               />
             </SelectTrigger>

@@ -1,4 +1,4 @@
-import { requireAdmin, requireCollaboratorOrAdmin } from "@/lib/auth-server";
+import { requireAdmin, requireCarrier, requireCollaboratorOrAdmin } from "@/lib/auth-server";
 
 export type AdminSession = Awaited<ReturnType<typeof requireAdmin>>;
 
@@ -30,6 +30,22 @@ export function ideasHandler(
   return (async () => {
     try {
       const session = await requireCollaboratorOrAdmin();
+      return await fn(session);
+    } catch (e) {
+      if (e instanceof Response) throw e;
+      console.error(e);
+      return Response.json({ error: "Error interno del servidor" }, { status: 500 });
+    }
+  })();
+}
+
+/** Rutas API solo para transportistas autenticados. */
+export function carrierHandler(
+  fn: (session: Awaited<ReturnType<typeof requireCarrier>>) => Promise<Response>
+): Promise<Response> {
+  return (async () => {
+    try {
+      const session = await requireCarrier();
       return await fn(session);
     } catch (e) {
       if (e instanceof Response) throw e;

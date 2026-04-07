@@ -2,7 +2,7 @@ import * as XLSX from "xlsx";
 import { FINANCE_TARIFF_COST_LABEL, FINANCE_TARIFF_SALE_LABEL } from "@/lib/constants/finance-tariff-labels";
 import { formatIncidentYesNo } from "@/lib/incident-yes-no";
 import { getIncidentTypeLabel } from "@/lib/incident-type-label";
-import type { Finance } from "@/types/finance.types";
+import type { FinanceListRow } from "@/types/finance.types";
 import type { Shipment, ShipmentStatus } from "@/types/shipment.types";
 
 const SHIPMENT_STATUS_LABEL: Record<ShipmentStatus, string> = {
@@ -54,12 +54,11 @@ export function shipmentsToExcelAoa(
     "Estado",
     "ECO",
     "Cliente",
-    "Proveedor",
     "Origen",
     "Destino",
     "Recolección",
     "Entrega",
-    "Razón social",
+    "Proveedor",
     "Comentarios",
     "Tipo de incidencia",
     "Celular",
@@ -69,7 +68,6 @@ export function shipmentsToExcelAoa(
     SHIPMENT_STATUS_LABEL[s.status] ?? s.status,
     s.eco ?? "",
     s.client ?? "",
-    s.operatorName ?? "",
     s.origin ?? "",
     s.destination ?? "",
     fmtDateEs(s.pickupDate),
@@ -83,8 +81,9 @@ export function shipmentsToExcelAoa(
   return [headers, ...rows];
 }
 
-export function financesToExcelAoa(finances: Finance[]): (string | number)[][] {
+export function financesToExcelAoa(rows: FinanceListRow[]): (string | number)[][] {
   const headers = [
+    "Estado",
     "ECO",
     "Cliente",
     "Origen",
@@ -95,7 +94,8 @@ export function financesToExcelAoa(finances: Finance[]): (string | number)[][] {
     "Recolección",
     "Entrega",
   ];
-  const rows = finances.map((f) => [
+  const data = rows.map((f) => [
+    SHIPMENT_STATUS_LABEL[f.status as ShipmentStatus] ?? f.status,
     f.eco ?? "",
     f.client ?? "",
     f.origin ?? "",
@@ -106,5 +106,5 @@ export function financesToExcelAoa(finances: Finance[]): (string | number)[][] {
     fmtDateEs(f.pickupDate),
     fmtDateEs(f.deliveryDate),
   ]);
-  return [headers, ...rows];
+  return [headers, ...data];
 }

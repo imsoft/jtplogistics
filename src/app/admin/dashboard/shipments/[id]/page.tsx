@@ -69,7 +69,7 @@ export default function ShipmentProfilePage() {
             </div>
             {shipment.legalName && (
               <p className="text-muted-foreground text-xs sm:text-sm truncate" title={shipment.legalName}>
-                Razón social del proveedor: {shipment.legalName}
+                Proveedor: {shipment.legalName}
               </p>
             )}
           </div>
@@ -99,18 +99,17 @@ export default function ShipmentProfilePage() {
             <InfoRow label="Producto" value={shipment.product} />
             <InfoRow label="Recolección" value={fmtDate(shipment.pickupDate)} />
             <InfoRow label="Entrega" value={fmtDate(shipment.deliveryDate)} />
-            <InfoRow label="Razón social del proveedor" value={shipment.legalName} />
+            <InfoRow label="Proveedor (transportista)" value={shipment.legalName} />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Proveedor y unidad
+              Unidad y contacto
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4">
-            <InfoRow label="Proveedor" value={shipment.operatorName} />
             <InfoRow label="Celular" value={shipment.phone} />
             <InfoRow label="Tracto" value={shipment.truck} />
             <InfoRow label="Caja" value={shipment.trailer} />

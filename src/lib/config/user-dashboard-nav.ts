@@ -1,5 +1,12 @@
 import type { LucideIcon } from "lucide-react";
-import { LayoutDashboard, User as UserIcon, Truck, MessageSquare, Users } from "lucide-react";
+import {
+  LayoutDashboard,
+  User as UserIcon,
+  Truck,
+  MessageSquare,
+  Users,
+  Lightbulb,
+} from "lucide-react";
 
 export interface UserDashboardNavItem {
   title: string;
@@ -17,6 +24,11 @@ export const userDashboardNavItems: UserDashboardNavItem[] = [
     title: "Tipos de unidades",
     href: "/carrier/dashboard/unit-types",
     icon: Truck,
+  },
+  {
+    title: "Sugerencias",
+    href: "/carrier/dashboard/suggestions",
+    icon: Lightbulb,
   },
   {
     title: "Mensajes",

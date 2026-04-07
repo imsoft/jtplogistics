@@ -2,8 +2,30 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-function Input({ className, type, ...props }: React.ComponentProps<"input">) {
-  const casingClass = type === "password" ? "normal-case tracking-normal" : "uppercase tracking-wide"
+function Input({ className, type, onChange, ...props }: React.ComponentProps<"input">) {
+  const casingClass =
+    type === "password" || type === "email"
+      ? "normal-case tracking-normal"
+      : "uppercase tracking-wide"
+
+  const handleChange = React.useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (type === "email") {
+        const lower = e.target.value.toLowerCase()
+        if (lower !== e.target.value) {
+          const next = {
+            ...e,
+            target: { ...e.target, value: lower },
+            currentTarget: { ...e.currentTarget, value: lower },
+          } as React.ChangeEvent<HTMLInputElement>
+          onChange?.(next)
+          return
+        }
+      }
+      onChange?.(e)
+    },
+    [type, onChange]
+  )
 
   return (
     <input
@@ -17,6 +39,7 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
         className
       )}
       {...props}
+      onChange={type === "email" ? handleChange : onChange}
     />
   )
 }

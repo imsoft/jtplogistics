@@ -66,7 +66,7 @@ const SHIPMENT_LABELS: Record<string, string> = {
   product: "Producto",
   pickupDate: "Recolección",
   deliveryDate: "Entrega",
-  legalName: "Razón social",
+  legalName: "Proveedor",
   operatorName: "Nombre operador",
   truck: "Tracto",
   trailer: "Caja",

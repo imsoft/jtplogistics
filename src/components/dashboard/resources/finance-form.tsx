@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormActions } from "@/components/ui/form-actions";
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { FINANCE_TARIFF_COST_LABEL, FINANCE_TARIFF_SALE_LABEL } from "@/lib/constants/finance-tariff-labels";
 import { formatMxnLive } from "@/lib/utils";
-import { getIncidentSelectOptions } from "@/lib/incident-yes-no";
+import { getIncidentSelectOptions, incidentAllowsIncidentType } from "@/lib/incident-yes-no";
 import { useIncidentTypes } from "@/hooks/use-incident-types";
 import type { Finance, FinanceFormData } from "@/types/finance.types";
 
@@ -74,12 +74,33 @@ export function FinanceForm({
     return incidentTypes;
   }, [incidentTypes, incidentType]);
 
+  const canPickIncidentType = incidentAllowsIncidentType(incident);
+
+  useEffect(() => {
+    if (!incidentAllowsIncidentType(incident)) setIncidentType("");
+  }, [incident]);
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     onSubmit({
-      eco, client, origin, destination, sale, product,
-      pickupDate, deliveryDate, legalName, cost, operatorName,
-      truck, trailer, unit, phone, comments, incident, incidentType,
+      eco,
+      client,
+      origin,
+      destination,
+      sale,
+      product,
+      pickupDate,
+      deliveryDate,
+      legalName,
+      cost,
+      operatorName,
+      truck,
+      trailer,
+      unit,
+      phone,
+      comments,
+      incident,
+      incidentType: canPickIncidentType ? incidentType : "",
     });
   }
 
@@ -170,7 +191,13 @@ export function FinanceForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="finance-incident">Incidencia</Label>
-          <Select value={incident || undefined} onValueChange={setIncident}>
+          <Select
+            value={incident || undefined}
+            onValueChange={(v) => {
+              setIncident(v);
+              if (!incidentAllowsIncidentType(v)) setIncidentType("");
+            }}
+          >
             <SelectTrigger id="finance-incident">
               <SelectValue placeholder="Selecciona Sí o No" />
             </SelectTrigger>
@@ -185,13 +212,19 @@ export function FinanceForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="finance-incidentType">Tipo de incidencia</Label>
-          <Select value={incidentType || undefined} onValueChange={setIncidentType}>
+          <Select
+            value={canPickIncidentType ? incidentType || undefined : undefined}
+            onValueChange={setIncidentType}
+            disabled={!canPickIncidentType}
+          >
             <SelectTrigger id="finance-incidentType">
               <SelectValue
                 placeholder={
-                  incidentTypeOptions.length === 0
-                    ? "No hay tipos de incidencia"
-                    : "Selecciona tipo de incidencia"
+                  !canPickIncidentType
+                    ? "Indica primero si hubo incidencia (Sí)"
+                    : incidentTypeOptions.length === 0
+                      ? "No hay tipos de incidencia"
+                      : "Selecciona tipo de incidencia"
                 }
               />
             </SelectTrigger>

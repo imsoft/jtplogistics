@@ -25,6 +25,9 @@ export function UserAppSidebar() {
     const messagesItem = otherItems.find(
       (item) => item.href === "/carrier/dashboard/messages"
     );
+    const suggestionsItem = otherItems.find(
+      (item) => item.href === "/carrier/dashboard/suggestions"
+    );
     const collaboratorsItem = otherItems.find(
       (item) => item.href === "/carrier/dashboard/collaborators"
     );
@@ -60,6 +63,14 @@ export function UserAppSidebar() {
         title: collaboratorsItem.title,
         href: collaboratorsItem.href,
         icon: collaboratorsItem.icon,
+      });
+    }
+
+    if (suggestionsItem) {
+      mainItems.push({
+        title: suggestionsItem.title,
+        href: suggestionsItem.href,
+        icon: suggestionsItem.icon,
       });
     }
 

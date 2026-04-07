@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { FileDown } from "lucide-react";
 import { toast } from "sonner";
@@ -9,6 +9,7 @@ import { type ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   downloadXlsxFromAoa,
   excelExportFilename,
@@ -16,7 +17,9 @@ import {
 } from "@/lib/excel-export";
 import { FINANCE_TARIFF_COST_LABEL, FINANCE_TARIFF_SALE_LABEL } from "@/lib/constants/finance-tariff-labels";
 import { formatMxn } from "@/lib/utils";
-import type { Finance } from "@/types/finance.types";
+import { SHIPMENT_STATUS_CONFIG } from "@/components/dashboard/resources/shipments-table";
+import type { FinanceListRow } from "@/types/finance.types";
+import type { ShipmentStatus } from "@/types/shipment.types";
 
 function fmtDate(iso: string | null) {
   if (!iso) return null;
@@ -27,17 +30,33 @@ function fmtDate(iso: string | null) {
   });
 }
 
-function getColumns(): ColumnDef<Finance>[] {
+function getColumns(): ColumnDef<FinanceListRow>[] {
   return [
     {
       id: "search",
       accessorFn: (row) =>
-        `${row.eco ?? ""} ${row.client ?? ""} ${row.origin ?? ""} ${row.destination ?? ""} ${row.product ?? ""} ${row.legalName ?? ""} ${row.operatorName ?? ""} ${row.truck ?? ""} ${row.trailer ?? ""} ${row.unit ?? ""} ${row.phone ?? ""} ${row.incident ?? ""} ${row.incidentType ?? ""}`,
+        `${row.status} ${row.eco ?? ""} ${row.client ?? ""} ${row.origin ?? ""} ${row.destination ?? ""} ${row.product ?? ""} ${row.legalName ?? ""} ${row.operatorName ?? ""} ${row.truck ?? ""} ${row.trailer ?? ""} ${row.unit ?? ""} ${row.phone ?? ""} ${row.incident ?? ""} ${row.incidentType ?? ""}`,
       filterFn: "fuzzy",
       header: () => null,
       cell: () => null,
       enableSorting: false,
       enableHiding: false,
+    },
+    {
+      accessorKey: "status",
+      header: ({ column }) => <SortableColumnHeader column={column} title="Estado" />,
+      cell: ({ row }) => {
+        const status = row.getValue<string>("status");
+        const cfg = SHIPMENT_STATUS_CONFIG[status as ShipmentStatus];
+        return (
+          <Badge
+            variant="outline"
+            className={`whitespace-nowrap border-0 text-xs font-medium ${cfg?.badgeClass ?? ""}`}
+          >
+            {cfg?.label ?? status}
+          </Badge>
+        );
+      },
     },
     {
       accessorKey: "eco",
@@ -121,43 +140,44 @@ function getColumns(): ColumnDef<Finance>[] {
 
 export function FinancesTable() {
   const router = useRouter();
-  const { data: finances, isLoaded, error } = useAdminFetch<Finance>(
+  const columns = useMemo(() => getColumns(), []);
+  const { data: rows, isLoaded, error } = useAdminFetch<FinanceListRow>(
     "/api/admin/finances",
     "Error al cargar finanzas"
   );
 
   const exportToExcel = useCallback(() => {
-    const aoa = financesToExcelAoa(finances);
+    const aoa = financesToExcelAoa(rows);
     downloadXlsxFromAoa(excelExportFilename("finanzas"), "Finanzas", aoa);
     toast.success("Archivo Excel descargado.");
-  }, [finances]);
+  }, [rows]);
 
   if (!isLoaded) return <p className="text-muted-foreground">Cargando…</p>;
   if (error) return <p className="text-destructive text-sm">{error}</p>;
-  if (finances.length === 0) {
+  if (rows.length === 0) {
     return (
       <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
-        No hay registros de finanzas.
+        No hay embarques registrados.
       </p>
     );
   }
 
   return (
-    <DataTable<Finance, unknown>
-      columns={getColumns()}
-      data={finances}
+    <DataTable<FinanceListRow, unknown>
+      columns={columns}
+      data={rows}
       filterColumn="search"
-      filterPlaceholder="Buscar…"
+      filterPlaceholder="Buscar embarques…"
       initialColumnVisibility={{ search: false }}
       getRowId={(row) => row.id}
-      onRowClick={(finance) => router.push(`/admin/dashboard/finances/${finance.id}`)}
+      onRowClick={(row) => router.push(`/admin/dashboard/finances/${row.id}`)}
       toolbar={
         <Button
           type="button"
           variant="outline"
           className="w-full gap-2 sm:w-auto"
           onClick={exportToExcel}
-          disabled={finances.length === 0}
+          disabled={rows.length === 0}
         >
           <FileDown className="size-4 shrink-0" />
           Exportar Excel

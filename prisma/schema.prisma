@@ -36,7 +36,7 @@ model User {
   birthDate     DateTime?      @map("birth_date")
   role          UserRole       @default(collaborator) @map("role")
   canEditTarget Boolean        @default(true) @map("can_edit_target")
-  canEditRoutes  Boolean        @default(true) @map("can_edit_routes")
+  canEditRoutes  Boolean        @default(false) @map("can_edit_routes")
   canAddRoutes   Boolean        @default(true) @map("can_add_routes")
   canViewMessages   Boolean       @default(false) @map("can_view_messages")
   canViewIdeas      Boolean       @default(false) @map("can_view_ideas")
@@ -61,6 +61,7 @@ model User {
   accounts         Account[]
   profile          Profile?
   carrierRoutes    CarrierRoute[]
+  carrierSuggestions CarrierSuggestion[]
   employeeProfile  EmployeeProfile?
   ownedCollaborators EmployeeProfile[] @relation("CollaboratorOwner")
   assignedLaptops  Laptop[]
@@ -405,6 +406,22 @@ model EmailAccountUser {
 
   @@id([emailAccountId, userId])
   @@map("email_account_users")
+}
+
+// ---- App: sugerencias de transportistas ----
+
+model CarrierSuggestion {
+  id          String   @id @default(cuid()) @map("id")
+  title       String   @map("title")
+  description String?  @map("description")
+  status      String   @default("pending") @map("status")
+  carrierId   String   @map("carrier_id")
+  carrier     User     @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([carrierId])
+  @@map("carrier_suggestions")
 }
 
 // ---- App: ideas (colaboradores + admins) ----
