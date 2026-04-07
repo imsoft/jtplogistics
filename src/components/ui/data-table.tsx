@@ -94,7 +94,7 @@ export function DataTable<TData, TValue>({
       | undefined)?.accessorKey;
 
   return (
-    <div className="min-w-0 space-y-4">
+    <div className="w-full min-w-0 space-y-4">
       {(filterKey || toolbar) && (
         <div className="flex flex-wrap items-center gap-2 py-2">
           {filterKey && (
@@ -110,8 +110,8 @@ export function DataTable<TData, TValue>({
           {toolbar}
         </div>
       )}
-      <div className="overflow-x-auto overflow-y-hidden rounded-md border">
-        <Table>
+      <div className="w-full overflow-x-auto overflow-y-hidden rounded-md border">
+        <Table className="w-full min-w-full">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>

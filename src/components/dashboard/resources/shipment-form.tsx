@@ -403,7 +403,6 @@ export function ShipmentForm({
         submitLabel={submitLabel}
         cancelHref={cancelHref}
         isSubmitting={isSubmitting}
-        submitDisabled={isClosed}
       />
     </form>
   );
