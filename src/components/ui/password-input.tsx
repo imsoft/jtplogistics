@@ -24,6 +24,7 @@ function PasswordInput({ className, ...props }: PasswordInputProps) {
     <InputGroup className={cn("w-full", className)}>
       <InputGroupInput
         type={showPassword ? "text" : "password"}
+        className="normal-case tracking-normal"
         {...props}
       />
       <InputGroupAddon align="inline-end">
