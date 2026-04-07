@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAdminFetch } from "@/hooks/use-admin-fetch";
 import { type ColumnDef } from "@tanstack/react-table";
@@ -273,6 +273,9 @@ export function ShipmentsTable() {
   const router = useRouter();
   const incidentTypes = useIncidentTypes();
   const columns = useMemo(() => getColumns(incidentTypes), [incidentTypes]);
+  const [compactView, setCompactView] = useState(
+    () => typeof window !== "undefined" && window.innerWidth < 1500
+  );
   const { data: shipments, isLoaded, error } = useAdminFetch<Shipment>(
     "/api/admin/shipments",
     "Error al cargar embarques"
@@ -290,6 +293,15 @@ export function ShipmentsTable() {
     setPickupTo("");
     setDeliveryFrom("");
     setDeliveryTo("");
+  }, []);
+
+  useEffect(() => {
+    const onResize = () => {
+      setCompactView(window.innerWidth < 1500);
+    };
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
 
   const filteredShipments = useMemo(() => {
@@ -323,11 +335,23 @@ export function ShipmentsTable() {
 
   return (
     <DataTable<Shipment, unknown>
+      key={compactView ? "shipments-compact" : "shipments-full"}
       columns={columns}
       data={filteredShipments}
       filterColumn="search"
       filterPlaceholder="Buscar…"
-      initialColumnVisibility={{ search: false }}
+      initialColumnVisibility={
+        compactView
+          ? {
+              search: false,
+              legalName: false,
+              comments: false,
+              phone: false,
+              incident: false,
+              incidentType: false,
+            }
+          : { search: false }
+      }
       getRowId={(row) => row.id}
       onRowClick={(shipment) => router.push(`/admin/dashboard/shipments/${shipment.id}`)}
       getRowClassName={getRowClassName}
