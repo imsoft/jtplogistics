@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { Check, Minus, MoveRight } from "lucide-react";
+import { Check, Minus, MoveRight, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -90,6 +90,7 @@ export default function CarrierUnitTypePage() {
   const [originalSelected, setOriginalSelected] = useState<Set<string>>(new Set());
   const [targetByRouteId, setTargetByRouteId] = useState<Record<string, string>>({});
   const [weeklyVolumeByRouteId, setWeeklyVolumeByRouteId] = useState<Record<string, string>>({});
+  const [editingRows, setEditingRows] = useState<Set<string>>(new Set());
 
   const unitTypes = useUnitTypes();
   const unitTypeLabel = useMemo(() => {
@@ -193,6 +194,15 @@ export default function CarrierUnitTypePage() {
 
   const selectedCount = selected.size;
 
+  function toggleEditingRow(routeId: string) {
+    setEditingRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(routeId)) next.delete(routeId);
+      else next.add(routeId);
+      return next;
+    });
+  }
+
   function toggleSelected(routeId: string) {
     setSelected((prev) => {
       const next = new Set(prev);
@@ -245,6 +255,7 @@ export default function CarrierUnitTypePage() {
         throw new Error(err.error ?? "Error al guardar");
       }
       toast.success(`Selecciones de ${pageTitle} guardadas correctamente.`);
+      setEditingRows(new Set());
       await loadRoutes();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "No se pudieron guardar las selecciones. Intenta de nuevo.");
@@ -274,7 +285,7 @@ export default function CarrierUnitTypePage() {
     return <p className="text-muted-foreground">Cargando…</p>;
   }
 
-  const canSave = canEditRoutes ? true : newSelections.size > 0;
+  const canSave = newSelections.size > 0 || editingRows.size > 0;
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
@@ -399,31 +410,32 @@ export default function CarrierUnitTypePage() {
                         Desde {origin}
                       </span>
                     </div>
-                    <div className="grid grid-cols-[auto_1fr_130px_80px_56px] gap-3 border-b bg-muted/20 px-3 py-1.5 text-xs font-medium text-muted-foreground sm:px-4">
+                    <div className="grid grid-cols-[auto_1fr_130px_80px_56px_36px] gap-3 border-b bg-muted/20 px-3 py-1.5 text-xs font-medium text-muted-foreground sm:px-4">
                       <span className="flex items-center">Sel.</span>
                       <span className="flex items-center">Ruta</span>
                       <span className="flex items-center">Mi target</span>
                       <span className="flex items-center">Vol./sem.</span>
                       <span className="flex items-center">Dif.</span>
+                      <span />
                     </div>
                     {items.map((route) => {
                       const isSelected = selected.has(route.id);
                       const isOriginallySelected = originalSelected.has(route.id);
-                      const checkboxDisabled = isOriginallySelected && !canEditRoutes;
-                      const rowSavedLocked = isOriginallySelected && !canEditRoutes;
+                      const rowEditing = editingRows.has(route.id);
+                      const rowEditingLocked = isOriginallySelected && !(canEditRoutes && rowEditing);
                       const currentTarget = parseMxn(targetByRouteId[route.id] ?? "") ?? null;
 
                       return (
                         <div
                           key={route.id}
-                          className="grid grid-cols-[auto_1fr_130px_80px_56px] gap-3 items-center border-b px-3 py-3 last:border-b-0 sm:px-4 hover:bg-hover hover:text-hover-foreground transition-colors"
+                          className="grid grid-cols-[auto_1fr_130px_80px_56px_36px] gap-3 items-center border-b px-3 py-3 last:border-b-0 sm:px-4 hover:bg-hover hover:text-hover-foreground transition-colors"
                         >
                           <label className="flex cursor-pointer items-center gap-2">
                             <input
                               type="checkbox"
                               checked={isSelected}
                               onChange={() => toggleSelected(route.id)}
-                              disabled={checkboxDisabled}
+                              disabled={rowEditingLocked}
                               className="size-4 rounded border-input accent-primary disabled:cursor-not-allowed disabled:opacity-50"
                               aria-label={`Seleccionar ${route.origin} a ${route.destination}`}
                             />
@@ -448,7 +460,7 @@ export default function CarrierUnitTypePage() {
                               value={targetByRouteId[route.id] ?? ""}
                               onChange={(e) => handleTargetChange(route.id, e.target.value)}
                               onBlur={() => handleTargetBlur(route.id)}
-                              disabled={!isSelected || (isOriginallySelected && !canEditTarget)}
+                              disabled={!isSelected || rowEditingLocked}
                               className="h-8 min-w-0 w-full text-sm"
                               aria-label={`Mi target para ${route.origin} a ${route.destination}`}
                             />
@@ -460,13 +472,27 @@ export default function CarrierUnitTypePage() {
                             min={0}
                             value={weeklyVolumeByRouteId[route.id] ?? ""}
                             onChange={(e) => handleVolumeChange(route.id, e.target.value)}
-                            disabled={!isSelected || rowSavedLocked}
+                            disabled={!isSelected || rowEditingLocked}
                             className="h-8 w-full text-sm"
                             aria-label={`Volumen semanal para ${route.origin} a ${route.destination}`}
                           />
 
                           <div className="flex items-center justify-center">
                             <TargetDiff jtpTarget={jtpTargetForPage(route)} carrierTarget={currentTarget} />
+                          </div>
+
+                          <div className="flex items-center justify-center">
+                            {isOriginallySelected && canEditRoutes && (
+                              <button
+                                type="button"
+                                onClick={() => toggleEditingRow(route.id)}
+                                className={`rounded p-1 transition-colors ${rowEditing ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+                                aria-label={rowEditing ? "Cancelar edición" : "Editar ruta"}
+                                title={rowEditing ? "Cancelar edición" : "Editar ruta"}
+                              >
+                                <Pencil className="size-3.5" />
+                              </button>
+                            )}
                           </div>
                         </div>
                       );
