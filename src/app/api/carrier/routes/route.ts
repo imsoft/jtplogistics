@@ -156,12 +156,10 @@ export async function PUT(request: NextRequest) {
       const unlockedNewOnes = body.filter((item) => !existingKeys.has(`${item.routeId}:${item.unitType}`));
 
       if (unlockedNewOnes.length > 0) {
-        const targetData = userRecord?.canEditTarget
-          ? unlockedNewOnes
-          : unlockedNewOnes.map((item) => ({ ...item, carrierTarget: null }));
-
+        // Rutas nuevas: siempre guardar el target que el carrier ingresó.
+        // canEditTarget solo restringe editar rutas YA guardadas.
         await prisma.carrierRoute.createMany({
-          data: targetData.map((item) => ({
+          data: unlockedNewOnes.map((item) => ({
             carrierId: session.user.id,
             routeId: item.routeId,
             unitType: item.unitType,
