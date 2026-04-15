@@ -16,8 +16,6 @@ import {
 } from "@/components/ui/select";
 import type { EmailAccount } from "@/types/resources.types";
 
-const EMAIL_TYPES = ["Gmail", "Outlook", "iCloud", "Yahoo", "Corporativo", "Otro"];
-
 function getColumns(): ColumnDef<EmailAccount>[] {
   return [
     {
@@ -59,10 +57,15 @@ export function EmailsTable() {
   );
   const [filterType, setFilterType] = useState("all");
 
-  const filtered = useMemo(() => emails.filter((e) => {
-    if (filterType !== "all" && e.type !== filterType) return false;
-    return true;
-  }), [emails, filterType]);
+  const availableTypes = useMemo(
+    () => [...new Set(emails.map((e) => e.type))].sort(),
+    [emails]
+  );
+
+  const filtered = useMemo(
+    () => emails.filter((e) => filterType === "all" || e.type === filterType),
+    [emails, filterType]
+  );
 
   if (!isLoaded) return <p className="text-muted-foreground">Cargando…</p>;
   if (error) return <p className="text-destructive text-sm">{error}</p>;
@@ -90,7 +93,7 @@ export function EmailsTable() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos los tipos</SelectItem>
-              {EMAIL_TYPES.map((t) => (
+              {availableTypes.map((t) => (
                 <SelectItem key={t} value={t}>{t}</SelectItem>
               ))}
             </SelectContent>
