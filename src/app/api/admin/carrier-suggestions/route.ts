@@ -7,8 +7,18 @@ export function GET() {
       orderBy: { createdAt: "desc" },
       include: { carrier: { select: { name: true, email: true } } },
     });
+    type Row = {
+      id: string;
+      title: string;
+      description: string | null;
+      status: string;
+      carrierId: string;
+      carrier: { name: string; email: string };
+      createdAt: Date;
+      updatedAt: Date;
+    };
     return Response.json(
-      rows.map((r) => ({
+      (rows as Row[]).map((r) => ({
         id: r.id,
         title: r.title,
         description: r.description,
