@@ -27,13 +27,29 @@ export async function PATCH(
       return Response.json({ error: "Ruta no encontrada" }, { status: 404 });
     }
 
-    await prisma.carrierRoute.update({
-      where: { id },
-      data: {
-        editUnlockApproved: approved,
-        editUnlockRequested: false,
-      },
-    });
+    const routeLabel = `${carrierRoute.route.origin} → ${carrierRoute.route.destination}`;
+
+    await prisma.$transaction([
+      prisma.carrierRoute.update({
+        where: { id },
+        data: {
+          editUnlockApproved: approved,
+          editUnlockRequested: false,
+        },
+      }),
+      prisma.notification.create({
+        data: {
+          userId: carrierRoute.carrier.id,
+          type: "carrier_unlock_response",
+          title: approved ? "Edición de ruta aprobada" : "Solicitud de edición rechazada",
+          body: approved
+            ? `Tu solicitud para editar la ruta ${routeLabel} fue aprobada. Ya puedes modificarla.`
+            : `Tu solicitud para editar la ruta ${routeLabel} fue rechazada.`,
+          href: `/carrier/dashboard/unit-types/${carrierRoute.unitType}`,
+          read: false,
+        },
+      }),
+    ]);
 
     void logAudit({
       resource: "carrier_route_unlock",
