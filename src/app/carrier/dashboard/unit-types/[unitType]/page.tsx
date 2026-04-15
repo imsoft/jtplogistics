@@ -448,7 +448,7 @@ export default function CarrierUnitTypePage() {
                               value={targetByRouteId[route.id] ?? ""}
                               onChange={(e) => handleTargetChange(route.id, e.target.value)}
                               onBlur={() => handleTargetBlur(route.id)}
-                              disabled={!canEditTarget || !isSelected || rowSavedLocked}
+                              disabled={!isSelected || (isOriginallySelected && !canEditTarget)}
                               className="h-8 min-w-0 w-full text-sm"
                               aria-label={`Mi target para ${route.origin} a ${route.destination}`}
                             />
