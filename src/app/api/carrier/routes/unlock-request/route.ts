@@ -3,40 +3,46 @@ import { prisma } from "@/lib/db";
 import { requireCarrier } from "@/lib/auth-server";
 import { logAudit } from "@/lib/audit-log";
 
-type RequestType = "edit_existing" | "add_new";
-
-const REQUEST_TITLES: Record<RequestType, string> = {
-  edit_existing: "Solicitud de desbloqueo para editar rutas",
-  add_new: "Solicitud de desbloqueo para agregar rutas",
-};
-
-const REQUEST_BODIES: Record<RequestType, string> = {
-  edit_existing: "El transportista solicita autorización para modificar rutas ya seleccionadas y sus targets.",
-  add_new: "El transportista solicita autorización para agregar nuevas rutas a su selección.",
-};
-
 export async function POST(request: NextRequest) {
   try {
     const session = await requireCarrier();
     const body = await request.json();
-    const type = body?.type as RequestType;
+    const { routeId, unitType } = body as { routeId?: string; unitType?: string };
 
-    if (type !== "edit_existing" && type !== "add_new") {
-      return Response.json({ error: "Tipo de solicitud inválido" }, { status: 400 });
+    if (!routeId || !unitType) {
+      return Response.json({ error: "routeId y unitType son requeridos" }, { status: 400 });
     }
 
+    // Find the carrier route record
+    const carrierRoute = await prisma.carrierRoute.findUnique({
+      where: { carrierId_routeId_unitType: { carrierId: session.user.id, routeId, unitType } },
+      include: { route: { select: { origin: true, destination: true } } },
+    });
+
+    if (!carrierRoute) {
+      return Response.json({ error: "Ruta no encontrada" }, { status: 404 });
+    }
+
+    // Mark as requested
+    await prisma.carrierRoute.update({
+      where: { id: carrierRoute.id },
+      data: { editUnlockRequested: true },
+    });
+
+    // Notify all admins
     const admins = await prisma.user.findMany({
       where: { role: "admin" },
       select: { id: true },
     });
 
     if (admins.length > 0) {
+      const routeLabel = `${carrierRoute.route.origin} → ${carrierRoute.route.destination} (${unitType})`;
       await prisma.notification.createMany({
         data: admins.map((admin) => ({
           userId: admin.id,
           type: "carrier_unlock_request",
-          title: REQUEST_TITLES[type],
-          body: `${REQUEST_BODIES[type]} Transportista: ${session.user.name}.`,
+          title: "Solicitud de edición de ruta",
+          body: `${(session.user as { name: string }).name} solicita editar: ${routeLabel}.`,
           href: `/admin/dashboard/users/${session.user.id}`,
           read: false,
         })),
@@ -44,12 +50,12 @@ export async function POST(request: NextRequest) {
     }
 
     void logAudit({
-      resource: "carrier_routes_unlock_request",
-      resourceId: session.user.id,
-      resourceLabel: session.user.name,
+      resource: "carrier_route_unlock_request",
+      resourceId: carrierRoute.id,
+      resourceLabel: `${carrierRoute.route.origin} → ${carrierRoute.route.destination}`,
       action: "created",
       userId: session.user.id,
-      userName: session.user.name,
+      userName: (session.user as { name: string }).name,
     });
 
     return Response.json({ ok: true });

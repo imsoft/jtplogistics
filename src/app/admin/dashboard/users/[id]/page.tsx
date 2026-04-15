@@ -10,6 +10,7 @@ import { InfoRow } from "@/components/dashboard/users/info-row";
 import { formatPhone } from "@/lib/utils";
 import { TargetDiff } from "@/components/dashboard/users/target-diff";
 import { ToggleCarrierPermissions } from "@/components/dashboard/users/toggle-carrier-permissions";
+import { CarrierRouteUnlockRequests } from "@/components/dashboard/users/carrier-route-unlock-requests";
 import { DeleteUserButton } from "@/components/dashboard/users/delete-user-button";
 import type { UserRole } from "@/types/user.types";
 
@@ -25,7 +26,10 @@ type ProfileContact = {
 
 type CarrierRouteListItem = {
   id: string;
+  unitType: string;
   carrierTarget: number | null;
+  editUnlockRequested: boolean;
+  editUnlockApproved: boolean;
   route: {
     origin: string;
     destination: string;
@@ -87,6 +91,14 @@ export default async function UserProfilePage({
   const phones = contacts.filter((c) => c.type === "phone");
   const emails = contacts.filter((c) => c.type === "email");
   const carrierRoutes = user.carrierRoutes as CarrierRouteListItem[];
+  const pendingUnlockRequests = carrierRoutes
+    .filter((cr) => cr.editUnlockRequested && !cr.editUnlockApproved)
+    .map((cr) => ({
+      id: cr.id,
+      origin: cr.route.origin,
+      destination: cr.route.destination,
+      unitType: cr.unitType,
+    }));
 
   return (
     <div className="min-w-0 space-y-6">
@@ -223,7 +235,11 @@ export default async function UserProfilePage({
               Rutas seleccionadas ({carrierRoutes.length})
             </CardTitle>
           </CardHeader>
-          <CardContent className="px-4 pb-4 pt-0 space-y-2">
+          <CardContent className="px-4 pb-4 pt-0 space-y-3">
+            <CarrierRouteUnlockRequests
+              carrierId={user.id}
+              initialRequests={pendingUnlockRequests}
+            />
             <ToggleCarrierPermissions
               userId={user.id}
               initialCanEditRoutes={user.canEditRoutes}

@@ -39,10 +39,16 @@ export async function GET() {
     const selectedRouteIds = new Set(carrierRoutes.map((cr) => cr.routeId));
 
     // Build per-unitType selection info
-    const selectionsByRoute = new Map<string, { unitType: string; carrierTarget: number | null; carrierWeeklyVolume: number | null }[]>();
+    const selectionsByRoute = new Map<string, { unitType: string; carrierTarget: number | null; carrierWeeklyVolume: number | null; editUnlockRequested: boolean; editUnlockApproved: boolean }[]>();
     for (const cr of carrierRoutes) {
       const list = selectionsByRoute.get(cr.routeId) ?? [];
-      list.push({ unitType: cr.unitType, carrierTarget: cr.carrierTarget ?? null, carrierWeeklyVolume: cr.carrierWeeklyVolume ?? null });
+      list.push({
+        unitType: cr.unitType,
+        carrierTarget: cr.carrierTarget ?? null,
+        carrierWeeklyVolume: cr.carrierWeeklyVolume ?? null,
+        editUnlockRequested: cr.editUnlockRequested,
+        editUnlockApproved: cr.editUnlockApproved,
+      });
       selectionsByRoute.set(cr.routeId, list);
     }
 
@@ -105,69 +111,74 @@ export async function PUT(request: NextRequest) {
       where: { carrierId: session.user.id, unitType: pageUnitType },
     });
     const existingMap = new Map(existingRoutes.map((r) => [`${r.routeId}:${r.unitType}`, r]));
-    const incomingMap = new Map(body.map((r) => [`${r.routeId}:${r.unitType}`, r]));
-    const newOnes = body.filter((item) => !existingMap.has(`${item.routeId}:${item.unitType}`));
-    const removedExisting = existingRoutes.filter((item) => !incomingMap.has(`${item.routeId}:${item.unitType}`));
-    const changedExisting = body.filter((item) => {
-      const prev = existingMap.get(`${item.routeId}:${item.unitType}`);
-      if (!prev) return false;
-      return (prev.carrierTarget ?? null) !== (item.carrierTarget ?? null)
+    const incomingKeys = new Set(body.map((r) => `${r.routeId}:${r.unitType}`));
+    const canEditGlobally = userRecord?.canEditRoutes ?? false;
+
+    // Categorize routes
+    const toCreate = body.filter((item) => !existingMap.has(`${item.routeId}:${item.unitType}`));
+    const toDelete = existingRoutes.filter((item) => !incomingKeys.has(`${item.routeId}:${item.unitType}`));
+    const toUpdate = body.filter((item) => existingMap.has(`${item.routeId}:${item.unitType}`));
+
+    // Check permissions for deletions
+    const unauthorizedDeletes = toDelete.filter((item) => !canEditGlobally && !item.editUnlockApproved);
+    // Check permissions for updates (only block if something actually changed)
+    const unauthorizedUpdates = toUpdate.filter((item) => {
+      const prev = existingMap.get(`${item.routeId}:${item.unitType}`)!;
+      const changed = (prev.carrierTarget ?? null) !== (item.carrierTarget ?? null)
         || (prev.carrierWeeklyVolume ?? null) !== (item.carrierWeeklyVolume ?? null);
+      return changed && !canEditGlobally && !prev.editUnlockApproved;
     });
 
-    if (!userRecord?.canEditRoutes && (removedExisting.length > 0 || changedExisting.length > 0)) {
+    if (unauthorizedDeletes.length > 0 || unauthorizedUpdates.length > 0) {
       return Response.json(
-        { error: "No tienes autorización para editar rutas ya seleccionadas. Solicita desbloqueo al administrador." },
+        { error: "No tienes autorización para editar esas rutas. Solicita desbloqueo al administrador." },
         { status: 403 }
       );
     }
 
-    if (userRecord?.canEditRoutes) {
-      // Edición completa: reemplaza selections for this unitType only, preserve others
-      let data = body;
-      if (!userRecord.canEditTarget) {
-        const existingTargetMap = new Map(
-          existingRoutes.map((r) => [`${r.routeId}:${r.unitType}`, r.carrierTarget ?? null])
-        );
-        data = body.map((item) => ({
-          ...item,
-          carrierTarget: existingTargetMap.get(`${item.routeId}:${item.unitType}`) ?? null,
-        }));
-      }
+    // Build transaction operations
+    const ops = [];
 
-      await prisma.$transaction([
-        // Only delete selections for this unit type page
-        prisma.carrierRoute.deleteMany({
-          where: { carrierId: session.user.id, unitType: pageUnitType },
-        }),
+    // Create new routes
+    if (toCreate.length > 0) {
+      ops.push(
         prisma.carrierRoute.createMany({
-          data: data.map((item) => ({
+          data: toCreate.map((item) => ({
             carrierId: session.user.id,
             routeId: item.routeId,
             unitType: item.unitType,
             carrierTarget: item.carrierTarget ?? undefined,
             carrierWeeklyVolume: item.carrierWeeklyVolume ?? undefined,
           })),
-        }),
-      ]);
-    } else {
-      // Solo agrega rutas nuevas para este unitType (no toca las existentes)
-      const existingKeys = new Set(existingRoutes.map((r) => `${r.routeId}:${r.unitType}`));
-      const unlockedNewOnes = body.filter((item) => !existingKeys.has(`${item.routeId}:${item.unitType}`));
+        })
+      );
+    }
 
-      if (unlockedNewOnes.length > 0) {
-        // Rutas nuevas: siempre guardar el target que el carrier ingresó.
-        // canEditTarget solo restringe editar rutas YA guardadas.
-        await prisma.carrierRoute.createMany({
-          data: unlockedNewOnes.map((item) => ({
-            carrierId: session.user.id,
-            routeId: item.routeId,
-            unitType: item.unitType,
+    // Delete removed routes (already permission-checked above)
+    for (const item of toDelete) {
+      ops.push(prisma.carrierRoute.delete({ where: { id: item.id } }));
+    }
+
+    // Update existing routes that have permission (global or per-route)
+    for (const item of toUpdate) {
+      const prev = existingMap.get(`${item.routeId}:${item.unitType}`)!;
+      if (!canEditGlobally && !prev.editUnlockApproved) continue; // skip locked rows silently
+      ops.push(
+        prisma.carrierRoute.update({
+          where: { id: prev.id },
+          data: {
             carrierTarget: item.carrierTarget ?? undefined,
             carrierWeeklyVolume: item.carrierWeeklyVolume ?? undefined,
-          })),
-        });
-      }
+            // Reset per-route approval after saving so each edit requires fresh approval
+            editUnlockApproved: false,
+            editUnlockRequested: false,
+          },
+        })
+      );
+    }
+
+    if (ops.length > 0) {
+      await prisma.$transaction(ops);
     }
 
     // Notificación a pricing

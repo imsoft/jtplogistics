@@ -191,6 +191,8 @@ model CarrierRoute {
   unitType             String   @default("") @map("unit_type")
   carrierTarget        Float?   @map("carrier_target")
   carrierWeeklyVolume  Int?     @map("carrier_weekly_volume")
+  editUnlockRequested  Boolean  @default(false) @map("edit_unlock_requested")
+  editUnlockApproved   Boolean  @default(false) @map("edit_unlock_approved")
   createdAt            DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
   carrier       User     @relation(fields: [carrierId], references: [id], onDelete: Cascade)
