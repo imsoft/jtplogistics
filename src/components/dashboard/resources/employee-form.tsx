@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const DEPARTMENTS = ["Logística", "Finanzas", "Administración", "Tecnología"] as const;
+const DEPARTMENTS = ["Logística", "Finanzas", "Administración", "Tecnología", "Recursos Humanos"] as const;
 import type { Employee, EmployeeFormData } from "@/types/resources.types";
 
 interface EmployeeFormProps {

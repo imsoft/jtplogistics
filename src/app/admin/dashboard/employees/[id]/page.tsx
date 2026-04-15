@@ -92,7 +92,6 @@ export default function EmployeeProfilePage() {
             />
             <InfoRow label="Puesto" value={employee.position} />
             <InfoRow label="Departamento" value={employee.department} />
-            <InfoRow label="Registro" value={formatDate(employee.createdAt)} />
           </CardContent>
         </Card>
       </div>
