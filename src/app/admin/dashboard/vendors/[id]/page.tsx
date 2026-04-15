@@ -76,6 +76,7 @@ export default function VendorProfilePage() {
                 vendor.birthDate
                   ? new Date(vendor.birthDate).toLocaleDateString("es-MX", {
                       year: "numeric", month: "long", day: "numeric",
+                      timeZone: "UTC",
                     })
                   : null
               }

@@ -17,6 +17,7 @@ function initials(name: string) {
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("es-MX", {
     year: "numeric", month: "long", day: "numeric",
+    timeZone: "UTC",
   });
 }
 
