@@ -34,7 +34,11 @@ export function EmployeeForm({
   const [password, setPassword] = useState("");
   const [birthDate, setBirthDate] = useState(initialValues.birthDate ?? "");
   const [position, setPosition] = useState(initialValues.position ?? "");
-  const [department, setDepartment] = useState(initialValues.department ?? "");
+  const [department, setDepartment] = useState(
+    DEPARTMENTS.find((d) => d.toLowerCase() === (initialValues.department ?? "").toLowerCase())
+    ?? initialValues.department
+    ?? ""
+  );
   const [phone, setPhone] = useState(initialValues.phone ?? "");
 
   function handleSubmit(e: React.FormEvent) {
