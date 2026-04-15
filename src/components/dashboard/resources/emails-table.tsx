@@ -16,6 +16,20 @@ import {
 } from "@/components/ui/select";
 import type { EmailAccount } from "@/types/resources.types";
 
+const EMAIL_TYPE_LABELS: Record<string, string> = {
+  administrative: "Administrativo",
+  gmail: "Gmail",
+  icloud: "iCloud",
+  hotmail: "Hotmail",
+  outlook: "Outlook",
+  hosting: "Hosting",
+  yahoo: "Yahoo",
+};
+
+function emailTypeLabel(type: string) {
+  return EMAIL_TYPE_LABELS[type.toLowerCase()] ?? type;
+}
+
 function getColumns(): ColumnDef<EmailAccount>[] {
   return [
     {
@@ -35,7 +49,7 @@ function getColumns(): ColumnDef<EmailAccount>[] {
     {
       accessorKey: "type",
       header: ({ column }) => <SortableColumnHeader column={column} title="Tipo" />,
-      cell: ({ row }) => row.getValue("type"),
+      cell: ({ row }) => emailTypeLabel(row.getValue("type")),
     },
     {
       id: "assignees",
@@ -94,7 +108,7 @@ export function EmailsTable() {
             <SelectContent>
               <SelectItem value="all">Todos los tipos</SelectItem>
               {availableTypes.map((t) => (
-                <SelectItem key={t} value={t}>{t}</SelectItem>
+                <SelectItem key={t} value={t}>{emailTypeLabel(t)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
