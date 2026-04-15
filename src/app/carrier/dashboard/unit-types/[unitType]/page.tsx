@@ -81,7 +81,6 @@ export default function CarrierUnitTypePage() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isRequestingEditUnlock, setIsRequestingEditUnlock] = useState(false);
-  const [isRequestingAddUnlock, setIsRequestingAddUnlock] = useState(false);
 
   const [filterOrigin, setFilterOrigin] = useState<string | null>(null);
   const [filterDestination, setFilterDestination] = useState<string | null>(null);
@@ -254,9 +253,8 @@ export default function CarrierUnitTypePage() {
     }
   }
 
-  async function requestUnlock(type: "edit_existing" | "add_new") {
-    if (type === "edit_existing") setIsRequestingEditUnlock(true);
-    else setIsRequestingAddUnlock(true);
+  async function requestUnlock(type: "edit_existing") {
+    setIsRequestingEditUnlock(true);
     try {
       const res = await fetch("/api/carrier/routes/unlock-request", {
         method: "POST",
@@ -268,8 +266,7 @@ export default function CarrierUnitTypePage() {
     } catch {
       toast.error("No se pudo enviar la solicitud. Intenta de nuevo.");
     } finally {
-      if (type === "edit_existing") setIsRequestingEditUnlock(false);
-      else setIsRequestingAddUnlock(false);
+      setIsRequestingEditUnlock(false);
     }
   }
 
@@ -277,9 +274,7 @@ export default function CarrierUnitTypePage() {
     return <p className="text-muted-foreground">Cargando…</p>;
   }
 
-  const canSave = canEditRoutes
-    ? canAddRoutes || newSelections.size === 0
-    : canAddRoutes && newSelections.size > 0;
+  const canSave = canEditRoutes ? true : newSelections.size > 0;
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
@@ -303,42 +298,23 @@ export default function CarrierUnitTypePage() {
         </Card>
       )}
 
-      {isLoaded && (!canEditRoutes || !canAddRoutes) && (
-        <div className="space-y-2 rounded-lg border p-3 sm:p-4">
-          {!canEditRoutes && (
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs text-muted-foreground">
-                No puedes editar rutas ya seleccionadas ni su target hasta autorización del administrador.
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => requestUnlock("edit_existing")}
-                disabled={isRequestingEditUnlock}
-                className="w-full sm:w-auto"
-              >
-                {isRequestingEditUnlock ? "Enviando…" : "Solicitar desbloqueo de edición"}
-              </Button>
-            </div>
-          )}
-          {!canAddRoutes && (
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs text-muted-foreground">
-                No puedes agregar rutas nuevas hasta autorización del administrador.
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => requestUnlock("add_new")}
-                disabled={isRequestingAddUnlock}
-                className="w-full sm:w-auto"
-              >
-                {isRequestingAddUnlock ? "Enviando…" : "Solicitar desbloqueo para agregar"}
-              </Button>
-            </div>
-          )}
+      {isLoaded && !canEditRoutes && (
+        <div className="rounded-lg border p-3 sm:p-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-muted-foreground">
+              No puedes editar rutas ya seleccionadas ni su target hasta autorización del administrador.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => requestUnlock("edit_existing")}
+              disabled={isRequestingEditUnlock}
+              className="w-full sm:w-auto"
+            >
+              {isRequestingEditUnlock ? "Enviando…" : "Solicitar desbloqueo de edición"}
+            </Button>
+          </div>
         </div>
       )}
 
@@ -433,9 +409,7 @@ export default function CarrierUnitTypePage() {
                     {items.map((route) => {
                       const isSelected = selected.has(route.id);
                       const isOriginallySelected = originalSelected.has(route.id);
-                      const checkboxDisabled =
-                        (isOriginallySelected && !canEditRoutes) ||
-                        (!isOriginallySelected && !canAddRoutes);
+                      const checkboxDisabled = isOriginallySelected && !canEditRoutes;
                       const rowSavedLocked = isOriginallySelected && !canEditRoutes;
                       const currentTarget = parseMxn(targetByRouteId[route.id] ?? "") ?? null;
 

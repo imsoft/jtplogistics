@@ -100,6 +100,16 @@ export function CarrierSuggestionsTable({ mode }: CarrierSuggestionsTableProps) 
     );
   }
 
+  if (rows.length === 0) {
+    return (
+      <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
+        {mode === "carrier"
+          ? "Aún no has enviado ninguna sugerencia."
+          : "No hay sugerencias registradas."}
+      </p>
+    );
+  }
+
   return (
     <DataTable
       columns={columns}

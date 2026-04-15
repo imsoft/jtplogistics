@@ -10,6 +10,7 @@ import { InfoRow } from "@/components/dashboard/users/info-row";
 import { formatPhone } from "@/lib/utils";
 import { TargetDiff } from "@/components/dashboard/users/target-diff";
 import { ToggleCarrierPermissions } from "@/components/dashboard/users/toggle-carrier-permissions";
+import { DeleteUserButton } from "@/components/dashboard/users/delete-user-button";
 import type { UserRole } from "@/types/user.types";
 
 /** Alineado con el modelo Contact de Prisma (tipado explícito para el include del perfil). */
@@ -80,6 +81,7 @@ export default async function UserProfilePage({
     .toUpperCase();
 
   const isCarrier = user.role === "carrier";
+  const isDeletable = user.role === "carrier" || user.role === "collaborator";
 
   const contacts = (user.profile?.contacts ?? []) as ProfileContact[];
   const phones = contacts.filter((c) => c.type === "phone");
@@ -89,7 +91,8 @@ export default async function UserProfilePage({
   return (
     <div className="min-w-0 space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
         <Button variant="ghost" size="icon" asChild className="shrink-0">
           <Link href="/admin/dashboard/users" aria-label="Volver a usuarios">
             <ChevronLeft className="size-4" />
@@ -113,6 +116,13 @@ export default async function UserProfilePage({
             </p>
           </div>
         </div>
+        </div>
+        {isDeletable && (
+          <DeleteUserButton
+            userId={user.id}
+            userName={user.profile?.commercialName ?? user.name}
+          />
+        )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">

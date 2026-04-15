@@ -22,7 +22,7 @@ export async function GET() {
       }),
       prisma.user.findUnique({
         where: { id: session.user.id },
-        select: { canEditTarget: true, canEditRoutes: true, canAddRoutes: true },
+        select: { canEditTarget: true, canEditRoutes: true },
       }),
     ]);
 
@@ -49,7 +49,7 @@ export async function GET() {
     return Response.json({
       canEditTarget: userRecord?.canEditTarget ?? false,
       canEditRoutes: userRecord?.canEditRoutes ?? false,
-      canAddRoutes: userRecord?.canAddRoutes ?? false,
+      canAddRoutes: true,
       routes: routes.map((r) => {
         const unitTargets =
           r.unitTargets.length > 0
@@ -98,7 +98,7 @@ export async function PUT(request: NextRequest) {
 
     const userRecord = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { canEditTarget: true, canEditRoutes: true, canAddRoutes: true },
+      select: { canEditTarget: true, canEditRoutes: true },
     });
 
     const existingRoutes = await prisma.carrierRoute.findMany({
@@ -115,12 +115,6 @@ export async function PUT(request: NextRequest) {
         || (prev.carrierWeeklyVolume ?? null) !== (item.carrierWeeklyVolume ?? null);
     });
 
-    if (!userRecord?.canAddRoutes && newOnes.length > 0) {
-      return Response.json(
-        { error: "No tienes autorización para agregar rutas nuevas. Solicita desbloqueo al administrador." },
-        { status: 403 }
-      );
-    }
     if (!userRecord?.canEditRoutes && (removedExisting.length > 0 || changedExisting.length > 0)) {
       return Response.json(
         { error: "No tienes autorización para editar rutas ya seleccionadas. Solicita desbloqueo al administrador." },
@@ -182,7 +176,6 @@ export async function PUT(request: NextRequest) {
     void notifyPricing(session.user.id, body);
 
     // Tras guardar: se bloquea editar lo ya guardado (targets y desmarcar).
-    // Sigue pudiendo agregar rutas nuevas mientras canAddRoutes sea true.
     await prisma.user.update({
       where: { id: session.user.id },
       data: { canEditRoutes: false, canEditTarget: false },
