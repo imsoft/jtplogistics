@@ -32,6 +32,7 @@ export function GET(
       email: u.email,
       image: u.image,
       birthDate: u.birthDate ? u.birthDate.toISOString().split("T")[0] : null,
+      hireDate: u.employeeProfile?.hireDate ? u.employeeProfile.hireDate.toISOString().split("T")[0] : null,
       position: u.employeeProfile?.position ?? null,
       department: u.employeeProfile?.department ?? null,
       phone: u.employeeProfile?.phone ?? null,
@@ -79,13 +80,14 @@ export function PATCH(
   return adminHandler(async (session) => {
     const { id } = await params;
     const body = await request.json();
-    const { name, position, department, phone, password, birthDate } = body as {
+    const { name, position, department, phone, password, birthDate, hireDate } = body as {
       name?: string;
       position?: string;
       department?: string;
       phone?: string;
       password?: string;
       birthDate?: string | null;
+      hireDate?: string | null;
     };
 
     const PERMISSION_FIELDS = [
@@ -120,9 +122,14 @@ export function PATCH(
       return Response.json({ error: "No encontrado" }, { status: 404 });
     }
 
+    const parsedHireDate = hireDate !== undefined
+      ? (hireDate ? new Date(hireDate) : null)
+      : undefined;
+
     const before: Record<string, unknown> = {
       name: u.name,
       birthDate: u.birthDate,
+      hireDate: u.employeeProfile?.hireDate,
       position: u.employeeProfile?.position,
       department: u.employeeProfile?.department,
       phone: u.employeeProfile?.phone,
@@ -151,6 +158,7 @@ export function PATCH(
         position: position?.trim() ?? undefined,
         department: department?.trim() ?? undefined,
         phone: phone?.trim() ?? undefined,
+        ...(parsedHireDate !== undefined && { hireDate: parsedHireDate }),
         ...(password !== undefined && { password: password || null }),
       },
       create: {
@@ -158,6 +166,7 @@ export function PATCH(
         position: position?.trim() || null,
         department: department?.trim() || null,
         phone: phone?.trim() || null,
+        hireDate: parsedHireDate ?? null,
         password: password || null,
       },
     });
@@ -170,6 +179,7 @@ export function PATCH(
     const after: Record<string, unknown> = {
       name: updated!.name,
       birthDate: updated!.birthDate,
+      hireDate: updated!.employeeProfile?.hireDate,
       position: updated!.employeeProfile?.position,
       department: updated!.employeeProfile?.department,
       phone: updated!.employeeProfile?.phone,
@@ -179,6 +189,7 @@ export function PATCH(
     const fieldLabels: Record<string, string> = {
       name: "Nombre",
       birthDate: "Fecha de nacimiento",
+      hireDate: "Fecha de ingreso",
       position: "Puesto",
       department: "Departamento",
       phone: "Teléfono",

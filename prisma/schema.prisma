@@ -350,6 +350,7 @@ model EmployeeProfile {
   department String? @map("department")
   phone      String? @map("phone")
   password   String? @map("password")
+  hireDate   DateTime? @map("hire_date")
 
   @@index([ownerUserId])
   @@map("employee_profiles")

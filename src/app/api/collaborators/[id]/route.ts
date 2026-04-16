@@ -27,6 +27,7 @@ export async function GET(
       email: user.email,
       image: user.image,
       birthDate: user.birthDate ? user.birthDate.toISOString().split("T")[0] : null,
+      hireDate: user.employeeProfile?.hireDate ? user.employeeProfile.hireDate.toISOString().split("T")[0] : null,
       position: user.employeeProfile?.position ?? null,
       department: user.employeeProfile?.department ?? null,
       phone: user.employeeProfile?.phone ?? null,
@@ -48,13 +49,14 @@ export async function PATCH(
     const session = await requireCarrierOrVendor();
     const { id } = await params;
     const body = await request.json();
-    const { name, position, department, phone, password, birthDate } = body as {
+    const { name, position, department, phone, password, birthDate, hireDate } = body as {
       name?: string;
       position?: string;
       department?: string;
       phone?: string;
       password?: string;
       birthDate?: string | null;
+      hireDate?: string | null;
     };
 
     const user = await prisma.user.findFirst({
@@ -72,6 +74,8 @@ export async function PATCH(
 
     const parsedBirthDate =
       birthDate !== undefined ? (birthDate ? new Date(birthDate) : null) : undefined;
+    const parsedHireDate =
+      hireDate !== undefined ? (hireDate ? new Date(hireDate) : null) : undefined;
 
     const userUpdate: Record<string, unknown> = {};
     if (name !== undefined && name.trim()) userUpdate.name = name.trim();
@@ -87,6 +91,7 @@ export async function PATCH(
         position: position?.trim() ?? undefined,
         department: department?.trim() ?? undefined,
         phone: phone?.trim() ?? undefined,
+        ...(parsedHireDate !== undefined && { hireDate: parsedHireDate }),
         ...(password !== undefined && { password: password || null }),
       },
       create: {
@@ -95,6 +100,7 @@ export async function PATCH(
         position: position?.trim() || null,
         department: department?.trim() || null,
         phone: phone?.trim() || null,
+        hireDate: parsedHireDate ?? null,
         password: password || null,
       },
     });

@@ -33,6 +33,7 @@ export function EmployeeForm({
   const [email, setEmail] = useState(initialValues.email ?? "");
   const [password, setPassword] = useState("");
   const [birthDate, setBirthDate] = useState(initialValues.birthDate ?? "");
+  const [hireDate, setHireDate] = useState(initialValues.hireDate ?? "");
   const [position, setPosition] = useState(initialValues.position ?? "");
   const [department, setDepartment] = useState(
     DEPARTMENTS.find((d) => d.toLowerCase() === (initialValues.department ?? "").toLowerCase())
@@ -43,7 +44,7 @@ export function EmployeeForm({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const base = { name, email, birthDate, position, department, phone };
+    const base = { name, email, birthDate, hireDate, position, department, phone };
     if (isNew) {
       onSubmit({ ...base, password });
     } else {
@@ -108,6 +109,15 @@ export function EmployeeForm({
             type="date"
             value={birthDate}
             onChange={(e) => setBirthDate(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="emp-hireDate">Fecha de ingreso</Label>
+          <Input
+            id="emp-hireDate"
+            type="date"
+            value={hireDate}
+            onChange={(e) => setHireDate(e.target.value)}
           />
         </div>
         <div className="space-y-2">

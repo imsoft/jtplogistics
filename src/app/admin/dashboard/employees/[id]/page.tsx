@@ -91,6 +91,10 @@ export default function EmployeeProfilePage() {
               label="Fecha de nacimiento"
               value={employee.birthDate ? formatDate(employee.birthDate) : null}
             />
+            <InfoRow
+              label="Fecha de ingreso"
+              value={employee.hireDate ? formatDate(employee.hireDate) : null}
+            />
             <InfoRow label="Puesto" value={employee.position} />
             <InfoRow label="Departamento" value={employee.department} />
           </CardContent>

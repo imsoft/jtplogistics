@@ -23,6 +23,7 @@ export async function GET() {
         email: u.email,
         image: u.image,
         birthDate: u.birthDate ? u.birthDate.toISOString().split("T")[0] : null,
+        hireDate: u.employeeProfile?.hireDate ? u.employeeProfile.hireDate.toISOString().split("T")[0] : null,
         position: u.employeeProfile?.position ?? null,
         department: u.employeeProfile?.department ?? null,
         phone: u.employeeProfile?.phone ?? null,
@@ -41,11 +42,12 @@ export async function POST(request: Request) {
   try {
     const session = await requireCarrierOrVendor();
     const body = await request.json();
-    const { name, email, password, birthDate, position, department, phone } = body as {
+    const { name, email, password, birthDate, hireDate, position, department, phone } = body as {
       name: string;
       email: string;
       password: string;
       birthDate?: string | null;
+      hireDate?: string | null;
       position?: string;
       department?: string;
       phone?: string;
@@ -78,6 +80,7 @@ export async function POST(request: Request) {
         position: position?.trim() || null,
         department: department?.trim() || null,
         phone: phone?.trim() || null,
+        hireDate: hireDate ? new Date(hireDate) : null,
         // No duplicar la contraseña de acceso en perfil; solo nota opcional vía PATCH.
         password: null,
       },

@@ -24,6 +24,7 @@ export interface Employee {
   email: string;
   image: string | null;
   birthDate: string | null;
+  hireDate: string | null;
   position: string | null;
   department: string | null;
   phone: string | null;
@@ -55,6 +56,7 @@ export interface EmployeeFormData {
   /** En alta es obligatoria vía UI; en edición omitir si no se cambia la nota guardada. */
   password?: string;
   birthDate: string;
+  hireDate: string;
   position: string;
   department: string;
   phone: string;
