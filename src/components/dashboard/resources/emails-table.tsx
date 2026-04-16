@@ -17,7 +17,7 @@ import {
 import type { EmailAccount } from "@/types/resources.types";
 
 const EMAIL_TYPE_LABELS: Record<string, string> = {
-  administrative: "Administrativo",
+  administrative: "Administrativo / Qweb360",
   gmail: "Gmail",
   icloud: "iCloud",
   hotmail: "Hotmail",

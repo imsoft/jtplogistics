@@ -1,5 +1,5 @@
 export const EMAIL_ACCOUNT_TYPES: { value: string; label: string }[] = [
-  { value: "administrative", label: "Administrativo" },
+  { value: "administrative", label: "Administrativo / Qweb360" },
   { value: "gmail",          label: "Gmail" },
   { value: "icloud",         label: "iCloud" },
   { value: "hotmail",        label: "Hotmail" },
