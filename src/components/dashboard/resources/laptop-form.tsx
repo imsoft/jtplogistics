@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { FormActions } from "@/components/ui/form-actions";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -27,12 +28,18 @@ export function LaptopForm({
   const [name, setName] = useState(initialValues.name ?? "");
   const [password, setPassword] = useState(initialValues.password ?? "");
   const [serialNumber, setSerialNumber] = useState(initialValues.serialNumber ?? "");
+  const [equipmentType, setEquipmentType] = useState(initialValues.equipmentType ?? "");
+  const [brand, setBrand] = useState(initialValues.brand ?? "");
+  const [model, setModel] = useState(initialValues.model ?? "");
+  const [accessories, setAccessories] = useState(initialValues.accessories ?? "");
+  const [generalState, setGeneralState] = useState(initialValues.generalState ?? "");
+  const [software, setSoftware] = useState(initialValues.software ?? "");
   const [assignedToId, setAssignedToId] = useState(initialValues.assignedToId ?? "");
   const [emailAccountId, setEmailAccountId] = useState(initialValues.emailAccountId ?? "");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSubmit({ name, password, serialNumber, assignedToId, emailAccountId });
+    onSubmit({ name, password, serialNumber, equipmentType, brand, model, accessories, generalState, software, assignedToId, emailAccountId });
   }
 
   return (
@@ -45,6 +52,33 @@ export function LaptopForm({
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lap-equipment-type">Tipo de equipo</Label>
+          <Input
+            id="lap-equipment-type"
+            value={equipmentType}
+            onChange={(e) => setEquipmentType(e.target.value)}
+            placeholder="Ej. Laptop, Desktop, Tablet…"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lap-brand">Marca</Label>
+          <Input
+            id="lap-brand"
+            value={brand}
+            onChange={(e) => setBrand(e.target.value)}
+            placeholder="Ej. Lenovo, Dell, HP…"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lap-model">Modelo</Label>
+          <Input
+            id="lap-model"
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            placeholder="Ej. IdeaPad 3 15ITL6"
           />
         </div>
         <div className="space-y-2">
@@ -63,6 +97,15 @@ export function LaptopForm({
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
+        <div className="space-y-2">
+          <Label htmlFor="lap-general-state">Estado general</Label>
+          <Input
+            id="lap-general-state"
+            value={generalState}
+            onChange={(e) => setGeneralState(e.target.value)}
+            placeholder="Ej. Bueno, Regular, Malo…"
+          />
+        </div>
         <EmployeeSelect
           label="Asignado a"
           value={assignedToId}
@@ -73,6 +116,26 @@ export function LaptopForm({
           value={emailAccountId}
           onValueChange={setEmailAccountId}
         />
+        <div className="space-y-2 sm:col-span-2">
+          <Label htmlFor="lap-accessories">Accesorios</Label>
+          <Textarea
+            id="lap-accessories"
+            value={accessories}
+            onChange={(e) => setAccessories(e.target.value)}
+            placeholder="Ej. Cargador, Mouse, Mochila…"
+            rows={2}
+          />
+        </div>
+        <div className="space-y-2 sm:col-span-2">
+          <Label htmlFor="lap-software">Software</Label>
+          <Textarea
+            id="lap-software"
+            value={software}
+            onChange={(e) => setSoftware(e.target.value)}
+            placeholder="Ej. Windows 11, Office 365, Antivirus…"
+            rows={2}
+          />
+        </div>
       </div>
       <FormActions submitLabel={submitLabel} cancelHref={cancelHref} isSubmitting={isSubmitting} />
     </form>

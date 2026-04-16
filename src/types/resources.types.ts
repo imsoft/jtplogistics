@@ -85,6 +85,12 @@ export interface Laptop {
   name: string;
   password: string | null;
   serialNumber: string | null;
+  equipmentType: string | null;
+  brand: string | null;
+  model: string | null;
+  accessories: string | null;
+  generalState: string | null;
+  software: string | null;
   assignedToId: string | null;
   assignedTo: { id: string; name: string } | null;
   emailAccountId: string | null;
@@ -96,6 +102,12 @@ export interface LaptopFormData {
   name: string;
   password: string;
   serialNumber: string;
+  equipmentType: string;
+  brand: string;
+  model: string;
+  accessories: string;
+  generalState: string;
+  software: string;
   assignedToId: string;
   emailAccountId: string;
 }

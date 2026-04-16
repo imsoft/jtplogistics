@@ -21,6 +21,12 @@ export function GET(
       name: laptop.name,
       password: laptop.password,
       serialNumber: laptop.serialNumber,
+      equipmentType: laptop.equipmentType,
+      brand: laptop.brand,
+      model: laptop.model,
+      accessories: laptop.accessories,
+      generalState: laptop.generalState,
+      software: laptop.software,
       assignedToId: laptop.assignedToId,
       assignedTo: laptop.assignedTo,
       emailAccountId: laptop.emailAccountId,
@@ -37,10 +43,16 @@ export function PATCH(
   return adminHandler(async (session) => {
     const { id } = await params;
     const body = await request.json();
-    const { name, password, serialNumber, assignedToId, emailAccountId } = body as {
+    const { name, password, serialNumber, equipmentType, brand, model, accessories, generalState, software, assignedToId, emailAccountId } = body as {
       name?: string;
       password?: string;
       serialNumber?: string;
+      equipmentType?: string;
+      brand?: string;
+      model?: string;
+      accessories?: string;
+      generalState?: string;
+      software?: string;
       assignedToId?: string | null;
       emailAccountId?: string | null;
     };
@@ -54,6 +66,12 @@ export function PATCH(
         ...(name !== undefined && { name }),
         ...(password !== undefined && { password: password || null }),
         ...(serialNumber !== undefined && { serialNumber: serialNumber || null }),
+        ...(equipmentType !== undefined && { equipmentType: equipmentType || null }),
+        ...(brand !== undefined && { brand: brand || null }),
+        ...(model !== undefined && { model: model || null }),
+        ...(accessories !== undefined && { accessories: accessories || null }),
+        ...(generalState !== undefined && { generalState: generalState || null }),
+        ...(software !== undefined && { software: software || null }),
         ...(assignedToId !== undefined && { assignedToId: assignedToId || null }),
         ...(emailAccountId !== undefined && { emailAccountId: emailAccountId || null }),
       },

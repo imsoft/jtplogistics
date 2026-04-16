@@ -28,6 +28,12 @@ export async function GET() {
         name: l.name,
         password: l.password,
         serialNumber: l.serialNumber,
+        equipmentType: l.equipmentType,
+        brand: l.brand,
+        model: l.model,
+        accessories: l.accessories,
+        generalState: l.generalState,
+        software: l.software,
         assignedToId: l.assignedToId,
         assignedTo: l.assignedTo,
         emailAccountId: l.emailAccountId,
@@ -56,10 +62,16 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, password, serialNumber, assignedToId, emailAccountId } = body as {
+    const { name, password, serialNumber, equipmentType, brand, model, accessories, generalState, software, assignedToId, emailAccountId } = body as {
       name: string;
       password?: string;
       serialNumber?: string;
+      equipmentType?: string;
+      brand?: string;
+      model?: string;
+      accessories?: string;
+      generalState?: string;
+      software?: string;
       assignedToId?: string;
       emailAccountId?: string;
     };
@@ -73,6 +85,12 @@ export async function POST(request: Request) {
         name,
         password: password || null,
         serialNumber: serialNumber || null,
+        equipmentType: equipmentType || null,
+        brand: brand || null,
+        model: model || null,
+        accessories: accessories || null,
+        generalState: generalState || null,
+        software: software || null,
         assignedToId: assignedToId || null,
         emailAccountId: emailAccountId || null,
       },

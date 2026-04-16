@@ -342,7 +342,7 @@ export function ShipmentsTable() {
       onRowClick={(shipment) => router.push(`/admin/dashboard/shipments/${shipment.id}`)}
       getRowClassName={getRowClassName}
       toolbar={
-        <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+        <div className="flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
           <div className="space-y-1.5 w-full sm:w-auto sm:min-w-[200px]">
             <Label htmlFor="shipment-filter-status" className="text-xs text-muted-foreground">
               Estado

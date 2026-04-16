@@ -52,7 +52,13 @@ export default function CollaboratorLaptopProfilePage() {
           </CardHeader>
           <CardContent className="px-4 pb-4">
             <InfoRow label="Nombre" value={laptop.name} />
+            <InfoRow label="Tipo de equipo" value={laptop.equipmentType} />
+            <InfoRow label="Marca" value={laptop.brand} />
+            <InfoRow label="Modelo" value={laptop.model} />
             <InfoRow label="No. de serie" value={laptop.serialNumber} />
+            <InfoRow label="Estado general" value={laptop.generalState} />
+            <InfoRow label="Accesorios" value={laptop.accessories} />
+            <InfoRow label="Software" value={laptop.software} />
             <InfoRow label="Asignado a" value={laptop.assignedTo?.name ?? null} />
             <InfoRow label="Cuenta de correo" value={laptop.emailAccount?.email ?? null} />
             <InfoRow
