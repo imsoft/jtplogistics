@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { UserRound } from "lucide-react";
+import { useMemo, useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { UserRound, Plus } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
 import {
@@ -13,7 +15,6 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { type ColumnDef } from "@tanstack/react-table";
-import { useEffect, useRef } from "react";
 import type { Employee } from "@/types/resources.types";
 
 function getColumns(): ColumnDef<Employee>[] {
@@ -70,6 +71,7 @@ function getColumns(): ColumnDef<Employee>[] {
 }
 
 export default function CollaboratorEmployeesPage() {
+  const router = useRouter();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -114,14 +116,22 @@ export default function CollaboratorEmployeesPage() {
 
   return (
     <div className="min-w-0 space-y-6">
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-2">
-          <UserRound className="size-5 text-muted-foreground" />
-          <h1 className="page-heading">Colaboradores</h1>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <UserRound className="size-5 text-muted-foreground" />
+            <h1 className="page-heading">Colaboradores</h1>
+          </div>
+          <p className="text-muted-foreground text-sm">
+            Colaboradores registrados en el sistema.
+          </p>
         </div>
-        <p className="text-muted-foreground text-sm">
-          Colaboradores registrados en el sistema.
-        </p>
+        <Button asChild className="shrink-0">
+          <Link href="/collaborator/dashboard/employees/new">
+            <Plus className="size-4" />
+            Nuevo colaborador
+          </Link>
+        </Button>
       </div>
 
       {!isLoaded ? (
@@ -139,6 +149,9 @@ export default function CollaboratorEmployeesPage() {
           filterColumn="search"
           initialColumnVisibility={{ search: false }}
           getRowId={(row) => row.id}
+          onRowClick={(emp) =>
+            router.push(`/collaborator/dashboard/employees/${emp.id}`)
+          }
           toolbar={
             <>
               <Select
