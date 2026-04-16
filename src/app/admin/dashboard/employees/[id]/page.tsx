@@ -88,7 +88,7 @@ export default function EmployeeProfilePage() {
         </Button>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 sm:items-start">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
@@ -110,80 +110,79 @@ export default function EmployeeProfilePage() {
             <InfoRow label="Departamento" value={employee.department} />
           </CardContent>
         </Card>
-      </div>
 
-      {/* Recursos vinculados */}
-      {hasLinks && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Recursos vinculados
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 px-4 pb-4">
-            {laptops.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="flex items-center gap-2 text-sm font-medium">
-                  <Laptop className="size-4" /> Laptops ({laptops.length})
-                </h4>
-                <div className="space-y-1">
-                  {laptops.map((l) => (
-                    <Link
-                      key={l.id}
-                      href={`/admin/dashboard/laptops/${l.id}`}
-                      className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
-                    >
-                      <span>{l.name}</span>
-                      {l.serialNumber && <span className="text-muted-foreground text-xs">{l.serialNumber}</span>}
-                      <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                    </Link>
-                  ))}
+        {hasLinks && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                Recursos vinculados
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 px-4 pb-4">
+              {laptops.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="flex items-center gap-2 text-sm font-medium">
+                    <Laptop className="size-4" /> Laptops ({laptops.length})
+                  </h4>
+                  <div className="space-y-1">
+                    {laptops.map((l) => (
+                      <Link
+                        key={l.id}
+                        href={`/admin/dashboard/laptops/${l.id}`}
+                        className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
+                      >
+                        <span>{l.name}</span>
+                        {l.serialNumber && <span className="text-muted-foreground text-xs">{l.serialNumber}</span>}
+                        <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-            {phones.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="flex items-center gap-2 text-sm font-medium">
-                  <Smartphone className="size-4" /> Celulares ({phones.length})
-                </h4>
-                <div className="space-y-1">
-                  {phones.map((p) => (
-                    <Link
-                      key={p.id}
-                      href={`/admin/dashboard/phones/${p.id}`}
-                      className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
-                    >
-                      <span>{p.name}</span>
-                      {p.phoneNumber && <span className="text-muted-foreground text-xs">{formatPhone(p.phoneNumber)}</span>}
-                      <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                    </Link>
-                  ))}
+              )}
+              {phones.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="flex items-center gap-2 text-sm font-medium">
+                    <Smartphone className="size-4" /> Celulares ({phones.length})
+                  </h4>
+                  <div className="space-y-1">
+                    {phones.map((p) => (
+                      <Link
+                        key={p.id}
+                        href={`/admin/dashboard/phones/${p.id}`}
+                        className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
+                      >
+                        <span>{p.name}</span>
+                        {p.phoneNumber && <span className="text-muted-foreground text-xs">{formatPhone(p.phoneNumber)}</span>}
+                        <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-            {emailAccounts.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="flex items-center gap-2 text-sm font-medium">
-                  <Mail className="size-4" /> Correos ({emailAccounts.length})
-                </h4>
-                <div className="space-y-1">
-                  {emailAccounts.map((ea) => (
-                    <Link
-                      key={ea.id}
-                      href={`/admin/dashboard/emails/${ea.id}`}
-                      className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
-                    >
-                      <span>{ea.email}</span>
-                      <span className="text-muted-foreground text-xs">{ea.type}</span>
-                      <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                    </Link>
-                  ))}
+              )}
+              {emailAccounts.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="flex items-center gap-2 text-sm font-medium">
+                    <Mail className="size-4" /> Correos ({emailAccounts.length})
+                  </h4>
+                  <div className="space-y-1">
+                    {emailAccounts.map((ea) => (
+                      <Link
+                        key={ea.id}
+                        href={`/admin/dashboard/emails/${ea.id}`}
+                        className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
+                      >
+                        <span>{ea.email}</span>
+                        <span className="text-muted-foreground text-xs">{ea.type}</span>
+                        <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+              )}
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }
