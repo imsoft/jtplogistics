@@ -21,6 +21,17 @@ function formatDate(iso: string) {
   });
 }
 
+function ageFromDate(iso: string): string {
+  const birth = new Date(iso + "T00:00:00Z");
+  const now = new Date();
+  let years = now.getFullYear() - birth.getUTCFullYear();
+  let months = now.getMonth() - birth.getUTCMonth();
+  if (months < 0) { years--; months += 12; }
+  if (years > 0 && months > 0) return `${years} años, ${months} mes${months !== 1 ? "es" : ""}`;
+  if (years > 0) return `${years} año${years !== 1 ? "s" : ""}`;
+  return `${months} mes${months !== 1 ? "es" : ""}`;
+}
+
 export default function EmployeeProfilePage() {
   const { id } = useParams<{ id: string }>();
   const { data: employee, isLoaded, error } = useResourceEdit<Employee>({
@@ -89,11 +100,11 @@ export default function EmployeeProfilePage() {
             <InfoRow label="Teléfono" value={formatPhone(employee.phone)} />
             <InfoRow
               label="Fecha de nacimiento"
-              value={employee.birthDate ? formatDate(employee.birthDate) : null}
+              value={employee.birthDate ? `${formatDate(employee.birthDate)} (${ageFromDate(employee.birthDate)})` : null}
             />
             <InfoRow
               label="Fecha de ingreso"
-              value={employee.hireDate ? formatDate(employee.hireDate) : null}
+              value={employee.hireDate ? `${formatDate(employee.hireDate)} (${ageFromDate(employee.hireDate)})` : null}
             />
             <InfoRow label="Puesto" value={employee.position} />
             <InfoRow label="Departamento" value={employee.department} />
