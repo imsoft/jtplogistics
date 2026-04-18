@@ -351,6 +351,10 @@ model EmployeeProfile {
   phone      String? @map("phone")
   password   String? @map("password")
   hireDate   DateTime? @map("hire_date")
+  nss        String? @map("nss")
+  rfc        String? @map("rfc")
+  curp       String? @map("curp")
+  address    String? @map("address")
 
   @@index([ownerUserId])
   @@map("employee_profiles")

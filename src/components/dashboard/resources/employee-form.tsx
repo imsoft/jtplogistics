@@ -41,10 +41,14 @@ export function EmployeeForm({
     ?? ""
   );
   const [phone, setPhone] = useState(initialValues.phone ?? "");
+  const [nss, setNss] = useState(initialValues.nss ?? "");
+  const [rfc, setRfc] = useState(initialValues.rfc ?? "");
+  const [curp, setCurp] = useState(initialValues.curp ?? "");
+  const [address, setAddress] = useState(initialValues.address ?? "");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const base = { name, email, birthDate, hireDate, position, department, phone };
+    const base = { name, email, birthDate, hireDate, position, department, phone, nss, rfc, curp, address };
     if (isNew) {
       onSubmit({ ...base, password });
     } else {
@@ -148,6 +152,38 @@ export function EmployeeForm({
               ))}
             </SelectContent>
           </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="emp-nss">NSS</Label>
+          <Input
+            id="emp-nss"
+            value={nss}
+            onChange={(e) => setNss(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="emp-rfc">RFC</Label>
+          <Input
+            id="emp-rfc"
+            value={rfc}
+            onChange={(e) => setRfc(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="emp-curp">CURP</Label>
+          <Input
+            id="emp-curp"
+            value={curp}
+            onChange={(e) => setCurp(e.target.value)}
+          />
+        </div>
+        <div className="sm:col-span-2 space-y-2">
+          <Label htmlFor="emp-address">Domicilio</Label>
+          <Input
+            id="emp-address"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+          />
         </div>
       </div>
       {children}

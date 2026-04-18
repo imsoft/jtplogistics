@@ -28,6 +28,10 @@ export interface Employee {
   position: string | null;
   department: string | null;
   phone: string | null;
+  nss: string | null;
+  rfc: string | null;
+  curp: string | null;
+  address: string | null;
   /** Indica si hay nota de contraseña guardada (el valor nunca se expone por API). */
   hasPasswordReference?: boolean;
   canViewMessages: boolean;
@@ -60,6 +64,10 @@ export interface EmployeeFormData {
   position: string;
   department: string;
   phone: string;
+  nss: string;
+  rfc: string;
+  curp: string;
+  address: string;
 }
 
 export interface Vendor {

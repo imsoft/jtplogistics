@@ -39,6 +39,10 @@ const ALL_COLUMNS: { key: keyof Employee | "age" | "tenure"; label: string }[] =
   { key: "tenure",    label: "Antigüedad" },
   { key: "position",  label: "Puesto" },
   { key: "department",label: "Departamento" },
+  { key: "nss",       label: "NSS" },
+  { key: "rfc",       label: "RFC" },
+  { key: "curp",      label: "CURP" },
+  { key: "address",   label: "Domicilio" },
 ];
 
 function formatDateMx(iso: string | null): string {

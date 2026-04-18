@@ -36,6 +36,10 @@ export function GET(
       position: u.employeeProfile?.position ?? null,
       department: u.employeeProfile?.department ?? null,
       phone: u.employeeProfile?.phone ?? null,
+      nss: u.employeeProfile?.nss ?? null,
+      rfc: u.employeeProfile?.rfc ?? null,
+      curp: u.employeeProfile?.curp ?? null,
+      address: u.employeeProfile?.address ?? null,
       hasPasswordReference: Boolean(u.employeeProfile?.password?.trim()),
       canViewMessages: u.canViewMessages,
       canViewIdeas: u.canViewIdeas,
@@ -80,7 +84,7 @@ export function PATCH(
   return adminHandler(async (session) => {
     const { id } = await params;
     const body = await request.json();
-    const { name, position, department, phone, password, birthDate, hireDate } = body as {
+    const { name, position, department, phone, password, birthDate, hireDate, nss, rfc, curp, address } = body as {
       name?: string;
       position?: string;
       department?: string;
@@ -88,6 +92,10 @@ export function PATCH(
       password?: string;
       birthDate?: string | null;
       hireDate?: string | null;
+      nss?: string;
+      rfc?: string;
+      curp?: string;
+      address?: string;
     };
 
     const PERMISSION_FIELDS = [
@@ -133,6 +141,10 @@ export function PATCH(
       position: u.employeeProfile?.position,
       department: u.employeeProfile?.department,
       phone: u.employeeProfile?.phone,
+      nss: u.employeeProfile?.nss,
+      rfc: u.employeeProfile?.rfc,
+      curp: u.employeeProfile?.curp,
+      address: u.employeeProfile?.address,
     };
     for (const f of PERMISSION_FIELDS) before[f] = u[f];
 
@@ -160,6 +172,10 @@ export function PATCH(
         phone: phone?.trim() ?? undefined,
         ...(parsedHireDate !== undefined && { hireDate: parsedHireDate }),
         ...(password !== undefined && { password: password || null }),
+        ...(nss !== undefined && { nss: nss.trim() || null }),
+        ...(rfc !== undefined && { rfc: rfc.trim() || null }),
+        ...(curp !== undefined && { curp: curp.trim() || null }),
+        ...(address !== undefined && { address: address.trim() || null }),
       },
       create: {
         userId: id,
@@ -168,6 +184,10 @@ export function PATCH(
         phone: phone?.trim() || null,
         hireDate: parsedHireDate ?? null,
         password: password || null,
+        nss: nss?.trim() || null,
+        rfc: rfc?.trim() || null,
+        curp: curp?.trim() || null,
+        address: address?.trim() || null,
       },
     });
 
@@ -183,6 +203,10 @@ export function PATCH(
       position: updated!.employeeProfile?.position,
       department: updated!.employeeProfile?.department,
       phone: updated!.employeeProfile?.phone,
+      nss: updated!.employeeProfile?.nss,
+      rfc: updated!.employeeProfile?.rfc,
+      curp: updated!.employeeProfile?.curp,
+      address: updated!.employeeProfile?.address,
     };
     for (const f of PERMISSION_FIELDS) after[f] = updated![f];
 
@@ -193,6 +217,10 @@ export function PATCH(
       position: "Puesto",
       department: "Departamento",
       phone: "Teléfono",
+      nss: "NSS",
+      rfc: "RFC",
+      curp: "CURP",
+      address: "Domicilio",
       ...PERMISSION_LABELS,
     };
 

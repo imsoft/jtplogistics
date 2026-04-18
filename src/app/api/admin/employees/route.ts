@@ -21,6 +21,10 @@ export function GET() {
         position: u.employeeProfile?.position ?? null,
         department: u.employeeProfile?.department ?? null,
         phone: u.employeeProfile?.phone ?? null,
+        nss: u.employeeProfile?.nss ?? null,
+        rfc: u.employeeProfile?.rfc ?? null,
+        curp: u.employeeProfile?.curp ?? null,
+        address: u.employeeProfile?.address ?? null,
         hasPasswordReference: Boolean(u.employeeProfile?.password?.trim()),
         createdAt: u.createdAt.toISOString(),
       }))
@@ -31,7 +35,7 @@ export function GET() {
 export function POST(request: Request) {
   return adminHandler(async (session) => {
     const body = await request.json();
-    const { name, email, password, birthDate, hireDate, position, department, phone } = body as {
+    const { name, email, password, birthDate, hireDate, position, department, phone, nss, rfc, curp, address } = body as {
       name: string;
       email: string;
       password: string;
@@ -40,6 +44,10 @@ export function POST(request: Request) {
       position?: string;
       department?: string;
       phone?: string;
+      nss?: string;
+      rfc?: string;
+      curp?: string;
+      address?: string;
     };
 
     if (!name || !email || !password) {
@@ -70,6 +78,10 @@ export function POST(request: Request) {
         phone: phone?.trim() || null,
         hireDate: hireDate ? new Date(hireDate) : null,
         password: null,
+        nss: nss?.trim() || null,
+        rfc: rfc?.trim() || null,
+        curp: curp?.trim() || null,
+        address: address?.trim() || null,
       },
     });
 
