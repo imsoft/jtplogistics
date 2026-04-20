@@ -96,6 +96,10 @@ export default function CollaboratorEmployeeProfilePage() {
             />
             <InfoRow label="Puesto" value={employee.position} />
             <InfoRow label="Departamento" value={employee.department} />
+            <InfoRow label="NSS" value={employee.nss} />
+            <InfoRow label="RFC" value={employee.rfc} />
+            <InfoRow label="CURP" value={employee.curp} />
+            <InfoRow label="Domicilio" value={employee.address} />
           </CardContent>
         </Card>
       </div>
