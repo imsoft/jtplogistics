@@ -88,14 +88,14 @@ export default function EmployeeProfilePage() {
         </Button>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Información
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 pb-4">
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            Información
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-4 pb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
             <InfoRow label="Correo" value={employee.email} />
             <InfoRow label="Teléfono" value={formatPhone(employee.phone)} />
             <InfoRow
@@ -112,9 +112,9 @@ export default function EmployeeProfilePage() {
             <InfoRow label="RFC" value={employee.rfc} />
             <InfoRow label="CURP" value={employee.curp} />
             <InfoRow label="Domicilio" value={employee.address} />
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {hasLinks && (
         <Card>
@@ -136,10 +136,7 @@ export default function EmployeeProfilePage() {
                       href={`/admin/dashboard/laptops/${l.id}`}
                       className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
                     >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="font-medium">{l.name}</span>
-                        {l.serialNumber && <span className="text-muted-foreground text-xs">{l.serialNumber}</span>}
-                      </div>
+                      <span className="font-medium">{l.name}</span>
                       <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                     </Link>
                   ))}
@@ -158,10 +155,7 @@ export default function EmployeeProfilePage() {
                       href={`/admin/dashboard/phones/${p.id}`}
                       className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
                     >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="font-medium">{p.name}</span>
-                        {p.phoneNumber && <span className="text-muted-foreground text-xs">{formatPhone(p.phoneNumber)}</span>}
-                      </div>
+                      <span className="font-medium">{p.name}</span>
                       <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                     </Link>
                   ))}
@@ -180,10 +174,7 @@ export default function EmployeeProfilePage() {
                       href={`/admin/dashboard/emails/${ea.id}`}
                       className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
                     >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="font-medium">{ea.email}</span>
-                        <span className="text-muted-foreground text-xs">{ea.type}</span>
-                      </div>
+                      <span className="font-medium">{ea.email}</span>
                       <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                     </Link>
                   ))}
