@@ -48,13 +48,21 @@ function parseCSVLine(line: string): string[] {
   return result;
 }
 
+// Aliases: nombre normalizado → nombre correcto en el sistema
+const CITY_ALIASES: Record<string, string> = {
+  "tlajomulco": "Tlajomulco de Zúñiga",
+  "tlajomulco de zuñiga": "Tlajomulco de Zúñiga",
+  "tehuacan": "Tehuacán",
+};
+
 function toTitleCase(str: string): string {
   return str.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function parseCity(raw: string): string {
   const city = raw.replace(/,\s*[A-Za-z]{2,3}$/, "").trim();
-  return toTitleCase(city);
+  const titleCase = toTitleCase(city);
+  return CITY_ALIASES[titleCase.toLowerCase()] ?? titleCase;
 }
 
 function parseInput(text: string): ImportRoute[] {
