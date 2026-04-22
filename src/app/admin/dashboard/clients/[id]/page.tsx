@@ -20,6 +20,7 @@ interface AssignedRoute {
   destination: string;
   destinationState: string | null;
   unitType: string;
+  unitTargets: { unitType: string; target: number | null }[];
   target: number | null;
   weeklyVolume: number | null;
   createdByName: string | null;
