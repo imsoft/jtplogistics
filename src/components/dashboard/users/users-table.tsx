@@ -26,7 +26,7 @@ async function fetchUsers(): Promise<User[]> {
 
 type RoleFilter = UserRole | "all";
 
-export function UsersTable({ defaultRole }: { defaultRole?: UserRole }) {
+export function UsersTable({ defaultRole, detailBasePath }: { defaultRole?: UserRole; detailBasePath?: string }) {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -79,7 +79,11 @@ export function UsersTable({ defaultRole }: { defaultRole?: UserRole }) {
       filterColumn="search"
       initialColumnVisibility={{ search: false }}
       getRowId={(row) => row.id}
-      onRowClick={(user) => router.push(`/admin/dashboard/users/${user.id}`)}
+      onRowClick={(user) => {
+        const base = detailBasePath ?? "/admin/dashboard/users";
+        const from = detailBasePath ? `?from=${encodeURIComponent(detailBasePath)}` : "";
+        router.push(`/admin/dashboard/users/${user.id}${from}`);
+      }}
       toolbar={
         !defaultRole ? (
           <>

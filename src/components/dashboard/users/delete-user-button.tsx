@@ -7,9 +7,10 @@ import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 interface DeleteUserButtonProps {
   userId: string;
   userName: string;
+  redirectTo?: string;
 }
 
-export function DeleteUserButton({ userId, userName }: DeleteUserButtonProps) {
+export function DeleteUserButton({ userId, userName, redirectTo = "/admin/dashboard/users" }: DeleteUserButtonProps) {
   const router = useRouter();
 
   async function handleConfirm() {
@@ -20,7 +21,7 @@ export function DeleteUserButton({ userId, userName }: DeleteUserButtonProps) {
       return;
     }
     toast.success("Usuario eliminado.");
-    router.push("/admin/dashboard/users");
+    router.push(redirectTo);
   }
 
   return (

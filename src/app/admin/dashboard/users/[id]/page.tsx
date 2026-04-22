@@ -56,11 +56,15 @@ function formatMxn(value: number) {
 
 export default async function UserProfilePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ from?: string }>;
 }) {
   await requireAdmin();
   const { id } = await params;
+  const { from } = await searchParams;
+  const backHref = from ? decodeURIComponent(from) : "/admin/dashboard/users";
 
   const user = await prisma.user.findUnique({
     where: { id },
@@ -106,7 +110,7 @@ export default async function UserProfilePage({
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
         <Button variant="ghost" size="icon" asChild className="shrink-0">
-          <Link href="/admin/dashboard/users" aria-label="Volver a usuarios">
+          <Link href={backHref} aria-label="Volver">
             <ChevronLeft className="size-4" />
           </Link>
         </Button>
@@ -133,6 +137,7 @@ export default async function UserProfilePage({
           <DeleteUserButton
             userId={user.id}
             userName={user.profile?.commercialName ?? user.name}
+            redirectTo={backHref}
           />
         )}
       </div>

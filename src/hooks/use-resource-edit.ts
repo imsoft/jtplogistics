@@ -65,7 +65,12 @@ export function useResourceEdit<T>({
 
   async function handleDelete() {
     try {
-      await fetch(`${endpoint}/${id}`, { method: "DELETE" });
+      const res = await fetch(`${endpoint}/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setError((body as { error?: string }).error ?? "No se pudo eliminar");
+        return;
+      }
       router.push(deleteRedirectHref ?? redirectHref);
     } catch {
       setError("Error al eliminar");

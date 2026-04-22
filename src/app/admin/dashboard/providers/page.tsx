@@ -18,7 +18,7 @@ export default function ProvidersPage() {
         </p>
       </div>
       <Separator />
-      <UsersTable defaultRole="carrier" />
+      <UsersTable defaultRole="carrier" detailBasePath="/admin/dashboard/providers" />
     </div>
   );
 }

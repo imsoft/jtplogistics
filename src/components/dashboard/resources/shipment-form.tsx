@@ -59,6 +59,7 @@ export function ShipmentForm({
   const [pickupDate, setPickupDate] = useState(toDateInput(initialValues.pickupDate));
   const [deliveryDate, setDeliveryDate] = useState(toDateInput(initialValues.deliveryDate));
   const [legalName, setLegalName] = useState(initialValues.legalName ?? "");
+  const [operatorName, setOperatorName] = useState(initialValues.operatorName ?? "");
   const [truck, setTruck] = useState(initialValues.truck ?? "");
   const [trailer, setTrailer] = useState(initialValues.trailer ?? "");
   const [unit, setUnit] = useState(initialValues.unit ?? "");
@@ -189,7 +190,7 @@ export function ShipmentForm({
       pickupDate,
       deliveryDate,
       legalName,
-      operatorName: initialValues.operatorName ?? "",
+      operatorName,
       truck,
       trailer,
       unit,
@@ -329,7 +330,11 @@ export function ShipmentForm({
             onChange={(e) => setDeliveryDate(e.target.value)}
           />
         </div>
-        <div className="space-y-2 sm:col-span-2 lg:col-span-3">
+        <div className="space-y-2">
+          <Label htmlFor="shipment-operatorName">Nombre operador</Label>
+          <Input id="shipment-operatorName" value={operatorName} disabled={isClosed} onChange={(e) => setOperatorName(e.target.value)} />
+        </div>
+        <div className="space-y-2 sm:col-span-2 lg:col-span-2">
           <Label htmlFor="shipment-legalName">Proveedor (transportista)</Label>
           <Select
             value={legalName || undefined}
