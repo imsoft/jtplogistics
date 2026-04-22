@@ -175,7 +175,7 @@ export function ClientRoutesDialog({ clientId, open, onOpenChange, onSave }: Cli
             <p className="py-8 text-center text-sm text-muted-foreground">No hay rutas.</p>
           ) : (
             <div className="overflow-x-auto rounded-md border">
-              <table className="w-full min-w-[540px] text-sm">
+              <table className="w-full min-w-[540px] text-sm uppercase">
                 <thead>
                   <tr className="border-b bg-muted/50 text-xs text-muted-foreground">
                     <th className="w-10 py-2 pl-3 pr-1 text-left">

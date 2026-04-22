@@ -127,34 +127,31 @@ export async function PUT(
     // Obtener asignaciones actuales para preservar target/weeklyVolume
     const existing = await prisma.clientRoute.findMany({
       where: { clientId: id },
-      select: { routeId: true, unitType: true, target: true, weeklyVolume: true },
+      select: { id: true, routeId: true, unitType: true, target: true, weeklyVolume: true },
     });
     const existingMap = new Map(
-      existing.map((cr) => [`${cr.routeId}:${cr.unitType}`, { target: cr.target, weeklyVolume: cr.weeklyVolume }])
+      existing.map((cr) => [`${cr.routeId}:${cr.unitType}`, cr])
     );
 
     const incomingKeys = new Set(body.map((b) => `${b.routeId}:${b.unitType}`));
-    const toDelete = existing
-      .filter((cr) => !incomingKeys.has(`${cr.routeId}:${cr.unitType}`))
-      .map((cr) => ({ routeId: cr.routeId, unitType: cr.unitType }));
 
-    await prisma.$transaction([
-      // Eliminar solo las que ya no están seleccionadas
-      ...toDelete.map(({ routeId, unitType }) =>
-        prisma.clientRoute.deleteMany({ where: { clientId: id, routeId, unitType } })
-      ),
-      // Crear las nuevas preservando targets existentes
-      prisma.clientRoute.createMany({
-        data: body
-          .filter((b) => !existingMap.has(`${b.routeId}:${b.unitType}`))
-          .map((b) => ({
-            clientId: id,
-            routeId: b.routeId,
-            unitType: b.unitType,
-          })),
+    // IDs de registros que ya no están seleccionados
+    const toDeleteIds = existing
+      .filter((cr) => !incomingKeys.has(`${cr.routeId}:${cr.unitType}`))
+      .map((cr) => cr.id);
+
+    // Nuevas combinaciones (routeId:unitType) que no existen aún
+    const toCreate = body.filter((b) => !existingMap.has(`${b.routeId}:${b.unitType}`));
+
+    if (toDeleteIds.length > 0) {
+      await prisma.clientRoute.deleteMany({ where: { id: { in: toDeleteIds } } });
+    }
+    if (toCreate.length > 0) {
+      await prisma.clientRoute.createMany({
+        data: toCreate.map((b) => ({ clientId: id, routeId: b.routeId, unitType: b.unitType })),
         skipDuplicates: true,
-      }),
-    ]);
+      });
+    }
 
     void logAudit({
       resource: "client_routes",
