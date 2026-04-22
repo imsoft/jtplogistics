@@ -48,8 +48,13 @@ function parseCSVLine(line: string): string[] {
   return result;
 }
 
+function toTitleCase(str: string): string {
+  return str.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 function parseCity(raw: string): string {
-  return raw.replace(/,\s*[A-Z]{2,3}$/, "").trim();
+  const city = raw.replace(/,\s*[A-Za-z]{2,3}$/, "").trim();
+  return toTitleCase(city);
 }
 
 function parseInput(text: string): ImportRoute[] {

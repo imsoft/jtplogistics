@@ -77,11 +77,15 @@ export function RoutesCrud() {
   const groupedRoutes = useMemo(() => {
     const map = new Map<string, Route[]>();
     for (const r of filteredRoutes) {
-      const group = map.get(r.origin) ?? [];
+      const key = r.origin.trim().toLowerCase();
+      const group = map.get(key) ?? [];
       group.push(r);
-      map.set(r.origin, group);
+      map.set(key, group);
     }
-    return Array.from(map.entries()).map(([origin, items]) => ({ origin, items }));
+    return Array.from(map.entries()).map(([, items]) => ({
+      origin: items[0].origin,
+      items,
+    }));
   }, [filteredRoutes]);
 
   if (!isLoaded) {
