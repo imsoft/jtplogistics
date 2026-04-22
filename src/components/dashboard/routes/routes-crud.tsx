@@ -179,7 +179,7 @@ export function RoutesCrud() {
                       Desde {origin}
                     </span>
                   </div>
-                  <table className="w-full min-w-[680px] text-sm">
+                  <table className="w-full min-w-[680px] text-sm uppercase">
                     <thead>
                       <tr className="border-b bg-muted/20 text-xs font-medium text-muted-foreground">
                         <th className="px-4 py-1.5 text-left font-medium">Ruta</th>
