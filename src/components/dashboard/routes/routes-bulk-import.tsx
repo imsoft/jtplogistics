@@ -314,6 +314,7 @@ export function RoutesBulkImport() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/50 text-left">
+                  <th className="w-10 px-3 py-2 text-center font-medium text-muted-foreground">#</th>
                   <th className="px-3 py-2 font-medium">Origen</th>
                   <th className="px-3 py-2 font-medium">Destino</th>
                   <th className="px-3 py-2 font-medium">Tipo de unidad</th>
@@ -323,6 +324,7 @@ export function RoutesBulkImport() {
               <tbody>
                 {routes.map((route, i) => (
                   <tr key={i} className="border-b last:border-0">
+                    <td className="px-3 py-2 text-center font-mono text-xs text-muted-foreground">{i + 1}</td>
                     <td className="px-3 py-2 font-mono text-xs">{route.origin}</td>
                     <td className="px-3 py-2 font-mono text-xs">{route.destination}</td>
                     <td className="px-3 py-2">
