@@ -73,6 +73,16 @@ const CITY_ALIASES: Record<string, string> = {
   "juventino rosas": "Santa Cruz de Juventino Rosas",
   "naucalpan": "Naucalpan de Juárez",
   "oaxaca": "Oaxaca de Juárez",
+  "hub mexicali": "Mexicali",
+  "hub villahermosa": "Villahermosa",
+  "pb hub monterrey": "Monterrey",
+  "cd. hidalgo": "Hidalgo",
+  "poza rica": "Poza Rica de Hidalgo",
+  "los mochis": "Los Mochis",
+  "sta. isabel xi.,tlax": "Santa Isabel Xiloxoxtla",
+  "s. cristobal c.": "San Cristóbal de las Casas",
+  "soledad doblado": "Soledad de Doblado",
+  "tehuatlan": "Tehuetlán",
 };
 
 function toTitleCase(str: string): string {
