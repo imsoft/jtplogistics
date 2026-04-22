@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { FormActions } from "@/components/ui/form-actions";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EmployeeSelect } from "./employee-select";
 import { EmailAccountSelect } from "./email-account-select";
 import type { Laptop, LaptopFormData } from "@/types/resources.types";
@@ -28,7 +29,6 @@ export function LaptopForm({
   const [name, setName] = useState(initialValues.name ?? "");
   const [password, setPassword] = useState(initialValues.password ?? "");
   const [serialNumber, setSerialNumber] = useState(initialValues.serialNumber ?? "");
-  const [equipmentType, setEquipmentType] = useState(initialValues.equipmentType ?? "");
   const [brand, setBrand] = useState(initialValues.brand ?? "");
   const [model, setModel] = useState(initialValues.model ?? "");
   const [accessories, setAccessories] = useState(initialValues.accessories ?? "");
@@ -39,7 +39,7 @@ export function LaptopForm({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSubmit({ name, password, serialNumber, equipmentType, brand, model, accessories, generalState, software, assignedToId, emailAccountId });
+    onSubmit({ name, password, serialNumber, equipmentType: "", brand, model, accessories, generalState, software, assignedToId, emailAccountId });
   }
 
   return (
@@ -55,21 +55,11 @@ export function LaptopForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="lap-equipment-type">Tipo de equipo</Label>
-          <Input
-            id="lap-equipment-type"
-            value={equipmentType}
-            onChange={(e) => setEquipmentType(e.target.value)}
-            placeholder="Ej. Laptop, Desktop, Tablet…"
-          />
-        </div>
-        <div className="space-y-2">
           <Label htmlFor="lap-brand">Marca</Label>
           <Input
             id="lap-brand"
             value={brand}
             onChange={(e) => setBrand(e.target.value)}
-            placeholder="Ej. Lenovo, Dell, HP…"
           />
         </div>
         <div className="space-y-2">
@@ -78,7 +68,6 @@ export function LaptopForm({
             id="lap-model"
             value={model}
             onChange={(e) => setModel(e.target.value)}
-            placeholder="Ej. IdeaPad 3 15ITL6"
           />
         </div>
         <div className="space-y-2">
@@ -99,12 +88,16 @@ export function LaptopForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="lap-general-state">Estado general</Label>
-          <Input
-            id="lap-general-state"
-            value={generalState}
-            onChange={(e) => setGeneralState(e.target.value)}
-            placeholder="Ej. Bueno, Regular, Malo…"
-          />
+          <Select value={generalState} onValueChange={setGeneralState}>
+            <SelectTrigger id="lap-general-state" className="w-full">
+              <SelectValue placeholder="Selecciona un estado" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Bueno">Bueno</SelectItem>
+              <SelectItem value="Regular">Regular</SelectItem>
+              <SelectItem value="Malo">Malo</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <EmployeeSelect
           label="Asignado a"
@@ -122,7 +115,6 @@ export function LaptopForm({
             id="lap-accessories"
             value={accessories}
             onChange={(e) => setAccessories(e.target.value)}
-            placeholder="Ej. Cargador, Mouse, Mochila…"
             rows={2}
           />
         </div>
@@ -132,7 +124,6 @@ export function LaptopForm({
             id="lap-software"
             value={software}
             onChange={(e) => setSoftware(e.target.value)}
-            placeholder="Ej. Windows 11, Office 365, Antivirus…"
             rows={2}
           />
         </div>
