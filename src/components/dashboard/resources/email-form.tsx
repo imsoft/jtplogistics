@@ -60,7 +60,7 @@ export function EmailForm({
           <Label>Tipo de cuenta</Label>
           <Select value={type} onValueChange={setType} required>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="" />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {EMAIL_ACCOUNT_TYPES.map((t) => (

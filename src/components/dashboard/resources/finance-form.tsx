@@ -199,7 +199,7 @@ export function FinanceForm({
             }}
           >
             <SelectTrigger id="finance-incident">
-              <SelectValue placeholder="Selecciona Sí o No" />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {incidentSelectOptions.map((o) => (
@@ -218,15 +218,7 @@ export function FinanceForm({
             disabled={!canPickIncidentType}
           >
             <SelectTrigger id="finance-incidentType">
-              <SelectValue
-                placeholder={
-                  !canPickIncidentType
-                    ? "Indica primero si hubo incidencia (Sí)"
-                    : incidentTypeOptions.length === 0
-                      ? "No hay tipos de incidencia"
-                      : "Selecciona tipo de incidencia"
-                }
-              />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {incidentTypeOptions.map((it) => (

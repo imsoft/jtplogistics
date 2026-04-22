@@ -50,7 +50,7 @@ export function IdeaForm({
           <Label htmlFor="category">Categoría</Label>
           <Select value={category} onValueChange={setCategory}>
             <SelectTrigger id="category" className="w-full">
-              <SelectValue placeholder="" />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">Sin categoría</SelectItem>

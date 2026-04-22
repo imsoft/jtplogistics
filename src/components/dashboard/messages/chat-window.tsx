@@ -170,7 +170,6 @@ export function ChatWindow({ carrierId, currentUserId, title }: ChatWindowProps)
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Escribe un mensaje… (Enter para enviar)"
           rows={1}
           className="min-h-9 max-h-32 resize-none flex-1"
           disabled={isSending}

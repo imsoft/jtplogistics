@@ -237,13 +237,7 @@ export function ShipmentForm({
             disabled={isClosed || clientOptions.length === 0}
           >
             <SelectTrigger id="shipment-client" className="w-full">
-              <SelectValue
-                placeholder={
-                  clientOptions.length === 0
-                    ? "No hay clientes registrados"
-                    : "Selecciona cliente"
-                }
-              />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {clientOptions.map((clientName) => (
@@ -262,13 +256,7 @@ export function ShipmentForm({
             disabled={isClosed || originOptions.length === 0}
           >
             <SelectTrigger id="shipment-origin" className="w-full">
-              <SelectValue
-                placeholder={
-                  originOptions.length === 0
-                    ? "No hay rutas — créalas en Rutas"
-                    : "Selecciona origen"
-                }
-              />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {originOptions.map((o) => (
@@ -287,15 +275,7 @@ export function ShipmentForm({
             disabled={isClosed || !origin.trim() || destinationOptions.length === 0}
           >
             <SelectTrigger id="shipment-destination" className="w-full">
-              <SelectValue
-                placeholder={
-                  !origin.trim()
-                    ? "Primero elige origen"
-                    : destinationOptions.length === 0
-                      ? "Sin destinos para ese origen"
-                      : "Selecciona destino"
-                }
-              />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {destinationOptions.map((d) => (
@@ -342,13 +322,7 @@ export function ShipmentForm({
             disabled={isClosed || carrierOptions.length === 0}
           >
             <SelectTrigger id="shipment-legalName" className="w-full">
-              <SelectValue
-                placeholder={
-                  carrierOptions.length === 0
-                    ? "No hay transportistas — regístralos en Proveedores"
-                    : "Selecciona transportista"
-                }
-              />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {carrierOptions.map((name) => (
@@ -375,13 +349,7 @@ export function ShipmentForm({
             disabled={isClosed || unitOptions.length === 0}
           >
             <SelectTrigger id="shipment-unit" className="w-full">
-              <SelectValue
-                placeholder={
-                  unitOptions.length === 0
-                    ? "No hay tipos de unidad"
-                    : "Selecciona tipo de unidad"
-                }
-              />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {unitOptions.map((ut) => (
@@ -419,7 +387,7 @@ export function ShipmentForm({
             disabled={isClosed}
           >
             <SelectTrigger id="shipment-incident" className="w-full">
-              <SelectValue placeholder="Selecciona Sí o No" />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {incidentSelectOptions.map((o) => (
@@ -438,15 +406,7 @@ export function ShipmentForm({
             disabled={isClosed || !canPickIncidentType}
           >
             <SelectTrigger id="shipment-incidentType" className="w-full">
-              <SelectValue
-                placeholder={
-                  !canPickIncidentType
-                    ? "Indica primero si hubo incidencia (Sí)"
-                    : incidentTypeOptions.length === 0
-                      ? "No hay tipos de incidencia"
-                      : "Selecciona tipo de incidencia"
-                }
-              />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {incidentTypeOptions.map((it) => (

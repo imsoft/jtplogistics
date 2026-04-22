@@ -65,7 +65,6 @@ export function CityCombobox({
       >
         <ComboboxInput
           id={id}
-          placeholder={placeholder}
           className="w-full"
           showClear
         />

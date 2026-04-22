@@ -153,7 +153,6 @@ export function GlobalSearch() {
         shouldFilter={false}
       >
         <CommandInput
-          placeholder="Buscar rutas, transportistas, empleados…"
           value={query}
           onValueChange={setQuery}
         />

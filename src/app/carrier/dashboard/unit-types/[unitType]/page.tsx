@@ -345,7 +345,7 @@ export default function CarrierUnitTypePage() {
                 }}
               >
                 <SelectTrigger id="filter-origin" className="w-full">
-                  <SelectValue placeholder="" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__all__">Todos</SelectItem>
@@ -365,7 +365,7 @@ export default function CarrierUnitTypePage() {
                 disabled={origins.length === 0}
               >
                 <SelectTrigger id="filter-destination" className="w-full">
-                  <SelectValue placeholder="" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__all__">Todos</SelectItem>

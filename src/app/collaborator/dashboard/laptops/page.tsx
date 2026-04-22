@@ -127,7 +127,7 @@ export default function CollaboratorLaptopsPage() {
             <>
               <Select value={filterAssigned} onValueChange={setFilterAssigned}>
                 <SelectTrigger className="w-full sm:w-[150px]">
-                  <SelectValue placeholder="" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Cualquier asignación</SelectItem>

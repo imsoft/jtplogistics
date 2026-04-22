@@ -63,7 +63,6 @@ export function EmployeeMultiSelect({
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar colaborador…"
             className="h-7 border-0 p-0 text-sm shadow-none focus-visible:ring-0"
           />
         </div>

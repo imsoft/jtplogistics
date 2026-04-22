@@ -89,7 +89,7 @@ export function UsersTable({ defaultRole, detailBasePath }: { defaultRole?: User
           <>
             <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as RoleFilter)}>
               <SelectTrigger className="w-full sm:w-[160px]">
-                <SelectValue placeholder="" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los roles</SelectItem>

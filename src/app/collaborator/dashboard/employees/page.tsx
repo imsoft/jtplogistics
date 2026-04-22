@@ -257,7 +257,7 @@ export default function CollaboratorEmployeesPage() {
                   onValueChange={setFilterDepartment}
                 >
                   <SelectTrigger className="w-full sm:w-[160px]">
-                    <SelectValue placeholder="" />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos los depto.</SelectItem>

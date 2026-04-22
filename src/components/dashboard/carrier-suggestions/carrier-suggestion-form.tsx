@@ -51,7 +51,6 @@ export function CarrierSuggestionForm({
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={6}
-          placeholder="Describe tu sugerencia para mejorar el sistema o el servicio."
         />
       </div>
       <FormActions submitLabel={submitLabel} cancelHref={cancelHref} isSubmitting={isSubmitting} />

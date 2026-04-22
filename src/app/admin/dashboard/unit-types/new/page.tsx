@@ -69,7 +69,6 @@ export default function NewUnitTypePage() {
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Ej. Caja seca 53'"
                 required
                 disabled={isCreating}
                 autoFocus

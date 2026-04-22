@@ -285,9 +285,6 @@ export function RoutesBulkImport() {
         </p>
         <textarea
           className="min-h-[180px] w-full rounded-md border bg-background px-3 py-2 font-mono text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          placeholder={
-            "14CJ SENC 48 FT\tCUAUTITLAN, MEX\tTECAMAC, MEX\n17 FULL CJ 40 FT\tTEHUACAN, PUE\tCARDENAS, TAB\n30 TORTON ENTAR\tTEHUACAN, PUE\tHUAJUAPAN, OAX"
-          }
           value={inputText}
           onChange={(e) => {
             setInputText(e.target.value);

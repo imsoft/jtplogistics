@@ -90,7 +90,6 @@ export function ResourceSelect({
         <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
           <Command shouldFilter={false}>
             <CommandInput
-              placeholder="Buscar…"
               value={search}
               onValueChange={setSearch}
             />

@@ -69,7 +69,6 @@ export default function NewIncidentTypePage() {
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Ej. Retraso en carga"
                 required
                 disabled={isCreating}
                 autoFocus

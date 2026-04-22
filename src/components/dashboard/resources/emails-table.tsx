@@ -103,7 +103,7 @@ export function EmailsTable() {
         <>
           <Select value={filterType} onValueChange={setFilterType}>
             <SelectTrigger className="w-full sm:w-[140px]">
-              <SelectValue placeholder="" />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos los tipos</SelectItem>

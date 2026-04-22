@@ -90,7 +90,7 @@ export function LaptopForm({
           <Label htmlFor="lap-general-state">Estado general</Label>
           <Select value={generalState} onValueChange={setGeneralState}>
             <SelectTrigger id="lap-general-state" className="w-full">
-              <SelectValue placeholder="Selecciona un estado" />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Bueno">Bueno</SelectItem>

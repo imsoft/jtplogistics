@@ -92,13 +92,6 @@ export function EmployeeForm({
             onChange={(e) => setPassword(e.target.value)}
             required={isNew}
             autoComplete={isNew ? "new-password" : "off"}
-            placeholder={
-              isNew
-                ? undefined
-                : initialValues.hasPasswordReference
-                  ? "Deja vacío para no cambiar la nota guardada"
-                  : "Opcional: referencia interna (no es la contraseña de acceso)"
-            }
           />
           {!isNew && initialValues.hasPasswordReference ? (
             <p className="text-muted-foreground text-xs">
@@ -144,7 +137,7 @@ export function EmployeeForm({
           <Label htmlFor="emp-department">Departamento</Label>
           <Select value={department} onValueChange={setDepartment}>
             <SelectTrigger id="emp-department" className="w-full">
-              <SelectValue placeholder="Selecciona un departamento" />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {DEPARTMENTS.map((d) => (

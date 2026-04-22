@@ -145,7 +145,7 @@ export function CarrierQuotesTable() {
           <Label className="text-xs font-medium">Origen</Label>
           <Select value={selectedOrigin} onValueChange={handleOriginChange}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="" />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {origins.map((o) => (
@@ -165,7 +165,7 @@ export function CarrierQuotesTable() {
             disabled={!selectedOrigin}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="" />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {destinations.map((d) => (

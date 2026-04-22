@@ -349,7 +349,7 @@ export function ShipmentsTable() {
             </Label>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger id="shipment-filter-status" className="w-full">
-                <SelectValue placeholder="Estado" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={STATUS_FILTER_ALL}>Todos los estados</SelectItem>

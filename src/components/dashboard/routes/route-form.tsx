@@ -199,7 +199,6 @@ export function RouteForm({
               defaultValue={values.description}
               rows={3}
               className="resize-none"
-              placeholder="Notas o detalles adicionales sobre esta ruta…"
             />
           </div>
 
@@ -249,7 +248,6 @@ export function RouteForm({
                       )
                     }
                     className="w-full"
-                    placeholder="Target (MXN)"
                   />
                   <Button type="button" variant="outline" onClick={() => removeUnitTargetRow(index)} disabled={unitTargets.length <= 1}>
                     Quitar

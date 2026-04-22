@@ -178,7 +178,7 @@ export function AuditLogTable() {
       <div className="flex items-center gap-3">
         <Select value={resourceFilter} onValueChange={setResourceFilter}>
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Filtrar por tipo" />
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="__all__">Todos</SelectItem>

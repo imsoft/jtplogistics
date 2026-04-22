@@ -105,7 +105,7 @@ export function DeveloperTasksTable() {
       toolbar={
         <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as TaskStatus | typeof ALL)}>
           <SelectTrigger className="w-full sm:w-44">
-            <SelectValue placeholder="" />
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={ALL}>Todos los estados</SelectItem>

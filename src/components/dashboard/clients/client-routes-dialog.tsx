@@ -121,7 +121,6 @@ export function ClientRoutesDialog({ clientId, open, onOpenChange, onSave }: Cli
 
         <div className="px-6 pb-3">
           <Input
-            placeholder="Buscar por origen, destino, estado o creador…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full"
