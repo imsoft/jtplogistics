@@ -132,14 +132,21 @@ export function ClientRoutesDialog({ clientId, open, onOpenChange, onSave }: Cli
     setIsSaving(true);
     try {
       const body = Array.from(selected).map((key) => {
-        const [routeId, unitType] = key.split(":");
+        const idx = key.indexOf(":");
+        const routeId = key.slice(0, idx);
+        const unitType = key.slice(idx + 1);
         return { routeId, unitType };
       });
+      console.log("[PUT routes] selected keys:", Array.from(selected));
+
       const res = await fetch(`/api/admin/clients/${clientId}/routes`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
+      const json = await res.json();
+      console.log("[PUT routes] body sent:", body);
+      console.log("[PUT routes] response:", json);
       if (!res.ok) throw new Error();
       toast.success("Rutas asignadas correctamente.");
       onOpenChange(false);

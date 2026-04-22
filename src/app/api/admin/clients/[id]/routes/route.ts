@@ -162,6 +162,6 @@ export async function PUT(
       userName: session.user.name,
     });
 
-    return Response.json({ ok: true });
+    return Response.json({ ok: true, debug: { bodyCount: body.length, existingCount: existing.length, toCreateCount: toCreate.length, toDeleteCount: toDeleteIds.length, toCreate, sampleExisting: existing.slice(0, 3) } });
   });
 }
