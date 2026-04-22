@@ -108,68 +108,73 @@ export default function ClientProfilePage() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      {/* Información — ancho completo, dos columnas internas */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            Información
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-4 pb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 sm:divide-x">
+            <div className="sm:pr-6">
+              <InfoRow label="Nombre de contacto" value={client.contactName} />
+              <InfoRow label="Puesto" value={client.position} />
+              <InfoRow label="RFC" value={client.rfc} />
+              <InfoRow label="Correo" value={client.email} />
+            </div>
+            <div className="sm:pl-6">
+              <InfoRow label="Teléfono" value={formatPhone(client.phone)} />
+              <InfoRow label="Dirección" value={client.address} />
+              <InfoRow
+                label="Tipos de producto"
+                value={
+                  client.productTypes.length > 0 ? (
+                    <span className="flex flex-wrap gap-1.5">
+                      {client.productTypes.map((t) => (
+                        <Badge key={t} variant="secondary" className="font-normal">
+                          {t}
+                        </Badge>
+                      ))}
+                    </span>
+                  ) : (
+                    "—"
+                  )
+                }
+              />
+              <InfoRow
+                label="Registro"
+                value={new Date(client.createdAt).toLocaleDateString("es-MX", {
+                  year: "numeric", month: "long", day: "numeric",
+                })}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {(client.detentionConditions || client.notes) && (
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Información
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 pb-4">
-            <InfoRow label="Nombre de contacto" value={client.contactName} />
-            <InfoRow label="Puesto" value={client.position} />
-            <InfoRow label="RFC" value={client.rfc} />
-            <InfoRow label="Correo" value={client.email} />
-            <InfoRow label="Teléfono" value={formatPhone(client.phone)} />
-            <InfoRow label="Dirección" value={client.address} />
-            <InfoRow
-              label="Tipos de producto"
-              value={
-                client.productTypes.length > 0 ? (
-                  <span className="flex flex-wrap gap-1.5">
-                    {client.productTypes.map((t) => (
-                      <Badge key={t} variant="secondary" className="font-normal">
-                        {t}
-                      </Badge>
-                    ))}
-                  </span>
-                ) : (
-                  "—"
-                )
-              }
-            />
-            <InfoRow
-              label="Registro"
-              value={new Date(client.createdAt).toLocaleDateString("es-MX", {
-                year: "numeric", month: "long", day: "numeric",
-              })}
-            />
+          <CardContent className="px-4 py-4 space-y-4">
+            {client.detentionConditions && (
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                  Condiciones de estadías
+                </h3>
+                <p className="text-sm whitespace-pre-wrap">{client.detentionConditions}</p>
+              </div>
+            )}
+            {client.notes && (
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                  Notas
+                </h3>
+                <p className="text-sm whitespace-pre-wrap">{client.notes}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
-
-        {(client.detentionConditions || client.notes) && (
-          <Card>
-            <CardContent className="px-4 py-4 space-y-4">
-              {client.detentionConditions && (
-                <div>
-                  <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                    Condiciones de estadías
-                  </h3>
-                  <p className="text-sm whitespace-pre-wrap">{client.detentionConditions}</p>
-                </div>
-              )}
-              {client.notes && (
-                <div>
-                  <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                    Notas
-                  </h3>
-                  <p className="text-sm whitespace-pre-wrap">{client.notes}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      )}
 
       {/* Rutas asignadas */}
       <Card>
