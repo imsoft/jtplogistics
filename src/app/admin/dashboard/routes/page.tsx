@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { RoutesCrud } from "@/components/dashboard/routes/routes-crud";
@@ -19,12 +19,20 @@ export default function RoutesPage() {
             Crea, edita y elimina rutas de entrega. Los datos se guardan en la base de datos.
           </p>
         </div>
-        <Button asChild className="w-full shrink-0 sm:w-fit" size="sm">
-          <Link href="/admin/dashboard/routes/new">
-            <Plus className="size-4" />
-            Nueva ruta
-          </Link>
-        </Button>
+        <div className="flex w-full shrink-0 gap-2 sm:w-fit">
+          <Button asChild variant="outline" className="flex-1 sm:flex-none" size="sm">
+            <Link href="/admin/dashboard/routes/import">
+              <Upload className="size-4" />
+              Importar
+            </Link>
+          </Button>
+          <Button asChild className="flex-1 sm:flex-none" size="sm">
+            <Link href="/admin/dashboard/routes/new">
+              <Plus className="size-4" />
+              Nueva ruta
+            </Link>
+          </Button>
+        </div>
       </div>
       <Separator />
       <RoutesCrud />
