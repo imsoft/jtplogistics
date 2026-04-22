@@ -205,7 +205,7 @@ export function RoutesCrud() {
                             <td className="px-4 py-3">
                               <Link
                                 href={`/admin/dashboard/routes/${route.id}`}
-                                className="flex items-center gap-1 font-medium hover:text-primary transition-colors"
+                                className="flex items-center gap-1 font-medium hover:text-primary transition-colors uppercase"
                               >
                                 <span className="truncate">{route.origin}</span>
                                 <MoveRight className="size-3.5 shrink-0 text-muted-foreground" />
