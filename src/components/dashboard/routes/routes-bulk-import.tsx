@@ -53,6 +53,7 @@ const CITY_ALIASES: Record<string, string> = {
   "tlajomulco": "Tlajomulco de Zúñiga",
   "tlajomulco de zuñiga": "Tlajomulco de Zúñiga",
   "tehuacan": "Tehuacán",
+  "tecamac": "Tecamachalco",
 };
 
 function toTitleCase(str: string): string {
