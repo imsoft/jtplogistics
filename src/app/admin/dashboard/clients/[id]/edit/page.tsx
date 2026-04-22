@@ -18,6 +18,7 @@ import type { Client, ClientFormData } from "@/types/client.types";
 
 interface AssignedRoute {
   id: string;
+  clientRouteId: string;
   origin: string;
   destination: string;
   destinationState: string | null;
@@ -75,8 +76,8 @@ export default function EditClientPage() {
         const targets: Record<string, string> = {};
         const volumes: Record<string, string> = {};
         for (const r of data) {
-          if (r.clientTarget != null) targets[r.id] = formatMxn(r.clientTarget);
-          if (r.clientWeeklyVolume != null) volumes[r.id] = String(r.clientWeeklyVolume);
+          if (r.clientTarget != null) targets[r.clientRouteId] = formatMxn(r.clientTarget);
+          if (r.clientWeeklyVolume != null) volumes[r.clientRouteId] = String(r.clientWeeklyVolume);
         }
         setEditTargets(targets);
         setEditVolumes(volumes);
@@ -92,8 +93,8 @@ export default function EditClientPage() {
   async function handleFormSubmit(formData: ClientFormData) {
     // Save route tarifa/volumen changes
     const routeUpdates = routes.map((route) => {
-      const rawTarget = editTargets[route.id]?.trim();
-      const rawVolume = editVolumes[route.id]?.trim();
+      const rawTarget = editTargets[route.clientRouteId]?.trim();
+      const rawVolume = editVolumes[route.clientRouteId]?.trim();
       const parsedTarget = rawTarget ? parseMxn(rawTarget) : null;
       const parsedVolume = rawVolume ? Math.round(Number(rawVolume)) : null;
 
@@ -101,7 +102,7 @@ export default function EditClientPage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          routeId: route.id,
+          clientRouteId: route.clientRouteId,
           target: parsedTarget != null && !isNaN(parsedTarget) ? parsedTarget : null,
           weeklyVolume: parsedVolume != null && !isNaN(parsedVolume) ? parsedVolume : null,
         }),
@@ -120,12 +121,12 @@ export default function EditClientPage() {
     await handleSubmit(formData);
   }
 
-  function handleTargetChange(routeId: string, value: string) {
-    setEditTargets((prev) => ({ ...prev, [routeId]: formatMxnLive(value) }));
+  function handleTargetChange(clientRouteId: string, value: string) {
+    setEditTargets((prev) => ({ ...prev, [clientRouteId]: formatMxnLive(value) }));
   }
 
-  function handleVolumeChange(routeId: string, value: string) {
-    setEditVolumes((prev) => ({ ...prev, [routeId]: value }));
+  function handleVolumeChange(clientRouteId: string, value: string) {
+    setEditVolumes((prev) => ({ ...prev, [clientRouteId]: value }));
   }
 
   if (!isLoaded) return <p className="text-muted-foreground">Cargando…</p>;
@@ -192,7 +193,7 @@ export default function EditClientPage() {
                               </div>
                               {items.map((route) => (
                                 <div
-                                  key={route.id}
+                                  key={route.clientRouteId}
                                   className="grid grid-cols-[1fr_minmax(120px,1fr)_minmax(100px,1fr)_minmax(80px,1fr)] gap-x-6 items-center border-b px-4 py-3 last:border-0 transition-colors hover:bg-blue-50 dark:hover:bg-blue-950/30"
                                 >
                                   <div className="min-w-0">
@@ -208,8 +209,8 @@ export default function EditClientPage() {
                                     <Input
                                       type="text"
                                       inputMode="decimal"
-                                      value={editTargets[route.id] ?? ""}
-                                      onChange={(e) => handleTargetChange(route.id, e.target.value)}
+                                      value={editTargets[route.clientRouteId] ?? ""}
+                                      onChange={(e) => handleTargetChange(route.clientRouteId, e.target.value)}
                                       className="h-7 w-28 text-xs"
                                     />
                                   </div>
@@ -217,8 +218,8 @@ export default function EditClientPage() {
                                     type="number"
                                     inputMode="numeric"
                                     min={0}
-                                    value={editVolumes[route.id] ?? ""}
-                                    onChange={(e) => handleVolumeChange(route.id, e.target.value)}
+                                    value={editVolumes[route.clientRouteId] ?? ""}
+                                    onChange={(e) => handleVolumeChange(route.clientRouteId, e.target.value)}
                                     className="h-7 w-20 text-xs"
                                   />
                                   <Badge variant={STATUS_VARIANT[route.status] ?? "outline"} className="text-xs">

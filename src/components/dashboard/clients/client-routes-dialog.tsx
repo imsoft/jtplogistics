@@ -24,8 +24,20 @@ interface ClientRoutesDialogProps {
   onSave?: () => void;
 }
 
+// Una fila expandida = ruta × tipo de unidad
+interface RouteRow {
+  key: string; // `${routeId}:${unitType}`
+  routeId: string;
+  unitType: string;
+  origin: string;
+  destination: string;
+  destinationState: string | null;
+  status: string;
+  createdByName: string | null;
+}
+
 export function ClientRoutesDialog({ clientId, open, onOpenChange, onSave }: ClientRoutesDialogProps) {
-  const [routes, setRoutes] = useState<Route[]>([]);
+  const [rows, setRows] = useState<RouteRow[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -47,45 +59,70 @@ export function ClientRoutesDialog({ clientId, open, onOpenChange, onSave }: Cli
     Promise.all([
       fetch("/api/routes").then((r) => (r.ok ? r.json() : [])),
       fetch(`/api/admin/clients/${clientId}/routes`).then((r) => (r.ok ? r.json() : [])),
-    ]).then(([allRoutes, assignedIds]: [Route[], string[]]) => {
-      setRoutes(allRoutes);
-      setSelected(new Set(assignedIds));
+    ]).then(([allRoutes, assignedPairs]: [Route[], { routeId: string; unitType: string }[]]) => {
+      // Expandir rutas a una fila por unitType
+      const expanded: RouteRow[] = [];
+      for (const route of allRoutes) {
+        const types =
+          route.unitTargets && route.unitTargets.length > 0
+            ? route.unitTargets.map((ut) => ut.unitType)
+            : [route.unitType];
+        for (const ut of types) {
+          expanded.push({
+            key: `${route.id}:${ut}`,
+            routeId: route.id,
+            unitType: ut,
+            origin: route.origin,
+            destination: route.destination,
+            destinationState: route.destinationState ?? null,
+            status: route.status,
+            createdByName: route.createdByName ?? null,
+          });
+        }
+      }
+      setRows(expanded);
+
+      const selectedKeys = new Set(
+        assignedPairs.map((p) => `${p.routeId}:${p.unitType}`)
+      );
+      setSelected(selectedKeys);
       setIsLoaded(true);
     });
   }, [open, clientId]);
 
   const filtered = useMemo(() => {
     const q = search.trim();
-    if (!q) return routes;
-    return routes.filter(
+    if (!q) return rows;
+    return rows.filter(
       (r) =>
         fuzzyMatch(r.origin, q) ||
         fuzzyMatch(r.destination, q) ||
         fuzzyMatch(r.destinationState ?? "", q) ||
+        fuzzyMatch(unitTypeLabel[r.unitType] ?? r.unitType, q) ||
         fuzzyMatch(r.createdByName ?? "", q)
     );
-  }, [routes, search]);
+  }, [rows, search, unitTypeLabel]);
 
-  function toggleRoute(id: string) {
+  function toggleRow(key: string) {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
   }
 
   function toggleAll() {
-    if (filtered.every((r) => selected.has(r.id))) {
+    if (filtered.every((r) => selected.has(r.key))) {
       setSelected((prev) => {
         const next = new Set(prev);
-        filtered.forEach((r) => next.delete(r.id));
+        filtered.forEach((r) => next.delete(r.key));
         return next;
       });
     } else {
       setSelected((prev) => {
         const next = new Set(prev);
-        filtered.forEach((r) => next.add(r.id));
+        filtered.forEach((r) => next.add(r.key));
         return next;
       });
     }
@@ -94,10 +131,14 @@ export function ClientRoutesDialog({ clientId, open, onOpenChange, onSave }: Cli
   async function handleSave() {
     setIsSaving(true);
     try {
+      const body = Array.from(selected).map((key) => {
+        const [routeId, unitType] = key.split(":");
+        return { routeId, unitType };
+      });
       const res = await fetch(`/api/admin/clients/${clientId}/routes`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(Array.from(selected)),
+        body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error();
       toast.success("Rutas asignadas correctamente.");
@@ -110,7 +151,7 @@ export function ClientRoutesDialog({ clientId, open, onOpenChange, onSave }: Cli
     }
   }
 
-  const allFilteredSelected = filtered.length > 0 && filtered.every((r) => selected.has(r.id));
+  const allFilteredSelected = filtered.length > 0 && filtered.every((r) => selected.has(r.key));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -161,40 +202,40 @@ export function ClientRoutesDialog({ clientId, open, onOpenChange, onSave }: Cli
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((route) => (
+                  {filtered.map((row) => (
                     <tr
-                      key={route.id}
-                      onClick={() => toggleRoute(route.id)}
+                      key={row.key}
+                      onClick={() => toggleRow(row.key)}
                       className="cursor-pointer border-b last:border-b-0 hover:bg-hover hover:text-hover-foreground transition-colors"
                     >
                       <td className="py-2.5 pl-3 pr-1">
                         <input
                           type="checkbox"
-                          checked={selected.has(route.id)}
-                          onChange={() => toggleRoute(route.id)}
+                          checked={selected.has(row.key)}
+                          onChange={() => toggleRow(row.key)}
                           onClick={(e) => e.stopPropagation()}
                           className="size-4 rounded border-input accent-primary"
-                          aria-label={`Seleccionar ${route.origin} → ${route.destination}`}
+                          aria-label={`Seleccionar ${row.origin} → ${row.destination} (${unitTypeLabel[row.unitType] ?? row.unitType})`}
                         />
                       </td>
                       <td className="py-2.5 pr-4">
                         <span className="flex items-center gap-1 font-medium">
-                          <span>{route.origin}</span>
+                          <span>{row.origin}</span>
                           <MoveRight className="size-3 shrink-0 text-muted-foreground" />
-                          <span>{route.destination}</span>
+                          <span>{row.destination}</span>
                         </span>
                         <span className="text-xs text-muted-foreground">
-                          {ROUTE_STATUS_LABELS[route.status]}
+                          {ROUTE_STATUS_LABELS[row.status as keyof typeof ROUTE_STATUS_LABELS] ?? row.status}
                         </span>
                       </td>
                       <td className="py-2.5 pr-4 text-muted-foreground">
-                        {route.destinationState ?? "—"}
+                        {row.destinationState ?? "—"}
                       </td>
                       <td className="py-2.5 pr-4">
-                        {unitTypeLabel[route.unitType] ?? route.unitType}
+                        {unitTypeLabel[row.unitType] ?? row.unitType}
                       </td>
                       <td className="py-2.5 pr-4 text-muted-foreground">
-                        {route.createdByName ?? "—"}
+                        {row.createdByName ?? "—"}
                       </td>
                     </tr>
                   ))}
@@ -206,7 +247,7 @@ export function ClientRoutesDialog({ clientId, open, onOpenChange, onSave }: Cli
 
         <DialogFooter className="flex flex-col-reverse gap-3 border-t px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
           <span className="text-xs text-muted-foreground text-center sm:text-left">
-            {selected.size} ruta{selected.size !== 1 ? "s" : ""} seleccionada{selected.size !== 1 ? "s" : ""}
+            {selected.size} asignación{selected.size !== 1 ? "es" : ""} seleccionada{selected.size !== 1 ? "s" : ""}
           </span>
           <div className="flex flex-col-reverse gap-2 sm:flex-row">
             <Button variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)} disabled={isSaving}>
