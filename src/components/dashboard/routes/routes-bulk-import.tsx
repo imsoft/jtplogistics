@@ -25,7 +25,7 @@ interface ImportRoute {
   unitType: string;
   rawUnitType: string;
   hasUnknownUnitType: boolean;
-  status: "pending" | "importing" | "success" | "error" | "skipped";
+  status: "pending" | "importing" | "success" | "error" | "skipped" | "duplicate";
   message?: string;
 }
 
@@ -59,7 +59,6 @@ function parseInput(text: string): ImportRoute[] {
     .map((l) => l.trim())
     .filter(Boolean);
 
-  const seen = new Set<string>();
   const result: ImportRoute[] = [];
 
   for (const line of lines) {
@@ -81,7 +80,7 @@ function parseInput(text: string): ImportRoute[] {
     )
       continue;
 
-    if (!rawOrigin || !rawDestination) continue;
+    if (!rawUnitType || !rawOrigin || !rawDestination) continue;
 
     const mappedUnitType = UNIT_TYPE_MAP[rawUnitType] ?? null;
     const unitType = mappedUnitType ?? rawUnitType.toLowerCase().replace(/\s+/g, "_");
@@ -89,11 +88,6 @@ function parseInput(text: string): ImportRoute[] {
     const destination = parseCity(rawDestination);
 
     if (!origin || !destination) continue;
-
-    // Deduplicar filas idénticas dentro del mismo lote
-    const key = `${origin}|||${destination}|||${unitType}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
 
     result.push({
       origin,
@@ -139,9 +133,24 @@ export function RoutesBulkImport() {
     setImportDone(false);
 
     const updated = [...routes];
+    const importedKeys = new Set<string>();
 
     for (let i = 0; i < updated.length; i++) {
-      if (updated[i].status === "success" || updated[i].status === "skipped") continue;
+      if (
+        updated[i].status === "success" ||
+        updated[i].status === "skipped" ||
+        updated[i].status === "duplicate"
+      )
+        continue;
+
+      const key = `${updated[i].origin}|||${updated[i].destination}|||${updated[i].unitType}`;
+
+      // Duplicada dentro del mismo lote
+      if (importedKeys.has(key)) {
+        updated[i] = { ...updated[i], status: "duplicate", message: "Duplicada en el lote" };
+        setRoutes([...updated]);
+        continue;
+      }
 
       updated[i] = { ...updated[i], status: "importing" };
       setRoutes([...updated]);
@@ -162,6 +171,7 @@ export function RoutesBulkImport() {
 
         if (res.ok) {
           updated[i] = { ...updated[i], status: "success" };
+          importedKeys.add(key);
         } else if (res.status === 409) {
           updated[i] = { ...updated[i], status: "skipped", message: "Ya existe" };
         } else {
@@ -185,6 +195,7 @@ export function RoutesBulkImport() {
   const pendingCount = routes.filter((r) => r.status === "pending").length;
   const successCount = routes.filter((r) => r.status === "success").length;
   const skippedCount = routes.filter((r) => r.status === "skipped").length;
+  const duplicateCount = routes.filter((r) => r.status === "duplicate").length;
   const errorCount = routes.filter((r) => r.status === "error").length;
   const unknownCount = routes.filter((r) => r.hasUnknownUnitType).length;
 
@@ -284,6 +295,11 @@ export function RoutesBulkImport() {
                     {skippedCount} ya existían
                   </Badge>
                 )}
+                {duplicateCount > 0 && (
+                  <Badge variant="outline" className="text-muted-foreground">
+                    {duplicateCount} duplicadas en el lote
+                  </Badge>
+                )}
                 {errorCount > 0 && (
                   <Badge variant="outline" className="gap-1 border-red-500 text-red-600">
                     <XCircle className="size-3" />
@@ -348,6 +364,9 @@ export function RoutesBulkImport() {
                       {route.status === "skipped" && (
                         <span className="text-xs text-muted-foreground">Ya existía</span>
                       )}
+                      {route.status === "duplicate" && (
+                        <span className="text-xs text-muted-foreground">Duplicada</span>
+                      )}
                       {route.status === "error" && (
                         <span
                           className="flex items-center gap-1 text-xs text-red-600"
@@ -390,7 +409,10 @@ export function RoutesBulkImport() {
               Importación completada. {successCount} ruta
               {successCount !== 1 ? "s" : ""} creada{successCount !== 1 ? "s" : ""}
               {skippedCount > 0
-                ? `, ${skippedCount} omitida${skippedCount !== 1 ? "s" : ""} (ya existían)`
+                ? `, ${skippedCount} omitida${skippedCount !== 1 ? "s" : ""} (ya existían en el sistema)`
+                : ""}
+              {duplicateCount > 0
+                ? `, ${duplicateCount} duplicada${duplicateCount !== 1 ? "s" : ""} en el lote`
                 : ""}
               .
             </p>
