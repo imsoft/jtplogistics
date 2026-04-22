@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
-// Mapeo de tipos de unidad del Excel al valor interno del sistema
 const UNIT_TYPE_MAP: Record<string, string> = {
   "14CJ SENC 48 FT": "caja_seca",
   "37 CJ SENC 40 FT": "caja_seca",
@@ -23,8 +22,8 @@ const UNIT_TYPE_LABELS: Record<string, string> = {
 interface ImportRoute {
   origin: string;
   destination: string;
-  unitTypes: string[];
-  rawUnitTypes: string[];
+  unitType: string;
+  rawUnitType: string;
   hasUnknownUnitType: boolean;
   status: "pending" | "importing" | "success" | "error" | "skipped";
   message?: string;
@@ -34,7 +33,6 @@ function parseCSVLine(line: string): string[] {
   const result: string[] = [];
   let current = "";
   let inQuotes = false;
-
   for (let i = 0; i < line.length; i++) {
     const ch = line[i];
     if (ch === '"') {
@@ -51,7 +49,6 @@ function parseCSVLine(line: string): string[] {
 }
 
 function parseCity(raw: string): string {
-  // Elimina el sufijo de estado ", MEX" / ", CHS" / etc.
   return raw.replace(/,\s*[A-Z]{2,3}$/, "").trim();
 }
 
@@ -62,11 +59,11 @@ function parseInput(text: string): ImportRoute[] {
     .map((l) => l.trim())
     .filter(Boolean);
 
-  const map = new Map<string, ImportRoute>();
+  const seen = new Set<string>();
+  const result: ImportRoute[] = [];
 
   for (const line of lines) {
     let cols: string[];
-
     if (line.includes("\t")) {
       cols = line.split("\t").map((c) => c.trim().replace(/^"|"$/g, ""));
     } else {
@@ -93,28 +90,22 @@ function parseInput(text: string): ImportRoute[] {
 
     if (!origin || !destination) continue;
 
-    const key = `${origin}|||${destination}`;
-    const existing = map.get(key);
+    // Deduplicar filas idénticas dentro del mismo lote
+    const key = `${origin}|||${destination}|||${unitType}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
 
-    if (existing) {
-      if (!existing.unitTypes.includes(unitType)) {
-        existing.unitTypes.push(unitType);
-        existing.rawUnitTypes.push(rawUnitType);
-      }
-      if (!mappedUnitType) existing.hasUnknownUnitType = true;
-    } else {
-      map.set(key, {
-        origin,
-        destination,
-        unitTypes: [unitType],
-        rawUnitTypes: [rawUnitType],
-        hasUnknownUnitType: !mappedUnitType,
-        status: "pending",
-      });
-    }
+    result.push({
+      origin,
+      destination,
+      unitType,
+      rawUnitType,
+      hasUnknownUnitType: !mappedUnitType,
+      status: "pending",
+    });
   }
 
-  return Array.from(map.values());
+  return result;
 }
 
 export function RoutesBulkImport() {
@@ -126,8 +117,7 @@ export function RoutesBulkImport() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleParse() {
-    const parsed = parseInput(inputText);
-    setRoutes(parsed);
+    setRoutes(parseInput(inputText));
     setIsParsed(true);
     setImportDone(false);
   }
@@ -137,8 +127,7 @@ export function RoutesBulkImport() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      const text = ev.target?.result as string;
-      setInputText(text);
+      setInputText(ev.target?.result as string);
       setIsParsed(false);
       setImportDone(false);
     };
@@ -164,7 +153,7 @@ export function RoutesBulkImport() {
           body: JSON.stringify({
             origin: updated[i].origin,
             destination: updated[i].destination,
-            unitTargets: updated[i].unitTypes.map((ut) => ({ unitType: ut })),
+            unitTargets: [{ unitType: updated[i].unitType }],
             status: "active",
           }),
         });
@@ -238,11 +227,13 @@ export function RoutesBulkImport() {
         </div>
         <p className="text-xs text-muted-foreground">
           Copia las celdas directamente desde Excel y pégalas aquí (o sube un archivo CSV).
-          El formato esperado es: <strong>Tipo de Equipo | Origen | Destino</strong> — una fila por línea.
+          Formato esperado: <strong>Tipo de Equipo | Origen | Destino</strong> — una fila por línea.
         </p>
         <textarea
           className="min-h-[180px] w-full rounded-md border bg-background px-3 py-2 font-mono text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          placeholder={"14CJ SENC 48 FT\tCUAUTITLAN, MEX\tTECAMAC, MEX\n17 FULL CJ 40 FT\tTEHUACAN, PUE\tCARDENAS, TAB\n30 TORTON ENTAR\tTEHUACAN, PUE\tHUAJUAPAN, OAX"}
+          placeholder={
+            "14CJ SENC 48 FT\tCUAUTITLAN, MEX\tTECAMAC, MEX\n17 FULL CJ 40 FT\tTEHUACAN, PUE\tCARDENAS, TAB\n30 TORTON ENTAR\tTEHUACAN, PUE\tHUAJUAPAN, OAX"
+          }
           value={inputText}
           onChange={(e) => {
             setInputText(e.target.value);
@@ -262,7 +253,6 @@ export function RoutesBulkImport() {
         </Button>
       </div>
 
-      {/* Vista previa */}
       {isParsed && routes.length === 0 && (
         <p className="text-sm text-muted-foreground">
           No se encontraron rutas válidas. Verifica el formato de los datos.
@@ -273,9 +263,8 @@ export function RoutesBulkImport() {
         <div className="space-y-4">
           <Separator />
 
-          {/* Resumen */}
           <div className="flex flex-wrap items-center gap-2 text-sm">
-            <span className="font-medium">{routes.length} rutas únicas</span>
+            <span className="font-medium">{routes.length} rutas detectadas</span>
             {unknownCount > 0 && (
               <Badge variant="outline" className="gap-1 border-yellow-500 text-yellow-600">
                 <AlertCircle className="size-3" />
@@ -305,14 +294,13 @@ export function RoutesBulkImport() {
             )}
           </div>
 
-          {/* Tabla de previsualización */}
           <div className="overflow-x-auto rounded-md border">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/50 text-left">
                   <th className="px-3 py-2 font-medium">Origen</th>
                   <th className="px-3 py-2 font-medium">Destino</th>
-                  <th className="px-3 py-2 font-medium">Tipos de unidad</th>
+                  <th className="px-3 py-2 font-medium">Tipo de unidad</th>
                   <th className="px-3 py-2 font-medium">Estado</th>
                 </tr>
               </thead>
@@ -322,25 +310,24 @@ export function RoutesBulkImport() {
                     <td className="px-3 py-2 font-mono text-xs">{route.origin}</td>
                     <td className="px-3 py-2 font-mono text-xs">{route.destination}</td>
                     <td className="px-3 py-2">
-                      <div className="flex flex-wrap gap-1">
-                        {route.unitTypes.map((ut, j) => (
-                          <Badge
-                            key={ut}
-                            variant="secondary"
-                            className={
-                              !UNIT_TYPE_LABELS[ut]
-                                ? "border border-yellow-400 bg-yellow-50 text-yellow-700"
-                                : ""
-                            }
-                            title={!UNIT_TYPE_LABELS[ut] ? `Tipo no reconocido: ${route.rawUnitTypes[j]}` : undefined}
-                          >
-                            {UNIT_TYPE_LABELS[ut] ?? ut}
-                            {!UNIT_TYPE_LABELS[ut] && (
-                              <AlertCircle className="ml-1 size-3 text-yellow-500" />
-                            )}
-                          </Badge>
-                        ))}
-                      </div>
+                      <Badge
+                        variant="secondary"
+                        className={
+                          route.hasUnknownUnitType
+                            ? "border border-yellow-400 bg-yellow-50 text-yellow-700"
+                            : ""
+                        }
+                        title={
+                          route.hasUnknownUnitType
+                            ? `Tipo no reconocido: ${route.rawUnitType}`
+                            : undefined
+                        }
+                      >
+                        {UNIT_TYPE_LABELS[route.unitType] ?? route.unitType}
+                        {route.hasUnknownUnitType && (
+                          <AlertCircle className="ml-1 size-3 text-yellow-500" />
+                        )}
+                      </Badge>
                     </td>
                     <td className="px-3 py-2">
                       {route.status === "pending" && (
@@ -362,7 +349,10 @@ export function RoutesBulkImport() {
                         <span className="text-xs text-muted-foreground">Ya existía</span>
                       )}
                       {route.status === "error" && (
-                        <span className="flex items-center gap-1 text-xs text-red-600" title={route.message}>
+                        <span
+                          className="flex items-center gap-1 text-xs text-red-600"
+                          title={route.message}
+                        >
                           <XCircle className="size-3" />
                           {route.message ?? "Error"}
                         </span>
@@ -374,7 +364,6 @@ export function RoutesBulkImport() {
             </table>
           </div>
 
-          {/* Botón de importar */}
           {!importDone && (
             <Button
               type="button"
@@ -398,12 +387,18 @@ export function RoutesBulkImport() {
 
           {importDone && errorCount === 0 && (
             <p className="text-sm text-green-600">
-              Importación completada. {successCount} ruta{successCount !== 1 ? "s" : ""} creada{successCount !== 1 ? "s" : ""}{skippedCount > 0 ? `, ${skippedCount} omitida${skippedCount !== 1 ? "s" : ""} (ya existían)` : ""}.
+              Importación completada. {successCount} ruta
+              {successCount !== 1 ? "s" : ""} creada{successCount !== 1 ? "s" : ""}
+              {skippedCount > 0
+                ? `, ${skippedCount} omitida${skippedCount !== 1 ? "s" : ""} (ya existían)`
+                : ""}
+              .
             </p>
           )}
           {importDone && errorCount > 0 && (
             <p className="text-sm text-red-600">
-              Importación finalizada con {errorCount} error{errorCount !== 1 ? "es" : ""}. Revisa las filas marcadas.
+              Importación finalizada con {errorCount} error{errorCount !== 1 ? "es" : ""}. Revisa
+              las filas marcadas.
             </p>
           )}
         </div>
