@@ -137,18 +137,12 @@ export function ClientForm({
           />
         </div>
 
-        <div className="space-y-3 sm:col-span-2">
-          <div>
-            <Label className="text-base">Tipos de producto que maneja</Label>
-            <p className="text-muted-foreground text-xs mt-0.5">
-              Captúralos en un solo campo separados por coma.
-            </p>
-          </div>
+        <div className="space-y-2 sm:col-span-2">
+          <Label htmlFor="client-product-types">Tipos de producto que maneja</Label>
           <Input
             id="client-product-types"
             value={productTypesInput}
             onChange={(e) => setProductTypesInput(e.target.value)}
-            placeholder="Ejemplo: Acero, Granos, Refrigerado"
           />
         </div>
 
