@@ -71,7 +71,7 @@ export function ClientForm({
     <form onSubmit={handleSubmit} className="w-full space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="client-name">Nombre comercial</Label>
+          <Label htmlFor="client-name">Razón social</Label>
           <Input
             id="client-name"
             value={name}
@@ -80,11 +80,11 @@ export function ClientForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="client-legalName">Razón social</Label>
+          <Label htmlFor="client-rfc">RFC</Label>
           <Input
-            id="client-legalName"
-            value={legalName}
-            onChange={(e) => setLegalName(e.target.value)}
+            id="client-rfc"
+            value={rfc}
+            onChange={(e) => setRfc(e.target.value)}
           />
         </div>
         <div className="space-y-2">
@@ -101,14 +101,6 @@ export function ClientForm({
             id="client-position"
             value={position}
             onChange={(e) => setPosition(e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="client-rfc">RFC</Label>
-          <Input
-            id="client-rfc"
-            value={rfc}
-            onChange={(e) => setRfc(e.target.value)}
           />
         </div>
         <div className="space-y-2">
