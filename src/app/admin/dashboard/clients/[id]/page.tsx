@@ -108,23 +108,19 @@ export default function ClientProfilePage() {
         </div>
       </div>
 
-      {/* Información — ancho completo, dos columnas internas */}
+      {/* Información */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             Información
           </CardTitle>
         </CardHeader>
-        <CardContent className="px-4 pb-4">
+        <CardContent className="px-4 pb-4 space-y-4">
+          {/* RFC — ancho completo, justo bajo el título */}
+          <InfoRow label="RFC" value={client.rfc} />
+          <div className="border-t" />
           <div className="grid grid-cols-1 sm:grid-cols-2 sm:divide-x">
             <div className="sm:pr-6">
-              <InfoRow label="Nombre de contacto" value={client.contactName} />
-              <InfoRow label="Puesto" value={client.position} />
-              <InfoRow label="RFC" value={client.rfc} />
-              <InfoRow label="Correo" value={client.email} />
-            </div>
-            <div className="sm:pl-6">
-              <InfoRow label="Teléfono" value={formatPhone(client.phone)} />
               <InfoRow label="Dirección" value={client.address} />
               <InfoRow
                 label="Tipos de producto"
@@ -148,6 +144,12 @@ export default function ClientProfilePage() {
                   year: "numeric", month: "long", day: "numeric",
                 })}
               />
+            </div>
+            <div className="sm:pl-6">
+              <InfoRow label="Nombre de contacto" value={client.contactName} />
+              <InfoRow label="Puesto" value={client.position} />
+              <InfoRow label="Correo" value={client.email} />
+              <InfoRow label="Teléfono" value={formatPhone(client.phone)} />
             </div>
           </div>
         </CardContent>
