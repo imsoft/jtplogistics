@@ -17,6 +17,7 @@ import {
   Smartphone,
   Mail,
   ClipboardList,
+  Network,
 } from "lucide-react";
 import { DashboardSidebar, type NavItem, type NavGroup } from "@/components/dashboard/dashboard-sidebar";
 
@@ -65,6 +66,7 @@ const allNavGroups: PermNavGroup[] = [
     label: "Equipo",
     items: [
       { title: "Colaboradores", href: `${BASE}/employees`, icon: UserRound, permission: "canViewEmployees" },
+      { title: "Organigrama", href: `${BASE}/employees/org-chart`, icon: Network, permission: "canViewEmployees" },
       { title: "Vendedores", href: `${BASE}/vendors`, icon: ShoppingBag, permission: "canViewVendors" },
     ],
   },

@@ -17,7 +17,7 @@ import { MessageSquare } from "lucide-react";
 import { ScrollText } from "lucide-react";
 import { Ship } from "lucide-react";
 import { DollarSign } from "lucide-react";
-import { AlertTriangle, Inbox, TrendingUp } from "lucide-react";
+import { AlertTriangle, Inbox, TrendingUp, Network } from "lucide-react";
 
 export interface DashboardNavItem {
   title: string;
@@ -50,6 +50,7 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
     label: "Equipo",
     items: [
       { title: "Colaboradores", href: "/admin/dashboard/employees", icon: UserRound },
+      { title: "Organigrama", href: "/admin/dashboard/employees/org-chart", icon: Network },
       { title: "Vendedores", href: "/admin/dashboard/vendors", icon: ShoppingBag },
     ],
   },
