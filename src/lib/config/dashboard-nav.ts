@@ -17,7 +17,7 @@ import { MessageSquare } from "lucide-react";
 import { ScrollText } from "lucide-react";
 import { Ship } from "lucide-react";
 import { DollarSign } from "lucide-react";
-import { AlertTriangle, Inbox, TrendingUp, Network } from "lucide-react";
+import { AlertTriangle, Inbox, TrendingUp, Network, StarIcon } from "lucide-react";
 
 export interface DashboardNavItem {
   title: string;
@@ -40,6 +40,7 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
       { title: "Tipos de incidencia", href: "/admin/dashboard/incident-types", icon: AlertTriangle },
       { title: "Cotizador", href: "/admin/dashboard/quotes", icon: Calculator },
       { title: "Proveedores", href: "/admin/dashboard/providers", icon: Truck },
+      { title: "Rating transportistas", href: "/admin/dashboard/providers/ratings", icon: StarIcon },
       { title: "Clientes", href: "/admin/dashboard/clients", icon: Users },
       { title: "Tabla de embarques", href: "/admin/dashboard/shipments", icon: Ship },
       { title: "Tabla de finanzas", href: "/admin/dashboard/finances", icon: DollarSign },
