@@ -42,6 +42,7 @@ interface ShipmentFormProps {
   cancelHref: string;
   onSubmit: (data: ShipmentFormData) => void;
   isSubmitting?: boolean;
+  unlocked?: boolean;
 }
 
 export function ShipmentForm({
@@ -50,6 +51,7 @@ export function ShipmentForm({
   cancelHref,
   onSubmit,
   isSubmitting = false,
+  unlocked = false,
 }: ShipmentFormProps) {
   const [eco, setEco] = useState(initialValues.eco ?? "");
   const [client, setClient] = useState(initialValues.client ?? "");
@@ -68,7 +70,7 @@ export function ShipmentForm({
   const [incident, setIncident] = useState(initialValues.incident ?? "");
   const [incidentType, setIncidentType] = useState(initialValues.incidentType ?? "");
   const [status, setStatus] = useState<ShipmentStatus>(initialValues.status ?? "pending");
-  const isClosed = status === "returned";
+  const isClosed = status === "returned" && !unlocked;
 
   const [routes, setRoutes] = useState<Route[]>([]);
   const [clients, setClients] = useState<Client[]>([]);

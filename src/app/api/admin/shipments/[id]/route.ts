@@ -92,6 +92,7 @@ export function PATCH(
       eco, client, origin, destination, product,
       pickupDate, deliveryDate, legalName, operatorName,
       truck, trailer, unit, phone, comments, incident, incidentType, status,
+      _confirmedEmail,
     } = body as Record<string, string | null | undefined>;
 
     const shipment = await prisma.shipment.findUnique({ where: { id } });
@@ -102,12 +103,15 @@ export function PATCH(
         ? (status as (typeof VALID_STATUSES)[number])
         : shipment.status;
 
-    // Regla: cuando el embarque está cerrado, no se permite modificar nada más
-    // (ni siquiera guardando el mismo estado). Para editar, primero hay que reabrirlo
-    // cambiando el estado a una opción distinta de "Cerrado".
-    if (shipment.status === SHIPMENT_CLOSED_STATUS && nextStatus === SHIPMENT_CLOSED_STATUS) {
+    // Regla: cuando el embarque está cerrado, no se permite modificar nada más a menos
+    // que el usuario haya confirmado con su correo (_confirmedEmail === session.user.email).
+    const emailConfirmed =
+      typeof _confirmedEmail === "string" &&
+      _confirmedEmail.toLowerCase() === session.user.email.toLowerCase();
+
+    if (shipment.status === SHIPMENT_CLOSED_STATUS && nextStatus === SHIPMENT_CLOSED_STATUS && !emailConfirmed) {
       return Response.json(
-        { error: "El embarque está cerrado y no se puede modificar. Para editar, reabre el embarque cambiando el estado." },
+        { error: "El embarque está cerrado y no se puede modificar. Confirma tu correo electrónico para editar." },
         { status: 403 },
       );
     }
