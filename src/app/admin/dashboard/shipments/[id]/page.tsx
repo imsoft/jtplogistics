@@ -13,6 +13,7 @@ import { useIncidentTypes } from "@/hooks/use-incident-types";
 import { formatIncidentYesNo } from "@/lib/incident-yes-no";
 import { getIncidentTypeLabel } from "@/lib/incident-type-label";
 import { SHIPMENT_STATUS_CONFIG } from "@/components/dashboard/resources/shipments-table";
+import { ShipmentTimeline } from "@/components/dashboard/resources/shipment-timeline";
 import type { Shipment } from "@/types/shipment.types";
 
 function fmtDate(iso: string | null) {
@@ -148,6 +149,8 @@ export default function ShipmentProfilePage() {
           </CardContent>
         </Card>
       )}
+
+      <ShipmentTimeline shipmentId={shipment.id} />
     </div>
   );
 }
