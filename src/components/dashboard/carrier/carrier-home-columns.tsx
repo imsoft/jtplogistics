@@ -37,14 +37,6 @@ export function getCarrierHomeColumns(): ColumnDef<CarrierHomeRouteRow>[] {
       cell: ({ row }) => row.original.unitTypeLabel,
     },
     {
-      accessorKey: "jtpTarget",
-      header: ({ column }) => <SortableColumnHeader column={column} title="Target JTP (MXN)" />,
-      cell: ({ row }) => {
-        const v = row.original.jtpTarget;
-        return v != null ? `$${formatMxn(v)}` : <span className="text-muted-foreground">—</span>;
-      },
-    },
-    {
       accessorKey: "carrierTarget",
       header: ({ column }) => <SortableColumnHeader column={column} title="Mi target (MXN)" />,
       cell: ({ row }) => {

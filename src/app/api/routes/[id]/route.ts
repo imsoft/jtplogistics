@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { requireSession, requireAdmin } from "@/lib/auth-server";
+import { requireCollaboratorOrAdmin, requireAdmin } from "@/lib/auth-server";
 import { type PrismaRoute, VALID_STATUSES, routeToJson } from "@/lib/api/route-utils";
 import { getCityState } from "@/lib/data/mexico-cities";
 import { logRoute, diffSnapshots, type RouteSnapshot } from "@/lib/route-log";
@@ -13,7 +13,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireSession();
+    // Esta ruta expone targets confidenciales, restringido a admin/colaborador.
+    await requireCollaboratorOrAdmin();
     const { id } = await params;
     const route = await prisma.route.findUnique({
       where: { id },

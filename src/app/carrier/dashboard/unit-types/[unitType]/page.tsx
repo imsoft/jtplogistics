@@ -24,6 +24,8 @@ interface RouteSelection {
   carrierWeeklyVolume: number | null;
   editUnlockRequested: boolean;
   editUnlockApproved: boolean;
+  /** Diferencia porcentual contra el target del admin, calculada en servidor. Sin exponer precio. */
+  targetDiffPercent: number | null;
 }
 
 interface CarrierRouteRow {
@@ -32,9 +34,8 @@ interface CarrierRouteRow {
   destination: string;
   description: string | null;
   unitType: string;
-  /** Targets por tipo de unidad (una sola ruta puede tener varios). */
-  unitTargets: { unitType: string; target: number | null }[];
-  jtpTarget: number | null;
+  /** Tipos de unidad disponibles para esta ruta (sin precios, confidenciales para el admin). */
+  unitTargets: { unitType: string }[];
   selected: boolean;
   selections: RouteSelection[];
   carrierTarget: number | null;
@@ -55,20 +56,15 @@ async function fetchCarrierRoutes(): Promise<CarrierRoutesResponse> {
   return res.json();
 }
 
-function TargetDiff({
-  jtpTarget,
-  carrierTarget,
-}: {
-  jtpTarget: number | null;
-  carrierTarget: number | null;
-}) {
-  if (jtpTarget == null || carrierTarget == null) return null;
-  const diff = ((carrierTarget - jtpTarget) / jtpTarget) * 100;
-  const abs = Math.abs(diff).toFixed(1);
-  if (Math.abs(diff) < 0.05) {
+// Indicador de diferencia contra el target del admin: solo muestra ícono o porcentaje,
+// nunca el precio. El cálculo se hace en el servidor.
+function TargetDiff({ diffPercent }: { diffPercent: number | null }) {
+  if (diffPercent == null) return null;
+  const abs = Math.abs(diffPercent).toFixed(1);
+  if (Math.abs(diffPercent) < 0.05) {
     return <Minus className="size-4 text-muted-foreground" />;
   }
-  if (diff > 0) {
+  if (diffPercent > 0) {
     return <span className="text-xs font-medium text-destructive">+{abs}%</span>;
   }
   return <Check className="size-4 text-green-600 dark:text-green-400" />;
@@ -153,16 +149,6 @@ export default function CarrierUnitTypePage() {
         route.unitTargets?.some((t) => t.unitType === unitType) ?? route.unitType === unitType
       ),
     [allRoutes, unitType]
-  );
-
-  const jtpTargetForPage = useCallback(
-    (route: CarrierRouteRow): number | null => {
-      const fromList = route.unitTargets?.find((t) => t.unitType === unitType);
-      if (fromList && fromList.target != null) return fromList.target;
-      if (route.unitType === unitType && route.jtpTarget != null) return route.jtpTarget;
-      return null;
-    },
-    [unitType]
   );
 
   const origins = useMemo(
@@ -423,7 +409,8 @@ export default function CarrierUnitTypePage() {
                       const routeUnlockStatus = isOriginallySelected ? (unlockStatus[route.id] ?? null) : null;
                       const rowUnlocked = isOriginallySelected && (canEditRoutes || routeUnlockStatus === "approved");
                       const rowEditingLocked = isOriginallySelected && !(rowUnlocked && rowEditing);
-                      const currentTarget = parseMxn(targetByRouteId[route.id] ?? "") ?? null;
+                      const savedSelection = route.selections?.find((s) => s.unitType === unitType);
+                      const diffPercent = savedSelection?.targetDiffPercent ?? null;
 
                       return (
                         <div
@@ -478,7 +465,7 @@ export default function CarrierUnitTypePage() {
                           />
 
                           <div className="flex items-center justify-center">
-                            <TargetDiff jtpTarget={jtpTargetForPage(route)} carrierTarget={currentTarget} />
+                            <TargetDiff diffPercent={diffPercent} />
                           </div>
 
                           <div className="flex items-center justify-center">

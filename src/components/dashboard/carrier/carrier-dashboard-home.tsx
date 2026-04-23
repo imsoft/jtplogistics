@@ -21,7 +21,7 @@ interface CarrierRouteApi {
   origin: string;
   destination: string;
   description: string | null;
-  unitTargets: { unitType: string; target: number | null }[];
+  unitTargets: { unitType: string }[];
   selections: RouteSelection[];
 }
 
@@ -64,8 +64,6 @@ export function CarrierDashboardHome() {
     const out: CarrierHomeRouteRow[] = [];
     for (const r of data.routes) {
       for (const sel of r.selections) {
-        const jtp =
-          r.unitTargets.find((t) => t.unitType === sel.unitType)?.target ?? null;
         out.push({
           id: `${r.id}-${sel.unitType}`,
           routeId: r.id,
@@ -74,7 +72,6 @@ export function CarrierDashboardHome() {
           description: r.description,
           unitType: sel.unitType,
           unitTypeLabel: unitLabelMap[sel.unitType] ?? sel.unitType,
-          jtpTarget: jtp,
           carrierTarget: sel.carrierTarget,
           carrierWeeklyVolume: sel.carrierWeeklyVolume,
         });

@@ -26,20 +26,32 @@ export async function GET() {
       }),
     ]);
 
-    // Group carrier selections by routeId+unitType
-    const selectionKey = (routeId: string, unitType: string) => `${routeId}:${unitType}`;
-    const selectionMap = new Map<string, { carrierTarget: number | null; carrierWeeklyVolume: number | null }>(
-      carrierRoutes.map((cr) => [
-        selectionKey(cr.routeId, cr.unitType),
-        { carrierTarget: cr.carrierTarget ?? null, carrierWeeklyVolume: cr.carrierWeeklyVolume ?? null },
-      ])
-    );
-
     // Also build a set of all selected route IDs (regardless of unitType) for backward compat
     const selectedRouteIds = new Set(carrierRoutes.map((cr) => cr.routeId));
 
+    // Índice de targets del admin por ruta + tipo de unidad, SÓLO para cálculos en servidor.
+    // Nunca se serializa al cliente.
+    const adminTargetByRouteUnit = new Map<string, number | null>();
+    for (const r of routes) {
+      if (r.unitTargets.length > 0) {
+        for (const ut of r.unitTargets) {
+          adminTargetByRouteUnit.set(`${r.id}:${ut.unitType}`, ut.target ?? null);
+        }
+      } else {
+        adminTargetByRouteUnit.set(`${r.id}:${r.unitType}`, r.target ?? null);
+      }
+    }
+
+    /** Sólo el % de diferencia (nunca el precio). */
+    function computeDiffPercent(routeId: string, unitType: string, carrierTarget: number | null): number | null {
+      if (carrierTarget == null) return null;
+      const adminTarget = adminTargetByRouteUnit.get(`${routeId}:${unitType}`);
+      if (adminTarget == null || adminTarget === 0) return null;
+      return ((carrierTarget - adminTarget) / adminTarget) * 100;
+    }
+
     // Build per-unitType selection info
-    const selectionsByRoute = new Map<string, { unitType: string; carrierTarget: number | null; carrierWeeklyVolume: number | null; editUnlockRequested: boolean; editUnlockApproved: boolean }[]>();
+    const selectionsByRoute = new Map<string, { unitType: string; carrierTarget: number | null; carrierWeeklyVolume: number | null; editUnlockRequested: boolean; editUnlockApproved: boolean; targetDiffPercent: number | null }[]>();
     for (const cr of carrierRoutes) {
       const list = selectionsByRoute.get(cr.routeId) ?? [];
       list.push({
@@ -48,6 +60,7 @@ export async function GET() {
         carrierWeeklyVolume: cr.carrierWeeklyVolume ?? null,
         editUnlockRequested: cr.editUnlockRequested,
         editUnlockApproved: cr.editUnlockApproved,
+        targetDiffPercent: computeDiffPercent(cr.routeId, cr.unitType, cr.carrierTarget ?? null),
       });
       selectionsByRoute.set(cr.routeId, list);
     }
@@ -57,13 +70,11 @@ export async function GET() {
       canEditRoutes: userRecord?.canEditRoutes ?? false,
       canAddRoutes: true,
       routes: routes.map((r) => {
+        // Nunca exponer targets de JTP al transportista (información confidencial).
         const unitTargets =
           r.unitTargets.length > 0
-            ? r.unitTargets.map((u) => ({
-                unitType: u.unitType,
-                target: u.target,
-              }))
-            : [{ unitType: r.unitType, target: r.target }];
+            ? r.unitTargets.map((u) => ({ unitType: u.unitType }))
+            : [{ unitType: r.unitType }];
         return {
           id: r.id,
           origin: r.origin,
@@ -71,7 +82,6 @@ export async function GET() {
           description: r.description ?? null,
           unitType: r.unitType,
           unitTargets,
-          jtpTarget: r.target ?? null,
           selected: selectedRouteIds.has(r.id),
           selections: selectionsByRoute.get(r.id) ?? [],
           carrierTarget: null,

@@ -7,7 +7,6 @@ export interface CarrierHomeRouteRow {
   description: string | null;
   unitType: string;
   unitTypeLabel: string;
-  jtpTarget: number | null;
   carrierTarget: number | null;
   carrierWeeklyVolume: number | null;
 }
