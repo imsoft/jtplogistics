@@ -37,9 +37,18 @@ function toJson(c: {
 async function checkPermission(userId: string) {
   const me = await prisma.user.findUnique({
     where: { id: userId },
-    select: { canViewClients: true },
+    select: {
+      canViewClients: true,
+      canReadRecords: true,
+      canUpdateRecords: true,
+      canDeleteRecords: true,
+    },
   });
-  return me?.canViewClients ?? false;
+  return {
+    canRead: Boolean(me?.canViewClients && me?.canReadRecords),
+    canUpdate: Boolean(me?.canViewClients && me?.canUpdateRecords),
+    canDelete: Boolean(me?.canViewClients && me?.canDeleteRecords),
+  };
 }
 
 export async function GET(
@@ -48,7 +57,8 @@ export async function GET(
 ) {
   try {
     const session = await requireCollaboratorOrAdmin();
-    if (!(await checkPermission(session.user.id))) {
+    const permission = await checkPermission(session.user.id);
+    if (!permission.canRead) {
       return Response.json({ error: "Sin permiso" }, { status: 403 });
     }
 
@@ -69,7 +79,8 @@ export async function PATCH(
 ) {
   try {
     const session = await requireCollaboratorOrAdmin();
-    if (!(await checkPermission(session.user.id))) {
+    const permission = await checkPermission(session.user.id);
+    if (!permission.canUpdate) {
       return Response.json({ error: "Sin permiso" }, { status: 403 });
     }
 
@@ -127,7 +138,8 @@ export async function DELETE(
 ) {
   try {
     const session = await requireCollaboratorOrAdmin();
-    if (!(await checkPermission(session.user.id))) {
+    const permission = await checkPermission(session.user.id);
+    if (!permission.canDelete) {
       return Response.json({ error: "Sin permiso" }, { status: 403 });
     }
 

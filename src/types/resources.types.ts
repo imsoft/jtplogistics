@@ -48,6 +48,10 @@ export interface Employee {
   canViewPhones: boolean;
   canViewEmails: boolean;
   canViewTasks: boolean;
+  canCreateRecords: boolean;
+  canReadRecords: boolean;
+  canUpdateRecords: boolean;
+  canDeleteRecords: boolean;
   createdAt: string;
   laptops?: EmployeeLinkedLaptop[];
   phones?: EmployeeLinkedPhone[];

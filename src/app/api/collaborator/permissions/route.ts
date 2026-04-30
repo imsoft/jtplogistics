@@ -21,6 +21,10 @@ export async function GET() {
         canViewPhones: true,
         canViewEmails: true,
         canViewTasks: true,
+        canCreateRecords: true,
+        canReadRecords: true,
+        canUpdateRecords: true,
+        canDeleteRecords: true,
       },
     });
 

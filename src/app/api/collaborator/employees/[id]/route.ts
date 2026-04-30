@@ -1,12 +1,25 @@
 import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 
-async function requirePermission(userId: string) {
+type EmployeeAction = "read" | "update" | "delete";
+
+async function requirePermission(userId: string, action: EmployeeAction) {
   const me = await prisma.user.findUnique({
     where: { id: userId },
-    select: { canViewEmployees: true },
+    select: {
+      canViewEmployees: true,
+      canReadRecords: true,
+      canUpdateRecords: true,
+      canDeleteRecords: true,
+    },
   });
-  if (!me?.canViewEmployees) {
+  const allowed =
+    action === "read"
+      ? Boolean(me?.canViewEmployees && me?.canReadRecords)
+      : action === "update"
+        ? Boolean(me?.canViewEmployees && me?.canUpdateRecords)
+        : Boolean(me?.canViewEmployees && me?.canDeleteRecords);
+  if (!allowed) {
     throw new Response(JSON.stringify({ error: "Sin permiso" }), {
       status: 403,
       headers: { "Content-Type": "application/json" },
@@ -20,7 +33,7 @@ export async function GET(
 ) {
   try {
     const session = await requireCollaboratorOrAdmin();
-    await requirePermission(session.user.id);
+    await requirePermission(session.user.id, "read");
 
     const { id } = await params;
     const u = await prisma.user.findUnique({
@@ -74,6 +87,10 @@ export async function GET(
       canViewPhones: u.canViewPhones,
       canViewEmails: u.canViewEmails,
       canViewTasks: u.canViewTasks,
+      canCreateRecords: u.canCreateRecords,
+      canReadRecords: u.canReadRecords,
+      canUpdateRecords: u.canUpdateRecords,
+      canDeleteRecords: u.canDeleteRecords,
       createdAt: u.createdAt.toISOString(),
       laptops: u.assignedLaptops.map((l) => ({
         id: l.id,
@@ -110,7 +127,7 @@ export async function PATCH(
 ) {
   try {
     const session = await requireCollaboratorOrAdmin();
-    await requirePermission(session.user.id);
+    await requirePermission(session.user.id, "update");
 
     const { id } = await params;
     const body = await request.json();
@@ -187,7 +204,7 @@ export async function DELETE(
 ) {
   try {
     const session = await requireCollaboratorOrAdmin();
-    await requirePermission(session.user.id);
+    await requirePermission(session.user.id, "delete");
 
     const { id } = await params;
     const u = await prisma.user.findUnique({ where: { id } });

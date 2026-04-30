@@ -55,6 +55,10 @@ export function GET(
       canViewPhones: u.canViewPhones,
       canViewEmails: u.canViewEmails,
       canViewTasks: u.canViewTasks,
+      canCreateRecords: u.canCreateRecords,
+      canReadRecords: u.canReadRecords,
+      canUpdateRecords: u.canUpdateRecords,
+      canDeleteRecords: u.canDeleteRecords,
       createdAt: u.createdAt.toISOString(),
       laptops: u.assignedLaptops.map((l) => ({
         id: l.id,
@@ -102,7 +106,8 @@ export function PATCH(
       "canViewMessages", "canViewIdeas", "canViewRoutes", "canViewRouteLogs",
       "canViewUnitTypes", "canViewQuotes", "canViewProviders", "canViewClients",
       "canViewEmployees", "canViewVendors", "canViewLaptops", "canViewPhones",
-      "canViewEmails", "canViewTasks",
+      "canViewEmails", "canViewTasks", "canCreateRecords", "canReadRecords",
+      "canUpdateRecords", "canDeleteRecords",
     ] as const;
 
     const PERMISSION_LABELS: Record<string, string> = {
@@ -120,6 +125,10 @@ export function PATCH(
       canViewPhones: "Celulares",
       canViewEmails: "Correos",
       canViewTasks: "Tareas",
+      canCreateRecords: "Crear",
+      canReadRecords: "Leer",
+      canUpdateRecords: "Editar",
+      canDeleteRecords: "Eliminar",
     };
 
     const u = await prisma.user.findUnique({

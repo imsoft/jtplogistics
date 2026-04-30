@@ -17,6 +17,10 @@ import type { Employee, EmployeeFormData } from "@/types/resources.types";
 import { formatPhone } from "@/lib/utils";
 
 const PERMISSION_FIELDS = [
+  { key: "canCreateRecords", label: "Crear", desc: "Permite crear nuevos registros donde aplique." },
+  { key: "canReadRecords", label: "Leer", desc: "Permite consultar información en los módulos habilitados." },
+  { key: "canUpdateRecords", label: "Editar", desc: "Permite actualizar registros existentes." },
+  { key: "canDeleteRecords", label: "Eliminar", desc: "Permite eliminar registros." },
   { key: "canViewRoutes", label: "Rutas", desc: "Ver y consultar rutas." },
   { key: "canViewRouteLogs", label: "Historial de cambios", desc: "Ver el historial de cambios de rutas." },
   { key: "canViewUnitTypes", label: "Tipos de unidades", desc: "Ver los tipos de unidades." },

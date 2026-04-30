@@ -7,7 +7,8 @@ const ALLOWED_FIELDS = [
   "canViewMessages", "canViewIdeas", "canViewRoutes", "canViewRouteLogs",
   "canViewUnitTypes", "canViewQuotes", "canViewProviders", "canViewClients",
   "canViewEmployees", "canViewVendors", "canViewLaptops", "canViewPhones",
-  "canViewEmails", "canViewTasks",
+  "canViewEmails", "canViewTasks", "canCreateRecords", "canReadRecords",
+  "canUpdateRecords", "canDeleteRecords",
 ] as const;
 type PermissionField = (typeof ALLOWED_FIELDS)[number];
 
@@ -26,6 +27,10 @@ const FIELD_LABELS: Record<PermissionField, string> = {
   canViewPhones: "Celulares",
   canViewEmails: "Correos",
   canViewTasks: "Tareas",
+  canCreateRecords: "Crear",
+  canReadRecords: "Leer",
+  canUpdateRecords: "Editar",
+  canDeleteRecords: "Eliminar",
 };
 
 export async function PATCH(
