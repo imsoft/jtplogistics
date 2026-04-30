@@ -176,9 +176,13 @@ export default function RouteDetailPage() {
               label="Tipo de unidad"
               value={
                 route.unitTargets && route.unitTargets.length > 1
-                  ? route.unitTargets
-                      .map((u) => unitTypeLabel[u.unitType] ?? u.unitType)
-                      .join(", ")
+                  ? (
+                    <div className="flex flex-col gap-0.5">
+                      {route.unitTargets.map((u) => (
+                        <span key={u.unitType}>{unitTypeLabel[u.unitType] ?? u.unitType}</span>
+                      ))}
+                    </div>
+                  )
                   : unitTypeLabel[route.unitType] ?? route.unitType
               }
             />

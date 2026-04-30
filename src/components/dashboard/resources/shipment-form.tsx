@@ -209,7 +209,7 @@ export function ShipmentForm({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="space-y-2">
           <Label htmlFor="shipment-status">Estado</Label>
-          <Select value={status} onValueChange={(v) => setStatus(v as ShipmentStatus)}>
+          <Select value={status} onValueChange={(v) => setStatus(v as ShipmentStatus)} disabled={isClosed}>
             <SelectTrigger id="shipment-status" className="w-full">
               <SelectValue />
             </SelectTrigger>

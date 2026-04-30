@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, Pencil } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoRow } from "@/components/dashboard/users/info-row";
@@ -35,12 +35,6 @@ export default function CollaboratorLaptopProfilePage() {
             )}
           </div>
         </div>
-        <Button asChild className="shrink-0">
-          <Link href={`/collaborator/dashboard/laptops/${id}/edit`}>
-            <Pencil className="size-4" />
-            Editar
-          </Link>
-        </Button>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -52,9 +46,11 @@ export default function CollaboratorLaptopProfilePage() {
           </CardHeader>
           <CardContent className="px-4 pb-4">
             <InfoRow label="Nombre" value={laptop.name} />
+            <InfoRow label="Tipo de equipo" value={laptop.equipmentType} />
             <InfoRow label="Marca" value={laptop.brand} />
             <InfoRow label="Modelo" value={laptop.model} />
             <InfoRow label="No. de serie" value={laptop.serialNumber} />
+            <InfoRow label="Contraseña" value={laptop.password} />
             <InfoRow label="Estado general" value={laptop.generalState} />
             <InfoRow label="Accesorios" value={laptop.accessories} />
             <InfoRow label="Software" value={laptop.software} />

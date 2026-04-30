@@ -43,48 +43,6 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
-  try {
-    const session = await requireCollaboratorOrAdmin();
-
-    const me = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { canViewPhones: true },
-    });
-
-    if (!me?.canViewPhones) {
-      return Response.json({ error: "Sin permiso" }, { status: 403 });
-    }
-
-    const body = await request.json();
-    const { name, phoneNumber, password, imei, assignedToId, emailAccountId } = body as {
-      name: string;
-      phoneNumber?: string;
-      password?: string;
-      imei?: string;
-      assignedToId?: string;
-      emailAccountId?: string;
-    };
-
-    if (!name) {
-      return Response.json({ error: "name es requerido" }, { status: 400 });
-    }
-
-    const phone = await prisma.phone.create({
-      data: {
-        name,
-        phoneNumber: phoneNumber || null,
-        password: password || null,
-        imei: imei || null,
-        assignedToId: assignedToId || null,
-        emailAccountId: emailAccountId || null,
-      },
-    });
-
-    return Response.json({ id: phone.id }, { status: 201 });
-  } catch (e) {
-    if (e instanceof Response) throw e;
-    console.error(e);
-    return Response.json({ error: "Error interno del servidor" }, { status: 500 });
-  }
+export async function POST() {
+  return Response.json({ error: "Sin permiso" }, { status: 403 });
 }

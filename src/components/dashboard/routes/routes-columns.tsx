@@ -65,7 +65,13 @@ export function getRoutesColumns({
             cell: ({ row }: { row: Row<Route> }) => {
               const r = row.original;
               if (r.unitTargets && r.unitTargets.length > 1) {
-                return r.unitTargets.map((u) => u.unitType).join(", ");
+                return (
+                  <div className="flex flex-col gap-0.5">
+                    {r.unitTargets.map((u) => (
+                      <span key={u.unitType}>{u.unitType}</span>
+                    ))}
+                  </div>
+                );
               }
               return r.unitType;
             },
@@ -98,7 +104,19 @@ export function getRoutesColumns({
               <SortableColumnHeader column={column} title="Target (MXN)" />
             ),
             cell: ({ row }: { row: Row<Route> }) => {
-              const target = row.original.target;
+              const r = row.original;
+              if (r.unitTargets && r.unitTargets.length > 1) {
+                return (
+                  <div className="flex flex-col gap-0.5">
+                    {r.unitTargets.map((u) => (
+                      <span key={u.unitType}>
+                        {u.target != null ? `$${formatMxn(u.target)}` : <span className="text-muted-foreground">—</span>}
+                      </span>
+                    ))}
+                  </div>
+                );
+              }
+              const target = r.target;
               if (target == null) return <span className="text-muted-foreground">—</span>;
               return `$${formatMxn(target)}`;
             },

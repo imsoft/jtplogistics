@@ -2,8 +2,6 @@
 
 import { useMemo, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
@@ -100,12 +98,6 @@ export default function CollaboratorLaptopsPage() {
             Laptops registradas y su asignación.
           </p>
         </div>
-        <Button asChild className="w-full shrink-0 sm:w-fit" size="sm">
-          <Link href="/collaborator/dashboard/laptops/new">
-            <Plus className="size-4" />
-            Nueva laptop
-          </Link>
-        </Button>
       </div>
       {!isLoaded ? (
         <p className="text-muted-foreground">Cargando…</p>

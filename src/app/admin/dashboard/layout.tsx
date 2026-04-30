@@ -3,6 +3,7 @@ import { AppSidebar } from "@/components/dashboard/app-sidebar";
 import { GlobalSearch } from "@/components/global-search";
 import { NotificationBell } from "@/components/notification-bell";
 import { FloatingChat } from "@/components/floating-chat";
+import { OnboardingTour } from "@/components/dashboard/onboarding-tour";
 import { requireAdmin } from "@/lib/auth-server";
 import { dashboardMainWithFloatingChatClassName } from "@/lib/dashboard-shell";
 
@@ -23,12 +24,17 @@ export default async function DashboardLayout({
           <span className="truncate flex-1 text-xs font-semibold uppercase tracking-wide text-foreground/70 sm:text-sm">
             Panel de administración
           </span>
-          <NotificationBell />
-          <GlobalSearch />
+          <div id="tour-header-notifications">
+            <NotificationBell />
+          </div>
+          <div id="tour-header-search">
+            <GlobalSearch />
+          </div>
         </header>
         <div className={dashboardMainWithFloatingChatClassName}>{children}</div>
       </SidebarInset>
       <FloatingChat />
+      <OnboardingTour />
     </SidebarProvider>
   );
 }

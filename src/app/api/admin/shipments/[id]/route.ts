@@ -109,7 +109,7 @@ export function PATCH(
       typeof _confirmedEmail === "string" &&
       _confirmedEmail.toLowerCase() === session.user.email.toLowerCase();
 
-    if (shipment.status === SHIPMENT_CLOSED_STATUS && nextStatus === SHIPMENT_CLOSED_STATUS && !emailConfirmed) {
+    if (shipment.status === SHIPMENT_CLOSED_STATUS && !emailConfirmed) {
       return Response.json(
         { error: "El embarque está cerrado y no se puede modificar. Confirma tu correo electrónico para editar." },
         { status: 403 },

@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Check, Clock, Minus, MoveRight, Pencil, Send } from "lucide-react";
+import { Check, Lock, Minus, MoveRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -88,10 +88,6 @@ export default function CarrierUnitTypePage() {
   const [originalSelected, setOriginalSelected] = useState<Set<string>>(new Set());
   const [targetByRouteId, setTargetByRouteId] = useState<Record<string, string>>({});
   const [weeklyVolumeByRouteId, setWeeklyVolumeByRouteId] = useState<Record<string, string>>({});
-  const [editingRows, setEditingRows] = useState<Set<string>>(new Set());
-  // Per-route unlock state: routeId → "requested" | "approved" | null
-  const [unlockStatus, setUnlockStatus] = useState<Record<string, "requested" | "approved">>({});
-  const [requestingUnlockId, setRequestingUnlockId] = useState<string | null>(null);
 
   const unitTypes = useUnitTypes();
   const unitTypeLabel = useMemo(() => {
@@ -118,22 +114,18 @@ export default function CarrierUnitTypePage() {
     const savedSelected = new Set<string>();
     const savedTargets: Record<string, string> = {};
     const savedVolumes: Record<string, string> = {};
-    const savedUnlockStatus: Record<string, "requested" | "approved"> = {};
     for (const r of data.routes) {
       const sel = r.selections?.find((s) => s.unitType === unitType);
       if (sel) {
         savedSelected.add(r.id);
         if (sel.carrierTarget != null) savedTargets[r.id] = formatMxn(sel.carrierTarget);
         if (sel.carrierWeeklyVolume != null) savedVolumes[r.id] = String(sel.carrierWeeklyVolume);
-        if (sel.editUnlockApproved) savedUnlockStatus[r.id] = "approved";
-        else if (sel.editUnlockRequested) savedUnlockStatus[r.id] = "requested";
       }
     }
     setSelected(savedSelected);
     setOriginalSelected(savedSelected);
     setTargetByRouteId(savedTargets);
     setWeeklyVolumeByRouteId(savedVolumes);
-    setUnlockStatus(savedUnlockStatus);
     setIsLoaded(true);
   }, [unitType]);
 
@@ -189,15 +181,6 @@ export default function CarrierUnitTypePage() {
 
   const selectedCount = selected.size;
 
-  function toggleEditingRow(routeId: string) {
-    setEditingRows((prev) => {
-      const next = new Set(prev);
-      if (next.has(routeId)) next.delete(routeId);
-      else next.add(routeId);
-      return next;
-    });
-  }
-
   function toggleSelected(routeId: string) {
     setSelected((prev) => {
       const next = new Set(prev);
@@ -250,7 +233,6 @@ export default function CarrierUnitTypePage() {
         throw new Error(err.error ?? "Error al guardar");
       }
       toast.success(`Selecciones de ${pageTitle} guardadas correctamente.`);
-      setEditingRows(new Set());
       router.push("/carrier/dashboard");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "No se pudieron guardar las selecciones. Intenta de nuevo.");
@@ -259,29 +241,11 @@ export default function CarrierUnitTypePage() {
     }
   }
 
-  async function requestUnlockForRoute(routeId: string) {
-    setRequestingUnlockId(routeId);
-    try {
-      const res = await fetch("/api/carrier/routes/unlock-request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ routeId, unitType }),
-      });
-      if (!res.ok) throw new Error("No se pudo enviar la solicitud");
-      setUnlockStatus((prev) => ({ ...prev, [routeId]: "requested" }));
-      toast.success("Solicitud enviada al administrador.");
-    } catch {
-      toast.error("No se pudo enviar la solicitud. Intenta de nuevo.");
-    } finally {
-      setRequestingUnlockId(null);
-    }
-  }
-
   if (!isLoaded) {
     return <p className="text-muted-foreground">Cargando…</p>;
   }
 
-  const canSave = newSelections.size > 0 || editingRows.size > 0;
+  const canSave = newSelections.size > 0 || canEditRoutes;
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
@@ -305,10 +269,11 @@ export default function CarrierUnitTypePage() {
         </Card>
       )}
 
-      {isLoaded && !canEditRoutes && originalSelected.size > 0 && (
-        <div className="rounded-lg border p-3 sm:p-4">
+      {isLoaded && originalSelected.size > 0 && (
+        <div className="rounded-lg border p-3 sm:p-4 flex items-start gap-2">
+          <Lock className="size-3.5 shrink-0 mt-0.5 text-muted-foreground" />
           <p className="text-xs text-muted-foreground">
-            Para editar una ruta ya guardada, usa el botón <strong>Solicitar</strong> en la fila correspondiente. El administrador recibirá una notificación y podrá aprobar o rechazar la solicitud.
+            Las rutas ya guardadas no se pueden modificar. Solo puedes agregar rutas nuevas.
           </p>
         </div>
       )}
@@ -394,35 +359,32 @@ export default function CarrierUnitTypePage() {
                         Desde {origin}
                       </span>
                     </div>
-                    <div className="grid grid-cols-[auto_1fr_130px_80px_56px_36px] gap-3 border-b bg-muted/20 px-3 py-1.5 text-xs font-medium text-muted-foreground sm:px-4">
+                    <div className="grid grid-cols-[auto_1fr_130px_80px_56px] gap-3 border-b bg-muted/20 px-3 py-1.5 text-xs font-medium text-muted-foreground sm:px-4">
                       <span className="flex items-center">Sel.</span>
                       <span className="flex items-center">Ruta</span>
                       <span className="flex items-center">Mi target</span>
                       <span className="flex items-center">Vol./sem.</span>
                       <span className="flex items-center">Dif.</span>
-                      <span />
                     </div>
                     {items.map((route) => {
                       const isSelected = selected.has(route.id);
                       const isOriginallySelected = originalSelected.has(route.id);
-                      const rowEditing = editingRows.has(route.id);
-                      const routeUnlockStatus = isOriginallySelected ? (unlockStatus[route.id] ?? null) : null;
-                      const rowUnlocked = isOriginallySelected && (canEditRoutes || routeUnlockStatus === "approved");
-                      const rowEditingLocked = isOriginallySelected && !(rowUnlocked && rowEditing);
                       const savedSelection = route.selections?.find((s) => s.unitType === unitType);
                       const diffPercent = savedSelection?.targetDiffPercent ?? null;
+
+                      const isLocked = isOriginallySelected && !canEditRoutes;
 
                       return (
                         <div
                           key={route.id}
-                          className="grid grid-cols-[auto_1fr_130px_80px_56px_36px] gap-3 items-center border-b px-3 py-3 last:border-b-0 sm:px-4 hover:bg-hover hover:text-hover-foreground transition-colors"
+                          className="grid grid-cols-[auto_1fr_130px_80px_56px] gap-3 items-center border-b px-3 py-3 last:border-b-0 sm:px-4 hover:bg-hover hover:text-hover-foreground transition-colors"
                         >
                           <label className="flex cursor-pointer items-center gap-2">
                             <input
                               type="checkbox"
                               checked={isSelected}
                               onChange={() => toggleSelected(route.id)}
-                              disabled={rowEditingLocked}
+                              disabled={isLocked}
                               className="size-4 rounded border-input accent-primary disabled:cursor-not-allowed disabled:opacity-50"
                               aria-label={`Seleccionar ${route.origin} a ${route.destination}`}
                             />
@@ -447,7 +409,7 @@ export default function CarrierUnitTypePage() {
                               value={targetByRouteId[route.id] ?? ""}
                               onChange={(e) => handleTargetChange(route.id, e.target.value)}
                               onBlur={() => handleTargetBlur(route.id)}
-                              disabled={!isSelected || rowEditingLocked}
+                              disabled={!isSelected || isLocked}
                               className="h-8 min-w-0 w-full text-sm"
                               aria-label={`Mi target para ${route.origin} a ${route.destination}`}
                             />
@@ -459,47 +421,13 @@ export default function CarrierUnitTypePage() {
                             min={0}
                             value={weeklyVolumeByRouteId[route.id] ?? ""}
                             onChange={(e) => handleVolumeChange(route.id, e.target.value)}
-                            disabled={!isSelected || rowEditingLocked}
+                            disabled={!isSelected || isLocked}
                             className="h-8 w-full text-sm"
                             aria-label={`Volumen semanal para ${route.origin} a ${route.destination}`}
                           />
 
                           <div className="flex items-center justify-center">
                             <TargetDiff diffPercent={diffPercent} />
-                          </div>
-
-                          <div className="flex items-center justify-center">
-                            {isOriginallySelected && (
-                              rowUnlocked ? (
-                                // Admin has approved (or global unlock): show pencil to toggle edit mode
-                                <button
-                                  type="button"
-                                  onClick={() => toggleEditingRow(route.id)}
-                                  className={`rounded p-1 transition-colors ${rowEditing ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
-                                  aria-label={rowEditing ? "Cancelar edición" : "Editar ruta"}
-                                  title={rowEditing ? "Cancelar edición" : "Editar ruta"}
-                                >
-                                  <Pencil className="size-3.5" />
-                                </button>
-                              ) : routeUnlockStatus === "requested" ? (
-                                // Request sent, waiting for admin
-                                <span title="Solicitud enviada, pendiente de aprobación" className="flex items-center justify-center rounded p-1 text-amber-500">
-                                  <Clock className="size-3.5" />
-                                </span>
-                              ) : (
-                                // No request yet: show send button
-                                <button
-                                  type="button"
-                                  onClick={() => requestUnlockForRoute(route.id)}
-                                  disabled={requestingUnlockId === route.id}
-                                  className="rounded p-1 text-muted-foreground transition-colors hover:text-foreground hover:bg-muted disabled:opacity-50"
-                                  aria-label="Solicitar edición de esta ruta"
-                                  title="Solicitar edición"
-                                >
-                                  <Send className="size-3.5" />
-                                </button>
-                              )
-                            )}
                           </div>
                         </div>
                       );

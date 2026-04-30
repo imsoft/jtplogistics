@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, Pencil } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoRow } from "@/components/dashboard/users/info-row";
@@ -36,12 +36,6 @@ export default function CollaboratorPhoneProfilePage() {
             )}
           </div>
         </div>
-        <Button asChild className="shrink-0">
-          <Link href={`/collaborator/dashboard/phones/${id}/edit`}>
-            <Pencil className="size-4" />
-            Editar
-          </Link>
-        </Button>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -54,6 +48,7 @@ export default function CollaboratorPhoneProfilePage() {
           <CardContent className="px-4 pb-4">
             <InfoRow label="Nombre" value={phone.name} />
             <InfoRow label="Número" value={phone.phoneNumber ? formatPhone(phone.phoneNumber) : null} />
+            <InfoRow label="Contraseña" value={phone.password} />
             <InfoRow label="IMEI" value={phone.imei} />
             <InfoRow label="Asignado a" value={phone.assignedTo?.name ?? null} />
             <InfoRow label="Cuenta de correo" value={phone.emailAccount?.email ?? null} />
