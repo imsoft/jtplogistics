@@ -119,13 +119,14 @@ export default function CollaboratorEmployeeProfilePage() {
                 </h4>
                 <div className="space-y-1">
                   {laptops.map((l) => (
-                    <div
+                    <Link
                       key={l.id}
-                      className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm"
+                      href={`/collaborator/dashboard/laptops/${l.id}`}
+                      className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
                     >
-                      <span>{l.name}</span>
+                      <span className="font-medium">{l.name}</span>
                       <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -137,13 +138,14 @@ export default function CollaboratorEmployeeProfilePage() {
                 </h4>
                 <div className="space-y-1">
                   {phones.map((p) => (
-                    <div
+                    <Link
                       key={p.id}
-                      className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm"
+                      href={`/collaborator/dashboard/phones/${p.id}`}
+                      className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
                     >
-                      <span>{p.name}</span>
+                      <span className="font-medium">{p.name}</span>
                       <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -155,13 +157,14 @@ export default function CollaboratorEmployeeProfilePage() {
                 </h4>
                 <div className="space-y-1">
                   {emailAccounts.map((ea) => (
-                    <div
+                    <Link
                       key={ea.id}
-                      className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm"
+                      href={`/collaborator/dashboard/emails/${ea.id}`}
+                      className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
                     >
-                      <span>{ea.email}</span>
+                      <span className="font-medium">{ea.email}</span>
                       <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </div>
