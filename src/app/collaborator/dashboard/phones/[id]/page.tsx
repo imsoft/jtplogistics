@@ -1,21 +1,46 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoRow } from "@/components/dashboard/users/info-row";
-import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { formatPhone } from "@/lib/utils";
 import type { PhoneDevice } from "@/types/resources.types";
 
 export default function CollaboratorPhoneProfilePage() {
-  const { id } = useParams<{ id: string }>();
-  const { data: phone, isLoaded, error } = useResourceEdit<PhoneDevice>({
-    endpoint: "/api/collaborator/phones",
-    redirectHref: "/collaborator/dashboard/phones",
-  });
+  const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const [phone, setPhone] = useState<PhoneDevice | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const phoneId = params.id;
+  const employeeId = searchParams.get("employeeId");
+  const backHref = employeeId
+    ? `/collaborator/dashboard/employees/${employeeId}`
+    : "/collaborator/dashboard/employees";
+
+  useEffect(() => {
+    const query = employeeId ? `?employeeId=${employeeId}` : "";
+    fetch(`/api/collaborator/phones/${phoneId}${query}`)
+      .then(async (r) => {
+        const body = await r.json();
+        if (!r.ok) {
+          throw new Error(body?.error ?? "Error al cargar celular");
+        }
+        return body as PhoneDevice;
+      })
+      .then((data) => {
+        setPhone(data);
+        setIsLoaded(true);
+      })
+      .catch((e: Error) => {
+        setError(e.message);
+        setIsLoaded(true);
+      });
+  }, [employeeId, phoneId]);
 
   if (!isLoaded) return <p className="text-muted-foreground py-6">Cargando…</p>;
   if (error || !phone) return <p className="text-destructive py-6 text-sm">{error ?? "No encontrado"}</p>;
@@ -25,7 +50,7 @@ export default function CollaboratorPhoneProfilePage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2 min-w-0">
           <Button variant="ghost" size="icon" asChild className="shrink-0">
-            <Link href="/collaborator/dashboard/phones" aria-label="Volver a celulares">
+            <Link href={backHref} aria-label="Volver al colaborador">
               <ChevronLeft className="size-4" />
             </Link>
           </Button>

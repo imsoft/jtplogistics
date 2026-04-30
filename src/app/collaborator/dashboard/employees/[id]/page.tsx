@@ -140,7 +140,7 @@ export default function CollaboratorEmployeeProfilePage() {
                   {phones.map((p) => (
                     <Link
                       key={p.id}
-                      href={`/collaborator/dashboard/phones/${p.id}`}
+                      href={`/collaborator/dashboard/phones/${p.id}?employeeId=${id}`}
                       className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
                     >
                       <span className="font-medium">{p.name}</span>

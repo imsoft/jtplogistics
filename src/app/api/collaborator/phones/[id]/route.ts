@@ -1,23 +1,17 @@
 import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 
-async function checkPermission(userId: string) {
-  const me = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { canViewPhones: true },
-  });
-  return me?.canViewPhones ?? false;
-}
-
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await requireCollaboratorOrAdmin();
-    if (!(await checkPermission(session.user.id))) {
-      return Response.json({ error: "Sin permiso" }, { status: 403 });
-    }
+    const me = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { canViewPhones: true, canViewEmployees: true },
+    });
+    if (!me) return Response.json({ error: "Sin permiso" }, { status: 403 });
 
     const { id } = await params;
     const phone = await prisma.phone.findUnique({
@@ -28,6 +22,18 @@ export async function GET(
       },
     });
     if (!phone) return Response.json({ error: "No encontrado" }, { status: 404 });
+
+    const { searchParams } = new URL(req.url);
+    const employeeId = searchParams.get("employeeId");
+    const canViewAssignedPhoneFromEmployee =
+      Boolean(me.canViewEmployees) &&
+      Boolean(employeeId) &&
+      phone.assignedToId === employeeId;
+
+    if (!me.canViewPhones && !canViewAssignedPhoneFromEmployee) {
+      return Response.json({ error: "Sin permiso" }, { status: 403 });
+    }
+
     return Response.json({
       id: phone.id,
       name: phone.name,
