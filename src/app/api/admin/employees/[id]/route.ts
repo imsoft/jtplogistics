@@ -2,6 +2,41 @@ import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
 import { logAudit, diffObjects } from "@/lib/audit-log";
 
+const PERMISSION_MODULES = [
+  { suffix: "Messages", label: "Mensajes" },
+  { suffix: "Ideas", label: "Ideas" },
+  { suffix: "Routes", label: "Rutas" },
+  { suffix: "RouteLogs", label: "Historial de cambios" },
+  { suffix: "UnitTypes", label: "Tipos de unidades" },
+  { suffix: "Quotes", label: "Cotizador" },
+  { suffix: "Providers", label: "Proveedores" },
+  { suffix: "Clients", label: "Clientes" },
+  { suffix: "Employees", label: "Colaboradores" },
+  { suffix: "Vendors", label: "Vendedores" },
+  { suffix: "Laptops", label: "Laptops" },
+  { suffix: "Phones", label: "Celulares" },
+  { suffix: "Emails", label: "Correos" },
+  { suffix: "Tasks", label: "Tareas" },
+  { suffix: "Shipments", label: "Embarques" },
+  { suffix: "Finances", label: "Finanzas" },
+] as const;
+
+const PERMISSION_FIELDS = PERMISSION_MODULES.flatMap((module) => [
+  `canView${module.suffix}`,
+  `canCreate${module.suffix}`,
+  `canUpdate${module.suffix}`,
+  `canDelete${module.suffix}`,
+]);
+
+const PERMISSION_LABELS: Record<string, string> = Object.fromEntries(
+  PERMISSION_MODULES.flatMap((module) => [
+    [`canView${module.suffix}`, `${module.label}: leer`],
+    [`canCreate${module.suffix}`, `${module.label}: crear`],
+    [`canUpdate${module.suffix}`, `${module.label}: editar`],
+    [`canDelete${module.suffix}`, `${module.label}: eliminar`],
+  ])
+);
+
 export function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -26,6 +61,9 @@ export function GET(
     if (!u || u.role !== "collaborator") {
       return Response.json({ error: "No encontrado" }, { status: 404 });
     }
+    const permissionValues = Object.fromEntries(
+      PERMISSION_FIELDS.map((field) => [field, u[field as keyof typeof u]])
+    );
     return Response.json({
       id: u.id,
       name: u.name,
@@ -41,24 +79,7 @@ export function GET(
       curp: u.employeeProfile?.curp ?? null,
       address: u.employeeProfile?.address ?? null,
       hasPasswordReference: Boolean(u.employeeProfile?.password?.trim()),
-      canViewMessages: u.canViewMessages,
-      canViewIdeas: u.canViewIdeas,
-      canViewRoutes: u.canViewRoutes,
-      canViewRouteLogs: u.canViewRouteLogs,
-      canViewUnitTypes: u.canViewUnitTypes,
-      canViewQuotes: u.canViewQuotes,
-      canViewProviders: u.canViewProviders,
-      canViewClients: u.canViewClients,
-      canViewEmployees: u.canViewEmployees,
-      canViewVendors: u.canViewVendors,
-      canViewLaptops: u.canViewLaptops,
-      canViewPhones: u.canViewPhones,
-      canViewEmails: u.canViewEmails,
-      canViewTasks: u.canViewTasks,
-      canCreateRecords: u.canCreateRecords,
-      canReadRecords: u.canReadRecords,
-      canUpdateRecords: u.canUpdateRecords,
-      canDeleteRecords: u.canDeleteRecords,
+      ...permissionValues,
       createdAt: u.createdAt.toISOString(),
       laptops: u.assignedLaptops.map((l) => ({
         id: l.id,
@@ -102,35 +123,6 @@ export function PATCH(
       address?: string;
     };
 
-    const PERMISSION_FIELDS = [
-      "canViewMessages", "canViewIdeas", "canViewRoutes", "canViewRouteLogs",
-      "canViewUnitTypes", "canViewQuotes", "canViewProviders", "canViewClients",
-      "canViewEmployees", "canViewVendors", "canViewLaptops", "canViewPhones",
-      "canViewEmails", "canViewTasks", "canCreateRecords", "canReadRecords",
-      "canUpdateRecords", "canDeleteRecords",
-    ] as const;
-
-    const PERMISSION_LABELS: Record<string, string> = {
-      canViewMessages: "Mensajes",
-      canViewIdeas: "Ideas",
-      canViewRoutes: "Rutas",
-      canViewRouteLogs: "Historial de cambios",
-      canViewUnitTypes: "Tipos de unidades",
-      canViewQuotes: "Cotizador",
-      canViewProviders: "Proveedores",
-      canViewClients: "Clientes",
-      canViewEmployees: "Colaboradores",
-      canViewVendors: "Vendedores",
-      canViewLaptops: "Laptops",
-      canViewPhones: "Celulares",
-      canViewEmails: "Correos",
-      canViewTasks: "Tareas",
-      canCreateRecords: "Crear",
-      canReadRecords: "Leer",
-      canUpdateRecords: "Editar",
-      canDeleteRecords: "Eliminar",
-    };
-
     const u = await prisma.user.findUnique({
       where: { id },
       include: { employeeProfile: true },
@@ -155,7 +147,7 @@ export function PATCH(
       curp: u.employeeProfile?.curp,
       address: u.employeeProfile?.address,
     };
-    for (const f of PERMISSION_FIELDS) before[f] = u[f];
+    for (const f of PERMISSION_FIELDS) before[f] = u[f as keyof typeof u];
 
     const parsedBirthDate = birthDate !== undefined
       ? (birthDate ? new Date(birthDate) : null)
@@ -217,7 +209,7 @@ export function PATCH(
       curp: updated!.employeeProfile?.curp,
       address: updated!.employeeProfile?.address,
     };
-    for (const f of PERMISSION_FIELDS) after[f] = updated![f];
+    for (const f of PERMISSION_FIELDS) after[f] = updated![f as keyof typeof updated];
 
     const fieldLabels: Record<string, string> = {
       name: "Nombre",

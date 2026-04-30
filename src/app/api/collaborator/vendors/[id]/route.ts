@@ -7,15 +7,14 @@ async function checkPermission(userId: string) {
     where: { id: userId },
     select: {
       canViewVendors: true,
-      canReadRecords: true,
-      canUpdateRecords: true,
-      canDeleteRecords: true,
+      canUpdateVendors: true,
+      canDeleteVendors: true,
     },
   });
   return {
-    canRead: Boolean(me?.canViewVendors && me?.canReadRecords),
-    canUpdate: Boolean(me?.canViewVendors && me?.canUpdateRecords),
-    canDelete: Boolean(me?.canViewVendors && me?.canDeleteRecords),
+    canRead: Boolean(me?.canViewVendors),
+    canUpdate: Boolean(me?.canUpdateVendors),
+    canDelete: Boolean(me?.canDeleteVendors),
   };
 }
 

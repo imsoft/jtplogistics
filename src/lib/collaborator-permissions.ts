@@ -17,11 +17,6 @@ type PermissionField =
   | "canViewPhones"
   | "canViewEmails"
   | "canViewTasks";
-type CrudPermissionField =
-  | "canCreateRecords"
-  | "canReadRecords"
-  | "canUpdateRecords"
-  | "canDeleteRecords";
 
 /**
  * Checks that the current collaborator has a specific permission.
@@ -38,7 +33,6 @@ export async function requireCollaboratorPermission(field: PermissionField) {
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: {
-      canReadRecords: true,
       canViewMessages: true,
       canViewIdeas: true,
       canViewRoutes: true,
@@ -53,30 +47,6 @@ export async function requireCollaboratorPermission(field: PermissionField) {
       canViewPhones: true,
       canViewEmails: true,
       canViewTasks: true,
-    },
-  });
-
-  if (!user || !user.canReadRecords || !user[field]) {
-    redirect("/collaborator/dashboard/profile");
-  }
-
-  return session;
-}
-
-export async function requireCollaboratorCrudPermission(field: CrudPermissionField) {
-  const session = await getSession();
-  if (!session) redirect("/login");
-
-  if (session.user.role === "admin") return session;
-  if (session.user.role !== "collaborator") redirect("/login");
-
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      canCreateRecords: true,
-      canReadRecords: true,
-      canUpdateRecords: true,
-      canDeleteRecords: true,
     },
   });
 

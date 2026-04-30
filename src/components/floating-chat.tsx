@@ -8,7 +8,11 @@ import { ChatWindow } from "@/components/dashboard/messages/chat-window";
 import { ConversationList } from "@/components/dashboard/messages/conversation-list";
 import { Button } from "@/components/ui/button";
 
-export function FloatingChat() {
+type FloatingChatProps = {
+  placement?: "floating" | "header";
+};
+
+export function FloatingChat({ placement = "floating" }: FloatingChatProps) {
   const { data: session } = useSession();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
@@ -36,12 +40,24 @@ export function FloatingChat() {
     setSelectedCarrierName("");
   }
 
+  const isHeaderPlacement = placement === "header";
+
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+    <div
+      className={
+        isHeaderPlacement
+          ? "relative z-50 flex flex-col items-end gap-2"
+          : "fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3"
+      }
+    >
       {/* Panel expandido */}
       {isOpen && (
         <div
-          className="w-80 sm:w-96 rounded-xl border bg-background shadow-2xl flex flex-col overflow-hidden"
+          className={
+            isHeaderPlacement
+              ? "absolute right-0 top-11 w-80 rounded-xl border bg-background shadow-2xl flex flex-col overflow-hidden sm:w-96"
+              : "w-80 rounded-xl border bg-background shadow-2xl flex flex-col overflow-hidden sm:w-96"
+          }
           style={{ height: 480 }}
         >
           {/* Header */}
@@ -93,19 +109,31 @@ export function FloatingChat() {
         </div>
       )}
 
-      {/* Botón flotante */}
-      <button
-        type="button"
-        onClick={() => setIsOpen((v) => !v)}
-        aria-label={isOpen ? "Cerrar chat" : "Abrir chat"}
-        className="size-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 active:scale-95 transition-all"
-      >
-        {isOpen ? (
-          <X className="size-5" />
-        ) : (
-          <MessageSquare className="size-6" />
-        )}
-      </button>
+      {isHeaderPlacement ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsOpen((v) => !v)}
+          aria-label={isOpen ? "Cerrar chat" : "Abrir chat"}
+          className="relative shrink-0"
+        >
+          {isOpen ? <X className="size-4" /> : <MessageSquare className="size-4" />}
+        </Button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setIsOpen((v) => !v)}
+          aria-label={isOpen ? "Cerrar chat" : "Abrir chat"}
+          className="size-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 active:scale-95 transition-all"
+        >
+          {isOpen ? (
+            <X className="size-5" />
+          ) : (
+            <MessageSquare className="size-6" />
+          )}
+        </button>
+      )}
     </div>
   );
 }

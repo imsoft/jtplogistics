@@ -27,13 +27,13 @@ export default async function DashboardLayout({
           <div id="tour-header-notifications">
             <NotificationBell />
           </div>
+          <FloatingChat placement="header" />
           <div id="tour-header-search">
             <GlobalSearch />
           </div>
         </header>
         <div className={dashboardMainWithFloatingChatClassName}>{children}</div>
       </SidebarInset>
-      <FloatingChat />
       <OnboardingTour />
     </SidebarProvider>
   );

@@ -3,35 +3,40 @@ import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-server";
 import { logAudit } from "@/lib/audit-log";
 
-const ALLOWED_FIELDS = [
-  "canViewMessages", "canViewIdeas", "canViewRoutes", "canViewRouteLogs",
-  "canViewUnitTypes", "canViewQuotes", "canViewProviders", "canViewClients",
-  "canViewEmployees", "canViewVendors", "canViewLaptops", "canViewPhones",
-  "canViewEmails", "canViewTasks", "canCreateRecords", "canReadRecords",
-  "canUpdateRecords", "canDeleteRecords",
+const PERMISSION_MODULES = [
+  { suffix: "Messages", label: "Mensajes" },
+  { suffix: "Ideas", label: "Ideas" },
+  { suffix: "Routes", label: "Rutas" },
+  { suffix: "RouteLogs", label: "Historial de cambios" },
+  { suffix: "UnitTypes", label: "Tipos de unidades" },
+  { suffix: "Quotes", label: "Cotizador" },
+  { suffix: "Providers", label: "Proveedores" },
+  { suffix: "Clients", label: "Clientes" },
+  { suffix: "Employees", label: "Colaboradores" },
+  { suffix: "Vendors", label: "Vendedores" },
+  { suffix: "Laptops", label: "Laptops" },
+  { suffix: "Phones", label: "Celulares" },
+  { suffix: "Emails", label: "Correos" },
+  { suffix: "Tasks", label: "Tareas" },
+  { suffix: "Shipments", label: "Embarques" },
+  { suffix: "Finances", label: "Finanzas" },
 ] as const;
-type PermissionField = (typeof ALLOWED_FIELDS)[number];
 
-const FIELD_LABELS: Record<PermissionField, string> = {
-  canViewMessages: "Mensajes",
-  canViewIdeas: "Ideas",
-  canViewRoutes: "Rutas",
-  canViewRouteLogs: "Historial de cambios",
-  canViewUnitTypes: "Tipos de unidades",
-  canViewQuotes: "Cotizador",
-  canViewProviders: "Proveedores",
-  canViewClients: "Clientes",
-  canViewEmployees: "Colaboradores",
-  canViewVendors: "Vendedores",
-  canViewLaptops: "Laptops",
-  canViewPhones: "Celulares",
-  canViewEmails: "Correos",
-  canViewTasks: "Tareas",
-  canCreateRecords: "Crear",
-  canReadRecords: "Leer",
-  canUpdateRecords: "Editar",
-  canDeleteRecords: "Eliminar",
-};
+const ALLOWED_FIELDS = PERMISSION_MODULES.flatMap((module) => [
+  `canView${module.suffix}`,
+  `canCreate${module.suffix}`,
+  `canUpdate${module.suffix}`,
+  `canDelete${module.suffix}`,
+]);
+
+const FIELD_LABELS: Record<string, string> = Object.fromEntries(
+  PERMISSION_MODULES.flatMap((module) => [
+    [`canView${module.suffix}`, `${module.label}: leer`],
+    [`canCreate${module.suffix}`, `${module.label}: crear`],
+    [`canUpdate${module.suffix}`, `${module.label}: editar`],
+    [`canDelete${module.suffix}`, `${module.label}: eliminar`],
+  ])
+);
 
 export async function PATCH(
   request: NextRequest,
@@ -53,7 +58,7 @@ export async function PATCH(
     for (const field of ALLOWED_FIELDS) {
       if (field in body && typeof body[field] === "boolean") {
         data[field] = body[field];
-        const prev = u[field];
+        const prev = u[field as keyof typeof u];
         if (prev !== body[field]) {
           changes.push({
             field,

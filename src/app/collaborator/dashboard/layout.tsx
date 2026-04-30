@@ -21,11 +21,11 @@ export default function CollaboratorDashboardLayout({
             Mi panel
           </span>
           <NotificationBell />
+          <FloatingChat placement="header" />
           <GlobalSearch />
         </header>
         <div className={dashboardMainWithFloatingChatClassName}>{children}</div>
       </SidebarInset>
-      <FloatingChat />
     </SidebarProvider>
   );
 }

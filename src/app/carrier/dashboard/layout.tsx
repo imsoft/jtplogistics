@@ -20,10 +20,10 @@ export default function CarrierDashboardLayout({
             Mi panel
           </span>
           <NotificationBell />
+          <FloatingChat placement="header" />
         </header>
         <div className={dashboardMainWithFloatingChatClassName}>{children}</div>
       </SidebarInset>
-      <FloatingChat />
     </SidebarProvider>
   );
 }

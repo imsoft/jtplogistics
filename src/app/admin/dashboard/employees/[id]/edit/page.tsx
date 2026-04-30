@@ -11,33 +11,35 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { Laptop, Smartphone, Mail, ChevronRight } from "lucide-react";
 import type { Employee, EmployeeFormData } from "@/types/resources.types";
 import { formatPhone } from "@/lib/utils";
 
-const PERMISSION_FIELDS = [
-  { key: "canCreateRecords", label: "Crear", desc: "Permite crear nuevos registros donde aplique." },
-  { key: "canReadRecords", label: "Leer", desc: "Permite consultar información en los módulos habilitados." },
-  { key: "canUpdateRecords", label: "Editar", desc: "Permite actualizar registros existentes." },
-  { key: "canDeleteRecords", label: "Eliminar", desc: "Permite eliminar registros." },
-  { key: "canViewRoutes", label: "Rutas", desc: "Ver y consultar rutas." },
-  { key: "canViewRouteLogs", label: "Historial de cambios", desc: "Ver el historial de cambios de rutas." },
-  { key: "canViewUnitTypes", label: "Tipos de unidades", desc: "Ver los tipos de unidades." },
-  { key: "canViewQuotes", label: "Cotizador", desc: "Usar el cotizador de rutas." },
-  { key: "canViewProviders", label: "Proveedores", desc: "Ver proveedores y transportistas." },
-  { key: "canViewClients", label: "Clientes", desc: "Ver clientes y sus rutas." },
-  { key: "canViewEmployees", label: "Colaboradores", desc: "Ver otros colaboradores." },
-  { key: "canViewVendors", label: "Vendedores", desc: "Ver vendedores." },
-  { key: "canViewLaptops", label: "Laptops", desc: "Ver laptops asignadas." },
-  { key: "canViewPhones", label: "Celulares", desc: "Ver celulares asignados." },
-  { key: "canViewEmails", label: "Correos", desc: "Ver cuentas de correo." },
-  { key: "canViewMessages", label: "Mensajes", desc: "Ver y enviar mensajes a transportistas." },
-  { key: "canViewIdeas", label: "Ideas", desc: "Ver y enviar ideas al equipo." },
-  { key: "canViewTasks", label: "Tareas", desc: "Ver tareas asignadas." },
+const MODULES = [
+  { suffix: "Messages", label: "Mensajes" },
+  { suffix: "Ideas", label: "Ideas" },
+  { suffix: "Routes", label: "Rutas" },
+  { suffix: "RouteLogs", label: "Historial de cambios" },
+  { suffix: "UnitTypes", label: "Tipos de unidades" },
+  { suffix: "Quotes", label: "Cotizador" },
+  { suffix: "Providers", label: "Proveedores" },
+  { suffix: "Clients", label: "Clientes" },
+  { suffix: "Employees", label: "Colaboradores" },
+  { suffix: "Vendors", label: "Vendedores" },
+  { suffix: "Laptops", label: "Laptops" },
+  { suffix: "Phones", label: "Celulares" },
+  { suffix: "Emails", label: "Correos" },
+  { suffix: "Tasks", label: "Tareas" },
+  { suffix: "Shipments", label: "Embarques" },
+  { suffix: "Finances", label: "Finanzas" },
 ] as const;
 
-type PermissionKey = (typeof PERMISSION_FIELDS)[number]["key"];
+const PERMISSION_FIELDS = MODULES.flatMap((module) => [
+  { key: `canView${module.suffix}`, label: `${module.label}: leer` },
+  { key: `canCreate${module.suffix}`, label: `${module.label}: crear` },
+  { key: `canUpdate${module.suffix}`, label: `${module.label}: editar` },
+  { key: `canDelete${module.suffix}`, label: `${module.label}: eliminar` },
+]);
 
 function LinkedResource({ href, children }: { href: string; children: React.ReactNode }) {
   return (
@@ -62,18 +64,19 @@ export default function EditEmployeePage() {
     });
 
   // Local permission state, initialized from employee data
-  const [permissions, setPermissions] = useState<Record<PermissionKey, boolean> | null>(null);
+  const [permissions, setPermissions] = useState<Record<string, boolean> | null>(null);
 
   // Initialize permissions when employee loads
   if (employee && permissions === null) {
     const initial: Record<string, boolean> = {};
+    const employeePermissions = employee as unknown as Record<string, boolean | null | undefined>;
     for (const f of PERMISSION_FIELDS) {
-      initial[f.key] = employee[f.key];
+      initial[f.key] = Boolean(employeePermissions[f.key]);
     }
-    setPermissions(initial as Record<PermissionKey, boolean>);
+    setPermissions(initial);
   }
 
-  function togglePerm(key: PermissionKey) {
+  function togglePerm(key: string) {
     setPermissions((prev) => prev ? { ...prev, [key]: !prev[key] } : prev);
   }
 
@@ -225,23 +228,19 @@ export default function EditEmployeePage() {
                     </div>
                   </div>
                   <CardDescription className="text-left text-xs sm:text-sm">
-                    Controla qué secciones puede ver y utilizar este colaborador.
+                    Controla permisos por módulo para leer, crear, editar y eliminar.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-0">
-                    {PERMISSION_FIELDS.map((perm, i) => (
+                    {PERMISSION_FIELDS.map((perm) => (
                       <div key={perm.key}>
-                        {i > 0 && <Separator />}
                         <div className="flex items-center justify-between gap-4 py-3">
                           <Label
                             htmlFor={`perm-${perm.key}`}
-                            className="flex flex-col items-start gap-0.5 cursor-pointer"
+                            className="flex cursor-pointer flex-col items-start gap-0.5"
                           >
                             <span className="text-left text-sm font-medium">{perm.label}</span>
-                            <span className="text-left text-xs text-muted-foreground font-normal">
-                              {perm.desc}
-                            </span>
                           </Label>
                           <Switch
                             id={`perm-${perm.key}`}

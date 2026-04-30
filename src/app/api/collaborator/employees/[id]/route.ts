@@ -8,17 +8,16 @@ async function requirePermission(userId: string, action: EmployeeAction) {
     where: { id: userId },
     select: {
       canViewEmployees: true,
-      canReadRecords: true,
-      canUpdateRecords: true,
-      canDeleteRecords: true,
+      canUpdateEmployees: true,
+      canDeleteEmployees: true,
     },
   });
   const allowed =
     action === "read"
-      ? Boolean(me?.canViewEmployees && me?.canReadRecords)
+      ? Boolean(me?.canViewEmployees)
       : action === "update"
-        ? Boolean(me?.canViewEmployees && me?.canUpdateRecords)
-        : Boolean(me?.canViewEmployees && me?.canDeleteRecords);
+        ? Boolean(me?.canUpdateEmployees)
+        : Boolean(me?.canDeleteEmployees);
   if (!allowed) {
     throw new Response(JSON.stringify({ error: "Sin permiso" }), {
       status: 403,
@@ -87,10 +86,8 @@ export async function GET(
       canViewPhones: u.canViewPhones,
       canViewEmails: u.canViewEmails,
       canViewTasks: u.canViewTasks,
-      canCreateRecords: u.canCreateRecords,
-      canReadRecords: u.canReadRecords,
-      canUpdateRecords: u.canUpdateRecords,
-      canDeleteRecords: u.canDeleteRecords,
+      canViewShipments: u.canViewShipments,
+      canViewFinances: u.canViewFinances,
       createdAt: u.createdAt.toISOString(),
       laptops: u.assignedLaptops.map((l) => ({
         id: l.id,

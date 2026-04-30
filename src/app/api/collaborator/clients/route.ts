@@ -40,10 +40,10 @@ export async function GET() {
 
     const me = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { canViewClients: true, canReadRecords: true },
+      select: { canViewClients: true },
     });
 
-    if (!me?.canViewClients || !me.canReadRecords) {
+    if (!me?.canViewClients) {
       return Response.json({ error: "Sin permiso" }, { status: 403 });
     }
 
@@ -64,10 +64,10 @@ export async function POST(request: Request) {
 
     const me = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { canViewClients: true, canCreateRecords: true },
+      select: { canCreateClients: true },
     });
 
-    if (!me?.canViewClients || !me.canCreateRecords) {
+    if (!me?.canCreateClients) {
       return Response.json({ error: "Sin permiso" }, { status: 403 });
     }
 
