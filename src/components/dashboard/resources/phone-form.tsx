@@ -8,6 +8,7 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { EmployeeSelect } from "./employee-select";
 import { EmailAccountSelect } from "./email-account-select";
 import type { PhoneDevice, PhoneFormData } from "@/types/resources.types";
+import { formatIMEI } from "@/lib/utils";
 
 interface PhoneFormProps {
   initialValues?: Partial<PhoneDevice>;
@@ -27,13 +28,14 @@ export function PhoneForm({
   const [name, setName] = useState(initialValues.name ?? "");
   const [phoneNumber, setPhoneNumber] = useState(initialValues.phoneNumber ?? "");
   const [password, setPassword] = useState(initialValues.password ?? "");
-  const [imei, setImei] = useState(initialValues.imei ?? "");
+  const [imei, setImei] = useState(formatIMEI(initialValues.imei ?? ""));
   const [assignedToId, setAssignedToId] = useState(initialValues.assignedToId ?? "");
   const [emailAccountId, setEmailAccountId] = useState(initialValues.emailAccountId ?? "");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSubmit({ name, phoneNumber, password, imei, assignedToId, emailAccountId });
+    const normalizedImei = imei.replace(/\s/g, "");
+    onSubmit({ name, phoneNumber, password, imei: normalizedImei, assignedToId, emailAccountId });
   }
 
   return (
@@ -69,7 +71,7 @@ export function PhoneForm({
           <Input
             id="ph-imei"
             value={imei}
-            onChange={(e) => setImei(e.target.value)}
+            onChange={(e) => setImei(formatIMEI(e.target.value))}
           />
         </div>
         <EmployeeSelect

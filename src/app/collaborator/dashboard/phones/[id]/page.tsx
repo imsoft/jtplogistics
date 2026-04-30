@@ -7,7 +7,7 @@ import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoRow } from "@/components/dashboard/users/info-row";
-import { formatPhone } from "@/lib/utils";
+import { formatPhone, formatIMEI } from "@/lib/utils";
 import type { PhoneDevice } from "@/types/resources.types";
 
 export default function CollaboratorPhoneProfilePage() {
@@ -74,7 +74,7 @@ export default function CollaboratorPhoneProfilePage() {
             <InfoRow label="Nombre" value={phone.name} />
             <InfoRow label="Número" value={phone.phoneNumber ? formatPhone(phone.phoneNumber) : null} />
             <InfoRow label="Contraseña" value={phone.password} />
-            <InfoRow label="IMEI" value={phone.imei} />
+            <InfoRow label="IMEI" value={phone.imei ? formatIMEI(phone.imei) : null} />
             <InfoRow label="Asignado a" value={phone.assignedTo?.name ?? null} />
             <InfoRow label="Cuenta de correo" value={phone.emailAccount?.email ?? null} />
             <InfoRow
