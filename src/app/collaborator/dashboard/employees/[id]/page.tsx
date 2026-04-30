@@ -121,7 +121,7 @@ export default function CollaboratorEmployeeProfilePage() {
                   {laptops.map((l) => (
                     <Link
                       key={l.id}
-                      href={`/collaborator/dashboard/laptops/${l.id}`}
+                      href={`/collaborator/dashboard/laptops/${l.id}?employeeId=${id}`}
                       className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
                     >
                       <span className="font-medium">{l.name}</span>
@@ -159,7 +159,7 @@ export default function CollaboratorEmployeeProfilePage() {
                   {emailAccounts.map((ea) => (
                     <Link
                       key={ea.id}
-                      href={`/collaborator/dashboard/emails/${ea.id}`}
+                      href={`/collaborator/dashboard/emails/${ea.id}?employeeId=${id}`}
                       className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
                     >
                       <span className="font-medium">{ea.email}</span>

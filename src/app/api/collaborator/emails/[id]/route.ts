@@ -6,27 +6,26 @@ async function checkPermission(userId: string) {
     where: { id: userId },
     select: {
       canViewEmails: true,
+      canViewEmployees: true,
       canUpdateEmails: true,
       canDeleteEmails: true,
     },
   });
   return {
     canRead: Boolean(me?.canViewEmails),
+    canViewEmployees: Boolean(me?.canViewEmployees),
     canUpdate: Boolean(me?.canUpdateEmails),
     canDelete: Boolean(me?.canDeleteEmails),
   };
 }
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await requireCollaboratorOrAdmin();
     const permission = await checkPermission(session.user.id);
-    if (!permission.canRead) {
-      return Response.json({ error: "Sin permiso" }, { status: 403 });
-    }
 
     const { id } = await params;
     const account = await prisma.emailAccount.findUnique({
@@ -36,6 +35,18 @@ export async function GET(
       },
     });
     if (!account) return Response.json({ error: "No encontrado" }, { status: 404 });
+
+    const { searchParams } = new URL(req.url);
+    const employeeId = searchParams.get("employeeId");
+    const canViewAssignedEmailFromEmployee =
+      permission.canViewEmployees &&
+      Boolean(employeeId) &&
+      account.assignees.some((a) => a.user.id === employeeId);
+
+    if (!permission.canRead && !canViewAssignedEmailFromEmployee) {
+      return Response.json({ error: "Sin permiso" }, { status: 403 });
+    }
+
     return Response.json({
       id: account.id,
       type: account.type,

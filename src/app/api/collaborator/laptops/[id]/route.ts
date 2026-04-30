@@ -1,23 +1,17 @@
 import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 
-async function checkPermission(userId: string) {
-  const me = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { canViewLaptops: true },
-  });
-  return me?.canViewLaptops ?? false;
-}
-
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await requireCollaboratorOrAdmin();
-    if (!(await checkPermission(session.user.id))) {
-      return Response.json({ error: "Sin permiso" }, { status: 403 });
-    }
+    const me = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { canViewLaptops: true, canViewEmployees: true },
+    });
+    if (!me) return Response.json({ error: "Sin permiso" }, { status: 403 });
 
     const { id } = await params;
     const laptop = await prisma.laptop.findUnique({
@@ -28,6 +22,17 @@ export async function GET(
       },
     });
     if (!laptop) return Response.json({ error: "No encontrado" }, { status: 404 });
+
+    const { searchParams } = new URL(req.url);
+    const employeeId = searchParams.get("employeeId");
+    const canViewAssignedLaptopFromEmployee =
+      Boolean(me.canViewEmployees) &&
+      Boolean(employeeId) &&
+      laptop.assignedToId === employeeId;
+
+    if (!me.canViewLaptops && !canViewAssignedLaptopFromEmployee) {
+      return Response.json({ error: "Sin permiso" }, { status: 403 });
+    }
     return Response.json({
       id: laptop.id,
       name: laptop.name,
