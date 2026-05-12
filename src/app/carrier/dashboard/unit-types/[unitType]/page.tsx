@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Check, Lock, Minus, MoveRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -88,6 +88,8 @@ export default function CarrierUnitTypePage() {
   const [originalSelected, setOriginalSelected] = useState<Set<string>>(new Set());
   const [targetByRouteId, setTargetByRouteId] = useState<Record<string, string>>({});
   const [weeklyVolumeByRouteId, setWeeklyVolumeByRouteId] = useState<Record<string, string>>({});
+  const [localDiffByRouteId, setLocalDiffByRouteId] = useState<Record<string, number | null>>({});
+  const diffDebounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const unitTypes = useUnitTypes();
   const unitTypeLabel = useMemo(() => {
@@ -122,10 +124,16 @@ export default function CarrierUnitTypePage() {
         if (sel.carrierWeeklyVolume != null) savedVolumes[r.id] = String(sel.carrierWeeklyVolume);
       }
     }
+    const savedDiffs: Record<string, number | null> = {};
+    for (const r of data.routes) {
+      const sel = r.selections?.find((s) => s.unitType === unitType);
+      if (sel) savedDiffs[r.id] = sel.targetDiffPercent ?? null;
+    }
     setSelected(savedSelected);
     setOriginalSelected(savedSelected);
     setTargetByRouteId(savedTargets);
     setWeeklyVolumeByRouteId(savedVolumes);
+    setLocalDiffByRouteId(savedDiffs);
     setIsLoaded(true);
   }, [unitType]);
 
@@ -191,7 +199,26 @@ export default function CarrierUnitTypePage() {
   }
 
   function handleTargetChange(routeId: string, raw: string) {
-    setTargetByRouteId((prev) => ({ ...prev, [routeId]: formatMxnLive(raw) }));
+    const formatted = formatMxnLive(raw);
+    setTargetByRouteId((prev) => ({ ...prev, [routeId]: formatted }));
+
+    clearTimeout(diffDebounceTimers.current[routeId]);
+    const parsed = parseMxn(formatted);
+    if (parsed == null || parsed <= 0) {
+      setLocalDiffByRouteId((prev) => ({ ...prev, [routeId]: null }));
+      return;
+    }
+    diffDebounceTimers.current[routeId] = setTimeout(async () => {
+      try {
+        const params = new URLSearchParams({ routeId, unitType, carrierTarget: String(parsed) });
+        const res = await fetch(`/api/carrier/routes/diff?${params}`);
+        if (!res.ok) return;
+        const { diffPercent } = await res.json();
+        setLocalDiffByRouteId((prev) => ({ ...prev, [routeId]: diffPercent ?? null }));
+      } catch {
+        // silently ignore
+      }
+    }, 400);
   }
 
   function handleTargetBlur(routeId: string) {
@@ -369,8 +396,7 @@ export default function CarrierUnitTypePage() {
                     {items.map((route) => {
                       const isSelected = selected.has(route.id);
                       const isOriginallySelected = originalSelected.has(route.id);
-                      const savedSelection = route.selections?.find((s) => s.unitType === unitType);
-                      const diffPercent = savedSelection?.targetDiffPercent ?? null;
+                      const diffPercent = localDiffByRouteId[route.id] ?? null;
 
                       const isLocked = isOriginallySelected && !canEditRoutes;
 
