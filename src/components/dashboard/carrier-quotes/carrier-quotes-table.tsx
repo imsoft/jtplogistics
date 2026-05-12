@@ -55,6 +55,7 @@ export function CarrierQuotesTable({ apiEndpoint = "/api/admin/carrier-quotes" }
   const [selectedDestination, setSelectedDestination] = useState<string>("");
   const [search, setSearch] = useState<string>("");
   const [filterPrice, setFilterPrice] = useState<string>("all");
+  const [finalPrice, setFinalPrice] = useState<number | null>(null);
 
   const loadRoutes = useCallback(async () => {
     const [data, utRes] = await Promise.all([
@@ -104,6 +105,7 @@ export function CarrierQuotesTable({ apiEndpoint = "/api/admin/carrier-quotes" }
   const routeTarget = selectedRoute?.target ?? null;
 
   useEffect(() => {
+    setFinalPrice(null);
     if (!selectedRouteId) { setCarriers([]); return; }
     setIsLoadingCarriers(true);
     fetchQuotes(apiEndpoint, selectedRouteId).then((data) => {
@@ -268,7 +270,7 @@ export function CarrierQuotesTable({ apiEndpoint = "/api/admin/carrier-quotes" }
                   <QuoteBuilderDialog
                     routes={routes}
                     preselectedRoute={selectedRoute}
-                    defaultCost={stats.venta ?? undefined}
+                    defaultCost={finalPrice ?? stats.venta ?? undefined}
                   />
                 </div>
               </CardHeader>
@@ -279,12 +281,20 @@ export function CarrierQuotesTable({ apiEndpoint = "/api/admin/carrier-quotes" }
                     <p className="text-lg font-semibold">${formatMxn(stats.avg)}</p>
                   </div>
                   <div className="rounded-lg bg-muted/50 p-4">
-                    <p className="text-muted-foreground text-xs font-medium">Venta</p>
+                    <p className="text-muted-foreground text-xs font-medium">Precio sugerido</p>
                     <p className="text-lg font-semibold">${formatMxn(stats.venta)}</p>
                   </div>
-                  <div className="rounded-lg bg-muted/50 p-4">
-                    <p className="text-muted-foreground text-xs font-medium">Total con IVA</p>
-                    <p className="text-lg font-semibold">${formatMxn(stats.monto)}</p>
+                  <div className="rounded-lg bg-muted/50 p-4 space-y-1">
+                    <p className="text-muted-foreground text-xs font-medium">Precio final</p>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="100"
+                      value={finalPrice ?? ""}
+                      onChange={(e) => setFinalPrice(e.target.value ? parseFloat(e.target.value) : null)}
+                      placeholder={stats.venta != null ? `$${formatMxn(stats.venta)}` : "0.00"}
+                      className="h-8 text-sm font-semibold"
+                    />
                   </div>
                 </div>
               </CardContent>
