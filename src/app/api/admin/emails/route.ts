@@ -16,6 +16,7 @@ export function GET() {
         type: e.type,
         email: e.email,
         password: e.password,
+        department: e.department,
         assignees: e.assignees.map((a) => ({ id: a.user.id, name: a.user.name })),
         createdAt: e.createdAt.toISOString(),
       }))
@@ -26,10 +27,11 @@ export function GET() {
 export function POST(request: Request) {
   return adminHandler(async (session) => {
     const body = await request.json();
-    const { type, email, password, assigneeIds } = body as {
+    const { type, email, password, department, assigneeIds } = body as {
       type: string;
       email: string;
       password?: string;
+      department?: string;
       assigneeIds?: string[];
     };
 
@@ -42,6 +44,7 @@ export function POST(request: Request) {
         type,
         email,
         password: password || null,
+        department: department || null,
         assignees: assigneeIds?.length
           ? { create: assigneeIds.map((userId) => ({ userId })) }
           : undefined,

@@ -18,6 +18,8 @@ export function GET() {
         phoneNumber: p.phoneNumber,
         password: p.password,
         imei: p.imei,
+        color: p.color,
+        department: p.department,
         assignedToId: p.assignedToId,
         assignedTo: p.assignedTo,
         emailAccountId: p.emailAccountId,
@@ -31,11 +33,13 @@ export function GET() {
 export function POST(request: Request) {
   return adminHandler(async (session) => {
     const body = await request.json();
-    const { name, phoneNumber, password, imei, assignedToId, emailAccountId } = body as {
+    const { name, phoneNumber, password, imei, color, department, assignedToId, emailAccountId } = body as {
       name: string;
       phoneNumber?: string;
       password?: string;
       imei?: string;
+      color?: string;
+      department?: string;
       assignedToId?: string;
       emailAccountId?: string;
     };
@@ -50,6 +54,8 @@ export function POST(request: Request) {
         phoneNumber: phoneNumber || null,
         password: password || null,
         imei: imei || null,
+        color: color || null,
+        department: department || null,
         assignedToId: assignedToId || null,
         emailAccountId: emailAccountId || null,
       },

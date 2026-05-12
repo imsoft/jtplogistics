@@ -29,6 +29,8 @@ export async function GET() {
         phoneNumber: p.phoneNumber,
         password: p.password,
         imei: p.imei,
+        color: p.color,
+        department: p.department,
         assignedToId: p.assignedToId,
         assignedTo: p.assignedTo,
         emailAccountId: p.emailAccountId,

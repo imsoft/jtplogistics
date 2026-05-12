@@ -22,6 +22,8 @@ export function GET(
       phoneNumber: phone.phoneNumber,
       password: phone.password,
       imei: phone.imei,
+      color: phone.color,
+      department: phone.department,
       assignedToId: phone.assignedToId,
       assignedTo: phone.assignedTo,
       emailAccountId: phone.emailAccountId,
@@ -38,11 +40,13 @@ export function PATCH(
   return adminHandler(async (session) => {
     const { id } = await params;
     const body = await request.json();
-    const { name, phoneNumber, password, imei, assignedToId, emailAccountId } = body as {
+    const { name, phoneNumber, password, imei, color, department, assignedToId, emailAccountId } = body as {
       name?: string;
       phoneNumber?: string;
       password?: string;
       imei?: string;
+      color?: string;
+      department?: string | null;
       assignedToId?: string | null;
       emailAccountId?: string | null;
     };
@@ -57,6 +61,8 @@ export function PATCH(
         ...(phoneNumber !== undefined && { phoneNumber: phoneNumber || null }),
         ...(password !== undefined && { password: password || null }),
         ...(imei !== undefined && { imei: imei || null }),
+        ...(color !== undefined && { color: color || null }),
+        ...(department !== undefined && { department: department || null }),
         ...(assignedToId !== undefined && { assignedToId: assignedToId || null }),
         ...(emailAccountId !== undefined && { emailAccountId: emailAccountId || null }),
       },

@@ -40,6 +40,8 @@ export async function GET(
       phoneNumber: phone.phoneNumber,
       password: phone.password,
       imei: phone.imei,
+      color: phone.color,
+      department: phone.department,
       assignedToId: phone.assignedToId,
       assignedTo: phone.assignedTo,
       emailAccountId: phone.emailAccountId,

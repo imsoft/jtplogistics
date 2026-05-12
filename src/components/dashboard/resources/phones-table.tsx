@@ -21,7 +21,7 @@ function getColumns(): ColumnDef<PhoneDevice>[] {
   return [
     {
       id: "search",
-      accessorFn: (row) => `${row.name} ${row.phoneNumber ?? ""} ${row.imei ?? ""} ${row.assignedTo?.name ?? ""} ${row.emailAccount?.email ?? ""}`,
+      accessorFn: (row) => `${row.name} ${row.phoneNumber ?? ""} ${row.imei ?? ""} ${row.color ?? ""} ${row.department ?? ""} ${row.assignedTo?.name ?? ""} ${row.emailAccount?.email ?? ""}`,
       filterFn: "fuzzy",
       header: () => null,
       cell: () => null,
@@ -47,6 +47,22 @@ function getColumns(): ColumnDef<PhoneDevice>[] {
       cell: ({ row }) => {
         const v = row.getValue<string | null>("imei");
         return v ? formatIMEI(v) : <span className="text-muted-foreground">—</span>;
+      },
+    },
+    {
+      accessorKey: "color",
+      header: ({ column }) => <SortableColumnHeader column={column} title="Color" />,
+      cell: ({ row }) => {
+        const v = row.getValue<string | null>("color");
+        return v ? <span>{v}</span> : <span className="text-muted-foreground">—</span>;
+      },
+    },
+    {
+      accessorKey: "department",
+      header: ({ column }) => <SortableColumnHeader column={column} title="Departamento" />,
+      cell: ({ row }) => {
+        const v = row.getValue<string | null>("department");
+        return v ? <span>{v}</span> : <span className="text-muted-foreground">—</span>;
       },
     },
     {
@@ -77,12 +93,19 @@ export function PhonesTable() {
     "Error al cargar celulares"
   );
   const [filterAssigned, setFilterAssigned] = useState("all");
+  const [filterDepartment, setFilterDepartment] = useState("all");
+
+  const departments = useMemo(
+    () => Array.from(new Set(phones.map((p) => p.department).filter(Boolean) as string[])).sort(),
+    [phones]
+  );
 
   const filtered = useMemo(() => phones.filter((p) => {
     if (filterAssigned === "yes" && !p.assignedToId) return false;
     if (filterAssigned === "no" && p.assignedToId) return false;
+    if (filterDepartment !== "all" && p.department !== filterDepartment) return false;
     return true;
-  }), [phones, filterAssigned]);
+  }), [phones, filterAssigned, filterDepartment]);
 
   if (!isLoaded) return <p className="text-muted-foreground">Cargando…</p>;
   if (error) return <p className="text-destructive text-sm">{error}</p>;
@@ -104,6 +127,17 @@ export function PhonesTable() {
       onRowClick={(phone) => router.push(`/admin/dashboard/phones/${phone.id}`)}
       toolbar={
         <>
+          <Select value={filterDepartment} onValueChange={setFilterDepartment}>
+            <SelectTrigger className="w-full sm:w-[160px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los depto.</SelectItem>
+              {departments.map((d) => (
+                <SelectItem key={d} value={d}>{d}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Select value={filterAssigned} onValueChange={setFilterAssigned}>
             <SelectTrigger className="w-full sm:w-[150px]">
               <SelectValue />
@@ -117,7 +151,7 @@ export function PhonesTable() {
           <Button
             type="button"
             variant="outline"
-            onClick={() => setFilterAssigned("all")}
+            onClick={() => { setFilterAssigned("all"); setFilterDepartment("all"); }}
           >
             Limpiar filtros
           </Button>

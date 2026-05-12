@@ -130,6 +130,8 @@ export interface PhoneDevice {
   phoneNumber: string | null;
   password: string | null;
   imei: string | null;
+  color: string | null;
+  department: string | null;
   assignedToId: string | null;
   assignedTo: { id: string; name: string } | null;
   emailAccountId: string | null;
@@ -142,6 +144,8 @@ export interface PhoneFormData {
   phoneNumber: string;
   password: string;
   imei: string;
+  color: string;
+  department: string;
   assignedToId: string;
   emailAccountId: string;
 }
@@ -151,6 +155,7 @@ export interface EmailAccount {
   type: string;
   email: string;
   password: string | null;
+  department: string | null;
   assignees: { id: string; name: string }[];
   createdAt: string;
 }
@@ -159,5 +164,6 @@ export interface EmailFormData {
   type: string;
   email: string;
   password: string;
+  department: string;
   assigneeIds: string[];
 }

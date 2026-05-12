@@ -20,6 +20,7 @@ export function GET(
       type: account.type,
       email: account.email,
       password: account.password,
+      department: account.department,
       assignees: account.assignees.map((a) => ({ id: a.user.id, name: a.user.name })),
       createdAt: account.createdAt.toISOString(),
     });
@@ -33,10 +34,11 @@ export function PATCH(
   return adminHandler(async (session) => {
     const { id } = await params;
     const body = await request.json();
-    const { type, email, password, assigneeIds } = body as {
+    const { type, email, password, department, assigneeIds } = body as {
       type?: string;
       email?: string;
       password?: string;
+      department?: string | null;
       assigneeIds?: string[];
     };
 
@@ -49,6 +51,7 @@ export function PATCH(
         ...(type !== undefined && { type }),
         ...(email !== undefined && { email }),
         ...(password !== undefined && { password: password || null }),
+        ...(department !== undefined && { department: department || null }),
       },
     });
 

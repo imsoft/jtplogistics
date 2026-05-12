@@ -34,7 +34,7 @@ function getColumns(): ColumnDef<EmailAccount>[] {
   return [
     {
       id: "search",
-      accessorFn: (row) => `${row.email} ${row.type} ${row.assignees.map((a) => a.name).join(" ")}`,
+      accessorFn: (row) => `${row.email} ${row.type} ${row.department ?? ""} ${row.assignees.map((a) => a.name).join(" ")}`,
       filterFn: "fuzzy",
       header: () => null,
       cell: () => null,
@@ -50,6 +50,14 @@ function getColumns(): ColumnDef<EmailAccount>[] {
       accessorKey: "type",
       header: ({ column }) => <SortableColumnHeader column={column} title="Tipo" />,
       cell: ({ row }) => emailTypeLabel(row.getValue("type")),
+    },
+    {
+      accessorKey: "department",
+      header: ({ column }) => <SortableColumnHeader column={column} title="Departamento" />,
+      cell: ({ row }) => {
+        const v = row.getValue<string | null>("department");
+        return v ? <span>{v}</span> : <span className="text-muted-foreground">—</span>;
+      },
     },
     {
       id: "assignees",
@@ -70,15 +78,25 @@ export function EmailsTable() {
     "Error al cargar correos"
   );
   const [filterType, setFilterType] = useState("all");
+  const [filterDepartment, setFilterDepartment] = useState("all");
 
   const availableTypes = useMemo(
     () => [...new Set(emails.map((e) => e.type))].sort(),
     [emails]
   );
 
+  const departments = useMemo(
+    () => Array.from(new Set(emails.map((e) => e.department).filter(Boolean) as string[])).sort(),
+    [emails]
+  );
+
   const filtered = useMemo(
-    () => emails.filter((e) => filterType === "all" || e.type === filterType),
-    [emails, filterType]
+    () => emails.filter((e) => {
+      if (filterType !== "all" && e.type !== filterType) return false;
+      if (filterDepartment !== "all" && e.department !== filterDepartment) return false;
+      return true;
+    }),
+    [emails, filterType, filterDepartment]
   );
 
   if (!isLoaded) return <p className="text-muted-foreground">Cargando…</p>;
@@ -101,6 +119,17 @@ export function EmailsTable() {
       onRowClick={(email) => router.push(`/admin/dashboard/emails/${email.id}`)}
       toolbar={
         <>
+          <Select value={filterDepartment} onValueChange={setFilterDepartment}>
+            <SelectTrigger className="w-full sm:w-[160px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los depto.</SelectItem>
+              {departments.map((d) => (
+                <SelectItem key={d} value={d}>{d}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Select value={filterType} onValueChange={setFilterType}>
             <SelectTrigger className="w-full sm:w-[140px]">
               <SelectValue />
@@ -115,7 +144,7 @@ export function EmailsTable() {
           <Button
             type="button"
             variant="outline"
-            onClick={() => setFilterType("all")}
+            onClick={() => { setFilterType("all"); setFilterDepartment("all"); }}
           >
             Limpiar filtros
           </Button>
