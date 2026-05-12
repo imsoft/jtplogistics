@@ -9,7 +9,14 @@ export function GET(
 ) {
   return adminHandler(async (_session) => {
     const { id } = await params;
-    const u = await prisma.user.findUnique({ where: { id } });
+    const u = await prisma.user.findUnique({
+      where: { id },
+      include: {
+        assignedEmails: {
+          include: { emailAccount: { select: { id: true, type: true, email: true } } },
+        },
+      },
+    });
     if (!u || u.role !== "vendor") {
       return Response.json({ error: "No encontrado" }, { status: 404 });
     }
@@ -20,6 +27,12 @@ export function GET(
       email: u.email,
       image: u.image,
       birthDate: u.birthDate ? u.birthDate.toISOString().split("T")[0] : null,
+      vendorNotes: u.vendorNotes ?? null,
+      emailAccounts: u.assignedEmails.map((ae) => ({
+        id: ae.emailAccount.id,
+        type: ae.emailAccount.type,
+        email: ae.emailAccount.email,
+      })),
       createdAt: u.createdAt.toISOString(),
     });
   });

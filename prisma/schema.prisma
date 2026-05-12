@@ -34,6 +34,7 @@ model User {
   emailVerified Boolean        @map("email_verified")
   image         String?        @map("image")
   birthDate     DateTime?      @map("birth_date")
+  vendorNotes   String?        @map("vendor_notes")
   role          UserRole       @default(collaborator) @map("role")
   canEditTarget Boolean        @default(true) @map("can_edit_target")
   canEditRoutes  Boolean        @default(false) @map("can_edit_routes")

@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, Pencil } from "lucide-react";
+import { ChevronLeft, Pencil, Mail, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoRow } from "@/components/dashboard/users/info-row";
@@ -22,6 +22,8 @@ export default function VendorProfilePage() {
 
   if (!isLoaded) return <p className="text-muted-foreground py-6">Cargando…</p>;
   if (error || !vendor) return <p className="text-destructive py-6 text-sm">{error ?? "No encontrado"}</p>;
+
+  const emailAccounts = vendor.emailAccounts ?? [];
 
   return (
     <div className="min-w-0 space-y-6">
@@ -89,7 +91,47 @@ export default function VendorProfilePage() {
             />
           </CardContent>
         </Card>
+
+        {vendor.vendorNotes && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                Notas del proveedor
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              <pre className="whitespace-pre-wrap text-sm text-foreground font-sans">{vendor.vendorNotes}</pre>
+            </CardContent>
+          </Card>
+        )}
       </div>
+
+      {emailAccounts.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              Recursos vinculados
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 space-y-2">
+            <h4 className="flex items-center gap-2 text-sm font-medium">
+              <Mail className="size-4" /> Correos ({emailAccounts.length})
+            </h4>
+            <div className="space-y-1">
+              {emailAccounts.map((ea) => (
+                <Link
+                  key={ea.id}
+                  href={`/admin/dashboard/emails/${ea.id}`}
+                  className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
+                >
+                  <span className="font-medium">{ea.email}</span>
+                  <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

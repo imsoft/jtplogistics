@@ -81,6 +81,8 @@ export interface Vendor {
   email: string;
   image: string | null;
   birthDate: string | null;
+  vendorNotes: string | null;
+  emailAccounts: { id: string; type: string; email: string }[];
   createdAt: string;
 }
 

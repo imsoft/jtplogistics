@@ -4,12 +4,16 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 
 export default function VendorProfilePage() {
+  const DEFAULT_NOTES = "- Estadías\n- Reparto";
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [notes, setNotes] = useState(DEFAULT_NOTES);
   const [image, setImage] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -17,13 +21,20 @@ export default function VendorProfilePage() {
   const [success, setSuccess] = useState(false);
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/profile");
-    if (!res.ok) return;
-    const data = await res.json();
+    const [profileRes, notesRes] = await Promise.all([
+      fetch("/api/profile"),
+      fetch("/api/vendor/notes"),
+    ]);
+    if (!profileRes.ok) return;
+    const data = await profileRes.json();
     setName(data.name ?? "");
     setEmail(data.email ?? "");
     setBirthDate(data.birthDate ?? "");
     setImage(data.image ?? null);
+    if (notesRes.ok) {
+      const notesData = await notesRes.json();
+      setNotes(notesData.notes ?? DEFAULT_NOTES);
+    }
     setIsLoaded(true);
   }, []);
 
@@ -35,14 +46,25 @@ export default function VendorProfilePage() {
     setSuccess(false);
     setIsLoading(true);
     try {
-      const res = await fetch("/api/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), birthDate: birthDate || null }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
+      const [profileRes, notesRes] = await Promise.all([
+        fetch("/api/profile", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: name.trim(), birthDate: birthDate || null }),
+        }),
+        fetch("/api/vendor/notes", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ notes }),
+        }),
+      ]);
+      if (!profileRes.ok) {
+        const err = await profileRes.json().catch(() => ({}));
         throw new Error(err.error ?? "Error al guardar");
+      }
+      if (!notesRes.ok) {
+        const err = await notesRes.json().catch(() => ({}));
+        throw new Error(err.error ?? "Error al guardar notas");
       }
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
@@ -67,7 +89,7 @@ export default function VendorProfilePage() {
       <div>
         <h1 className="page-heading">Mi perfil</h1>
         <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
-          Actualiza tu nombre, fecha de nacimiento y foto de perfil.
+          Actualiza tu información, foto de perfil y notas de servicios.
         </p>
       </div>
 
@@ -112,7 +134,23 @@ export default function VendorProfilePage() {
           </div>
         </div>
 
-        <div className="flex justify-end">
+        <div className="space-y-2 sm:col-span-2">
+          <Label htmlFor="notes">Notas de servicios</Label>
+          <Textarea
+            id="notes"
+            rows={5}
+            disabled={isLoading}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Ej.&#10;- Estadías&#10;- Reparto"
+            className="resize-y"
+          />
+          <p className="text-xs text-muted-foreground">
+            Describe los servicios que ofreces. Esta información es visible para el administrador.
+          </p>
+        </div>
+
+        <div className="flex justify-end sm:col-span-2">
           <Button type="submit" disabled={isLoading}>
             {isLoading ? "Guardando…" : "Guardar cambios"}
           </Button>
