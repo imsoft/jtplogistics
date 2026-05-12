@@ -80,24 +80,34 @@ export function EmailsTable() {
   const [filterType, setFilterType] = useState("all");
   const [filterDepartment, setFilterDepartment] = useState("all");
 
+  const assigned = useMemo(() => emails.filter((e) => e.assignees.length > 0), [emails]);
+  const unassigned = useMemo(() => emails.filter((e) => e.assignees.length === 0), [emails]);
+
   const availableTypes = useMemo(
     () => [...new Set(emails.map((e) => e.type))].sort(),
     [emails]
   );
 
   const departments = useMemo(
-    () => Array.from(new Set(emails.map((e) => e.department).filter(Boolean) as string[])).sort(),
-    [emails]
+    () => Array.from(new Set(assigned.map((e) => e.department).filter(Boolean) as string[])).sort(),
+    [assigned]
   );
 
-  const filtered = useMemo(
-    () => emails.filter((e) => {
+  const filteredAssigned = useMemo(
+    () => assigned.filter((e) => {
       if (filterType !== "all" && e.type !== filterType) return false;
       if (filterDepartment !== "all" && e.department !== filterDepartment) return false;
       return true;
     }),
-    [emails, filterType, filterDepartment]
+    [assigned, filterType, filterDepartment]
   );
+
+  const filteredUnassigned = useMemo(
+    () => unassigned.filter((e) => filterType === "all" || e.type === filterType),
+    [unassigned, filterType]
+  );
+
+  const columns = useMemo(() => getColumns(), []);
 
   if (!isLoaded) return <p className="text-muted-foreground">Cargando…</p>;
   if (error) return <p className="text-destructive text-sm">{error}</p>;
@@ -109,47 +119,82 @@ export function EmailsTable() {
     );
   }
 
+  const hasActiveFilters = filterType !== "all" || filterDepartment !== "all";
+
   return (
-    <DataTable<EmailAccount, unknown>
-      columns={getColumns()}
-      data={filtered}
-      filterColumn="search"
-      initialColumnVisibility={{ search: false }}
-      getRowId={(row) => row.id}
-      onRowClick={(email) => router.push(`/admin/dashboard/emails/${email.id}`)}
-      toolbar={
-        <>
-          <Select value={filterDepartment} onValueChange={setFilterDepartment}>
-            <SelectTrigger className="w-full sm:w-[160px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los depto.</SelectItem>
-              {departments.map((d) => (
-                <SelectItem key={d} value={d}>{d}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="w-full sm:w-[140px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los tipos</SelectItem>
-              {availableTypes.map((t) => (
-                <SelectItem key={t} value={t}>{emailTypeLabel(t)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => { setFilterType("all"); setFilterDepartment("all"); }}
-          >
-            Limpiar filtros
-          </Button>
-        </>
-      }
-    />
+    <div className="space-y-8">
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <h2 className="text-sm font-semibold">Asignados</h2>
+            <p className="text-xs text-muted-foreground">{filteredAssigned.length} correo{filteredAssigned.length !== 1 ? "s" : ""}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={filterDepartment} onValueChange={setFilterDepartment}>
+              <SelectTrigger className="w-full sm:w-[160px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los depto.</SelectItem>
+                {departments.map((d) => (
+                  <SelectItem key={d} value={d}>{d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterType} onValueChange={setFilterType}>
+              <SelectTrigger className="w-full sm:w-[140px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los tipos</SelectItem>
+                {availableTypes.map((t) => (
+                  <SelectItem key={t} value={t}>{emailTypeLabel(t)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {hasActiveFilters && (
+              <Button type="button" variant="outline" onClick={() => { setFilterType("all"); setFilterDepartment("all"); }}>
+                Limpiar
+              </Button>
+            )}
+          </div>
+        </div>
+        {filteredAssigned.length === 0 ? (
+          <p className="text-muted-foreground rounded-lg border border-dashed p-6 text-center text-sm">
+            No hay correos asignados{hasActiveFilters ? " con esos filtros" : ""}.
+          </p>
+        ) : (
+          <DataTable<EmailAccount, unknown>
+            columns={columns}
+            data={filteredAssigned}
+            filterColumn="search"
+            initialColumnVisibility={{ search: false }}
+            getRowId={(row) => row.id}
+            onRowClick={(email) => router.push(`/admin/dashboard/emails/${email.id}`)}
+          />
+        )}
+      </div>
+
+      <div className="space-y-3">
+        <div>
+          <h2 className="text-sm font-semibold">Sin asignar</h2>
+          <p className="text-xs text-muted-foreground">{filteredUnassigned.length} correo{filteredUnassigned.length !== 1 ? "s" : ""} disponible{filteredUnassigned.length !== 1 ? "s" : ""}</p>
+        </div>
+        {filteredUnassigned.length === 0 ? (
+          <p className="text-muted-foreground rounded-lg border border-dashed p-6 text-center text-sm">
+            Todos los correos están asignados.
+          </p>
+        ) : (
+          <DataTable<EmailAccount, unknown>
+            columns={columns}
+            data={filteredUnassigned}
+            filterColumn="search"
+            initialColumnVisibility={{ search: false }}
+            getRowId={(row) => row.id}
+            onRowClick={(email) => router.push(`/admin/dashboard/emails/${email.id}`)}
+          />
+        )}
+      </div>
+    </div>
   );
 }

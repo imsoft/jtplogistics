@@ -92,20 +92,22 @@ export function PhonesTable() {
     "/api/admin/phones",
     "Error al cargar celulares"
   );
-  const [filterAssigned, setFilterAssigned] = useState("all");
   const [filterDepartment, setFilterDepartment] = useState("all");
 
+  const assigned = useMemo(() => phones.filter((p) => p.assignedToId), [phones]);
+  const unassigned = useMemo(() => phones.filter((p) => !p.assignedToId), [phones]);
+
   const departments = useMemo(
-    () => Array.from(new Set(phones.map((p) => p.department).filter(Boolean) as string[])).sort(),
-    [phones]
+    () => Array.from(new Set(assigned.map((p) => p.department).filter(Boolean) as string[])).sort(),
+    [assigned]
   );
 
-  const filtered = useMemo(() => phones.filter((p) => {
-    if (filterAssigned === "yes" && !p.assignedToId) return false;
-    if (filterAssigned === "no" && p.assignedToId) return false;
-    if (filterDepartment !== "all" && p.department !== filterDepartment) return false;
-    return true;
-  }), [phones, filterAssigned, filterDepartment]);
+  const filteredAssigned = useMemo(
+    () => assigned.filter((p) => filterDepartment === "all" || p.department === filterDepartment),
+    [assigned, filterDepartment]
+  );
+
+  const columns = useMemo(() => getColumns(), []);
 
   if (!isLoaded) return <p className="text-muted-foreground">Cargando…</p>;
   if (error) return <p className="text-destructive text-sm">{error}</p>;
@@ -118,45 +120,68 @@ export function PhonesTable() {
   }
 
   return (
-    <DataTable<PhoneDevice, unknown>
-      columns={getColumns()}
-      data={filtered}
-      filterColumn="search"
-      initialColumnVisibility={{ search: false }}
-      getRowId={(row) => row.id}
-      onRowClick={(phone) => router.push(`/admin/dashboard/phones/${phone.id}`)}
-      toolbar={
-        <>
-          <Select value={filterDepartment} onValueChange={setFilterDepartment}>
-            <SelectTrigger className="w-full sm:w-[160px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los depto.</SelectItem>
-              {departments.map((d) => (
-                <SelectItem key={d} value={d}>{d}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={filterAssigned} onValueChange={setFilterAssigned}>
-            <SelectTrigger className="w-full sm:w-[150px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Cualquier asignación</SelectItem>
-              <SelectItem value="yes">Asignado</SelectItem>
-              <SelectItem value="no">Sin asignar</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => { setFilterAssigned("all"); setFilterDepartment("all"); }}
-          >
-            Limpiar filtros
-          </Button>
-        </>
-      }
-    />
+    <div className="space-y-8">
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <h2 className="text-sm font-semibold">Asignados</h2>
+            <p className="text-xs text-muted-foreground">{filteredAssigned.length} celular{filteredAssigned.length !== 1 ? "es" : ""}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={filterDepartment} onValueChange={setFilterDepartment}>
+              <SelectTrigger className="w-full sm:w-[160px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los depto.</SelectItem>
+                {departments.map((d) => (
+                  <SelectItem key={d} value={d}>{d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {filterDepartment !== "all" && (
+              <Button type="button" variant="outline" onClick={() => setFilterDepartment("all")}>
+                Limpiar
+              </Button>
+            )}
+          </div>
+        </div>
+        {filteredAssigned.length === 0 ? (
+          <p className="text-muted-foreground rounded-lg border border-dashed p-6 text-center text-sm">
+            No hay celulares asignados{filterDepartment !== "all" ? " en ese departamento" : ""}.
+          </p>
+        ) : (
+          <DataTable<PhoneDevice, unknown>
+            columns={columns}
+            data={filteredAssigned}
+            filterColumn="search"
+            initialColumnVisibility={{ search: false }}
+            getRowId={(row) => row.id}
+            onRowClick={(phone) => router.push(`/admin/dashboard/phones/${phone.id}`)}
+          />
+        )}
+      </div>
+
+      <div className="space-y-3">
+        <div>
+          <h2 className="text-sm font-semibold">Sin asignar</h2>
+          <p className="text-xs text-muted-foreground">{unassigned.length} celular{unassigned.length !== 1 ? "es" : ""} disponible{unassigned.length !== 1 ? "s" : ""}</p>
+        </div>
+        {unassigned.length === 0 ? (
+          <p className="text-muted-foreground rounded-lg border border-dashed p-6 text-center text-sm">
+            Todos los celulares están asignados.
+          </p>
+        ) : (
+          <DataTable<PhoneDevice, unknown>
+            columns={columns}
+            data={unassigned}
+            filterColumn="search"
+            initialColumnVisibility={{ search: false }}
+            getRowId={(row) => row.id}
+            onRowClick={(phone) => router.push(`/admin/dashboard/phones/${phone.id}`)}
+          />
+        )}
+      </div>
+    </div>
   );
 }
