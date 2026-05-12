@@ -2,6 +2,7 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import { UserAppSidebar } from "@/components/dashboard/user-app-sidebar";
 import { NotificationBell } from "@/components/notification-bell";
 import { FloatingChat } from "@/components/floating-chat";
+import { CarrierOnboardingTour } from "@/components/dashboard/carrier-onboarding-tour";
 import { dashboardMainWithFloatingChatClassName } from "@/lib/dashboard-shell";
 
 export default function CarrierDashboardLayout({
@@ -24,6 +25,7 @@ export default function CarrierDashboardLayout({
         </header>
         <div className={dashboardMainWithFloatingChatClassName}>{children}</div>
       </SidebarInset>
+      <CarrierOnboardingTour />
     </SidebarProvider>
   );
 }
