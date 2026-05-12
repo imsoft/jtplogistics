@@ -14,6 +14,7 @@ export interface ResetPasswordFormData {
 
 export interface RegisterFormData {
   legalName: string;
+  rfc: string;
   name: string;
   phone: string;
   email: string;

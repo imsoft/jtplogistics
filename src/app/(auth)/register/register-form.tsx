@@ -26,6 +26,7 @@ export function RegisterForm() {
     const formData = new FormData(form);
     const data: RegisterFormData = {
       legalName: (formData.get("legalName") as string)?.trim() ?? "",
+      rfc: (formData.get("rfc") as string)?.trim() ?? "",
       name: (formData.get("name") as string)?.trim() ?? "",
       phone: (formData.get("phone") as string)?.trim() ?? "",
       email: (formData.get("email") as string)?.trim() ?? "",
@@ -63,6 +64,7 @@ export function RegisterForm() {
             // inicializamos con la razón social para que no quede vacío en perfil.
             commercialName: data.legalName,
             legalName: data.legalName,
+            rfc: data.rfc,
             contacts: [{ type: "phone", value: data.phone, label: "Teléfono" }],
           }),
         });
@@ -97,7 +99,18 @@ export function RegisterForm() {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="name">Nombre</Label>
+        <Label htmlFor="rfc">RFC</Label>
+        <Input
+          id="rfc"
+          name="rfc"
+          type="text"
+          autoComplete="off"
+          required
+          disabled={isLoading}
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="name">Contacto</Label>
         <Input
           id="name"
           name="name"

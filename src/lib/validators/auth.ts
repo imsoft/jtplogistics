@@ -21,7 +21,7 @@ export function validateLoginForm(data: LoginFormData): AuthValidationResult {
 
 export function validateRegisterForm(data: RegisterFormData): AuthValidationResult {
   const missingBase = !data.name?.trim() || !data.email?.trim() || !data.password || !data.confirmPassword;
-  const missingCarrierFields = !data.legalName?.trim() || !data.phone?.trim();
+  const missingCarrierFields = !data.legalName?.trim() || !data.phone?.trim() || !data.rfc?.trim();
   if (missingBase || missingCarrierFields) {
     return { success: false, error: "Completa todos los campos." };
   }
