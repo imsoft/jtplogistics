@@ -608,3 +608,16 @@ model Task {
 
   @@map("tasks")
 }
+
+// ---- App: configuración de textos de cotización (singleton) ----
+
+model QuoteConfig {
+  id            String   @id @default("default") @map("id")
+  bulletsJson   String   @default("") @map("bullets_json")
+  contractJson  String   @default("") @map("contract_json")
+  privacyJson   String   @default("") @map("privacy_json")
+  limitsJson    String   @default("") @map("limits_json")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("quote_config")
+}

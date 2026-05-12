@@ -1,29 +1,35 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import Link from "next/link";
+import { pdf } from "@react-pdf/renderer";
+import { Plus, Trash2, FileText, Loader2, Settings } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { getCarrierQuotesColumns } from "./carrier-quotes-columns";
-import { QuoteBuilderDialog } from "./quote-builder-dialog";
-import type { ActiveRoute, CarrierQuote, CarrierQuotesResponse } from "@/types/carrier-quote.types";
+import { QuotePdf } from "./quote-pdf";
+import type { ActiveRoute, CarrierQuote, CarrierQuotesResponse, QuoteRow } from "@/types/carrier-quote.types";
+import type { QuoteTermsJson } from "./quote-pdf";
 import { formatMxn } from "@/lib/utils";
 import { fuzzyMatch } from "@/lib/search";
+
+// ── types ────────────────────────────────────────────────────────────────────
 
 interface UnitTypeOption { value: string; label: string; }
 
 interface CarrierQuotesTableProps {
   apiEndpoint?: string;
+  showTermsLink?: boolean;
 }
+
+// ── helpers ──────────────────────────────────────────────────────────────────
 
 async function fetchQuotes(endpoint: string, routeId?: string): Promise<CarrierQuotesResponse> {
   const url = routeId ? `${endpoint}?routeId=${routeId}` : endpoint;
@@ -33,30 +39,57 @@ async function fetchQuotes(endpoint: string, routeId?: string): Promise<CarrierQ
 }
 
 function computeStats(quotes: CarrierQuote[]) {
-  const targets = quotes
-    .map((q) => q.carrierTarget)
-    .filter((t): t is number => t != null && !Number.isNaN(t));
-  if (targets.length === 0) return { avg: null, venta: null, monto: null };
+  const targets = quotes.map((q) => q.carrierTarget).filter((t): t is number => t != null && !Number.isNaN(t));
+  if (targets.length === 0) return { avg: null, venta: null };
   const avg = targets.reduce((a, b) => a + b, 0) / targets.length;
-  const venta = avg * 1.30;
-  const monto = venta * 1.16;
-  return { avg, venta, monto };
+  return { avg, venta: avg * 1.3 };
 }
 
-export function CarrierQuotesTable({ apiEndpoint = "/api/admin/carrier-quotes" }: CarrierQuotesTableProps) {
+function defaultValidUntil() {
+  const d = new Date();
+  d.setMonth(d.getMonth() + 3);
+  d.setDate(new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate());
+  return d.toISOString().split("T")[0];
+}
+
+function generateQuoteNumber() {
+  const n = new Date();
+  const pad = (x: number) => String(x).padStart(2, "0");
+  return `JTP-${n.getFullYear()}${pad(n.getMonth() + 1)}${pad(n.getDate())}-001`;
+}
+
+// ── component ─────────────────────────────────────────────────────────────────
+
+export function CarrierQuotesTable({
+  apiEndpoint = "/api/admin/carrier-quotes",
+  showTermsLink = false,
+}: CarrierQuotesTableProps) {
+  // ── Explorer state ──
   const [routes, setRoutes] = useState<ActiveRoute[]>([]);
   const [carriers, setCarriers] = useState<CarrierQuote[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoadingCarriers, setIsLoadingCarriers] = useState(false);
   const [unitTypes, setUnitTypes] = useState<UnitTypeOption[]>([]);
-
-  const [selectedUnitType, setSelectedUnitType] = useState<string>("");
-  const [selectedOrigin, setSelectedOrigin] = useState<string>("");
-  const [selectedDestination, setSelectedDestination] = useState<string>("");
-  const [search, setSearch] = useState<string>("");
-  const [filterPrice, setFilterPrice] = useState<string>("all");
+  const [selectedUnitType, setSelectedUnitType] = useState("");
+  const [selectedOrigin, setSelectedOrigin] = useState("");
+  const [selectedDestination, setSelectedDestination] = useState("");
+  const [search, setSearch] = useState("");
+  const [filterPrice, setFilterPrice] = useState("all");
   const [finalPrice, setFinalPrice] = useState<number | null>(null);
 
+  // ── Quote builder state ──
+  const [quoteNumber, setQuoteNumber] = useState(generateQuoteNumber);
+  const [company, setCompany] = useState("");
+  const [contact, setContact] = useState("");
+  const [validUntil, setValidUntil] = useState(defaultValidUntil);
+  const [quoteRows, setQuoteRows] = useState<QuoteRow[]>([]);
+  const [addRouteId, setAddRouteId] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [quoteError, setQuoteError] = useState<string | null>(null);
+
+  const builderRef = useRef<HTMLDivElement>(null);
+
+  // ── Load data ──
   const loadRoutes = useCallback(async () => {
     const [data, utRes] = await Promise.all([
       fetchQuotes(apiEndpoint),
@@ -69,19 +102,13 @@ export function CarrierQuotesTable({ apiEndpoint = "/api/admin/carrier-quotes" }
 
   useEffect(() => { loadRoutes(); }, [loadRoutes]);
 
-  // Unique unit types present in active routes
-  const availableUnitTypes = useMemo(
-    () => {
-      const vals = Array.from(new Set(routes.map((r) => r.unitType)));
-      return vals.map((v) => ({
-        value: v,
-        label: unitTypes.find((u) => u.value === v)?.label ?? v,
-      }));
-    },
-    [routes, unitTypes]
-  );
+  // ── Derived: unit types present in routes ──
+  const availableUnitTypes = useMemo(() => {
+    const vals = Array.from(new Set(routes.map((r) => r.unitType)));
+    return vals.map((v) => ({ value: v, label: unitTypes.find((u) => u.value === v)?.label ?? v }));
+  }, [routes, unitTypes]);
 
-  // Routes filtered by unit type
+  // ── Derived: filtered routes by unit type ──
   const filteredByUnit = useMemo(
     () => selectedUnitType ? routes.filter((r) => r.unitType === selectedUnitType) : routes,
     [routes, selectedUnitType]
@@ -91,12 +118,10 @@ export function CarrierQuotesTable({ apiEndpoint = "/api/admin/carrier-quotes" }
     () => Array.from(new Set(filteredByUnit.map((r) => r.origin))).sort(),
     [filteredByUnit]
   );
-
   const destinations = useMemo(
     () => filteredByUnit.filter((r) => r.origin === selectedOrigin).map((r) => r.destination).sort(),
     [filteredByUnit, selectedOrigin]
   );
-
   const selectedRoute = useMemo(
     () => filteredByUnit.find((r) => r.origin === selectedOrigin && r.destination === selectedDestination) ?? null,
     [filteredByUnit, selectedOrigin, selectedDestination]
@@ -104,6 +129,7 @@ export function CarrierQuotesTable({ apiEndpoint = "/api/admin/carrier-quotes" }
   const selectedRouteId = selectedRoute?.id ?? null;
   const routeTarget = selectedRoute?.target ?? null;
 
+  // ── Load carriers when route changes ──
   useEffect(() => {
     setFinalPrice(null);
     if (!selectedRouteId) { setCarriers([]); return; }
@@ -114,117 +140,146 @@ export function CarrierQuotesTable({ apiEndpoint = "/api/admin/carrier-quotes" }
     });
   }, [selectedRouteId, apiEndpoint]);
 
-  function handleUnitTypeChange(value: string) {
-    setSelectedUnitType(value);
-    setSelectedOrigin("");
-    setSelectedDestination("");
-    setCarriers([]);
-    setSearch("");
-    setFilterPrice("all");
+  // ── Handlers ──
+  function handleUnitTypeChange(v: string) {
+    setSelectedUnitType(v); setSelectedOrigin(""); setSelectedDestination(""); setCarriers([]); setSearch(""); setFilterPrice("all");
   }
-
-  function handleOriginChange(value: string) {
-    setSelectedOrigin(value);
-    setSelectedDestination("");
-    setCarriers([]);
-    setSearch("");
-    setFilterPrice("all");
+  function handleOriginChange(v: string) {
+    setSelectedOrigin(v); setSelectedDestination(""); setCarriers([]); setSearch(""); setFilterPrice("all");
   }
-
   function handleClear() {
-    setSelectedUnitType("");
-    setSelectedOrigin("");
-    setSelectedDestination("");
-    setCarriers([]);
-    setSearch("");
-    setFilterPrice("all");
+    setSelectedUnitType(""); setSelectedOrigin(""); setSelectedDestination(""); setCarriers([]); setSearch(""); setFilterPrice("all");
   }
 
   const columns = useMemo(() => getCarrierQuotesColumns(routeTarget), [routeTarget]);
   const stats = useMemo(() => computeStats(carriers), [carriers]);
 
   const filteredCarriers = useMemo(() => {
-    let result = carriers;
+    let r = carriers;
     const q = search.trim();
-    if (q) {
-      result = result.filter(
-        (c) => fuzzyMatch(c.name, q) || fuzzyMatch(c.email, q) || fuzzyMatch(c.company ?? "", q)
-      );
-    }
+    if (q) r = r.filter((c) => fuzzyMatch(c.name, q) || fuzzyMatch(c.email, q) || fuzzyMatch(c.company ?? "", q));
     if (filterPrice !== "all" && routeTarget != null) {
-      result = result.filter((c) => {
+      r = r.filter((c) => {
         if (c.carrierTarget == null) return false;
-        if (filterPrice === "below") return c.carrierTarget < routeTarget;
-        if (filterPrice === "above") return c.carrierTarget > routeTarget;
-        return true;
+        return filterPrice === "below" ? c.carrierTarget < routeTarget : c.carrierTarget > routeTarget;
       });
     }
-    return result;
+    return r;
   }, [carriers, search, filterPrice, routeTarget]);
 
-  if (!isLoaded) {
-    return <p className="text-muted-foreground">Cargando…</p>;
+  // ── Quote builder helpers ──
+  const usedRouteKeys = useMemo(
+    () => new Set(quoteRows.map((r) => `${r.origin}||${r.destination}`)),
+    [quoteRows]
+  );
+  const routesAvailableToAdd = useMemo(
+    () => routes.filter((r) => !usedRouteKeys.has(`${r.origin}||${r.destination}`)),
+    [routes, usedRouteKeys]
+  );
+
+  function handleAddRoute() {
+    if (!addRouteId) return;
+    const route = routes.find((r) => r.id === addRouteId);
+    if (!route) return;
+    const label = unitTypes.find((u) => u.value === route.unitType)?.label ?? route.unitType;
+    setQuoteRows((prev) => [...prev, {
+      origin: route.origin,
+      destination: route.destination,
+      destinationState: route.destinationState,
+      cost: 0,
+      unitLabel: label,
+    }]);
+    setAddRouteId("");
+    setQuoteError(null);
   }
 
+  function addCurrentRouteToQuote() {
+    if (!selectedRoute) return;
+    const key = `${selectedRoute.origin}||${selectedRoute.destination}`;
+    if (usedRouteKeys.has(key)) return;
+    const label = unitTypes.find((u) => u.value === selectedRoute.unitType)?.label ?? selectedRoute.unitType;
+    const cost = finalPrice ?? stats.venta ?? 0;
+    setQuoteRows((prev) => [...prev, {
+      origin: selectedRoute.origin,
+      destination: selectedRoute.destination,
+      destinationState: selectedRoute.destinationState,
+      cost,
+      unitLabel: label,
+    }]);
+    setQuoteError(null);
+    builderRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function removeRow(i: number) { setQuoteRows((prev) => prev.filter((_, idx) => idx !== i)); }
+  function updateCost(i: number, v: string) {
+    const num = parseFloat(v.replace(/[^0-9.]/g, "")) || 0;
+    setQuoteRows((prev) => prev.map((r, idx) => idx === i ? { ...r, cost: num } : r));
+  }
+
+  async function handleDownloadPdf() {
+    setQuoteError(null);
+    if (!company.trim()) { setQuoteError("Ingresa el nombre de la compañía."); return; }
+    if (!contact.trim()) { setQuoteError("Ingresa el nombre del contacto."); return; }
+    if (quoteRows.length === 0) { setQuoteError("Agrega al menos una ruta."); return; }
+    setIsGenerating(true);
+    try {
+      const termsRes = await fetch("/api/admin/quote-config");
+      const termsJson: QuoteTermsJson = termsRes.ok ? await termsRes.json() : { bulletsJson: "", contractJson: "", privacyJson: "", limitsJson: "" };
+      const logoUrl = window.location.origin + "/images/logo/jtp-logistics.png";
+      const blob = await pdf(
+        <QuotePdf data={{ quoteNumber, company, contact, validUntil, rows: quoteRows }} logoUrl={logoUrl} termsJson={termsJson} />
+      ).toBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `cotizacion-${quoteNumber}.pdf`; a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error(e);
+      setQuoteError("Error al generar el PDF.");
+    } finally {
+      setIsGenerating(false);
+    }
+  }
+
+  if (!isLoaded) return <p className="text-muted-foreground">Cargando…</p>;
+
   return (
-    <div className="space-y-6">
-      {/* Filtros */}
+    <div className="space-y-8">
+      {/* ─── SECCIÓN 1: FILTROS ─────────────────────────────────────────────── */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_auto]">
         {availableUnitTypes.length > 1 && (
           <div className="space-y-2">
             <Label className="text-xs font-medium">Tipo de unidad</Label>
             <Select value={selectedUnitType} onValueChange={handleUnitTypeChange}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Todos" />
-              </SelectTrigger>
+              <SelectTrigger className="w-full"><SelectValue placeholder="Todos" /></SelectTrigger>
               <SelectContent>
-                {availableUnitTypes.map((u) => (
-                  <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>
-                ))}
+                {availableUnitTypes.map((u) => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
         )}
-
         <div className="space-y-2">
           <Label className="text-xs font-medium">Origen</Label>
           <Select value={selectedOrigin} onValueChange={handleOriginChange}>
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {origins.map((o) => (
-                <SelectItem key={o} value={o}>{o}</SelectItem>
-              ))}
-            </SelectContent>
+            <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+            <SelectContent>{origins.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
           </Select>
         </div>
-
         <div className="space-y-2">
           <Label className="text-xs font-medium">Destino</Label>
           <Select value={selectedDestination} onValueChange={setSelectedDestination} disabled={!selectedOrigin}>
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {destinations.map((d) => (
-                <SelectItem key={d} value={d}>{d}</SelectItem>
-              ))}
-            </SelectContent>
+            <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+            <SelectContent>{destinations.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
           </Select>
         </div>
-
         <div className="space-y-2">
           <Label className="text-xs font-medium">Buscar</Label>
           <Input value={search} onChange={(e) => setSearch(e.target.value)} disabled={!selectedRouteId} />
         </div>
-
         <div className="space-y-2">
           <Label className="text-xs font-medium">Target vs. ruta</Label>
           <Select value={filterPrice} onValueChange={setFilterPrice} disabled={!selectedRouteId || routeTarget == null}>
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
+            <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos</SelectItem>
               <SelectItem value="below">Por debajo del target</SelectItem>
@@ -232,15 +287,12 @@ export function CarrierQuotesTable({ apiEndpoint = "/api/admin/carrier-quotes" }
             </SelectContent>
           </Select>
         </div>
-
         <div className="self-end">
-          <Button type="button" variant="outline" onClick={handleClear}>
-            Limpiar
-          </Button>
+          <Button type="button" variant="outline" onClick={handleClear}>Limpiar</Button>
         </div>
       </div>
 
-      {/* Resultados */}
+      {/* ─── SECCIÓN 2: TRANSPORTISTAS ──────────────────────────────────────── */}
       {!selectedRouteId ? (
         <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
           Selecciona una ruta para ver los transportistas disponibles.
@@ -253,26 +305,14 @@ export function CarrierQuotesTable({ apiEndpoint = "/api/admin/carrier-quotes" }
         </p>
       ) : (
         <div className="space-y-4">
-          <DataTable<CarrierQuote, unknown>
-            columns={columns}
-            data={filteredCarriers}
-            getRowId={(row) => row.id}
-            filterColumn=""
-          />
+          <DataTable<CarrierQuote, unknown> columns={columns} data={filteredCarriers} getRowId={(row) => row.id} filterColumn="" />
 
           {stats.avg != null && (
             <Card>
               <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                    Resumen de targets
-                  </CardTitle>
-                  <QuoteBuilderDialog
-                    routes={routes}
-                    preselectedRoute={selectedRoute}
-                    defaultCost={finalPrice ?? stats.venta ?? undefined}
-                  />
-                </div>
+                <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                  Resumen de targets
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4 sm:grid-cols-3">
@@ -287,9 +327,7 @@ export function CarrierQuotesTable({ apiEndpoint = "/api/admin/carrier-quotes" }
                   <div className="rounded-lg bg-muted/50 p-4 space-y-1">
                     <p className="text-muted-foreground text-xs font-medium">Precio final</p>
                     <Input
-                      type="number"
-                      min="0"
-                      step="100"
+                      type="number" min="0" step="100"
                       value={finalPrice ?? ""}
                       onChange={(e) => setFinalPrice(e.target.value ? parseFloat(e.target.value) : null)}
                       placeholder={stats.venta != null ? `$${formatMxn(stats.venta)}` : "0.00"}
@@ -297,18 +335,150 @@ export function CarrierQuotesTable({ apiEndpoint = "/api/admin/carrier-quotes" }
                     />
                   </div>
                 </div>
+                {selectedRoute && !usedRouteKeys.has(`${selectedRoute.origin}||${selectedRoute.destination}`) && (
+                  <div className="mt-3 flex justify-end">
+                    <Button variant="outline" size="sm" onClick={addCurrentRouteToQuote}>
+                      <Plus className="size-3.5" />
+                      Agregar ruta a cotización
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
         </div>
       )}
 
-      {/* Builder always accessible even without active route */}
-      {!selectedRouteId && routes.length > 0 && (
-        <div className="flex justify-end">
-          <QuoteBuilderDialog routes={routes} />
+      {/* ─── SECCIÓN 3: COTIZACIÓN ──────────────────────────────────────────── */}
+      <div ref={builderRef} className="space-y-6 pt-2">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <Separator className="w-5" />
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                Cotización PDF
+              </h2>
+              <Separator className="flex-1" />
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Completa los datos y agrega rutas para generar el PDF para tu cliente.
+            </p>
+          </div>
+          {showTermsLink && (
+            <Button variant="ghost" size="sm" asChild className="shrink-0 text-muted-foreground">
+              <Link href="/admin/dashboard/quotes/terms">
+                <Settings className="size-3.5" />
+                Textos legales
+              </Link>
+            </Button>
+          )}
         </div>
-      )}
+
+        {/* Datos del cliente */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="qb-num">No. Cotización</Label>
+            <Input id="qb-num" value={quoteNumber} onChange={(e) => setQuoteNumber(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="qb-vigencia">Vigencia</Label>
+            <Input id="qb-vigencia" type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="qb-company">Compañía</Label>
+            <Input id="qb-company" value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Empresa cliente" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="qb-contact">Contacto</Label>
+            <Input id="qb-contact" value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Nombre del contacto" />
+          </div>
+        </div>
+
+        {/* Rutas de la cotización */}
+        <div className="space-y-3">
+          <Label>Rutas incluidas</Label>
+
+          {quoteRows.length > 0 && (
+            <div className="rounded-lg border overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50 border-b">
+                  <tr>
+                    <th className="text-left px-3 py-2 font-medium text-xs">Origen</th>
+                    <th className="text-left px-3 py-2 font-medium text-xs">Destino</th>
+                    <th className="text-left px-3 py-2 font-medium text-xs hidden sm:table-cell">Estado</th>
+                    <th className="text-left px-3 py-2 font-medium text-xs">Costo ($)</th>
+                    <th className="text-left px-3 py-2 font-medium text-xs hidden md:table-cell">Unidad</th>
+                    <th className="px-2 py-2 w-8" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {quoteRows.map((row, i) => (
+                    <tr key={i} className="border-t">
+                      <td className="px-3 py-2 text-sm">{row.origin}</td>
+                      <td className="px-3 py-2 text-sm">{row.destination}</td>
+                      <td className="px-3 py-2 text-sm text-muted-foreground hidden sm:table-cell">{row.destinationState ?? "—"}</td>
+                      <td className="px-3 py-2">
+                        <Input
+                          type="number" min="0" step="100"
+                          value={row.cost || ""}
+                          onChange={(e) => updateCost(i, e.target.value)}
+                          className="w-28 h-8" placeholder="0.00"
+                        />
+                      </td>
+                      <td className="px-3 py-2 text-xs text-muted-foreground hidden md:table-cell">{row.unitLabel}</td>
+                      <td className="px-2 py-2">
+                        <Button variant="ghost" size="icon" className="size-7" onClick={() => removeRow(i)}>
+                          <Trash2 className="size-3.5 text-destructive" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Agregar ruta */}
+          {routesAvailableToAdd.length > 0 && (
+            <div className="flex gap-2">
+              <Select value={addRouteId} onValueChange={setAddRouteId}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Seleccionar ruta para agregar…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {routesAvailableToAdd.map((r) => {
+                    const label = unitTypes.find((u) => u.value === r.unitType)?.label ?? r.unitType;
+                    return (
+                      <SelectItem key={r.id} value={r.id}>
+                        {r.origin} → {r.destination} ({label})
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+              <Button type="button" size="icon" onClick={handleAddRoute} disabled={!addRouteId} title="Agregar ruta">
+                <Plus className="size-4" />
+              </Button>
+            </div>
+          )}
+
+          {quoteRows.length === 0 && routesAvailableToAdd.length === 0 && (
+            <p className="text-sm text-muted-foreground">No hay rutas activas disponibles.</p>
+          )}
+          {quoteRows.length === 0 && routesAvailableToAdd.length > 0 && (
+            <p className="text-xs text-muted-foreground">Selecciona una ruta y pulsa el ícono <strong>+</strong> para agregarla.</p>
+          )}
+        </div>
+
+        {quoteError && <p className="text-sm text-destructive">{quoteError}</p>}
+
+        <div className="flex justify-end pb-4">
+          <Button onClick={handleDownloadPdf} disabled={isGenerating} size="lg">
+            {isGenerating ? <Loader2 className="size-4 animate-spin" /> : <FileText className="size-4" />}
+            {isGenerating ? "Generando PDF…" : "Descargar cotización PDF"}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

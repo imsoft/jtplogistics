@@ -10,16 +10,13 @@ export default function CotizadorPage() {
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
       <div className="min-w-0">
-        <h1 className="page-heading">
-          Cotizador
-        </h1>
+        <h1 className="page-heading">Cotizador</h1>
         <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
-          Filtra por origen y destino para ver los transportistas que tienen
-          esa ruta y su target. Al final verás el promedio, venta y monto.
+          Filtra por ruta, consulta los transportistas y genera cotizaciones PDF para tus clientes.
         </p>
       </div>
       <Separator />
-      <CarrierQuotesTable />
+      <CarrierQuotesTable showTermsLink />
     </div>
   );
 }
