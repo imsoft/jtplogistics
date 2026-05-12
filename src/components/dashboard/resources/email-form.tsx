@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/select";
 import { EmployeeMultiSelect } from "./employee-multiselect";
 import { EMAIL_ACCOUNT_TYPES } from "@/lib/constants/email-type";
-import { DEPARTMENTS } from "@/lib/constants/department";
 import type { EmailAccount, EmailFormData } from "@/types/resources.types";
 
 interface EmailFormProps {
@@ -35,14 +34,13 @@ export function EmailForm({
   const [type, setType] = useState(initialValues.type ?? "");
   const [email, setEmail] = useState(initialValues.email ?? "");
   const [password, setPassword] = useState(initialValues.password ?? "");
-  const [department, setDepartment] = useState(initialValues.department ?? "");
   const [assigneeIds, setAssigneeIds] = useState<string[]>(
     initialValues.assignees?.map((a) => a.id) ?? []
   );
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSubmit({ type, email, password, department, assigneeIds });
+    onSubmit({ type, email, password, assigneeIds });
   }
 
   return (
@@ -80,20 +78,6 @@ export function EmailForm({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-        </div>
-        <div className="space-y-2">
-          <Label>Departamento</Label>
-          <Select value={department || "__none__"} onValueChange={(v) => setDepartment(v === "__none__" ? "" : v)}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Sin departamento" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__none__">Sin departamento</SelectItem>
-              {DEPARTMENTS.map((d) => (
-                <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
         <div className="sm:col-span-2">
           <EmployeeMultiSelect

@@ -441,7 +441,6 @@ model Phone {
   password       String?       @map("password")
   imei           String?       @map("imei")
   color          String?       @map("color")
-  department     String?       @map("department")
   assignedToId   String?       @map("assigned_to_id")
   assignedTo     User?         @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
   emailAccountId String?       @map("email_account_id")
@@ -453,12 +452,11 @@ model Phone {
 }
 
 model EmailAccount {
-  id         String             @id @default(cuid()) @map("id")
-  type       String             @map("type")
-  email      String             @map("email")
-  password   String?            @map("password")
-  department String?            @map("department")
-  assignees  EmailAccountUser[]
+  id        String             @id @default(cuid()) @map("id")
+  type      String             @map("type")
+  email     String             @map("email")
+  password  String?            @map("password")
+  assignees EmailAccountUser[]
   laptops    Laptop[]           @relation("LaptopEmailAccount")
   phones     Phone[]            @relation("PhoneEmailAccount")
   createdAt  DateTime           @default(now()) @map("created_at")

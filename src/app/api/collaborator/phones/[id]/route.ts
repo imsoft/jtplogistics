@@ -17,7 +17,13 @@ export async function GET(
     const phone = await prisma.phone.findUnique({
       where: { id },
       include: {
-        assignedTo: { select: { id: true, name: true } },
+        assignedTo: {
+          select: {
+            id: true,
+            name: true,
+            employeeProfile: { select: { department: true } },
+          },
+        },
         emailAccount: { select: { id: true, email: true } },
       },
     });
@@ -41,9 +47,11 @@ export async function GET(
       password: phone.password,
       imei: phone.imei,
       color: phone.color,
-      department: phone.department,
+      department: phone.assignedTo?.employeeProfile?.department ?? null,
       assignedToId: phone.assignedToId,
-      assignedTo: phone.assignedTo,
+      assignedTo: phone.assignedTo
+        ? { id: phone.assignedTo.id, name: phone.assignedTo.name }
+        : null,
       emailAccountId: phone.emailAccountId,
       emailAccount: phone.emailAccount,
       createdAt: phone.createdAt.toISOString(),

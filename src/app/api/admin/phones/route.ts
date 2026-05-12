@@ -7,7 +7,13 @@ export function GET() {
     const phones = await prisma.phone.findMany({
       orderBy: { createdAt: "desc" },
       include: {
-        assignedTo: { select: { id: true, name: true } },
+        assignedTo: {
+          select: {
+            id: true,
+            name: true,
+            employeeProfile: { select: { department: true } },
+          },
+        },
         emailAccount: { select: { id: true, email: true } },
       },
     });
@@ -19,9 +25,11 @@ export function GET() {
         password: p.password,
         imei: p.imei,
         color: p.color,
-        department: p.department,
+        department: p.assignedTo?.employeeProfile?.department ?? null,
         assignedToId: p.assignedToId,
-        assignedTo: p.assignedTo,
+        assignedTo: p.assignedTo
+          ? { id: p.assignedTo.id, name: p.assignedTo.name }
+          : null,
         emailAccountId: p.emailAccountId,
         emailAccount: p.emailAccount,
         createdAt: p.createdAt.toISOString(),
@@ -33,13 +41,12 @@ export function GET() {
 export function POST(request: Request) {
   return adminHandler(async (session) => {
     const body = await request.json();
-    const { name, phoneNumber, password, imei, color, department, assignedToId, emailAccountId } = body as {
+    const { name, phoneNumber, password, imei, color, assignedToId, emailAccountId } = body as {
       name: string;
       phoneNumber?: string;
       password?: string;
       imei?: string;
       color?: string;
-      department?: string;
       assignedToId?: string;
       emailAccountId?: string;
     };
@@ -55,7 +62,6 @@ export function POST(request: Request) {
         password: password || null,
         imei: imei || null,
         color: color || null,
-        department: department || null,
         assignedToId: assignedToId || null,
         emailAccountId: emailAccountId || null,
       },

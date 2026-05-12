@@ -31,7 +31,17 @@ export async function GET(
     const account = await prisma.emailAccount.findUnique({
       where: { id },
       include: {
-        assignees: { include: { user: { select: { id: true, name: true } } } },
+        assignees: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                employeeProfile: { select: { department: true } },
+              },
+            },
+          },
+        },
       },
     });
     if (!account) return Response.json({ error: "No encontrado" }, { status: 404 });
@@ -52,7 +62,7 @@ export async function GET(
       type: account.type,
       email: account.email,
       password: account.password,
-      department: account.department,
+      department: account.assignees[0]?.user?.employeeProfile?.department ?? null,
       assignees: account.assignees.map((a) => ({ id: a.user.id, name: a.user.name })),
       createdAt: account.createdAt.toISOString(),
     });
@@ -76,11 +86,10 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
-    const { type, email, password, department, assigneeIds } = body as {
+    const { type, email, password, assigneeIds } = body as {
       type?: string;
       email?: string;
       password?: string;
-      department?: string | null;
       assigneeIds?: string[];
     };
 
@@ -93,7 +102,6 @@ export async function PATCH(
         ...(type !== undefined && { type }),
         ...(email !== undefined && { email }),
         ...(password !== undefined && { password: password || null }),
-        ...(department !== undefined && { department: department || null }),
       },
     });
 

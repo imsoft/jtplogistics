@@ -17,7 +17,17 @@ export async function GET() {
     const emails = await prisma.emailAccount.findMany({
       orderBy: { createdAt: "desc" },
       include: {
-        assignees: { include: { user: { select: { id: true, name: true } } } },
+        assignees: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                employeeProfile: { select: { department: true } },
+              },
+            },
+          },
+        },
       },
     });
 
@@ -27,7 +37,7 @@ export async function GET() {
         type: e.type,
         email: e.email,
         password: e.password,
-        department: e.department,
+        department: e.assignees[0]?.user?.employeeProfile?.department ?? null,
         assignees: e.assignees.map((a) => ({ id: a.user.id, name: a.user.name })),
         createdAt: e.createdAt.toISOString(),
       }))
@@ -53,11 +63,10 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { type, email, password, department, assigneeIds } = body as {
+    const { type, email, password, assigneeIds } = body as {
       type: string;
       email: string;
       password?: string;
-      department?: string;
       assigneeIds?: string[];
     };
 
@@ -70,7 +79,6 @@ export async function POST(request: Request) {
         type,
         email,
         password: password || null,
-        department: department || null,
         assignees: assigneeIds?.length
           ? { create: assigneeIds.map((userId) => ({ userId })) }
           : undefined,

@@ -145,7 +145,6 @@ export interface PhoneFormData {
   password: string;
   imei: string;
   color: string;
-  department: string;
   assignedToId: string;
   emailAccountId: string;
 }
@@ -164,6 +163,5 @@ export interface EmailFormData {
   type: string;
   email: string;
   password: string;
-  department: string;
   assigneeIds: string[];
 }
