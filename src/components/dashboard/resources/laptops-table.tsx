@@ -1,19 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAdminFetch } from "@/hooks/use-admin-fetch";
 import { type ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
-import { Button } from "@/components/ui/button";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import type { Laptop } from "@/types/resources.types";
 
 function getColumns(): ColumnDef<Laptop>[] {
@@ -64,13 +56,11 @@ export function LaptopsTable() {
     "/api/admin/laptops",
     "Error al cargar laptops"
   );
-  const [filterAssigned, setFilterAssigned] = useState("all");
 
-  const filtered = useMemo(() => laptops.filter((l) => {
-    if (filterAssigned === "yes" && !l.assignedToId) return false;
-    if (filterAssigned === "no" && l.assignedToId) return false;
-    return true;
-  }), [laptops, filterAssigned]);
+  const assigned = useMemo(() => laptops.filter((l) => l.assignedToId), [laptops]);
+  const unassigned = useMemo(() => laptops.filter((l) => !l.assignedToId), [laptops]);
+
+  const columns = useMemo(() => getColumns(), []);
 
   if (!isLoaded) return <p className="text-muted-foreground">Cargando…</p>;
   if (error) return <p className="text-destructive text-sm">{error}</p>;
@@ -83,34 +73,48 @@ export function LaptopsTable() {
   }
 
   return (
-    <DataTable<Laptop, unknown>
-      columns={getColumns()}
-      data={filtered}
-      filterColumn="search"
-      initialColumnVisibility={{ search: false }}
-      getRowId={(row) => row.id}
-      onRowClick={(laptop) => router.push(`/admin/dashboard/laptops/${laptop.id}`)}
-      toolbar={
-        <>
-          <Select value={filterAssigned} onValueChange={setFilterAssigned}>
-            <SelectTrigger className="w-full sm:w-[150px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Cualquier asignación</SelectItem>
-              <SelectItem value="yes">Asignado</SelectItem>
-              <SelectItem value="no">Sin asignar</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setFilterAssigned("all")}
-          >
-            Limpiar filtros
-          </Button>
-        </>
-      }
-    />
+    <div className="space-y-8">
+      <div className="space-y-3">
+        <div>
+          <h2 className="text-sm font-semibold">Asignadas</h2>
+          <p className="text-xs text-muted-foreground">{assigned.length} laptop{assigned.length !== 1 ? "s" : ""}</p>
+        </div>
+        {assigned.length === 0 ? (
+          <p className="text-muted-foreground rounded-lg border border-dashed p-6 text-center text-sm">
+            No hay laptops asignadas.
+          </p>
+        ) : (
+          <DataTable<Laptop, unknown>
+            columns={columns}
+            data={assigned}
+            filterColumn="search"
+            initialColumnVisibility={{ search: false }}
+            getRowId={(row) => row.id}
+            onRowClick={(laptop) => router.push(`/admin/dashboard/laptops/${laptop.id}`)}
+          />
+        )}
+      </div>
+
+      <div className="space-y-3">
+        <div>
+          <h2 className="text-sm font-semibold">Sin asignar</h2>
+          <p className="text-xs text-muted-foreground">{unassigned.length} laptop{unassigned.length !== 1 ? "s" : ""} disponible{unassigned.length !== 1 ? "s" : ""}</p>
+        </div>
+        {unassigned.length === 0 ? (
+          <p className="text-muted-foreground rounded-lg border border-dashed p-6 text-center text-sm">
+            Todas las laptops están asignadas.
+          </p>
+        ) : (
+          <DataTable<Laptop, unknown>
+            columns={columns}
+            data={unassigned}
+            filterColumn="search"
+            initialColumnVisibility={{ search: false }}
+            getRowId={(row) => row.id}
+            onRowClick={(laptop) => router.push(`/admin/dashboard/laptops/${laptop.id}`)}
+          />
+        )}
+      </div>
+    </div>
   );
 }
