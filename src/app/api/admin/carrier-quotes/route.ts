@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
 
     const routes = await prisma.route.findMany({
       where: { status: "active" },
-      select: { id: true, origin: true, destination: true, target: true },
+      select: { id: true, origin: true, destination: true, destinationState: true, unitType: true, target: true },
       orderBy: [{ origin: "asc" }, { destination: "asc" }],
     });
 

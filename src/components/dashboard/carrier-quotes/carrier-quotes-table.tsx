@@ -14,14 +14,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getCarrierQuotesColumns } from "./carrier-quotes-columns";
+import { QuoteBuilderDialog } from "./quote-builder-dialog";
 import type { ActiveRoute, CarrierQuote, CarrierQuotesResponse } from "@/types/carrier-quote.types";
 import { formatMxn } from "@/lib/utils";
 import { fuzzyMatch } from "@/lib/search";
 
-async function fetchQuotes(routeId?: string): Promise<CarrierQuotesResponse> {
-  const url = routeId
-    ? `/api/admin/carrier-quotes?routeId=${routeId}`
-    : "/api/admin/carrier-quotes";
+interface UnitTypeOption { value: string; label: string; }
+
+interface CarrierQuotesTableProps {
+  apiEndpoint?: string;
+}
+
+async function fetchQuotes(endpoint: string, routeId?: string): Promise<CarrierQuotesResponse> {
+  const url = routeId ? `${endpoint}?routeId=${routeId}` : endpoint;
   const res = await fetch(url);
   if (!res.ok) return { routes: [], carriers: [] };
   return res.json();
@@ -38,70 +43,95 @@ function computeStats(quotes: CarrierQuote[]) {
   return { avg, venta, monto };
 }
 
-export function CarrierQuotesTable() {
+export function CarrierQuotesTable({ apiEndpoint = "/api/admin/carrier-quotes" }: CarrierQuotesTableProps) {
   const [routes, setRoutes] = useState<ActiveRoute[]>([]);
   const [carriers, setCarriers] = useState<CarrierQuote[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoadingCarriers, setIsLoadingCarriers] = useState(false);
+  const [unitTypes, setUnitTypes] = useState<UnitTypeOption[]>([]);
 
+  const [selectedUnitType, setSelectedUnitType] = useState<string>("");
   const [selectedOrigin, setSelectedOrigin] = useState<string>("");
   const [selectedDestination, setSelectedDestination] = useState<string>("");
   const [search, setSearch] = useState<string>("");
   const [filterPrice, setFilterPrice] = useState<string>("all");
 
-  // Load routes on mount
   const loadRoutes = useCallback(async () => {
-    const data = await fetchQuotes();
+    const [data, utRes] = await Promise.all([
+      fetchQuotes(apiEndpoint),
+      fetch("/api/unit-types").then((r) => r.ok ? r.json() : []),
+    ]);
     setRoutes(data.routes);
+    setUnitTypes(utRes);
     setIsLoaded(true);
-  }, []);
+  }, [apiEndpoint]);
 
-  useEffect(() => {
-    loadRoutes();
-  }, [loadRoutes]);
+  useEffect(() => { loadRoutes(); }, [loadRoutes]);
 
-  // Unique origins
+  // Unique unit types present in active routes
+  const availableUnitTypes = useMemo(
+    () => {
+      const vals = Array.from(new Set(routes.map((r) => r.unitType)));
+      return vals.map((v) => ({
+        value: v,
+        label: unitTypes.find((u) => u.value === v)?.label ?? v,
+      }));
+    },
+    [routes, unitTypes]
+  );
+
+  // Routes filtered by unit type
+  const filteredByUnit = useMemo(
+    () => selectedUnitType ? routes.filter((r) => r.unitType === selectedUnitType) : routes,
+    [routes, selectedUnitType]
+  );
+
   const origins = useMemo(
-    () => Array.from(new Set(routes.map((r) => r.origin))).sort(),
-    [routes]
+    () => Array.from(new Set(filteredByUnit.map((r) => r.origin))).sort(),
+    [filteredByUnit]
   );
 
-  // Destinations filtered by selected origin
   const destinations = useMemo(
-    () =>
-      routes
-        .filter((r) => r.origin === selectedOrigin)
-        .map((r) => r.destination)
-        .sort(),
-    [routes, selectedOrigin]
+    () => filteredByUnit.filter((r) => r.origin === selectedOrigin).map((r) => r.destination).sort(),
+    [filteredByUnit, selectedOrigin]
   );
 
-  // Selected route
   const selectedRoute = useMemo(
-    () =>
-      routes.find(
-        (r) => r.origin === selectedOrigin && r.destination === selectedDestination
-      ) ?? null,
-    [routes, selectedOrigin, selectedDestination]
+    () => filteredByUnit.find((r) => r.origin === selectedOrigin && r.destination === selectedDestination) ?? null,
+    [filteredByUnit, selectedOrigin, selectedDestination]
   );
   const selectedRouteId = selectedRoute?.id ?? null;
   const routeTarget = selectedRoute?.target ?? null;
 
-  // Load carriers when route changes
   useEffect(() => {
-    if (!selectedRouteId) {
-      setCarriers([]);
-      return;
-    }
+    if (!selectedRouteId) { setCarriers([]); return; }
     setIsLoadingCarriers(true);
-    fetchQuotes(selectedRouteId).then((data) => {
+    fetchQuotes(apiEndpoint, selectedRouteId).then((data) => {
       setCarriers(data.carriers);
       setIsLoadingCarriers(false);
     });
-  }, [selectedRouteId]);
+  }, [selectedRouteId, apiEndpoint]);
+
+  function handleUnitTypeChange(value: string) {
+    setSelectedUnitType(value);
+    setSelectedOrigin("");
+    setSelectedDestination("");
+    setCarriers([]);
+    setSearch("");
+    setFilterPrice("all");
+  }
 
   function handleOriginChange(value: string) {
     setSelectedOrigin(value);
+    setSelectedDestination("");
+    setCarriers([]);
+    setSearch("");
+    setFilterPrice("all");
+  }
+
+  function handleClear() {
+    setSelectedUnitType("");
+    setSelectedOrigin("");
     setSelectedDestination("");
     setCarriers([]);
     setSearch("");
@@ -116,10 +146,7 @@ export function CarrierQuotesTable() {
     const q = search.trim();
     if (q) {
       result = result.filter(
-        (c) =>
-          fuzzyMatch(c.name, q) ||
-          fuzzyMatch(c.email, q) ||
-          fuzzyMatch(c.company ?? "", q)
+        (c) => fuzzyMatch(c.name, q) || fuzzyMatch(c.email, q) || fuzzyMatch(c.company ?? "", q)
       );
     }
     if (filterPrice !== "all" && routeTarget != null) {
@@ -140,7 +167,23 @@ export function CarrierQuotesTable() {
   return (
     <div className="space-y-6">
       {/* Filtros */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_auto]">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_auto]">
+        {availableUnitTypes.length > 1 && (
+          <div className="space-y-2">
+            <Label className="text-xs font-medium">Tipo de unidad</Label>
+            <Select value={selectedUnitType} onValueChange={handleUnitTypeChange}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Todos" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableUnitTypes.map((u) => (
+                  <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         <div className="space-y-2">
           <Label className="text-xs font-medium">Origen</Label>
           <Select value={selectedOrigin} onValueChange={handleOriginChange}>
@@ -149,9 +192,7 @@ export function CarrierQuotesTable() {
             </SelectTrigger>
             <SelectContent>
               {origins.map((o) => (
-                <SelectItem key={o} value={o}>
-                  {o}
-                </SelectItem>
+                <SelectItem key={o} value={o}>{o}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -159,19 +200,13 @@ export function CarrierQuotesTable() {
 
         <div className="space-y-2">
           <Label className="text-xs font-medium">Destino</Label>
-          <Select
-            value={selectedDestination}
-            onValueChange={setSelectedDestination}
-            disabled={!selectedOrigin}
-          >
+          <Select value={selectedDestination} onValueChange={setSelectedDestination} disabled={!selectedOrigin}>
             <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {destinations.map((d) => (
-                <SelectItem key={d} value={d}>
-                  {d}
-                </SelectItem>
+                <SelectItem key={d} value={d}>{d}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -179,11 +214,7 @@ export function CarrierQuotesTable() {
 
         <div className="space-y-2">
           <Label className="text-xs font-medium">Buscar</Label>
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            disabled={!selectedRouteId}
-          />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} disabled={!selectedRouteId} />
         </div>
 
         <div className="space-y-2">
@@ -201,17 +232,8 @@ export function CarrierQuotesTable() {
         </div>
 
         <div className="self-end">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              handleOriginChange("");
-              setSelectedDestination("");
-              setSearch("");
-              setFilterPrice("all");
-            }}
-          >
-            Limpiar filtros
+          <Button type="button" variant="outline" onClick={handleClear}>
+            Limpiar
           </Button>
         </div>
       </div>
@@ -239,9 +261,16 @@ export function CarrierQuotesTable() {
           {stats.avg != null && (
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                  Resumen de targets
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                    Resumen de targets
+                  </CardTitle>
+                  <QuoteBuilderDialog
+                    routes={routes}
+                    preselectedRoute={selectedRoute}
+                    defaultCost={stats.venta ?? undefined}
+                  />
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4 sm:grid-cols-3">
@@ -261,6 +290,13 @@ export function CarrierQuotesTable() {
               </CardContent>
             </Card>
           )}
+        </div>
+      )}
+
+      {/* Builder always accessible even without active route */}
+      {!selectedRouteId && routes.length > 0 && (
+        <div className="flex justify-end">
+          <QuoteBuilderDialog routes={routes} />
         </div>
       )}
     </div>
