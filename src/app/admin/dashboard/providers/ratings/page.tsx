@@ -7,13 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { AppSelect } from "@/components/ui/app-select";
 import type { CarrierRating } from "@/app/api/admin/carriers/ratings/route";
 
 // ── Star display ─────────────────────────────────────────────────────────────
@@ -271,27 +265,23 @@ export default function CarrierRatingsPage() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <Select value={starFilter} onValueChange={setStarFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {STAR_FILTER_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={minShipments} onValueChange={setMinShipments}>
-              <SelectTrigger className="w-[160px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">Mín. 1 embarque</SelectItem>
-                <SelectItem value="3">Mín. 3 embarques</SelectItem>
-                <SelectItem value="5">Mín. 5 embarques</SelectItem>
-                <SelectItem value="10">Mín. 10 embarques</SelectItem>
-              </SelectContent>
-            </Select>
+            <AppSelect
+              value={starFilter}
+              onValueChange={setStarFilter}
+              options={STAR_FILTER_OPTIONS}
+              className="w-[180px]"
+            />
+            <AppSelect
+              value={minShipments}
+              onValueChange={setMinShipments}
+              options={[
+                {value: "1", label: "Mín. 1 embarque"},
+                {value: "3", label: "Mín. 3 embarques"},
+                {value: "5", label: "Mín. 5 embarques"},
+                {value: "10", label: "Mín. 10 embarques"},
+              ]}
+              className="w-[160px]"
+            />
           </div>
 
           {/* Results count */}

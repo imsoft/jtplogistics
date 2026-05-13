@@ -3,13 +3,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { AppSelect } from "@/components/ui/app-select";
 import { formatMxn } from "@/lib/utils";
 
 type ActiveRoute = { id: string; origin: string; destination: string; target: number | null };
@@ -106,38 +100,23 @@ export function VendorQuotesTable() {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label className="text-xs font-medium">Origen</Label>
-          <Select value={selectedOrigin} onValueChange={handleOriginChange}>
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {origins.map((o) => (
-                <SelectItem key={o} value={o}>
-                  {o}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <AppSelect
+            value={selectedOrigin}
+            onValueChange={handleOriginChange}
+            options={origins.map((o) => ({value: o, label: o}))}
+            className="w-full"
+          />
         </div>
 
         <div className="space-y-2">
           <Label className="text-xs font-medium">Destino</Label>
-          <Select
+          <AppSelect
             value={selectedDestination}
             onValueChange={setSelectedDestination}
+            options={destinations.map((d) => ({value: d, label: d}))}
             disabled={!selectedOrigin}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {destinations.map((d) => (
-                <SelectItem key={d} value={d}>
-                  {d}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            className="w-full"
+          />
         </div>
       </div>
 

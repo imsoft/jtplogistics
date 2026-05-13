@@ -4,13 +4,7 @@ import { useState, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { AppSelect } from "@/components/ui/app-select";
 import { getUsersColumns } from "./users-columns";
 import { USER_ROLE_LABELS } from "@/lib/constants/user-role";
 import type { User, UserRole } from "@/types/user.types";
@@ -87,19 +81,12 @@ export function UsersTable({ defaultRole, detailBasePath }: { defaultRole?: User
       toolbar={
         !defaultRole ? (
           <>
-            <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as RoleFilter)}>
-              <SelectTrigger className="w-full sm:w-[160px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los roles</SelectItem>
-                {(Object.keys(USER_ROLE_LABELS) as UserRole[]).map((role) => (
-                  <SelectItem key={role} value={role}>
-                    {USER_ROLE_LABELS[role]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <AppSelect
+              value={roleFilter}
+              onValueChange={(v) => setRoleFilter(v as RoleFilter)}
+              options={[{value: "all", label: "Todos los roles"}, ...(Object.keys(USER_ROLE_LABELS) as UserRole[]).map((role) => ({value: role, label: USER_ROLE_LABELS[role]}))]}
+              className="w-full sm:w-[160px]"
+            />
             <Button
               type="button"
               variant="outline"

@@ -7,13 +7,7 @@ import { type ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { AppSelect } from "@/components/ui/app-select";
 import type { EmailAccount } from "@/types/resources.types";
 
 const EMAIL_TYPE_LABELS: Record<string, string> = {
@@ -130,28 +124,18 @@ export function EmailsTable() {
             <p className="text-xs text-muted-foreground">{filteredAssigned.length} correo{filteredAssigned.length !== 1 ? "s" : ""}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Select value={filterDepartment} onValueChange={setFilterDepartment}>
-              <SelectTrigger className="w-full sm:w-[160px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los depto.</SelectItem>
-                {departments.map((d) => (
-                  <SelectItem key={d} value={d}>{d}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-full sm:w-[140px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los tipos</SelectItem>
-                {availableTypes.map((t) => (
-                  <SelectItem key={t} value={t}>{emailTypeLabel(t)}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <AppSelect
+              value={filterDepartment}
+              onValueChange={setFilterDepartment}
+              options={[{value: "all", label: "Todos los depto."}, ...departments.map((d) => ({value: d, label: d}))]}
+              className="w-full sm:w-[160px]"
+            />
+            <AppSelect
+              value={filterType}
+              onValueChange={setFilterType}
+              options={[{value: "all", label: "Todos los tipos"}, ...availableTypes.map((t) => ({value: t, label: emailTypeLabel(t)}))]}
+              className="w-full sm:w-[140px]"
+            />
             {hasActiveFilters && (
               <Button type="button" variant="outline" onClick={() => { setFilterType("all"); setFilterDepartment("all"); }}>
                 Limpiar

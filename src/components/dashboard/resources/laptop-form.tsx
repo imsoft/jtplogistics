@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { FormActions } from "@/components/ui/form-actions";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AppSelect } from "@/components/ui/app-select";
 import { EmployeeSelect } from "./employee-select";
 import { EmailAccountSelect } from "./email-account-select";
 import type { Laptop, LaptopFormData } from "@/types/resources.types";
@@ -88,16 +88,12 @@ export function LaptopForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="lap-general-state">Estado general</Label>
-          <Select value={generalState} onValueChange={setGeneralState}>
-            <SelectTrigger id="lap-general-state" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Bueno">Bueno</SelectItem>
-              <SelectItem value="Regular">Regular</SelectItem>
-              <SelectItem value="Malo">Malo</SelectItem>
-            </SelectContent>
-          </Select>
+          <AppSelect
+            value={generalState}
+            onValueChange={setGeneralState}
+            options={[{value: "Bueno", label: "Bueno"}, {value: "Regular", label: "Regular"}, {value: "Malo", label: "Malo"}]}
+            className="w-full"
+          />
         </div>
         <EmployeeSelect
           label="Asignado a"

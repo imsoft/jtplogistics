@@ -5,13 +5,7 @@ import Link from "next/link";
 import { MoveRight, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { AppSelect } from "@/components/ui/app-select";
 import {
   Tooltip,
   TooltipContent,
@@ -118,35 +112,21 @@ export function RoutesCrud() {
             />
             <div className="space-y-2">
               <Label htmlFor="filter-status">Estado</Label>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger id="filter-status" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={STATUS_FILTER_ALL}>Todos</SelectItem>
-                  {ROUTE_STATUS_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <AppSelect
+                value={filterStatus}
+                onValueChange={setFilterStatus}
+                options={[{value: STATUS_FILTER_ALL, label: "Todos"}, ...ROUTE_STATUS_OPTIONS]}
+                className="w-full"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="filter-unit">Tipo de unidad</Label>
-              <Select value={filterUnitType} onValueChange={setFilterUnitType}>
-                <SelectTrigger id="filter-unit" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={UNIT_FILTER_ALL}>Todos</SelectItem>
-                  {unitTypes.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <AppSelect
+                value={filterUnitType}
+                onValueChange={setFilterUnitType}
+                options={[{value: UNIT_FILTER_ALL, label: "Todos"}, ...unitTypes]}
+                className="w-full"
+              />
             </div>
             <div className="space-y-2">
               <span aria-hidden className="invisible block text-sm font-medium leading-none">_</span>

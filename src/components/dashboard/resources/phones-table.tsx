@@ -7,13 +7,7 @@ import { type ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { AppSelect } from "@/components/ui/app-select";
 import type { PhoneDevice } from "@/types/resources.types";
 import { formatPhone, formatIMEI } from "@/lib/utils";
 
@@ -128,17 +122,12 @@ export function PhonesTable() {
             <p className="text-xs text-muted-foreground">{filteredAssigned.length} celular{filteredAssigned.length !== 1 ? "es" : ""}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Select value={filterDepartment} onValueChange={setFilterDepartment}>
-              <SelectTrigger className="w-full sm:w-[160px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los depto.</SelectItem>
-                {departments.map((d) => (
-                  <SelectItem key={d} value={d}>{d}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <AppSelect
+              value={filterDepartment}
+              onValueChange={setFilterDepartment}
+              options={[{value: "all", label: "Todos los depto."}, ...departments.map((d) => ({value: d, label: d}))]}
+              className="w-full sm:w-[160px]"
+            />
             {filterDepartment !== "all" && (
               <Button type="button" variant="outline" onClick={() => setFilterDepartment("all")}>
                 Limpiar

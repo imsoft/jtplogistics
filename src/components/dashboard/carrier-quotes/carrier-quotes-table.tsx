@@ -9,9 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+import { AppSelect } from "@/components/ui/app-select";
 import { getCarrierQuotesColumns } from "./carrier-quotes-columns";
 import { QuotePdf } from "./quote-pdf";
 import type { ActiveRoute, CarrierQuote, CarrierQuotesResponse, QuoteRow } from "@/types/carrier-quote.types";
@@ -226,27 +224,16 @@ function addCurrentRouteToQuote() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_auto]">
         <div className="space-y-2">
           <Label className="text-xs font-medium">Origen</Label>
-          <Select value={selectedOrigin} onValueChange={handleOriginChange}>
-            <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-            <SelectContent>{origins.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
-          </Select>
+          <AppSelect value={selectedOrigin} onValueChange={handleOriginChange} options={origins.map((o) => ({value: o, label: o}))} className="w-full" />
         </div>
         <div className="space-y-2">
           <Label className="text-xs font-medium">Destino</Label>
-          <Select value={selectedDestination} onValueChange={setSelectedDestination} disabled={!selectedOrigin}>
-            <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-            <SelectContent>{destinations.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
-          </Select>
+          <AppSelect value={selectedDestination} onValueChange={setSelectedDestination} options={destinations.map((d) => ({value: d, label: d}))} disabled={!selectedOrigin} className="w-full" />
         </div>
         {availableUnitTypes.length > 1 && (
           <div className="space-y-2">
             <Label className="text-xs font-medium">Tipo de unidad</Label>
-            <Select value={selectedUnitType} onValueChange={handleUnitTypeChange}>
-              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {availableUnitTypes.map((u) => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <AppSelect value={selectedUnitType} onValueChange={handleUnitTypeChange} options={availableUnitTypes} className="w-full" />
           </div>
         )}
         <div className="space-y-2">
@@ -255,14 +242,7 @@ function addCurrentRouteToQuote() {
         </div>
         <div className="space-y-2">
           <Label className="text-xs font-medium">Target vs. ruta</Label>
-          <Select value={filterPrice} onValueChange={setFilterPrice} disabled={!selectedRouteId || routeTarget == null}>
-            <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="below">Por debajo del target</SelectItem>
-              <SelectItem value="above">Por encima del target</SelectItem>
-            </SelectContent>
-          </Select>
+          <AppSelect value={filterPrice} onValueChange={setFilterPrice} options={[{value: "all", label: "Todos"}, {value: "below", label: "Por debajo del target"}, {value: "above", label: "Por encima del target"}]} disabled={!selectedRouteId || routeTarget == null} className="w-full" />
         </div>
         <div className="self-end">
           <Button type="button" variant="outline" onClick={handleClear}>Limpiar</Button>

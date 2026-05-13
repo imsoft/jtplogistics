@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AppSelect } from "@/components/ui/app-select";
 import { FormActions } from "@/components/ui/form-actions";
 import { IDEA_CATEGORIES } from "@/lib/constants/idea-category";
 import type { Idea } from "@/types/idea.types";
@@ -48,19 +48,12 @@ export function IdeaForm({
 
         <div className="space-y-1.5">
           <Label htmlFor="category">Categoría</Label>
-          <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger id="category" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">Sin categoría</SelectItem>
-              {IDEA_CATEGORIES.map((cat) => (
-                <SelectItem key={cat} value={cat}>
-                  {cat}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <AppSelect
+            value={category}
+            onValueChange={setCategory}
+            options={[{value: "none", label: "Sin categoría"}, ...IDEA_CATEGORIES.map((cat) => ({value: cat, label: cat}))]}
+            className="w-full"
+          />
         </div>
 
         <div className="space-y-1.5 sm:col-span-2">

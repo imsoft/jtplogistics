@@ -5,13 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormActions } from "@/components/ui/form-actions";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { AppSelect } from "@/components/ui/app-select";
 import { SHIPMENT_STATUS_CONFIG } from "@/components/dashboard/resources/shipments-table";
 import { useUnitTypes } from "@/hooks/use-unit-types";
 import { useIncidentTypes } from "@/hooks/use-incident-types";
@@ -209,23 +203,13 @@ export function ShipmentForm({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="space-y-2">
           <Label htmlFor="shipment-status">Estado</Label>
-          <Select value={status} onValueChange={(v) => setStatus(v as ShipmentStatus)} disabled={isClosed}>
-            <SelectTrigger id="shipment-status" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {STATUS_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  <span className="flex items-center gap-2">
-                    <span
-                      className={`inline-block size-2.5 rounded-full ${SHIPMENT_STATUS_CONFIG[opt.value].badgeClass}`}
-                    />
-                    {opt.label}
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <AppSelect
+            value={status}
+            onValueChange={(v) => setStatus(v as ShipmentStatus)}
+            options={STATUS_OPTIONS}
+            disabled={isClosed}
+            className="w-full"
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-eco">ECO</Label>
@@ -233,60 +217,33 @@ export function ShipmentForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-client">Cliente</Label>
-          <Select
-            value={client || undefined}
+          <AppSelect
+            value={client}
             onValueChange={setClient}
+            options={clientOptions.map((clientName) => ({value: clientName, label: clientName}))}
             disabled={isClosed || clientOptions.length === 0}
-          >
-            <SelectTrigger id="shipment-client" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {clientOptions.map((clientName) => (
-                <SelectItem key={clientName} value={clientName}>
-                  {clientName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            className="w-full"
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-origin">Origen</Label>
-          <Select
-            value={origin || undefined}
+          <AppSelect
+            value={origin}
             onValueChange={onOriginChange}
+            options={originOptions.map((o) => ({value: o, label: o}))}
             disabled={isClosed || originOptions.length === 0}
-          >
-            <SelectTrigger id="shipment-origin" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {originOptions.map((o) => (
-                <SelectItem key={o} value={o}>
-                  {o}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            className="w-full"
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-destination">Destino</Label>
-          <Select
-            value={destination || undefined}
+          <AppSelect
+            value={destination}
             onValueChange={setDestination}
+            options={destinationOptions.map((d) => ({value: d, label: d}))}
             disabled={isClosed || !origin.trim() || destinationOptions.length === 0}
-          >
-            <SelectTrigger id="shipment-destination" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {destinationOptions.map((d) => (
-                <SelectItem key={d} value={d}>
-                  {d}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            className="w-full"
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-product">Producto</Label>
@@ -318,22 +275,13 @@ export function ShipmentForm({
         </div>
         <div className="space-y-2 sm:col-span-2 lg:col-span-2">
           <Label htmlFor="shipment-legalName">Proveedor (transportista)</Label>
-          <Select
-            value={legalName || undefined}
+          <AppSelect
+            value={legalName}
             onValueChange={setLegalName}
+            options={carrierOptions.map((name) => ({value: name, label: name}))}
             disabled={isClosed || carrierOptions.length === 0}
-          >
-            <SelectTrigger id="shipment-legalName" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {carrierOptions.map((name) => (
-                <SelectItem key={name} value={name}>
-                  {name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            className="w-full"
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-truck">Tracto</Label>
@@ -345,22 +293,13 @@ export function ShipmentForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-unit">Unidad</Label>
-          <Select
-            value={unit || undefined}
+          <AppSelect
+            value={unit}
             onValueChange={setUnit}
+            options={unitOptions}
             disabled={isClosed || unitOptions.length === 0}
-          >
-            <SelectTrigger id="shipment-unit" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {unitOptions.map((ut) => (
-                <SelectItem key={ut.value} value={ut.value}>
-                  {ut.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            className="w-full"
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-phone">Celular</Label>
@@ -380,44 +319,26 @@ export function ShipmentForm({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="shipment-incident">Incidencia</Label>
-          <Select
-            value={incident || undefined}
+          <AppSelect
+            value={incident}
             onValueChange={(v) => {
               setIncident(v);
               if (!incidentAllowsIncidentType(v)) setIncidentType("");
             }}
+            options={incidentSelectOptions}
             disabled={isClosed}
-          >
-            <SelectTrigger id="shipment-incident" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {incidentSelectOptions.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            className="w-full"
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-incidentType">Tipo de incidencia</Label>
-          <Select
-            value={canPickIncidentType ? incidentType || undefined : undefined}
+          <AppSelect
+            value={canPickIncidentType ? incidentType : ""}
             onValueChange={setIncidentType}
+            options={incidentTypeOptions}
             disabled={isClosed || !canPickIncidentType}
-          >
-            <SelectTrigger id="shipment-incidentType" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {incidentTypeOptions.map((it) => (
-                <SelectItem key={it.value} value={it.value}>
-                  {it.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            className="w-full"
+          />
         </div>
       </div>
       <FormActions

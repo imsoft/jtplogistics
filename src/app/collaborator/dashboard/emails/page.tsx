@@ -7,13 +7,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { AppSelect } from "@/components/ui/app-select";
 import { type ColumnDef } from "@tanstack/react-table";
 import type { EmailAccount } from "@/types/resources.types";
 
@@ -134,17 +128,12 @@ export default function CollaboratorEmailsPage() {
           onRowClick={(email) => router.push(`/collaborator/dashboard/emails/${email.id}`)}
           toolbar={
             <>
-              <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger className="w-full sm:w-[140px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los tipos</SelectItem>
-                  {availableTypes.map((t) => (
-                    <SelectItem key={t} value={t}>{emailTypeLabel(t)}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <AppSelect
+                value={filterType}
+                onValueChange={setFilterType}
+                options={[{value: "all", label: "Todos los tipos"}, ...availableTypes.map((t) => ({value: t, label: emailTypeLabel(t)}))]}
+                className="w-full sm:w-[140px]"
+              />
               <Button
                 type="button"
                 variant="outline"

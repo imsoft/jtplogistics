@@ -3,13 +3,7 @@
 import { useMemo, useState, useCallback } from "react";
 import { useAdminFetch } from "@/hooks/use-admin-fetch";
 import { DataTable } from "@/components/ui/data-table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { AppSelect } from "@/components/ui/app-select";
 import { TASK_STATUS_OPTIONS, TASK_STATUS_LABELS } from "@/lib/constants/task-status";
 import { getTasksColumns } from "./tasks-columns";
 import { toast } from "sonner";
@@ -67,24 +61,12 @@ export function DeveloperTasksTable() {
         cell: ({ row }: { row: { original: Task } }) => {
           const task = row.original;
           return (
-            <Select
+            <AppSelect
               value={task.status}
               onValueChange={(v) => handleStatusChange(task.id, v as TaskStatus)}
-            >
-              <SelectTrigger className="w-[160px] [&_[data-slot=select-value]]:hidden">
-                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_BADGE[task.status]}`}>
-                  {TASK_STATUS_LABELS[task.status]}
-                </span>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent position="popper" className="w-44">
-                {TASK_STATUS_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              options={TASK_STATUS_OPTIONS}
+              className="w-[160px]"
+            />
           );
         },
         enableSorting: false,
@@ -103,19 +85,12 @@ export function DeveloperTasksTable() {
       filterColumn="search"
       getRowId={(row) => row.id}
       toolbar={
-        <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as TaskStatus | typeof ALL)}>
-          <SelectTrigger className="w-full sm:w-44">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>Todos los estados</SelectItem>
-            {TASK_STATUS_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {TASK_STATUS_LABELS[opt.value]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <AppSelect
+          value={filterStatus}
+          onValueChange={(v) => setFilterStatus(v as TaskStatus | typeof ALL)}
+          options={[{value: ALL, label: "Todos los estados"}, ...TASK_STATUS_OPTIONS.map((opt) => ({value: opt.value, label: TASK_STATUS_LABELS[opt.value]}))]}
+          className="w-full sm:w-44"
+        />
       }
     />
   );

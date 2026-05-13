@@ -3,13 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { MoveRight, Plus, Pencil, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { AppSelect } from "@/components/ui/app-select";
 
 interface AuditChange {
   field: string;
@@ -176,17 +170,12 @@ export function AuditLogTable() {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-3">
-        <Select value={resourceFilter} onValueChange={setResourceFilter}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__all__">Todos</SelectItem>
-            {Object.entries(RESOURCE_LABELS).map(([value, label]) => (
-              <SelectItem key={value} value={value}>{label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <AppSelect
+          value={resourceFilter}
+          onValueChange={setResourceFilter}
+          options={[{value: "__all__", label: "Todos"}, ...Object.entries(RESOURCE_LABELS).map(([value, label]) => ({value, label}))]}
+          className="w-[200px]"
+        />
       </div>
 
       {logs.length === 0 ? (

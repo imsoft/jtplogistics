@@ -6,13 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { AppSelect } from "@/components/ui/app-select";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { useProfile } from "@/hooks/use-profile";
 
@@ -273,20 +267,13 @@ export default function CarrierProfilePage() {
                     disabled={isLoading}
                     className="flex-1"
                   />
-                  <Select
+                  <AppSelect
                     value={c.label || PHONE_LABELS[0]}
                     onValueChange={(val) => updateContact(c.idx, "label", val)}
+                    options={PHONE_LABELS.map((l) => ({value: l, label: l}))}
                     disabled={isLoading}
-                  >
-                    <SelectTrigger className="w-28 shrink-0 sm:w-36">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PHONE_LABELS.map((l) => (
-                        <SelectItem key={l} value={l}>{l}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    className="w-28 shrink-0 sm:w-36"
+                  />
                   <Button
                     type="button"
                     variant="ghost"
@@ -330,20 +317,13 @@ export default function CarrierProfilePage() {
                     disabled={isLoading}
                     className="flex-1"
                   />
-                  <Select
+                  <AppSelect
                     value={c.label || EMAIL_LABELS[0]}
                     onValueChange={(val) => updateContact(c.idx, "label", val)}
+                    options={EMAIL_LABELS.map((l) => ({value: l, label: l}))}
                     disabled={isLoading}
-                  >
-                    <SelectTrigger className="w-28 shrink-0 sm:w-36">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {EMAIL_LABELS.map((l) => (
-                        <SelectItem key={l} value={l}>{l}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    className="w-28 shrink-0 sm:w-36"
+                  />
                   <Button
                     type="button"
                     variant="ghost"

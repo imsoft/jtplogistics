@@ -7,13 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { AppSelect } from "@/components/ui/app-select";
 import { CityCombobox } from "./city-combobox";
 import { parseCityValue, findCityValue } from "@/lib/data/mexico-cities";
 import { ROUTE_STATUS_OPTIONS } from "@/lib/constants/route-status";
@@ -212,23 +206,14 @@ export function RouteForm({
             <div className="space-y-3">
               {unitTargets.map((row, index) => (
                 <div key={`${row.unitType}-${index}`} className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_auto]">
-                  <Select
+                  <AppSelect
                     value={row.unitType}
                     onValueChange={(v) =>
                       setUnitTargets((prev) => prev.map((item, i) => (i === index ? { ...item, unitType: v as UnitType } : item)))
                     }
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {unitTypeOptions.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    options={unitTypeOptions}
+                    className="w-full"
+                  />
                   <Input
                     type="text"
                     inputMode="decimal"
@@ -264,18 +249,12 @@ export function RouteForm({
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Estado</Label>
-              <Select value={status} onValueChange={(v) => setStatus(v as RouteStatus)}>
-                <SelectTrigger id="route-status" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {ROUTE_STATUS_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <AppSelect
+                value={status}
+                onValueChange={(v) => setStatus(v as RouteStatus)}
+                options={ROUTE_STATUS_OPTIONS}
+                className="w-full"
+              />
             </div>
           </div>
         </CardContent>

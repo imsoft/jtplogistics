@@ -5,13 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { AppSelect } from "@/components/ui/app-select";
 import { type ColumnDef } from "@tanstack/react-table";
 import type { Laptop } from "@/types/resources.types";
 
@@ -117,16 +111,12 @@ export default function CollaboratorLaptopsPage() {
           onRowClick={(laptop) => router.push(`/collaborator/dashboard/laptops/${laptop.id}`)}
           toolbar={
             <>
-              <Select value={filterAssigned} onValueChange={setFilterAssigned}>
-                <SelectTrigger className="w-full sm:w-[150px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Cualquier asignación</SelectItem>
-                  <SelectItem value="yes">Asignado</SelectItem>
-                  <SelectItem value="no">Sin asignar</SelectItem>
-                </SelectContent>
-              </Select>
+              <AppSelect
+                value={filterAssigned}
+                onValueChange={setFilterAssigned}
+                options={[{value: "all", label: "Cualquier asignación"}, {value: "yes", label: "Asignado"}, {value: "no", label: "Sin asignar"}]}
+                className="w-full sm:w-[150px]"
+              />
               <Button
                 type="button"
                 variant="outline"

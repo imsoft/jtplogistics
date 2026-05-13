@@ -5,13 +5,7 @@ import { Input } from "@/components/ui/input";
 import { FormActions } from "@/components/ui/form-actions";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { AppSelect } from "@/components/ui/app-select";
 import { EmployeeMultiSelect } from "./employee-multiselect";
 import { EMAIL_ACCOUNT_TYPES } from "@/lib/constants/email-type";
 import type { EmailAccount, EmailFormData } from "@/types/resources.types";
@@ -58,18 +52,12 @@ export function EmailForm({
         </div>
         <div className="space-y-2">
           <Label>Tipo de cuenta</Label>
-          <Select value={type} onValueChange={setType} required>
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {EMAIL_ACCOUNT_TYPES.map((t) => (
-                <SelectItem key={t.value} value={t.value}>
-                  {t.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <AppSelect
+            value={type}
+            onValueChange={setType}
+            options={EMAIL_ACCOUNT_TYPES}
+            className="w-full"
+          />
         </div>
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="em-password">Contraseña</Label>

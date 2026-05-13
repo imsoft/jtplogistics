@@ -7,13 +7,7 @@ import { type ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { AppSelect } from "@/components/ui/app-select";
 import type { Employee } from "@/types/resources.types";
 
 function getColumns(): ColumnDef<Employee>[] {
@@ -89,17 +83,12 @@ export function CollaboratorsTable() {
       onRowClick={(row) => router.push(`${pathname}/${row.id}/edit`)}
       toolbar={
         <>
-          <Select value={filterDepartment} onValueChange={setFilterDepartment}>
-            <SelectTrigger className="w-full sm:w-[160px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los depto.</SelectItem>
-              {departments.map((d) => (
-                <SelectItem key={d} value={d}>{d}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <AppSelect
+            value={filterDepartment}
+            onValueChange={setFilterDepartment}
+            options={[{value: "all", label: "Todos los depto."}, ...departments.map((d) => ({value: d, label: d}))]}
+            className="w-full sm:w-[160px]"
+          />
           <Button
             type="button"
             variant="outline"

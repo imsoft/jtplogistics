@@ -10,13 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { AppSelect } from "@/components/ui/app-select";
 import {
   Tooltip,
   TooltipContent,
@@ -347,19 +341,12 @@ export function ShipmentsTable() {
             <Label htmlFor="shipment-filter-status" className="text-xs text-muted-foreground">
               Estado
             </Label>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger id="shipment-filter-status" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={STATUS_FILTER_ALL}>Todos los estados</SelectItem>
-                {(Object.keys(SHIPMENT_STATUS_CONFIG) as ShipmentStatus[]).map((key) => (
-                  <SelectItem key={key} value={key}>
-                    {SHIPMENT_STATUS_CONFIG[key].label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <AppSelect
+              value={statusFilter}
+              onValueChange={setStatusFilter}
+              options={[{value: STATUS_FILTER_ALL, label: "Todos los estados"}, ...(Object.keys(SHIPMENT_STATUS_CONFIG) as ShipmentStatus[]).map((key) => ({value: key, label: SHIPMENT_STATUS_CONFIG[key].label}))]}
+              className="w-full"
+            />
           </div>
           <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end sm:gap-2">
             <div className="space-y-1.5 min-w-0 sm:w-[150px]">

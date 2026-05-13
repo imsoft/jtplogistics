@@ -5,13 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { AppSelect } from "@/components/ui/app-select";
 import { TASK_STATUS_OPTIONS } from "@/lib/constants/task-status";
 import type { TaskFormData, TaskStatus } from "@/types/task.types";
 
@@ -62,18 +56,13 @@ export function TaskForm({
 
         <div className="space-y-2 max-w-xs">
           <Label>Estado</Label>
-          <Select value={status} onValueChange={(v) => setStatus(v as TaskStatus)} disabled={isSubmitting}>
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {TASK_STATUS_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <AppSelect
+            value={status}
+            onValueChange={(v) => setStatus(v as TaskStatus)}
+            options={TASK_STATUS_OPTIONS}
+            disabled={isSubmitting}
+            className="w-full"
+          />
         </div>
       </div>
 

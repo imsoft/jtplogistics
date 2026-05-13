@@ -5,13 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Check, Lock, Minus, MoveRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { AppSelect } from "@/components/ui/app-select";
 import { Label } from "@/components/ui/label";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatMxnLive, formatMxn, parseMxn } from "@/lib/utils";
@@ -315,45 +309,25 @@ export default function CarrierUnitTypePage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-2">
               <Label htmlFor="filter-origin">Origen</Label>
-              <Select
+              <AppSelect
                 value={filterOrigin ?? "__all__"}
                 onValueChange={(v) => {
                   setFilterOrigin(v === "__all__" ? null : v);
                   setFilterDestination(null);
                 }}
-              >
-                <SelectTrigger id="filter-origin" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__all__">Todos</SelectItem>
-                  {origins.map((o) => (
-                    <SelectItem key={o} value={o}>
-                      {o}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                options={[{value: "__all__", label: "Todos"}, ...origins.map((o) => ({value: o, label: o}))]}
+                className="w-full"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="filter-destination">Destino</Label>
-              <Select
+              <AppSelect
                 value={filterDestination ?? "__all__"}
                 onValueChange={(v) => setFilterDestination(v === "__all__" ? null : v)}
+                options={[{value: "__all__", label: "Todos"}, ...destinations.map((d) => ({value: d, label: d}))]}
                 disabled={origins.length === 0}
-              >
-                <SelectTrigger id="filter-destination" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__all__">Todos</SelectItem>
-                  {destinations.map((d) => (
-                    <SelectItem key={d} value={d}>
-                      {d}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                className="w-full"
+              />
             </div>
             <div className="space-y-2">
               <span aria-hidden className="invisible block text-sm font-medium leading-none">_</span>

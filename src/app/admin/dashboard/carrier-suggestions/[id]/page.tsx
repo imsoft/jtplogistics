@@ -6,13 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ResourceEditHeader } from "@/components/dashboard/resources/resource-edit-header";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { AppSelect } from "@/components/ui/app-select";
 import {
   Card,
   CardContent,
@@ -180,18 +174,12 @@ export default function AdminCarrierSuggestionDetailPage() {
       <div className="space-y-3">
         <Label htmlFor="cs-status">Estado de la sugerencia</Label>
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-          <Select value={statusDraft} onValueChange={setStatusDraft}>
-            <SelectTrigger id="cs-status" className="w-full sm:max-w-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {CARRIER_SUGGESTION_STATUSES.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {CARRIER_SUGGESTION_STATUS_LABELS[s]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <AppSelect
+            value={statusDraft}
+            onValueChange={setStatusDraft}
+            options={CARRIER_SUGGESTION_STATUSES.map((s) => ({ value: s, label: CARRIER_SUGGESTION_STATUS_LABELS[s] }))}
+            className="w-full sm:max-w-xs"
+          />
           <Button
             type="button"
             size="sm"

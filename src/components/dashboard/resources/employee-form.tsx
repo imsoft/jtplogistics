@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { FormActions } from "@/components/ui/form-actions";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AppSelect } from "@/components/ui/app-select";
 
 const DEPARTMENTS = ["Logística", "Finanzas", "Administración", "Tecnología", "Recursos Humanos"] as const;
 import type { Employee, EmployeeFormData } from "@/types/resources.types";
@@ -135,16 +135,12 @@ export function EmployeeForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="emp-department">Departamento</Label>
-          <Select value={department} onValueChange={setDepartment}>
-            <SelectTrigger id="emp-department" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {DEPARTMENTS.map((d) => (
-                <SelectItem key={d} value={d}>{d}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <AppSelect
+            value={department}
+            onValueChange={setDepartment}
+            options={DEPARTMENTS.map((d) => ({value: d, label: d}))}
+            className="w-full"
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="emp-nss">NSS</Label>

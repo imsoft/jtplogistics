@@ -6,13 +6,7 @@ import Link from "next/link";
 import { UserRound, Plus, FileDown } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { AppSelect } from "@/components/ui/app-select";
 import {
   Dialog,
   DialogContent,
@@ -252,22 +246,12 @@ export default function CollaboratorEmployeesPage() {
             }
             toolbar={
               <>
-                <Select
+                <AppSelect
                   value={filterDepartment}
                   onValueChange={setFilterDepartment}
-                >
-                  <SelectTrigger className="w-full sm:w-[160px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos los depto.</SelectItem>
-                    {departments.map((d) => (
-                      <SelectItem key={d} value={d}>
-                        {d}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  options={[{value: "all", label: "Todos los depto."}, ...departments.map((d) => ({value: d, label: d}))]}
+                  className="w-full sm:w-[160px]"
+                />
                 <Button
                   type="button"
                   variant="outline"

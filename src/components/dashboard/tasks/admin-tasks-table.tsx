@@ -3,13 +3,7 @@
 import { useMemo, useState, useCallback } from "react";
 import { useAdminFetch } from "@/hooks/use-admin-fetch";
 import { DataTable } from "@/components/ui/data-table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { AppSelect } from "@/components/ui/app-select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -72,19 +66,12 @@ export function AdminTasksTable() {
         filterColumn="search"
         getRowId={(row) => row.id}
         toolbar={
-          <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as TaskStatus | typeof ALL)}>
-            <SelectTrigger className="w-full sm:w-44">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>Todos los estados</SelectItem>
-              {TASK_STATUS_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {TASK_STATUS_LABELS[opt.value]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <AppSelect
+            value={filterStatus}
+            onValueChange={(v) => setFilterStatus(v as TaskStatus | typeof ALL)}
+            options={[{value: ALL, label: "Todos los estados"}, ...TASK_STATUS_OPTIONS.map((opt) => ({value: opt.value, label: TASK_STATUS_LABELS[opt.value]}))]}
+            className="w-full sm:w-44"
+          />
         }
       />
       <AlertDialog open={deleteTask !== null} onOpenChange={(open) => !open && setDeleteTask(null)}>

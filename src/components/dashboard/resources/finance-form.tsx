@@ -5,13 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormActions } from "@/components/ui/form-actions";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { AppSelect } from "@/components/ui/app-select";
 import { FINANCE_TARIFF_COST_LABEL, FINANCE_TARIFF_SALE_LABEL } from "@/lib/constants/finance-tariff-labels";
 import { formatMxnLive } from "@/lib/utils";
 import { getIncidentSelectOptions, incidentAllowsIncidentType } from "@/lib/incident-yes-no";
@@ -191,43 +185,25 @@ export function FinanceForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="finance-incident">Incidencia</Label>
-          <Select
-            value={incident || undefined}
+          <AppSelect
+            value={incident}
             onValueChange={(v) => {
               setIncident(v);
               if (!incidentAllowsIncidentType(v)) setIncidentType("");
             }}
-          >
-            <SelectTrigger id="finance-incident">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {incidentSelectOptions.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            options={incidentSelectOptions}
+            className="w-full"
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="finance-incidentType">Tipo de incidencia</Label>
-          <Select
-            value={canPickIncidentType ? incidentType || undefined : undefined}
+          <AppSelect
+            value={canPickIncidentType ? incidentType : ""}
             onValueChange={setIncidentType}
+            options={incidentTypeOptions}
             disabled={!canPickIncidentType}
-          >
-            <SelectTrigger id="finance-incidentType">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {incidentTypeOptions.map((it) => (
-                <SelectItem key={it.value} value={it.value}>
-                  {it.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            className="w-full"
+          />
         </div>
       </div>
       <div className="space-y-2">
