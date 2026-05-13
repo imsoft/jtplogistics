@@ -24,6 +24,14 @@ interface AppSelectProps {
   className?: string
 }
 
+function normalize(s: string) {
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
+}
+
+function accentFilter(item: AppSelectOption, query: string) {
+  return normalize(item.label).includes(normalize(query))
+}
+
 export function AppSelect({ value, onValueChange, options, disabled, className }: AppSelectProps) {
   const selected = React.useMemo(
     () => options.find((o) => o.value === value) ?? null,
@@ -34,6 +42,7 @@ export function AppSelect({ value, onValueChange, options, disabled, className }
     <Combobox
       items={options}
       itemToStringValue={(o) => o.label}
+      filter={accentFilter}
       value={selected}
       onValueChange={(o) => onValueChange(o?.value ?? "")}
       disabled={disabled}
