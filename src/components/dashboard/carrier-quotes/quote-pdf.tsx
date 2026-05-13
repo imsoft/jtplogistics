@@ -4,35 +4,35 @@ import { Document, Page, Text, View, Image, StyleSheet } from "@react-pdf/render
 import type { QuoteData } from "@/types/carrier-quote.types";
 import { renderLexicalContent } from "@/lib/utils/lexical-to-pdf";
 
-const NAVY = "#00264D";
-const NAVY_LIGHT = "#E8F0F8";
+const BRAND = "#2D4EAA";       // oklch(0.488 0.243 264) → JTP primary blue
+const BRAND_LIGHT = "#EBF0FB"; // very light tint for alternating rows
 const WHITE = "#FFFFFF";
 const TEXT = "#1A1A1A";
-const MUTED = "#555555";
-const ROW_LINE = "#D0DCE8";
+const MUTED = "#6B7280";
+const LINE = "#C8D5EE";        // subtle blue-gray for dividers
 
 const s = StyleSheet.create({
   page: { fontFamily: "Helvetica", fontSize: 8, color: TEXT, paddingTop: 28, paddingBottom: 56, paddingHorizontal: 36 },
   // ── Header ──
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 18, borderBottomWidth: 1, borderBottomColor: ROW_LINE, paddingBottom: 10 },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 18, paddingBottom: 10 },
   logo: { width: 220, height: 88, objectFit: "contain" },
   headerDate: { fontSize: 8, color: MUTED, fontFamily: "Helvetica", textAlign: "right", maxWidth: 200 },
   // ── Page 1 title ──
-  titleWrapper: { borderBottomWidth: 1, borderColor: NAVY, paddingVertical: 7, marginBottom: 12 },
-  titleText: { color: NAVY, fontSize: 12, fontFamily: "Helvetica-Bold", textAlign: "center" },
+  titleWrapper: { borderBottomWidth: 1, borderColor: BRAND, paddingVertical: 7, marginBottom: 12 },
+  titleText: { color: BRAND, fontSize: 12, fontFamily: "Helvetica-Bold", textAlign: "center" },
   // ── Company info ──
   companyRow: { flexDirection: "row", marginBottom: 4 },
   companyLabel: { fontFamily: "Helvetica-Bold", fontSize: 9, width: 60 },
   companyValue: { fontSize: 9 },
   // ── Quote number ──
-  quoteNumWrapper: { borderBottomWidth: 0.8, borderColor: NAVY, paddingVertical: 6, marginBottom: 0 },
-  quoteNumText: { color: NAVY, fontSize: 10, fontFamily: "Helvetica-Bold", letterSpacing: 2, textAlign: "center" },
+  quoteNumWrapper: { borderBottomWidth: 0.8, borderColor: BRAND, paddingVertical: 6, marginBottom: 0 },
+  quoteNumText: { color: BRAND, fontSize: 10, fontFamily: "Helvetica-Bold", letterSpacing: 2, textAlign: "center" },
   // ── Table ──
   table: { marginBottom: 14 },
-  tableHead: { flexDirection: "row", borderBottomWidth: 1.2, borderBottomColor: NAVY },
-  tableHeadCell: { color: NAVY, fontFamily: "Helvetica-Bold", fontSize: 8, paddingVertical: 7, paddingHorizontal: 10, flex: 1, letterSpacing: 0.4 },
-  tableHeadCellLast: { color: NAVY, fontFamily: "Helvetica-Bold", fontSize: 8, paddingVertical: 7, paddingHorizontal: 10, flex: 1.5, letterSpacing: 0.4 },
-  tableRow: { flexDirection: "row", borderBottomWidth: 0.5, borderBottomColor: ROW_LINE },
+  tableHead: { flexDirection: "row", borderBottomWidth: 1.2, borderBottomColor: BRAND },
+  tableHeadCell: { color: BRAND, fontFamily: "Helvetica-Bold", fontSize: 8, paddingVertical: 7, paddingHorizontal: 10, flex: 1, letterSpacing: 0.4 },
+  tableHeadCellLast: { color: BRAND, fontFamily: "Helvetica-Bold", fontSize: 8, paddingVertical: 7, paddingHorizontal: 10, flex: 1.5, letterSpacing: 0.4 },
+  tableRow: { flexDirection: "row", borderBottomWidth: 0.5, borderBottomColor: LINE },
   tableCell: { fontSize: 8.5, paddingVertical: 7, paddingHorizontal: 10, flex: 1, color: TEXT },
   tableCellLast: { fontSize: 8.5, paddingVertical: 7, paddingHorizontal: 10, flex: 1.5, color: TEXT },
   // ── Terms / misc ──
@@ -47,7 +47,7 @@ const s = StyleSheet.create({
   // ── Page title (pages 2-4) ──
   pageTitle: { fontFamily: "Helvetica-Bold", fontSize: 10, textAlign: "center", marginBottom: 12, letterSpacing: 1 },
   // ── Footer ──
-  footer: { position: "absolute", bottom: 20, left: 36, right: 36, borderTopWidth: 0.5, borderTopColor: ROW_LINE, paddingTop: 6 },
+  footer: { position: "absolute", bottom: 20, left: 36, right: 36, borderTopWidth: 0.5, borderTopColor: LINE, paddingTop: 6 },
   footerText: { fontSize: 8, color: MUTED, textAlign: "center", fontFamily: "Helvetica" },
 });
 
@@ -125,7 +125,7 @@ interface Props {
 export function QuotePdf({ data, logoUrl, termsJson }: Props) {
   const today = new Date();
   const dateStr = formatDateEs(today);
-  const rowBg = (i: number) => (i % 2 === 0 ? NAVY_LIGHT : WHITE);
+  const rowBg = (i: number) => (i % 2 === 0 ? BRAND_LIGHT : WHITE);
 
   return (
     <Document title={`Cotizacion-${data.quoteNumber}`}>
