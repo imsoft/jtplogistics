@@ -94,8 +94,7 @@ function SelectContent({
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder={searchPlaceholder}
-                className="flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground placeholder:uppercase"
+                className="flex-1 bg-transparent text-xs outline-none"
                 onKeyDown={(e) => { if (e.key !== "Escape") e.stopPropagation() }}
               />
             </div>

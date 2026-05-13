@@ -98,7 +98,6 @@ function InitialStatePlugin({ json }: { json: string }) {
 interface LexicalEditorProps {
   value: string;
   onChange: (json: string) => void;
-  placeholder?: string;
   minHeight?: number;
   className?: string;
 }
@@ -124,7 +123,7 @@ const theme = {
   },
 };
 
-export function LexicalEditor({ value, onChange, placeholder = "Escribe aquí…", minHeight = 300, className }: LexicalEditorProps) {
+export function LexicalEditor({ value, onChange, minHeight = 300, className }: LexicalEditorProps) {
   function handleChange(state: EditorState, _editor: LexicalEditorInstance) {
     onChange(JSON.stringify(state.toJSON()));
   }
@@ -145,11 +144,7 @@ export function LexicalEditor({ value, onChange, placeholder = "Escribe aquí…
             contentEditable={
               <ContentEditable className="outline-none min-h-[inherit] focus:outline-none" />
             }
-            placeholder={
-              <div className="pointer-events-none absolute top-2 left-3 text-muted-foreground select-none">
-                {placeholder}
-              </div>
-            }
+            placeholder={<></>}
             ErrorBoundary={LexicalErrorBoundary}
           />
         </div>

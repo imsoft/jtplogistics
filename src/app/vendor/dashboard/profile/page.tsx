@@ -142,7 +142,6 @@ export default function VendorProfilePage() {
             disabled={isLoading}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Ej.&#10;- Estadías&#10;- Reparto"
             className="resize-y"
           />
           <p className="text-xs text-muted-foreground">

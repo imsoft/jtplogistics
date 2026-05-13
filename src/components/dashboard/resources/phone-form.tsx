@@ -81,7 +81,6 @@ export function PhoneForm({
             id="ph-color"
             value={color}
             onChange={(e) => setColor(e.target.value)}
-            placeholder="Ej. Negro, Blanco, Azul…"
           />
         </div>
         <EmployeeSelect

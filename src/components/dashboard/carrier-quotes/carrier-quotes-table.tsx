@@ -251,7 +251,7 @@ export function CarrierQuotesTable({
           <div className="space-y-2">
             <Label className="text-xs font-medium">Tipo de unidad</Label>
             <Select value={selectedUnitType} onValueChange={handleUnitTypeChange}>
-              <SelectTrigger className="w-full"><SelectValue placeholder="Todos" /></SelectTrigger>
+              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {availableUnitTypes.map((u) => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
               </SelectContent>
@@ -330,7 +330,6 @@ export function CarrierQuotesTable({
                       type="number" min="0" step="100"
                       value={finalPrice ?? ""}
                       onChange={(e) => setFinalPrice(e.target.value ? parseFloat(e.target.value) : null)}
-                      placeholder={stats.venta != null ? `$${formatMxn(stats.venta)}` : "0.00"}
                       className="h-8 text-sm font-semibold"
                     />
                   </div>
@@ -386,11 +385,11 @@ export function CarrierQuotesTable({
           </div>
           <div className="space-y-2">
             <Label htmlFor="qb-company">Compañía</Label>
-            <Input id="qb-company" value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Empresa cliente" />
+            <Input id="qb-company" value={company} onChange={(e) => setCompany(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="qb-contact">Contacto</Label>
-            <Input id="qb-contact" value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Nombre del contacto" />
+            <Input id="qb-contact" value={contact} onChange={(e) => setContact(e.target.value)} />
           </div>
         </div>
 
@@ -422,7 +421,7 @@ export function CarrierQuotesTable({
                           type="number" min="0" step="100"
                           value={row.cost || ""}
                           onChange={(e) => updateCost(i, e.target.value)}
-                          className="w-28 h-8" placeholder="0.00"
+                          className="w-28 h-8"
                         />
                       </td>
                       <td className="px-3 py-2 text-xs text-muted-foreground hidden md:table-cell">{row.unitLabel}</td>
@@ -443,7 +442,7 @@ export function CarrierQuotesTable({
             <div className="flex gap-2">
               <Select value={addRouteId} onValueChange={setAddRouteId}>
                 <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Seleccionar ruta para agregar…" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {routesAvailableToAdd.map((r) => {
