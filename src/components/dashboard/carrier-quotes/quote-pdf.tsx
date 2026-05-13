@@ -13,7 +13,7 @@ const MUTED = "#555555";
 const s = StyleSheet.create({
   page: { fontFamily: "Helvetica", fontSize: 8, color: TEXT, paddingTop: 28, paddingBottom: 50, paddingHorizontal: 36 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 },
-  logo: { width: 90, height: 36, objectFit: "contain" },
+  logo: { width: 160, height: 64, objectFit: "contain" },
   headerDate: { fontSize: 8, color: NAVY, fontFamily: "Helvetica-Bold", textAlign: "right", maxWidth: 200 },
   titleBanner: { backgroundColor: NAVY, paddingVertical: 8, paddingHorizontal: 8, marginBottom: 10 },
   titleText: { color: WHITE, fontSize: 12, fontFamily: "Helvetica-Bold", textAlign: "center" },
@@ -33,9 +33,9 @@ const s = StyleSheet.create({
   validity: { fontFamily: "Helvetica-Bold", fontSize: 8, textAlign: "center", textDecoration: "underline", marginTop: 10, marginBottom: 10 },
   sigBlock: { flexDirection: "row", justifyContent: "space-between", marginTop: 16, paddingTop: 8 },
   sigColumn: { width: "45%" },
-  sigLabel: { fontFamily: "Helvetica-Bold", fontSize: 9, marginBottom: 20 },
+  sigLabel: { fontFamily: "Helvetica-Bold", fontSize: 9, marginBottom: 20, textAlign: "center" },
   sigLine: { borderBottomWidth: 0.8, borderBottomColor: TEXT, marginBottom: 4 },
-  sigName: { fontFamily: "Helvetica-Bold", fontSize: 8 },
+  sigName: { fontFamily: "Helvetica-Bold", fontSize: 8, textAlign: "center" },
   pageTitle: { fontFamily: "Helvetica-Bold", fontSize: 10, textAlign: "center", marginBottom: 12, letterSpacing: 1 },
 });
 
@@ -77,14 +77,14 @@ function Signatures({ date }: { date: string }) {
           <Text style={s.sigLabel}>ATENTAMENTE</Text>
           <View style={s.sigLine} />
           <Text style={s.sigName}>LCI. José Octavio Tirado Peña</Text>
-          <Text style={{ fontSize: 8, color: MUTED }}>Director General</Text>
+          <Text style={{ fontSize: 8, color: MUTED, textAlign: "center" }}>Director General</Text>
         </View>
         <View style={s.sigColumn}>
           <Text style={s.sigLabel}>ACEPTAMOS COTIZACION</Text>
           <View style={s.sigLine} />
         </View>
       </View>
-      <Text style={{ fontSize: 7.5, color: MUTED, marginTop: 8 }}>{date}</Text>
+      <Text style={{ fontSize: 7.5, color: MUTED, marginTop: 8, textAlign: "center" }}>{date}</Text>
     </View>
   );
 }
