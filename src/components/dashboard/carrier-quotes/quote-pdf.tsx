@@ -5,10 +5,11 @@ import type { QuoteData } from "@/types/carrier-quote.types";
 import { renderLexicalContent } from "@/lib/utils/lexical-to-pdf";
 
 const NAVY = "#00264D";
-const LIGHT_BLUE = "#D6E8F7";
+const NAVY_LIGHT = "#E8F0F8";
 const WHITE = "#FFFFFF";
 const TEXT = "#1A1A1A";
 const MUTED = "#555555";
+const ROW_LINE = "#D0DCE8";
 
 const s = StyleSheet.create({
   page: { fontFamily: "Helvetica", fontSize: 8, color: TEXT, paddingTop: 28, paddingBottom: 50, paddingHorizontal: 36 },
@@ -22,13 +23,14 @@ const s = StyleSheet.create({
   companyValue: { fontSize: 9 },
   sectionHeader: { backgroundColor: NAVY, paddingVertical: 6, paddingHorizontal: 8, marginBottom: 0 },
   sectionHeaderText: { color: WHITE, fontSize: 11, fontFamily: "Helvetica-Bold", letterSpacing: 2, textAlign: "center" },
-  table: { marginBottom: 10, borderWidth: 0.5, borderColor: NAVY },
+  table: { marginBottom: 14 },
+  tableAccent: { height: 3, backgroundColor: NAVY, marginBottom: 0 },
   tableHead: { flexDirection: "row", backgroundColor: NAVY },
-  tableHeadCell: { color: WHITE, fontFamily: "Helvetica-Bold", fontSize: 8, padding: 5, flex: 1, borderRightWidth: 0.5, borderRightColor: "#4488BB" },
-  tableHeadCellLast: { color: WHITE, fontFamily: "Helvetica-Bold", fontSize: 8, padding: 5, flex: 1.5 },
-  tableRow: { flexDirection: "row", borderTopWidth: 0.5, borderTopColor: NAVY },
-  tableCell: { fontSize: 8, padding: 5, flex: 1, borderRightWidth: 0.5, borderRightColor: "#AACCEE" },
-  tableCellLast: { fontSize: 8, padding: 5, flex: 1.5 },
+  tableHeadCell: { color: WHITE, fontFamily: "Helvetica-Bold", fontSize: 8, paddingVertical: 8, paddingHorizontal: 10, flex: 1, letterSpacing: 0.4 },
+  tableHeadCellLast: { color: WHITE, fontFamily: "Helvetica-Bold", fontSize: 8, paddingVertical: 8, paddingHorizontal: 10, flex: 1.5, letterSpacing: 0.4 },
+  tableRow: { flexDirection: "row", borderBottomWidth: 0.5, borderBottomColor: ROW_LINE },
+  tableCell: { fontSize: 8.5, paddingVertical: 7, paddingHorizontal: 10, flex: 1, color: TEXT },
+  tableCellLast: { fontSize: 8.5, paddingVertical: 7, paddingHorizontal: 10, flex: 1.5, color: TEXT },
   termsTitle: { fontFamily: "Helvetica-Bold", fontSize: 10, textAlign: "center", textDecoration: "underline", marginBottom: 8, marginTop: 10 },
   validity: { fontFamily: "Helvetica-Bold", fontSize: 8, textAlign: "center", textDecoration: "underline", marginTop: 10, marginBottom: 10 },
   sigBlock: { flexDirection: "row", justifyContent: "space-between", marginTop: 16, paddingTop: 8 },
@@ -105,7 +107,7 @@ interface Props {
 export function QuotePdf({ data, logoUrl, termsJson }: Props) {
   const today = new Date();
   const dateStr = formatDateEs(today);
-  const rowBg = (i: number) => (i % 2 === 0 ? LIGHT_BLUE : WHITE);
+  const rowBg = (i: number) => (i % 2 === 0 ? NAVY_LIGHT : WHITE);
 
   return (
     <Document title={`Cotizacion-${data.quoteNumber}`}>
@@ -127,6 +129,7 @@ export function QuotePdf({ data, logoUrl, termsJson }: Props) {
           <Text style={s.sectionHeaderText}>N O . &nbsp; C O T I Z A C I O N &nbsp; {data.quoteNumber}</Text>
         </View>
         <View style={s.table}>
+          <View style={s.tableAccent} />
           <View style={s.tableHead}>
             <Text style={s.tableHeadCell}>Origen</Text>
             <Text style={s.tableHeadCell}>Destino</Text>
