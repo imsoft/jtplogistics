@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -328,28 +327,16 @@ function addCurrentRouteToQuote() {
 
       {/* ─── SECCIÓN 3: COTIZACIÓN ──────────────────────────────────────────── */}
       <div ref={builderRef} className="space-y-6 pt-2">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <Separator className="w-5" />
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
-                Cotización PDF
-              </h2>
-              <Separator className="flex-1" />
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Completa los datos y agrega rutas para generar el PDF para tu cliente.
-            </p>
-          </div>
-          {showTermsLink && (
+        {showTermsLink && (
+          <div className="flex justify-end">
             <Button variant="ghost" size="sm" asChild className="shrink-0 text-muted-foreground">
               <Link href="/admin/dashboard/quotes/terms">
                 <Settings className="size-3.5" />
                 Textos legales
               </Link>
             </Button>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Datos del cliente */}
         <div className="grid gap-4 sm:grid-cols-2">
