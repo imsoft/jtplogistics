@@ -18,14 +18,14 @@ const s = StyleSheet.create({
   logo: { width: 220, height: 88, objectFit: "contain" },
   headerDate: { fontSize: 8, color: MUTED, fontFamily: "Helvetica", textAlign: "right", maxWidth: 200 },
   // ── Page 1 title ──
-  titleWrapper: { borderTopWidth: 1, borderBottomWidth: 1, borderColor: NAVY, paddingVertical: 7, marginBottom: 12 },
+  titleWrapper: { borderBottomWidth: 1, borderColor: NAVY, paddingVertical: 7, marginBottom: 12 },
   titleText: { color: NAVY, fontSize: 12, fontFamily: "Helvetica-Bold", textAlign: "center" },
   // ── Company info ──
   companyRow: { flexDirection: "row", marginBottom: 4 },
   companyLabel: { fontFamily: "Helvetica-Bold", fontSize: 9, width: 60 },
   companyValue: { fontSize: 9 },
   // ── Quote number ──
-  quoteNumWrapper: { borderTopWidth: 0.8, borderBottomWidth: 0.8, borderColor: NAVY, paddingVertical: 6, marginBottom: 0 },
+  quoteNumWrapper: { borderBottomWidth: 0.8, borderColor: NAVY, paddingVertical: 6, marginBottom: 0 },
   quoteNumText: { color: NAVY, fontSize: 10, fontFamily: "Helvetica-Bold", letterSpacing: 2, textAlign: "center" },
   // ── Table ──
   table: { marginBottom: 14 },
