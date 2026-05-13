@@ -224,17 +224,6 @@ function addCurrentRouteToQuote() {
     <div className="space-y-8">
       {/* ─── SECCIÓN 1: FILTROS ─────────────────────────────────────────────── */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_auto]">
-        {availableUnitTypes.length > 1 && (
-          <div className="space-y-2">
-            <Label className="text-xs font-medium">Tipo de unidad</Label>
-            <Select value={selectedUnitType} onValueChange={handleUnitTypeChange}>
-              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {availableUnitTypes.map((u) => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
         <div className="space-y-2">
           <Label className="text-xs font-medium">Origen</Label>
           <Select value={selectedOrigin} onValueChange={handleOriginChange}>
@@ -249,6 +238,17 @@ function addCurrentRouteToQuote() {
             <SelectContent>{destinations.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
           </Select>
         </div>
+        {availableUnitTypes.length > 1 && (
+          <div className="space-y-2">
+            <Label className="text-xs font-medium">Tipo de unidad</Label>
+            <Select value={selectedUnitType} onValueChange={handleUnitTypeChange}>
+              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {availableUnitTypes.map((u) => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         <div className="space-y-2">
           <Label className="text-xs font-medium">Buscar</Label>
           <Input value={search} onChange={(e) => setSearch(e.target.value)} disabled={!selectedRouteId} />
