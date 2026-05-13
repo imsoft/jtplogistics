@@ -83,7 +83,6 @@ export function CarrierQuotesTable({
   const [contact, setContact] = useState("");
   const [validUntil, setValidUntil] = useState(defaultValidUntil);
   const [quoteRows, setQuoteRows] = useState<QuoteRow[]>([]);
-  const [addRouteId, setAddRouteId] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [quoteError, setQuoteError] = useState<string | null>(null);
 
@@ -172,28 +171,7 @@ export function CarrierQuotesTable({
     () => new Set(quoteRows.map((r) => `${r.origin}||${r.destination}`)),
     [quoteRows]
   );
-  const routesAvailableToAdd = useMemo(
-    () => routes.filter((r) => !usedRouteKeys.has(`${r.origin}||${r.destination}`)),
-    [routes, usedRouteKeys]
-  );
-
-  function handleAddRoute() {
-    if (!addRouteId) return;
-    const route = routes.find((r) => r.id === addRouteId);
-    if (!route) return;
-    const label = unitTypes.find((u) => u.value === route.unitType)?.label ?? route.unitType;
-    setQuoteRows((prev) => [...prev, {
-      origin: route.origin,
-      destination: route.destination,
-      destinationState: route.destinationState,
-      cost: 0,
-      unitLabel: label,
-    }]);
-    setAddRouteId("");
-    setQuoteError(null);
-  }
-
-  function addCurrentRouteToQuote() {
+function addCurrentRouteToQuote() {
     if (!selectedRoute) return;
     const key = `${selectedRoute.origin}||${selectedRoute.destination}`;
     if (usedRouteKeys.has(key)) return;
@@ -437,35 +415,8 @@ export function CarrierQuotesTable({
             </div>
           )}
 
-          {/* Agregar ruta */}
-          {routesAvailableToAdd.length > 0 && (
-            <div className="flex gap-2">
-              <Select value={addRouteId} onValueChange={setAddRouteId}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {routesAvailableToAdd.map((r) => {
-                    const label = unitTypes.find((u) => u.value === r.unitType)?.label ?? r.unitType;
-                    return (
-                      <SelectItem key={r.id} value={r.id}>
-                        {r.origin} → {r.destination} ({label})
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-              <Button type="button" size="icon" onClick={handleAddRoute} disabled={!addRouteId} title="Agregar ruta">
-                <Plus className="size-4" />
-              </Button>
-            </div>
-          )}
-
-          {quoteRows.length === 0 && routesAvailableToAdd.length === 0 && (
-            <p className="text-sm text-muted-foreground">No hay rutas activas disponibles.</p>
-          )}
-          {quoteRows.length === 0 && routesAvailableToAdd.length > 0 && (
-            <p className="text-xs text-muted-foreground">Selecciona una ruta y pulsa el ícono <strong>+</strong> para agregarla.</p>
+          {quoteRows.length === 0 && (
+            <p className="text-sm text-muted-foreground">No hay rutas agregadas.</p>
           )}
         </div>
 
