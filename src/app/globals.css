@@ -84,33 +84,31 @@
   --popover-foreground: oklch(0.141 0.005 285.823);
   --primary: oklch(0.488 0.243 264.376);
   --primary-foreground: oklch(0.97 0.014 254.604);
-  --secondary: oklch(0.967 0.001 286.375);
+  --secondary: oklch(0.958 0.022 264.376);
   --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.525 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
+  --muted: oklch(0.958 0.022 264.376);
+  --muted-foreground: oklch(0.500 0.044 264.376);
+  --accent: oklch(0.948 0.032 264.376);
   --accent-foreground: oklch(0.21 0.006 285.885);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.918 0.006 264.376);
-  --input: oklch(0.918 0.006 264.376);
+  --border: oklch(0.902 0.022 264.376);
+  --input: oklch(0.902 0.022 264.376);
   --ring: oklch(0.546 0.245 262.881);
   --chart-1: oklch(0.809 0.105 251.813);
   --chart-2: oklch(0.623 0.214 259.815);
   --chart-3: oklch(0.546 0.245 262.881);
   --chart-4: oklch(0.488 0.243 264.376);
   --chart-5: oklch(0.424 0.199 265.638);
-  /* Sidebar: subtle blue-tinted background to visually distinguish from main content */
-  --sidebar: oklch(0.974 0.008 264.376);
+  --sidebar: oklch(0.958 0.030 264.376);
   --sidebar-foreground: oklch(0.141 0.005 285.823);
   --sidebar-primary: oklch(0.488 0.243 264.376);
   --sidebar-primary-foreground: oklch(0.97 0.014 254.604);
-  --sidebar-accent: oklch(0.955 0.014 264.376);
+  --sidebar-accent: oklch(0.942 0.038 264.376);
   --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
-  --sidebar-border: oklch(0.905 0.010 264.376);
+  --sidebar-border: oklch(0.888 0.028 264.376);
   --sidebar-ring: oklch(0.708 0 0);
-  /* Hover/highlight (combobox, table rows, etc.) */
-  --hover: oklch(0.96 0.018 264.376);
-  --hover-foreground: oklch(0.25 0.012 264.376);
+  --hover: oklch(0.938 0.048 264.376);
+  --hover-foreground: oklch(0.22 0.015 264.376);
 }
 
 .dark {
@@ -151,7 +149,7 @@
 
 @layer components {
   .page-heading {
-    @apply text-xl font-bold uppercase tracking-wide sm:text-2xl;
+    @apply text-xl font-bold uppercase tracking-wide text-primary sm:text-2xl;
   }
 }
 
