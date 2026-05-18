@@ -4,10 +4,12 @@ import { useParams } from "next/navigation";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { ResourceEditHeader } from "@/components/dashboard/resources/resource-edit-header";
 import { EmployeeForm } from "@/components/dashboard/resources/employee-form";
+import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 import type { Employee } from "@/types/resources.types";
 
 export default function CollaboratorEditEmployeePage() {
   const { id } = useParams<{ id: string }>();
+  const { permissions } = useCollaboratorPermissions();
 
   const { data: employee, isLoaded, error, isSubmitting, handleSubmit, handleDelete } =
     useResourceEdit<Employee>({
@@ -28,6 +30,7 @@ export default function CollaboratorEditEmployeePage() {
         deleteTitle="¿Eliminar colaborador?"
         deleteDescription="Esta acción no se puede deshacer. Se eliminará el colaborador y su acceso al sistema."
         onDelete={handleDelete}
+        showDelete={permissions?.canDeleteEmployees ?? false}
       />
       <div className="w-full min-w-0">
         {error && <p className="mb-4 text-sm text-destructive">{error}</p>}

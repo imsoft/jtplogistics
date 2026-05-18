@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { UserRound, Plus, FileDown } from "lucide-react";
+import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 import { DataTable } from "@/components/ui/data-table";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
 import { AppSelect } from "@/components/ui/app-select";
@@ -140,6 +141,7 @@ function getColumns(): ColumnDef<Employee>[] {
 
 export default function CollaboratorEmployeesPage() {
   const router = useRouter();
+  const { permissions } = useCollaboratorPermissions();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -218,12 +220,14 @@ export default function CollaboratorEmployeesPage() {
               Colaboradores registrados en el sistema.
             </p>
           </div>
-          <Button asChild className="shrink-0">
-            <Link href="/collaborator/dashboard/employees/new">
-              <Plus className="size-4" />
-              Nuevo colaborador
-            </Link>
-          </Button>
+          {permissions?.canCreateEmployees && (
+            <Button asChild className="shrink-0">
+              <Link href="/collaborator/dashboard/employees/new">
+                <Plus className="size-4" />
+                Nuevo colaborador
+              </Link>
+            </Button>
+          )}
         </div>
 
         {!isLoaded ? (
