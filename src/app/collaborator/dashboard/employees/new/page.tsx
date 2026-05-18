@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useResourceCreate } from "@/hooks/use-resource-create";
 import { ResourceNewPage } from "@/components/dashboard/resources/resource-new-page";
 import { EmployeeForm } from "@/components/dashboard/resources/employee-form";
@@ -10,6 +11,11 @@ export default function CollaboratorNewEmployeePage() {
     redirectHref: "/collaborator/dashboard/employees",
   });
 
+  const errorRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (error) errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [error]);
+
   return (
     <ResourceNewPage
       title="Nuevo colaborador"
@@ -17,6 +23,7 @@ export default function CollaboratorNewEmployeePage() {
       backHref="/collaborator/dashboard/employees"
       backLabel="Volver a colaboradores"
       error={error}
+      errorRef={errorRef}
     >
       <EmployeeForm
         submitLabel="Crear colaborador"

@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ interface ResourceNewPageProps {
   backHref: string;
   backLabel: string;
   error?: string | null;
+  errorRef?: React.RefObject<HTMLDivElement | null>;
   children: React.ReactNode;
 }
 
@@ -20,6 +22,7 @@ export function ResourceNewPage({
   backHref,
   backLabel,
   error,
+  errorRef,
   children,
 }: ResourceNewPageProps) {
   return (
@@ -40,7 +43,9 @@ export function ResourceNewPage({
       <Separator />
       <div className="w-full min-w-0">
         {error && (
-          <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-destructive">{error}</p>
+          <div ref={errorRef} className="mb-4 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3">
+            <p className="text-sm font-medium text-destructive">{error}</p>
+          </div>
         )}
         {children}
       </div>

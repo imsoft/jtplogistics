@@ -46,8 +46,30 @@ export function EmployeeForm({
   const [curp, setCurp] = useState(initialValues.curp ?? "");
   const [address, setAddress] = useState(initialValues.address ?? "");
 
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
+
+  function validate(): boolean {
+    const errors: { email?: string; password?: string } = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) {
+      errors.email = "El correo es obligatorio.";
+    } else if (!emailRegex.test(email.trim())) {
+      errors.email = "Ingresa un correo electrónico válido.";
+    }
+    if (isNew) {
+      if (!password) {
+        errors.password = "La contraseña es obligatoria.";
+      } else if (password.length < 8) {
+        errors.password = "La contraseña debe tener al menos 8 caracteres.";
+      }
+    }
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!validate()) return;
     const base = { name, email, birthDate, hireDate, position, department, phone, nss, rfc, curp, address };
     if (isNew) {
       onSubmit({ ...base, password });
@@ -77,10 +99,12 @@ export function EmployeeForm({
             id="emp-email"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
+            onChange={(e) => { setEmail(e.target.value); setFieldErrors((prev) => ({ ...prev, email: undefined })); }}
             disabled={!isNew}
           />
+          {fieldErrors.email && (
+            <p className="text-destructive text-xs">{fieldErrors.email}</p>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="emp-password">
@@ -89,11 +113,14 @@ export function EmployeeForm({
           <PasswordInput
             id="emp-password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required={isNew}
+            onChange={(e) => { setPassword(e.target.value); setFieldErrors((prev) => ({ ...prev, password: undefined })); }}
             autoComplete={isNew ? "new-password" : "off"}
           />
-          {!isNew && initialValues.hasPasswordReference ? (
+          {fieldErrors.password ? (
+            <p className="text-destructive text-xs">{fieldErrors.password}</p>
+          ) : isNew ? (
+            <p className="text-muted-foreground text-xs">Mínimo 8 caracteres.</p>
+          ) : initialValues.hasPasswordReference ? (
             <p className="text-muted-foreground text-xs">
               Hay una nota guardada. Escribe una nueva solo si quieres reemplazarla.
             </p>
