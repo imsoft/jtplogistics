@@ -1,16 +1,16 @@
-import { Separator } from "@/components/ui/separator";
-import { formatPhone } from "@/lib/utils";
-import { CarrierQuotesTable } from "@/components/dashboard/carrier-quotes/carrier-quotes-table";
+import Link from "next/link";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-server";
+import { formatPhone } from "@/lib/utils";
 
 export const metadata = {
-  title: "Cotizador | JTP Logistics",
-  description: "Ver transportistas disponibles por ruta y sus targets",
+  title: "Cotizaciones | JTP Logistics",
 };
 
-export default async function CotizadorPage() {
+export default async function QuotesPage() {
   await requireAdmin();
 
   const quotes = await prisma.generatedQuote.findMany({
@@ -30,31 +30,30 @@ export default async function CotizadorPage() {
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
-      <div className="min-w-0">
-        <h1 className="page-heading">Cotizador</h1>
-        <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
-          Filtra por ruta, consulta los transportistas y genera cotizaciones PDF para tus clientes.
-        </p>
-      </div>
-      <Separator />
-      <CarrierQuotesTable showTermsLink />
-
-      {/* Historial de cotizaciones generadas */}
-      <Separator />
-      <div>
-        <h2 className="text-base font-semibold sm:text-lg">Cotizaciones generadas</h2>
-        <p className="mt-1 text-xs text-muted-foreground">Últimas 50 cotizaciones descargadas.</p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="page-heading">Cotizaciones</h1>
+          <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
+            Historial de cotizaciones generadas.
+          </p>
+        </div>
+        <Button asChild>
+          <Link href="/admin/dashboard/quotes/new">
+            <Plus className="size-4" />
+            Nueva cotización
+          </Link>
+        </Button>
       </div>
 
       {quotes.length === 0 ? (
-        <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+        <p className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
           Aún no se han generado cotizaciones.
         </p>
       ) : (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Historial
+              Últimas 50 cotizaciones
             </CardTitle>
           </CardHeader>
           <CardContent className="px-0 pb-0">
