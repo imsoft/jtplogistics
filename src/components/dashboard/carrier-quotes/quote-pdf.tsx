@@ -15,7 +15,7 @@ const s = StyleSheet.create({
   page: { fontFamily: "Helvetica", fontSize: 8, color: TEXT, paddingTop: 28, paddingBottom: 56, paddingHorizontal: 36 },
   // ── Header ──
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 18, paddingBottom: 10 },
-  logo: { width: 220, height: 88, objectFit: "contain" },
+  logo: { width: 280, height: 112, objectFit: "contain" },
   headerDate: { fontSize: 8, color: MUTED, fontFamily: "Helvetica", textAlign: "right", maxWidth: 200 },
   // ── Page 1 title ──
   titleWrapper: { borderBottomWidth: 1, borderColor: BRAND, paddingVertical: 7, marginBottom: 12 },
@@ -140,10 +140,18 @@ export function QuotePdf({ data, logoUrl, termsJson }: Props) {
           <Text style={s.companyLabel}>Compañía:</Text>
           <Text style={s.companyValue}>{data.company}</Text>
         </View>
-        <View style={[s.companyRow, { marginBottom: 10 }]}>
+        <View style={[s.companyRow, { marginBottom: 2 }]}>
           <Text style={s.companyLabel}>Contacto:</Text>
           <Text style={s.companyValue}>{data.contact}</Text>
         </View>
+        {data.phone ? (
+          <View style={[s.companyRow, { marginBottom: 10 }]}>
+            <Text style={s.companyLabel}>Teléfono:</Text>
+            <Text style={s.companyValue}>{data.phone}</Text>
+          </View>
+        ) : (
+          <View style={{ marginBottom: 10 }} />
+        )}
         <View style={s.quoteNumWrapper}>
           <Text style={s.quoteNumText}>N O . &nbsp; C O T I Z A C I O N &nbsp; {data.quoteNumber}</Text>
         </View>

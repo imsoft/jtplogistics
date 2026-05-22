@@ -28,8 +28,11 @@ interface FormState {
   legalName: string;
   rfc: string;
   address: string;
+  notes: string;
   contacts: ContactInput[];
 }
+
+const DEFAULT_NOTES = "- Estadías\n- Reparto";
 
 export default function CarrierProfilePage() {
   const { data, isFetching, fetchError } = useProfile();
@@ -45,12 +48,21 @@ export default function CarrierProfilePage() {
     legalName: "",
     rfc: "",
     address: "",
+    notes: DEFAULT_NOTES,
     contacts: [],
   });
 
   useEffect(() => {
+    async function loadNotes() {
+      const res = await fetch("/api/carrier/notes");
+      if (res.ok) {
+        const { notes } = await res.json() as { notes: string };
+        setForm((prev) => ({ ...prev, notes: notes ?? DEFAULT_NOTES }));
+      }
+    }
     if (data) {
-      setForm({
+      setForm((prev) => ({
+        ...prev,
         name: data.name,
         email: data.email,
         birthDate: data.birthDate ?? "",
@@ -64,7 +76,8 @@ export default function CarrierProfilePage() {
           value: c.value,
           label: c.label ?? "",
         })),
-      });
+      }));
+      void loadNotes();
     }
   }, [data]);
 
@@ -101,24 +114,35 @@ export default function CarrierProfilePage() {
     setSuccess(false);
     setIsLoading(true);
     try {
-      const res = await fetch("/api/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: form.name.trim(),
-          birthDate: form.birthDate || null,
-          commercialName: form.commercialName.trim() || null,
-          legalName: form.legalName.trim() || null,
-          rfc: form.rfc.trim() || null,
-          address: form.address.trim() || null,
-          contacts: form.contacts
-            .filter((c) => c.value.trim())
-            .map((c) => ({ type: c.type, value: c.value.trim(), label: c.label.trim() || null })),
+      const [profileRes, notesRes] = await Promise.all([
+        fetch("/api/profile", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: form.name.trim(),
+            birthDate: form.birthDate || null,
+            commercialName: form.commercialName.trim() || null,
+            legalName: form.legalName.trim() || null,
+            rfc: form.rfc.trim() || null,
+            address: form.address.trim() || null,
+            contacts: form.contacts
+              .filter((c) => c.value.trim())
+              .map((c) => ({ type: c.type, value: c.value.trim(), label: c.label.trim() || null })),
+          }),
         }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
+        fetch("/api/carrier/notes", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ notes: form.notes }),
+        }),
+      ]);
+      if (!profileRes.ok) {
+        const err = await profileRes.json().catch(() => ({}));
         throw new Error(err.error ?? "Error al guardar");
+      }
+      if (!notesRes.ok) {
+        const err = await notesRes.json().catch(() => ({}));
+        throw new Error(err.error ?? "Error al guardar notas");
       }
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
@@ -339,6 +363,24 @@ export default function CarrierProfilePage() {
               ))}
             </div>
           )}
+        </section>
+
+        {/* ── Notas de servicios ── */}
+        <section className="space-y-2">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            Notas de servicios
+          </h2>
+          <Textarea
+            id="notes"
+            rows={5}
+            disabled={isLoading}
+            value={form.notes}
+            onChange={field("notes")}
+            className="resize-y"
+          />
+          <p className="text-xs text-muted-foreground">
+            Describe los servicios que ofreces. Esta información es visible para el administrador.
+          </p>
         </section>
 
         {/* ── Footer ── */}

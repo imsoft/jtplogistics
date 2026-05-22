@@ -92,18 +92,18 @@ export default function VendorProfilePage() {
           </CardContent>
         </Card>
 
-        {vendor.vendorNotes && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                Notas del proveedor
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 pb-4">
-              <pre className="whitespace-pre-wrap text-sm text-foreground font-sans">{vendor.vendorNotes}</pre>
-            </CardContent>
-          </Card>
-        )}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              Notas del proveedor
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            <pre className="whitespace-pre-wrap text-sm text-foreground font-sans">
+              {vendor.vendorNotes ?? "- Estadías\n- Reparto"}
+            </pre>
+          </CardContent>
+        </Card>
       </div>
 
       {emailAccounts.length > 0 && (

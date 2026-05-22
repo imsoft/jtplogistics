@@ -78,6 +78,7 @@ export function CarrierQuotesTable({
   const [quoteNumber, setQuoteNumber] = useState(generateQuoteNumber);
   const [company, setCompany] = useState("");
   const [contact, setContact] = useState("");
+  const [phone, setPhone] = useState("");
   const [validUntil, setValidUntil] = useState(defaultValidUntil);
   const [quoteRows, setQuoteRows] = useState<QuoteRow[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -202,12 +203,18 @@ function addCurrentRouteToQuote() {
       const termsJson: QuoteTermsJson = termsRes.ok ? await termsRes.json() : { bulletsJson: "", contractJson: "", privacyJson: "", limitsJson: "" };
       const logoUrl = window.location.origin + "/images/logo/jtp-logistics.png";
       const blob = await pdf(
-        <QuotePdf data={{ quoteNumber, company, contact, validUntil, rows: quoteRows }} logoUrl={logoUrl} termsJson={termsJson} />
+        <QuotePdf data={{ quoteNumber, company, contact, phone, validUntil, rows: quoteRows }} logoUrl={logoUrl} termsJson={termsJson} />
       ).toBlob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url; a.download = `cotizacion-${quoteNumber}.pdf`; a.click();
+      a.href = url; a.download = `${quoteNumber}.pdf`; a.click();
       URL.revokeObjectURL(url);
+
+      await fetch("/api/generated-quotes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quoteNumber, company, contact, phone, validUntil, rows: quoteRows }),
+      });
     } catch (e) {
       console.error(e);
       setQuoteError("Error al generar el PDF.");
@@ -335,6 +342,10 @@ function addCurrentRouteToQuote() {
           <div className="space-y-2">
             <Label htmlFor="qb-contact">Contacto</Label>
             <Input id="qb-contact" value={contact} onChange={(e) => setContact(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="qb-phone">Teléfono</Label>
+            <Input id="qb-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(33) 1234 5678" />
           </div>
         </div>
 

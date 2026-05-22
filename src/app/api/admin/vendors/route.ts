@@ -3,6 +3,8 @@ import { adminHandler } from "@/lib/api-handler";
 import { createAuthUser } from "@/lib/create-auth-user";
 import { logAudit } from "@/lib/audit-log";
 
+const DEFAULT_VENDOR_NOTES = "- Estadías\n- Reparto";
+
 export function GET() {
   return adminHandler(async (_session) => {
     const vendors = await prisma.user.findMany({
@@ -51,6 +53,7 @@ export function POST(request: Request) {
       data: {
         role: "vendor",
         position: position?.trim() || null,
+        vendorNotes: DEFAULT_VENDOR_NOTES,
         ...(birthDate ? { birthDate: new Date(birthDate) } : {}),
       },
     });

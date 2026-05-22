@@ -34,6 +34,7 @@ export interface QuoteData {
   quoteNumber: string;
   company: string;
   contact: string;
+  phone: string;
   validUntil: string;
   rows: QuoteRow[];
 }

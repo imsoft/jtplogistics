@@ -1,12 +1,32 @@
 import { Separator } from "@/components/ui/separator";
 import { CarrierQuotesTable } from "@/components/dashboard/carrier-quotes/carrier-quotes-table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { prisma } from "@/lib/db";
+import { requireAdmin } from "@/lib/auth-server";
 
 export const metadata = {
   title: "Cotizador | JTP Logistics",
   description: "Ver transportistas disponibles por ruta y sus targets",
 };
 
-export default function CotizadorPage() {
+export default async function CotizadorPage() {
+  await requireAdmin();
+
+  const quotes = await prisma.generatedQuote.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 50,
+    select: {
+      id: true,
+      quoteNumber: true,
+      company: true,
+      contact: true,
+      phone: true,
+      validUntil: true,
+      createdAt: true,
+      createdBy: { select: { name: true } },
+    },
+  });
+
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
       <div className="min-w-0">
@@ -17,6 +37,61 @@ export default function CotizadorPage() {
       </div>
       <Separator />
       <CarrierQuotesTable showTermsLink />
+
+      {/* Historial de cotizaciones generadas */}
+      <Separator />
+      <div>
+        <h2 className="text-base font-semibold sm:text-lg">Cotizaciones generadas</h2>
+        <p className="mt-1 text-xs text-muted-foreground">Últimas 50 cotizaciones descargadas.</p>
+      </div>
+
+      {quotes.length === 0 ? (
+        <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+          Aún no se han generado cotizaciones.
+        </p>
+      ) : (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              Historial
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-0 pb-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/40 text-xs text-muted-foreground">
+                    <th className="px-4 py-2 text-left font-medium">No. Cotización</th>
+                    <th className="px-4 py-2 text-left font-medium">Compañía</th>
+                    <th className="px-4 py-2 text-left font-medium hidden sm:table-cell">Contacto</th>
+                    <th className="px-4 py-2 text-left font-medium hidden md:table-cell">Teléfono</th>
+                    <th className="px-4 py-2 text-left font-medium hidden md:table-cell">Vigencia</th>
+                    <th className="px-4 py-2 text-left font-medium hidden lg:table-cell">Generado por</th>
+                    <th className="px-4 py-2 text-left font-medium">Fecha</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {quotes.map((q) => (
+                    <tr key={q.id} className="border-b last:border-0">
+                      <td className="px-4 py-3 font-mono text-xs font-medium">{q.quoteNumber}</td>
+                      <td className="px-4 py-3">{q.company}</td>
+                      <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{q.contact}</td>
+                      <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{q.phone ?? "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+                        {q.validUntil.toLocaleDateString("es-MX", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" })}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">{q.createdBy.name}</td>
+                      <td className="px-4 py-3 text-muted-foreground text-xs">
+                        {q.createdAt.toLocaleDateString("es-MX", { year: "numeric", month: "short", day: "numeric" })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

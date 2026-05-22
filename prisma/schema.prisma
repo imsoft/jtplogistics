@@ -35,6 +35,7 @@ model User {
   image         String?        @map("image")
   birthDate     DateTime?      @map("birth_date")
   vendorNotes   String?        @map("vendor_notes")
+  carrierNotes  String?        @map("carrier_notes")
   role          UserRole       @default(collaborator) @map("role")
   canEditTarget Boolean        @default(true) @map("can_edit_target")
   canEditRoutes  Boolean        @default(false) @map("can_edit_routes")
@@ -124,6 +125,7 @@ model User {
   createdRoutes    Route[]        @relation("RouteCreatedBy")
   assignedTasks    Task[]         @relation("TaskAssignee")
   createdTasks     Task[]         @relation("TaskCreator")
+  generatedQuotes  GeneratedQuote[]
   sentMessages     Message[]      @relation("SentMessages")
   carrierMessages  Message[]      @relation("CarrierMessages")
   notifications    Notification[]
@@ -607,6 +609,23 @@ model Task {
   updatedAt   DateTime   @updatedAt @map("updated_at")
 
   @@map("tasks")
+}
+
+// ---- App: cotizaciones generadas ----
+
+model GeneratedQuote {
+  id          String   @id @default(cuid()) @map("id")
+  quoteNumber String   @map("quote_number")
+  company     String   @map("company")
+  contact     String   @map("contact")
+  phone       String?  @map("phone")
+  validUntil  DateTime @map("valid_until")
+  rows        Json     @map("rows")
+  createdById String   @map("created_by_id")
+  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("generated_quotes")
 }
 
 // ---- App: configuración de textos de cotización (singleton) ----

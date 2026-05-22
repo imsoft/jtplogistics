@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Laptop, Smartphone, Mail, ChevronRight } from "lucide-react";
+import { Laptop, Smartphone, Mail, ChevronRight, Eye, Plus, Pencil, Trash2 } from "lucide-react";
 import type { Employee, EmployeeFormData } from "@/types/resources.types";
 import { formatPhone } from "@/lib/utils";
 
@@ -40,6 +40,20 @@ const PERMISSION_FIELDS = MODULES.flatMap((module) => [
   { key: `canUpdate${module.suffix}`, label: `${module.label}: editar` },
   { key: `canDelete${module.suffix}`, label: `${module.label}: eliminar` },
 ]);
+
+const PERM_ICONS: Record<string, React.ElementType> = {
+  canView: Eye,
+  canCreate: Plus,
+  canUpdate: Pencil,
+  canDelete: Trash2,
+};
+
+function getPermIcon(key: string): React.ElementType {
+  for (const prefix of Object.keys(PERM_ICONS)) {
+    if (key.startsWith(prefix)) return PERM_ICONS[prefix];
+  }
+  return Eye;
+}
 
 function LinkedResource({ href, children }: { href: string; children: React.ReactNode }) {
   return (
@@ -233,23 +247,30 @@ export default function EditEmployeePage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-0">
-                    {PERMISSION_FIELDS.map((perm) => (
-                      <div key={perm.key}>
-                        <div className="flex items-center justify-between gap-4 py-3">
-                          <Label
-                            htmlFor={`perm-${perm.key}`}
-                            className="flex cursor-pointer flex-col items-start gap-0.5"
-                          >
-                            <span className="text-left text-sm font-medium">{perm.label}</span>
-                          </Label>
-                          <Switch
-                            id={`perm-${perm.key}`}
-                            checked={permissions[perm.key]}
-                            onCheckedChange={() => togglePerm(perm.key)}
-                          />
+                    {PERMISSION_FIELDS.map((perm) => {
+                      const Icon = getPermIcon(perm.key);
+                      return (
+                        <div
+                          key={perm.key}
+                          className="group rounded-lg px-2 transition-colors hover:bg-muted/50"
+                        >
+                          <div className="flex items-center justify-between gap-4 py-3">
+                            <Label
+                              htmlFor={`perm-${perm.key}`}
+                              className="flex cursor-pointer flex-row items-center gap-2"
+                            >
+                              <Icon className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
+                              <span className="text-left text-sm font-medium">{perm.label}</span>
+                            </Label>
+                            <Switch
+                              id={`perm-${perm.key}`}
+                              checked={permissions[perm.key]}
+                              onCheckedChange={() => togglePerm(perm.key)}
+                            />
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
