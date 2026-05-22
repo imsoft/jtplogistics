@@ -11,6 +11,7 @@ import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { useUnitTypes } from "@/hooks/use-unit-types";
 import { useIncidentTypes } from "@/hooks/use-incident-types";
 import { formatIncidentYesNo } from "@/lib/incident-yes-no";
+import { formatPhone } from "@/lib/utils";
 import { getIncidentTypeLabel } from "@/lib/incident-type-label";
 import { SHIPMENT_STATUS_CONFIG } from "@/components/dashboard/resources/shipments-table";
 import { ShipmentTimeline } from "@/components/dashboard/resources/shipment-timeline";
@@ -111,7 +112,7 @@ export default function ShipmentProfilePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4">
-            <InfoRow label="Celular" value={shipment.phone} />
+            <InfoRow label="Celular" value={formatPhone(shipment.phone)} />
             <InfoRow label="Tracto" value={shipment.truck} />
             <InfoRow label="Caja" value={shipment.trailer} />
             <InfoRow label="Unidad" value={unitLabel} />

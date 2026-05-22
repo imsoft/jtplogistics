@@ -13,7 +13,7 @@ import { useUnitTypes } from "@/hooks/use-unit-types";
 import { formatIncidentYesNo } from "@/lib/incident-yes-no";
 import { getIncidentTypeLabel } from "@/lib/incident-type-label";
 import { FINANCE_TARIFF_COST_LABEL, FINANCE_TARIFF_SALE_LABEL } from "@/lib/constants/finance-tariff-labels";
-import { formatMxn } from "@/lib/utils";
+import { formatMxn, formatPhone } from "@/lib/utils";
 import { SHIPMENT_STATUS_CONFIG } from "@/components/dashboard/resources/shipments-table";
 import type { FinanceShipmentDetail } from "@/types/finance.types";
 import type { ShipmentStatus } from "@/types/shipment.types";
@@ -117,7 +117,7 @@ export default function FinanceShipmentReadOnlyPage() {
           </CardHeader>
           <CardContent className="px-4 pb-4">
             <InfoRow label="Nombre operador" value={row.operatorName} />
-            <InfoRow label="Celular" value={row.phone} />
+            <InfoRow label="Celular" value={formatPhone(row.phone)} />
             <InfoRow label="Tracto" value={row.truck} />
             <InfoRow label="Caja" value={row.trailer} />
             <InfoRow label="Unidad" value={unitLabel} />

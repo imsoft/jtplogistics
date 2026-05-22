@@ -3,7 +3,7 @@
 import { type ColumnDef } from "@tanstack/react-table";
 import { TrendingDown, TrendingUp, Minus } from "lucide-react";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
-import { formatMxn } from "@/lib/utils";
+import { formatMxn, formatPhone } from "@/lib/utils";
 import type { CarrierQuote } from "@/types/carrier-quote.types";
 
 function TargetIndicator({
@@ -68,7 +68,7 @@ export function getCarrierQuotesColumns(
       cell: ({ row }) => {
         const phone = row.getValue("phone") as string | null;
         return phone ? (
-          <span className="text-muted-foreground">{phone}</span>
+          <span className="text-muted-foreground">{formatPhone(phone)}</span>
         ) : (
           <span className="text-muted-foreground">—</span>
         );

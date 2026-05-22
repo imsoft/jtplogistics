@@ -1,4 +1,5 @@
 import { Separator } from "@/components/ui/separator";
+import { formatPhone } from "@/lib/utils";
 import { CarrierQuotesTable } from "@/components/dashboard/carrier-quotes/carrier-quotes-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { prisma } from "@/lib/db";
@@ -76,7 +77,7 @@ export default async function CotizadorPage() {
                       <td className="px-4 py-3 font-mono text-xs font-medium">{q.quoteNumber}</td>
                       <td className="px-4 py-3">{q.company}</td>
                       <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{q.contact}</td>
-                      <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{q.phone ?? "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{q.phone ? formatPhone(q.phone) : "—"}</td>
                       <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
                         {q.validUntil.toLocaleDateString("es-MX", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" })}
                       </td>

@@ -16,6 +16,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { formatPhone } from "@/lib/utils";
 import { formatIncidentYesNo } from "@/lib/incident-yes-no";
 import { getIncidentTypeLabel } from "@/lib/incident-type-label";
 import { useIncidentTypes } from "@/hooks/use-incident-types";
@@ -217,7 +218,7 @@ function getColumns(incidentTypes: { value: string; label: string }[]): ColumnDe
       cell: ({ row }) => {
         const v = row.getValue<string | null>("phone");
         return v ? (
-          <span className="whitespace-nowrap font-mono text-xs">{v}</span>
+          <span className="whitespace-nowrap font-mono text-xs">{formatPhone(v)}</span>
         ) : (
           <span className="text-muted-foreground">—</span>
         );
