@@ -49,12 +49,6 @@ function defaultValidUntil() {
   return d.toISOString().split("T")[0];
 }
 
-function generateQuoteNumber() {
-  const n = new Date();
-  const pad = (x: number) => String(x).padStart(2, "0");
-  return `JTP-${n.getFullYear()}${pad(n.getMonth() + 1)}${pad(n.getDate())}-001`;
-}
-
 // ── component ─────────────────────────────────────────────────────────────────
 
 export function CarrierQuotesTable({
@@ -75,7 +69,7 @@ export function CarrierQuotesTable({
   const [finalPrice, setFinalPrice] = useState<number | null>(null);
 
   // ── Quote builder state ──
-  const [quoteNumber, setQuoteNumber] = useState(generateQuoteNumber);
+  const [quoteNumber, setQuoteNumber] = useState("");
   const [company, setCompany] = useState("");
   const [contact, setContact] = useState("");
   const [phone, setPhone] = useState("");
@@ -88,12 +82,14 @@ export function CarrierQuotesTable({
 
   // ── Load data ──
   const loadRoutes = useCallback(async () => {
-    const [data, utRes] = await Promise.all([
+    const [data, utRes, numRes] = await Promise.all([
       fetchQuotes(apiEndpoint),
       fetch("/api/unit-types").then((r) => r.ok ? r.json() : []),
+      fetch("/api/generated-quotes/next-number").then((r) => r.ok ? r.json() : null),
     ]);
     setRoutes(data.routes);
     setUnitTypes(utRes);
+    if (numRes?.quoteNumber) setQuoteNumber(numRes.quoteNumber);
     setIsLoaded(true);
   }, [apiEndpoint]);
 
@@ -215,6 +211,12 @@ function addCurrentRouteToQuote() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ quoteNumber, company, contact, phone, validUntil, rows: quoteRows }),
       });
+
+      const nextRes = await fetch("/api/generated-quotes/next-number");
+      if (nextRes.ok) {
+        const { quoteNumber: next } = await nextRes.json() as { quoteNumber: string };
+        setQuoteNumber(next);
+      }
     } catch (e) {
       console.error(e);
       setQuoteError("Error al generar el PDF.");
@@ -251,8 +253,9 @@ function addCurrentRouteToQuote() {
           <Label className="text-xs font-medium">Target vs. ruta</Label>
           <AppSelect value={filterPrice} onValueChange={setFilterPrice} options={[{value: "all", label: "Todos"}, {value: "below", label: "Por debajo del target"}, {value: "above", label: "Por encima del target"}]} disabled={!selectedRouteId || routeTarget == null} className="w-full" />
         </div>
-        <div className="self-end">
-          <Button type="button" variant="outline" onClick={handleClear}>Limpiar</Button>
+        <div className="space-y-2">
+          <Label className="invisible text-xs font-medium">_</Label>
+          <Button type="button" variant="outline" onClick={handleClear} className="w-full">Limpiar</Button>
         </div>
       </div>
 
@@ -329,7 +332,7 @@ function addCurrentRouteToQuote() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="qb-num">No. Cotización</Label>
-            <Input id="qb-num" value={quoteNumber} onChange={(e) => setQuoteNumber(e.target.value)} />
+            <Input id="qb-num" value={quoteNumber} disabled className="bg-muted" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="qb-vigencia">Vigencia</Label>
@@ -345,7 +348,7 @@ function addCurrentRouteToQuote() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="qb-phone">Teléfono</Label>
-            <Input id="qb-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(33) 1234 5678" />
+            <Input id="qb-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
           </div>
         </div>
 
