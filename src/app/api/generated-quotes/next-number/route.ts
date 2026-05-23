@@ -1,9 +1,20 @@
 import { prisma } from "@/lib/db";
-import { requireSession } from "@/lib/auth-server";
+import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 
 export async function GET() {
   try {
-    await requireSession();
+    const session = await requireCollaboratorOrAdmin();
+
+    // Collaborators need canViewQuotes; admins bypass
+    if (session.user.role === "collaborator") {
+      const me = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { canViewQuotes: true },
+      });
+      if (!me?.canViewQuotes) {
+        return Response.json({ error: "Sin permiso" }, { status: 403 });
+      }
+    }
 
     const now = new Date();
     const pad = (n: number) => String(n).padStart(2, "0");

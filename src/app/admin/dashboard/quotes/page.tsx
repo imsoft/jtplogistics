@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-server";
 import { formatPhone } from "@/lib/utils";
+import { QuoteRowActions } from "@/components/dashboard/quotes/quote-row-actions";
 
 export const metadata = {
   title: "Cotizaciones | JTP Logistics",
@@ -68,6 +69,7 @@ export default async function QuotesPage() {
                     <th className="px-4 py-2 text-left font-medium hidden md:table-cell">Vigencia</th>
                     <th className="px-4 py-2 text-left font-medium hidden lg:table-cell">Generado por</th>
                     <th className="px-4 py-2 text-left font-medium">Fecha</th>
+                    <th className="px-4 py-2 w-16" />
                   </tr>
                 </thead>
                 <tbody>
@@ -83,6 +85,9 @@ export default async function QuotesPage() {
                       <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">{q.createdBy.name}</td>
                       <td className="px-4 py-3 text-muted-foreground text-xs">
                         {q.createdAt.toLocaleDateString("es-MX", { year: "numeric", month: "short", day: "numeric" })}
+                      </td>
+                      <td className="px-2 py-2">
+                        <QuoteRowActions id={q.id} quoteNumber={q.quoteNumber} />
                       </td>
                     </tr>
                   ))}

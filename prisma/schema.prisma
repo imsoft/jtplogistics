@@ -615,7 +615,7 @@ model Task {
 
 model GeneratedQuote {
   id          String   @id @default(cuid()) @map("id")
-  quoteNumber String   @map("quote_number")
+  quoteNumber String   @unique @map("quote_number")
   company     String   @map("company")
   contact     String   @map("contact")
   phone       String?  @map("phone")

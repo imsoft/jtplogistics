@@ -1,11 +1,23 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireSession } from "@/lib/auth-server";
+import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 import type { Prisma } from "@prisma/client";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireSession();
+    const session = await requireCollaboratorOrAdmin();
+
+    // Collaborators need canCreateQuotes; admins bypass
+    if (session.user.role === "collaborator") {
+      const me = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { canCreateQuotes: true },
+      });
+      if (!me?.canCreateQuotes) {
+        return Response.json({ error: "Sin permiso" }, { status: 403 });
+      }
+    }
+
     const body = await request.json() as {
       quoteNumber: string;
       company: string;

@@ -33,6 +33,20 @@ export function PATCH(request: Request) {
       privacyJson?: string;
       limitsJson?: string;
     };
+
+    const fields = ["bulletsJson", "contractJson", "privacyJson", "limitsJson"] as const;
+    for (const field of fields) {
+      const val = body[field];
+      if (val !== undefined) {
+        if (typeof val !== "string") {
+          return Response.json({ error: `${field} debe ser string` }, { status: 400 });
+        }
+        try { JSON.parse(val); } catch {
+          return Response.json({ error: `${field} no es JSON válido` }, { status: 400 });
+        }
+      }
+    }
+
     const cfg = await prisma.quoteConfig.upsert({
       where: { id: "default" },
       create: { id: "default", ...body },

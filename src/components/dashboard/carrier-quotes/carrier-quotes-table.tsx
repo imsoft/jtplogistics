@@ -303,7 +303,7 @@ function addCurrentRouteToQuote() {
                 </div>
                 {selectedRoute && !usedRouteKeys.has(`${selectedRoute.origin}||${selectedRoute.destination}`) && (
                   <div className="mt-3 flex justify-end">
-                    <Button variant="outline" size="sm" onClick={addCurrentRouteToQuote}>
+                    <Button variant="default" size="sm" onClick={addCurrentRouteToQuote}>
                       <Plus className="size-3.5" />
                       Agregar ruta a cotización
                     </Button>
