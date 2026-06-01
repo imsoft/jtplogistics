@@ -1,7 +1,16 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
 import { logAudit } from "@/lib/audit-log";
 import { parseClientProductTypes } from "@/lib/parse-client-product-types";
+
+const SEARCH_FIELDS = [
+  "name", "contactName", "position", "legalName", "rfc", "email", "phone",
+] as const;
+
+const SORTABLE_FIELDS = new Set([
+  "name", "contactName", "position", "legalName", "email", "phone", "createdAt",
+]);
 
 function toJson(c: {
   id: string;
@@ -35,12 +44,37 @@ function toJson(c: {
   };
 }
 
-export function GET() {
+export function GET(request: Request) {
   return adminHandler(async () => {
-    const clients = await prisma.client.findMany({
-      orderBy: { createdAt: "desc" },
-    });
-    return Response.json(clients.map(toJson));
+    const { searchParams } = new URL(request.url);
+    const all = searchParams.get("all") === "1";
+    const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
+    const pageSize = Math.min(200, Math.max(1, parseInt(searchParams.get("pageSize") ?? "20", 10) || 20));
+    const q = (searchParams.get("q") ?? "").trim();
+    const sortBy = searchParams.get("sortBy") ?? "createdAt";
+    const sortDir = searchParams.get("sortDir") === "asc" ? "asc" : "desc";
+
+    const where: Prisma.ClientWhereInput = {};
+    if (q) {
+      where.OR = SEARCH_FIELDS.map((field) => ({
+        [field]: { contains: q, mode: "insensitive" as Prisma.QueryMode },
+      })) as Prisma.ClientWhereInput[];
+    }
+
+    const orderBy: Prisma.ClientOrderByWithRelationInput = SORTABLE_FIELDS.has(sortBy)
+      ? ({ [sortBy]: sortDir } as Prisma.ClientOrderByWithRelationInput)
+      : { createdAt: "desc" };
+
+    const [total, clients] = await Promise.all([
+      prisma.client.count({ where }),
+      prisma.client.findMany({
+        where,
+        orderBy,
+        ...(all ? {} : { skip: (page - 1) * pageSize, take: pageSize }),
+      }),
+    ]);
+
+    return Response.json({ data: clients.map(toJson), total, page, pageSize });
   });
 }
 

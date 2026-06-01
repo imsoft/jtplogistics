@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { DataTableSkeleton } from "@/components/ui/skeletons";
-import { useAdminFetch } from "@/hooks/use-admin-fetch";
+import { useServerTable } from "@/hooks/use-server-table";
 import { type ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
@@ -39,14 +39,28 @@ function getColumns(): ColumnDef<Vendor>[] {
 
 export function VendorsTable() {
   const router = useRouter();
-  const { data: vendors, isLoaded, error } = useAdminFetch<Vendor>(
-    "/api/admin/vendors",
-    "Error al cargar vendedores"
-  );
+  const {
+    data: vendors,
+    total,
+    pageIndex,
+    pageCount,
+    setPageIndex,
+    sorting,
+    setSorting,
+    search,
+    setSearch,
+    isLoading,
+    isFetching,
+    error,
+  } = useServerTable<Vendor>({
+    endpoint: "/api/admin/vendors",
+    pageSize: 20,
+    errorMessage: "Error al cargar vendedores",
+  });
 
-  if (!isLoaded) return <DataTableSkeleton />;
+  if (isLoading) return <DataTableSkeleton />;
   if (error) return <p className="text-destructive text-sm">{error}</p>;
-  if (vendors.length === 0) {
+  if (total === 0 && search.trim() === "") {
     return (
       <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
         No hay vendedores registrados.
@@ -58,7 +72,18 @@ export function VendorsTable() {
     <DataTable<Vendor, unknown>
       columns={getColumns()}
       data={vendors}
-      filterColumn="search"
+      filterPlaceholder="Buscar…"
+      manualPagination
+      pageCount={pageCount}
+      pageIndex={pageIndex}
+      totalCount={total}
+      onPageChange={setPageIndex}
+      manualSorting
+      sorting={sorting}
+      onSortingChange={setSorting}
+      search={search}
+      onSearchChange={setSearch}
+      isFetching={isFetching}
       initialColumnVisibility={{ search: false }}
       getRowId={(row) => row.id}
       onRowClick={(v) => router.push(`/admin/dashboard/vendors/${v.id}`)}

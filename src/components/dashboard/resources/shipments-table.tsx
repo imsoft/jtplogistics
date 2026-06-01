@@ -3,7 +3,7 @@
 import { useMemo, useState, useCallback, useEffect } from "react";
 import { DataTableSkeleton } from "@/components/ui/skeletons";
 import { useRouter } from "next/navigation";
-import { useAdminFetch } from "@/hooks/use-admin-fetch";
+import { useServerTable } from "@/hooks/use-server-table";
 import { type ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
@@ -76,14 +76,6 @@ export const SHIPMENT_STATUS_CONFIG: Record<
 };
 
 const STATUS_FILTER_ALL = "all" as const;
-
-function dateInRange(iso: string | null, from: string, to: string): boolean {
-  const part = iso?.slice(0, 10);
-  if (!part) return false;
-  if (from && part < from) return false;
-  if (to && part > to) return false;
-  return true;
-}
 
 function getColumns(incidentTypes: { value: string; label: string }[]): ColumnDef<Shipment>[] {
   return [
@@ -258,16 +250,44 @@ export function ShipmentsTable() {
   const [compactView, setCompactView] = useState(
     () => typeof window !== "undefined" && window.innerWidth < 1500
   );
-  const { data: shipments, isLoaded, error } = useAdminFetch<Shipment>(
-    "/api/admin/shipments",
-    "Error al cargar embarques"
-  );
 
   const [statusFilter, setStatusFilter] = useState<string>(STATUS_FILTER_ALL);
   const [pickupFrom, setPickupFrom] = useState("");
   const [pickupTo, setPickupTo] = useState("");
   const [deliveryFrom, setDeliveryFrom] = useState("");
   const [deliveryTo, setDeliveryTo] = useState("");
+
+  const filters: Record<string, string> = {
+    ...(statusFilter !== STATUS_FILTER_ALL ? { status: statusFilter } : {}),
+    ...(pickupFrom ? { pickupFrom } : {}),
+    ...(pickupTo ? { pickupTo } : {}),
+    ...(deliveryFrom ? { deliveryFrom } : {}),
+    ...(deliveryTo ? { deliveryTo } : {}),
+  };
+
+  const {
+    data: shipments,
+    total,
+    pageIndex,
+    pageCount,
+    setPageIndex,
+    sorting,
+    setSorting,
+    search,
+    setSearch,
+    isLoading,
+    isFetching,
+    error,
+    buildQuery,
+  } = useServerTable<Shipment>({
+    endpoint: "/api/admin/shipments",
+    pageSize: 20,
+    filters,
+    errorMessage: "Error al cargar embarques",
+  });
+
+  const hasActiveQuery =
+    search.trim() !== "" || Object.keys(filters).length > 0;
 
   const clearFilters = useCallback(() => {
     setStatusFilter(STATUS_FILTER_ALL);
@@ -286,28 +306,22 @@ export function ShipmentsTable() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  const filteredShipments = useMemo(() => {
-    return shipments.filter((s) => {
-      if (statusFilter !== STATUS_FILTER_ALL && s.status !== statusFilter) return false;
-      if (pickupFrom || pickupTo) {
-        if (!dateInRange(s.pickupDate, pickupFrom, pickupTo)) return false;
-      }
-      if (deliveryFrom || deliveryTo) {
-        if (!dateInRange(s.deliveryDate, deliveryFrom, deliveryTo)) return false;
-      }
-      return true;
-    });
-  }, [shipments, statusFilter, pickupFrom, pickupTo, deliveryFrom, deliveryTo]);
+  const exportToExcel = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/admin/shipments?${buildQuery({ all: "1" })}`);
+      if (!res.ok) throw new Error();
+      const json = (await res.json()) as { data: Shipment[] };
+      const aoa = shipmentsToExcelAoa(json.data, incidentTypes);
+      downloadXlsxFromAoa(excelExportFilename("embarques"), "Embarques", aoa);
+      toast.success("Archivo Excel descargado.");
+    } catch {
+      toast.error("No se pudo exportar el archivo.");
+    }
+  }, [buildQuery, incidentTypes]);
 
-  const exportToExcel = useCallback(() => {
-    const aoa = shipmentsToExcelAoa(filteredShipments, incidentTypes);
-    downloadXlsxFromAoa(excelExportFilename("embarques"), "Embarques", aoa);
-    toast.success("Archivo Excel descargado.");
-  }, [filteredShipments, incidentTypes]);
-
-  if (!isLoaded) return <DataTableSkeleton />;
+  if (isLoading) return <DataTableSkeleton />;
   if (error) return <p className="text-destructive text-sm">{error}</p>;
-  if (shipments.length === 0) {
+  if (total === 0 && !hasActiveQuery) {
     return (
       <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
         No hay embarques registrados.
@@ -319,9 +333,19 @@ export function ShipmentsTable() {
     <DataTable<Shipment, unknown>
       key={compactView ? "shipments-compact" : "shipments-full"}
       columns={columns}
-      data={filteredShipments}
-      filterColumn="search"
+      data={shipments}
       filterPlaceholder="Buscar…"
+      manualPagination
+      pageCount={pageCount}
+      pageIndex={pageIndex}
+      totalCount={total}
+      onPageChange={setPageIndex}
+      manualSorting
+      sorting={sorting}
+      onSortingChange={setSorting}
+      search={search}
+      onSearchChange={setSearch}
+      isFetching={isFetching}
       initialColumnVisibility={
         compactView
           ? {
@@ -409,7 +433,7 @@ export function ShipmentsTable() {
               variant="outline"
               className="w-full sm:w-auto gap-2"
               onClick={exportToExcel}
-              disabled={filteredShipments.length === 0}
+              disabled={total === 0}
             >
               <FileDown className="size-4 shrink-0" />
               Exportar Excel

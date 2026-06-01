@@ -82,10 +82,11 @@ export function ShipmentForm({
   }, []);
 
   useEffect(() => {
-    fetch("/api/admin/clients")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data: unknown) => {
-        setClients(Array.isArray(data) ? (data as Client[]) : []);
+    fetch("/api/admin/clients?all=1")
+      .then((r) => (r.ok ? r.json() : { data: [] }))
+      .then((res: unknown) => {
+        const arr = (res as { data?: unknown })?.data;
+        setClients(Array.isArray(arr) ? (arr as Client[]) : []);
       })
       .catch(() => setClients([]));
   }, []);

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { DataTableSkeleton } from "@/components/ui/skeletons";
-import { useAdminFetch } from "@/hooks/use-admin-fetch";
+import { useServerTable } from "@/hooks/use-server-table";
 import { type ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
@@ -84,14 +84,28 @@ function getColumns(): ColumnDef<Client>[] {
 
 export function ClientsTable() {
   const router = useRouter();
-  const { data: clients, isLoaded, error } = useAdminFetch<Client>(
-    "/api/admin/clients",
-    "Error al cargar clientes"
-  );
+  const {
+    data: clients,
+    total,
+    pageIndex,
+    pageCount,
+    setPageIndex,
+    sorting,
+    setSorting,
+    search,
+    setSearch,
+    isLoading,
+    isFetching,
+    error,
+  } = useServerTable<Client>({
+    endpoint: "/api/admin/clients",
+    pageSize: 20,
+    errorMessage: "Error al cargar clientes",
+  });
 
-  if (!isLoaded) return <DataTableSkeleton />;
+  if (isLoading) return <DataTableSkeleton />;
   if (error) return <p className="text-destructive text-sm">{error}</p>;
-  if (clients.length === 0) {
+  if (total === 0 && search.trim() === "") {
     return (
       <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
         No hay clientes registrados.
@@ -103,8 +117,18 @@ export function ClientsTable() {
     <DataTable<Client, unknown>
       columns={getColumns()}
       data={clients}
-      filterColumn="search"
       filterPlaceholder="Buscar…"
+      manualPagination
+      pageCount={pageCount}
+      pageIndex={pageIndex}
+      totalCount={total}
+      onPageChange={setPageIndex}
+      manualSorting
+      sorting={sorting}
+      onSortingChange={setSorting}
+      search={search}
+      onSearchChange={setSearch}
+      isFetching={isFetching}
       initialColumnVisibility={{ search: false }}
       getRowId={(row) => row.id}
       onRowClick={(client) => router.push(`/admin/dashboard/clients/${client.id}`)}
