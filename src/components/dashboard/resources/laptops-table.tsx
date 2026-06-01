@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { DataTableSkeleton } from "@/components/ui/skeletons";
 import { useRouter } from "next/navigation";
 import { useAdminFetch } from "@/hooks/use-admin-fetch";
 import { type ColumnDef } from "@tanstack/react-table";
@@ -62,7 +63,7 @@ export function LaptopsTable() {
 
   const columns = useMemo(() => getColumns(), []);
 
-  if (!isLoaded) return <p className="text-muted-foreground">Cargando…</p>;
+  if (!isLoaded) return <DataTableSkeleton />;
   if (error) return <p className="text-destructive text-sm">{error}</p>;
   if (laptops.length === 0) {
     return (

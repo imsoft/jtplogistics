@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import { FormSkeleton } from "@/components/ui/skeletons";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { ResourceEditHeader } from "@/components/dashboard/resources/resource-edit-header";
 import { ClientForm } from "@/components/dashboard/resources/client-form";
@@ -16,7 +17,7 @@ export default function EditCollaboratorClientPage() {
       deleteRedirectHref: "/collaborator/dashboard/clients",
     });
 
-  if (!isLoaded) return <p className="text-muted-foreground">Cargando…</p>;
+  if (!isLoaded) return <FormSkeleton />;
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useResourceEdit } from "@/hooks/use-resource-edit";
+import { DetailSkeleton } from "@/components/ui/skeletons";
 import { ResourceEditHeader } from "@/components/dashboard/resources/resource-edit-header";
 import { EmailForm } from "@/components/dashboard/resources/email-form";
 import type { EmailAccount } from "@/types/resources.types";
@@ -12,7 +13,7 @@ export default function EditEmailPage() {
       redirectHref: "/admin/dashboard/emails",
     });
 
-  if (!isLoaded) return <p className="text-muted-foreground">Cargando…</p>;
+  if (!isLoaded) return <DetailSkeleton />;
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">

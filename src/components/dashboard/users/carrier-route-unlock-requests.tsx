@@ -43,13 +43,13 @@ export function CarrierRouteUnlockRequests({
   if (requests.length === 0) return null;
 
   return (
-    <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/20">
-      <div className="border-b border-amber-200 px-4 py-2.5 dark:border-amber-900/50">
-        <p className="text-xs font-semibold uppercase tracking-wider text-amber-800 dark:text-amber-400">
+    <div className="rounded-lg border border-amber-200 bg-amber-50">
+      <div className="border-b border-amber-200 px-4 py-2.5">
+        <p className="text-xs font-semibold uppercase tracking-wider text-amber-800">
           Solicitudes de edición pendientes ({requests.length})
         </p>
       </div>
-      <div className="divide-y divide-amber-100 dark:divide-amber-900/30">
+      <div className="divide-y divide-amber-100">
         {requests.map((r) => {
           const isLoading = loadingId === r.id;
           return (

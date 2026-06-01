@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { DataTableSkeleton } from "@/components/ui/skeletons";
 import { usePathname, useRouter } from "next/navigation";
 import { useAdminFetch } from "@/hooks/use-admin-fetch";
 import { type ColumnDef } from "@tanstack/react-table";
@@ -63,7 +64,7 @@ export function CollaboratorsTable() {
     return true;
   }), [collaborators, filterDepartment]);
 
-  if (!isLoaded) return <p className="text-muted-foreground">Cargando…</p>;
+  if (!isLoaded) return <DataTableSkeleton />;
   if (error) return <p className="text-destructive text-sm">{error}</p>;
   if (collaborators.length === 0) {
     return (

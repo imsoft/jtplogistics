@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { FormSkeleton } from "@/components/ui/skeletons";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
@@ -110,7 +111,7 @@ export default function EditEmployeePage() {
     handleSubmit({ ...formData, ...permissions });
   }
 
-  if (!isLoaded) return <p className="text-muted-foreground">Cargando…</p>;
+  if (!isLoaded) return <FormSkeleton />;
 
   const laptops = employee?.laptops ?? [];
   const phones = employee?.phones ?? [];

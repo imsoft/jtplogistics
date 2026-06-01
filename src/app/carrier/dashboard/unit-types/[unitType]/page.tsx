@@ -61,7 +61,7 @@ function TargetDiff({ diffPercent }: { diffPercent: number | null }) {
   if (diffPercent > 0) {
     return <span className="text-xs font-medium text-destructive">+{abs}%</span>;
   }
-  return <Check className="size-4 text-green-600 dark:text-green-400" />;
+  return <Check className="size-4 text-green-600" />;
 }
 
 export default function CarrierUnitTypePage() {

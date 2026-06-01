@@ -116,7 +116,7 @@ export default function AdminProfilePage() {
               <p className="text-xs font-semibold uppercase tracking-wide text-destructive">{error}</p>
             )}
             {success && (
-              <p className="text-xs font-semibold uppercase tracking-wide text-green-600 dark:text-green-500">
+              <p className="text-xs font-semibold uppercase tracking-wide text-green-600">
                 Perfil actualizado correctamente.
               </p>
             )}

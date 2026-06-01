@@ -57,10 +57,10 @@ function ScoreBar({ label, value, color }: { label: string; value: number | null
 
 function ScoreBadge({ score }: { score: number }) {
   const color =
-    score >= 90 ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" :
-    score >= 75 ? "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300" :
-    score >= 58 ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300" :
-    "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300";
+    score >= 90 ? "bg-emerald-100 text-emerald-800" :
+    score >= 75 ? "bg-blue-100 text-blue-800" :
+    score >= 58 ? "bg-amber-100 text-amber-800" :
+    "bg-red-100 text-red-800";
   return (
     <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold tabular-nums ${color}`}>
       {score}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useResourceEdit } from "@/hooks/use-resource-edit";
+import { DetailSkeleton } from "@/components/ui/skeletons";
 import { ResourceEditHeader } from "@/components/dashboard/resources/resource-edit-header";
 import { PhoneForm } from "@/components/dashboard/resources/phone-form";
 import type { PhoneDevice } from "@/types/resources.types";
@@ -12,7 +13,7 @@ export default function EditPhonePage() {
       redirectHref: "/admin/dashboard/phones",
     });
 
-  if (!isLoaded) return <p className="text-muted-foreground">Cargando…</p>;
+  if (!isLoaded) return <DetailSkeleton />;
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">

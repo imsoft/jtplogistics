@@ -25,9 +25,9 @@ interface AuditLogEntry {
 }
 
 const ACTION_CONFIG = {
-  created: { label: "Creado",      icon: Plus,   color: "text-green-600 dark:text-green-400",  bg: "bg-green-50 dark:bg-green-950/30" },
-  updated: { label: "Modificado",  icon: Pencil, color: "text-blue-600 dark:text-blue-400",    bg: "bg-blue-50 dark:bg-blue-950/30" },
-  deleted: { label: "Eliminado",   icon: Trash2, color: "text-destructive",                    bg: "bg-red-50 dark:bg-red-950/30" },
+  created: { label: "Creado",      icon: Plus,   color: "text-green-600",  bg: "bg-green-50" },
+  updated: { label: "Modificado",  icon: Pencil, color: "text-blue-600",    bg: "bg-blue-50" },
+  deleted: { label: "Eliminado",   icon: Trash2, color: "text-destructive",                    bg: "bg-red-50" },
 };
 
 const RESOURCE_LABELS: Record<string, string> = {

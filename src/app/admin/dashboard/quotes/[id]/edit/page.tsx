@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { FormSkeleton } from "@/components/ui/skeletons";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, Trash2 } from "lucide-react";
@@ -105,7 +106,7 @@ export default function EditQuotePage() {
     setRows((prev) => prev.map((r, idx) => idx === i ? { ...r, cost } : r));
   }
 
-  if (!isLoaded) return <p className="text-muted-foreground">Cargando…</p>;
+  if (!isLoaded) return <FormSkeleton />;
   if (error && !quote) return <p className="text-sm text-destructive">{error}</p>;
 
   return (

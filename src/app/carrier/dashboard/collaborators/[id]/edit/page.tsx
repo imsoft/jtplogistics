@@ -1,6 +1,7 @@
 "use client";
 
 import { useResourceEdit } from "@/hooks/use-resource-edit";
+import { FormSkeleton } from "@/components/ui/skeletons";
 import { ResourceEditHeader } from "@/components/dashboard/resources/resource-edit-header";
 import { EmployeeForm } from "@/components/dashboard/resources/employee-form";
 import type { Employee, EmployeeFormData } from "@/types/resources.types";
@@ -16,7 +17,7 @@ export default function CarrierCollaboratorEditPage() {
     handleSubmit(formData);
   }
 
-  if (!isLoaded) return <p className="text-muted-foreground">Cargando…</p>;
+  if (!isLoaded) return <FormSkeleton />;
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">

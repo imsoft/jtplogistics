@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { DetailSkeleton } from "@/components/ui/skeletons";
 import Link from "next/link";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { ResourceEditHeader } from "@/components/dashboard/resources/resource-edit-header";
@@ -48,7 +49,7 @@ export default function EditIdeaPage() {
     }
   }
 
-  if (!isLoaded) return <p className="text-muted-foreground">Cargando…</p>;
+  if (!isLoaded) return <DetailSkeleton />;
 
   const currentStatus = idea?.status ?? "pending";
   const statusColor = IDEA_STATUS_COLORS[currentStatus] ?? "";
@@ -106,7 +107,7 @@ export default function EditIdeaPage() {
         )}
         {statusError && <p className="text-destructive text-sm">{statusError}</p>}
         {createdTaskId && (
-          <p className="text-sm text-green-600 dark:text-green-400">
+          <p className="text-sm text-green-600">
             Tarea creada.{" "}
             <Link
               href={`/admin/dashboard/tasks/${createdTaskId}/edit`}

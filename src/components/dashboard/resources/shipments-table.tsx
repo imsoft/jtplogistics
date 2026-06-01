@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useCallback, useEffect } from "react";
+import { DataTableSkeleton } from "@/components/ui/skeletons";
 import { useRouter } from "next/navigation";
 import { useAdminFetch } from "@/hooks/use-admin-fetch";
 import { type ColumnDef } from "@tanstack/react-table";
@@ -44,33 +45,33 @@ export const SHIPMENT_STATUS_CONFIG: Record<
 > = {
   pending: {
     label: "Pendiente",
-    badgeClass: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
+    badgeClass: "bg-gray-100 text-gray-800",
     rowClass: "",
   },
   delivered: {
     label: "Entregado",
-    badgeClass: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-    rowClass: "bg-blue-50 dark:bg-blue-950/40",
+    badgeClass: "bg-blue-100 text-blue-800",
+    rowClass: "bg-blue-50",
   },
   delivered_with_delay: {
     label: "Entregado con retraso",
-    badgeClass: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-    rowClass: "bg-purple-50 dark:bg-purple-950/40",
+    badgeClass: "bg-purple-100 text-purple-800",
+    rowClass: "bg-purple-50",
   },
   not_delivered: {
     label: "No entregado",
-    badgeClass: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
-    rowClass: "bg-orange-50 dark:bg-orange-950/40",
+    badgeClass: "bg-orange-100 text-orange-800",
+    rowClass: "bg-orange-50",
   },
   at_risk: {
     label: "En riesgo",
-    badgeClass: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-    rowClass: "bg-red-50 dark:bg-red-950/40",
+    badgeClass: "bg-red-100 text-red-800",
+    rowClass: "bg-red-50",
   },
   returned: {
     label: "Cerrado",
-    badgeClass: "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200",
-    rowClass: "bg-pink-50 dark:bg-pink-950/40",
+    badgeClass: "bg-pink-100 text-pink-800",
+    rowClass: "bg-pink-50",
   },
 };
 
@@ -304,7 +305,7 @@ export function ShipmentsTable() {
     toast.success("Archivo Excel descargado.");
   }, [filteredShipments, incidentTypes]);
 
-  if (!isLoaded) return <p className="text-muted-foreground">Cargando…</p>;
+  if (!isLoaded) return <DataTableSkeleton />;
   if (error) return <p className="text-destructive text-sm">{error}</p>;
   if (shipments.length === 0) {
     return (

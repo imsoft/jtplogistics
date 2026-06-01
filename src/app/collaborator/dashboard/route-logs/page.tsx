@@ -25,9 +25,9 @@ interface RouteLogEntry {
 }
 
 const ACTION_CONFIG = {
-  created: { label: "Creada",     icon: Plus,   color: "text-green-600 dark:text-green-400",  bg: "bg-green-50 dark:bg-green-950/30" },
-  updated: { label: "Modificada", icon: Pencil,  color: "text-blue-600 dark:text-blue-400",    bg: "bg-blue-50 dark:bg-blue-950/30" },
-  deleted: { label: "Eliminada",  icon: Trash2,  color: "text-destructive",                    bg: "bg-red-50 dark:bg-red-950/30" },
+  created: { label: "Creada",     icon: Plus,   color: "text-green-600",  bg: "bg-green-50" },
+  updated: { label: "Modificada", icon: Pencil,  color: "text-blue-600",    bg: "bg-blue-50" },
+  deleted: { label: "Eliminada",  icon: Trash2,  color: "text-destructive",                    bg: "bg-red-50" },
 };
 
 function formatDateTime(iso: string) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { DataTableSkeleton } from "@/components/ui/skeletons";
 import Link from "next/link";
 import { pdf } from "@react-pdf/renderer";
 import { Plus, Trash2, FileText, Loader2, Settings } from "lucide-react";
@@ -225,7 +226,7 @@ function addCurrentRouteToQuote() {
     }
   }
 
-  if (!isLoaded) return <p className="text-muted-foreground">Cargando…</p>;
+  if (!isLoaded) return <DataTableSkeleton />;
 
   return (
     <div className="space-y-8">
@@ -385,7 +386,7 @@ function addCurrentRouteToQuote() {
                       </td>
                       <td className="px-3 py-2 text-xs text-muted-foreground hidden md:table-cell">{row.unitLabel}</td>
                       <td className="px-2 py-2">
-                        <Button variant="ghost" size="icon" className="size-7" onClick={() => removeRow(i)}>
+                        <Button variant="ghost" size="icon" className="size-7" onClick={() => removeRow(i)} aria-label="Eliminar fila">
                           <Trash2 className="size-3.5 text-destructive" />
                         </Button>
                       </td>

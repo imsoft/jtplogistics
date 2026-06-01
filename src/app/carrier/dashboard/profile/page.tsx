@@ -184,7 +184,7 @@ export default function CarrierProfilePage() {
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
-      {success && <p className="text-sm text-green-600 dark:text-green-400">Perfil guardado correctamente.</p>}
+      {success && <p className="text-sm text-green-600">Perfil guardado correctamente.</p>}
 
       <form onSubmit={handleSubmit} className="space-y-8">
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { FormSkeleton } from "@/components/ui/skeletons";
 import { useParams } from "next/navigation";
 import { Route as RouteIcon } from "lucide-react";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
@@ -129,7 +130,7 @@ export default function EditClientPage() {
     setEditVolumes((prev) => ({ ...prev, [clientRouteId]: value }));
   }
 
-  if (!isLoaded) return <p className="text-muted-foreground">Cargando…</p>;
+  if (!isLoaded) return <FormSkeleton />;
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
@@ -194,7 +195,7 @@ export default function EditClientPage() {
                               {items.map((route) => (
                                 <div
                                   key={route.clientRouteId}
-                                  className="grid grid-cols-[1fr_minmax(120px,1fr)_minmax(100px,1fr)_minmax(80px,1fr)] gap-x-6 items-center border-b px-4 py-3 last:border-0 transition-colors hover:bg-blue-50 dark:hover:bg-blue-950/30"
+                                  className="grid grid-cols-[1fr_minmax(120px,1fr)_minmax(100px,1fr)_minmax(80px,1fr)] gap-x-6 items-center border-b px-4 py-3 last:border-0 transition-colors hover:bg-blue-50"
                                 >
                                   <div className="min-w-0">
                                     <p className="truncate text-sm font-medium">

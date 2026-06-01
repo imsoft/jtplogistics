@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
+import { DataTableSkeleton } from "@/components/ui/skeletons";
 import { useRouter } from "next/navigation";
 import { FileDown } from "lucide-react";
 import { toast } from "sonner";
@@ -152,7 +153,7 @@ export function FinancesTable() {
     toast.success("Archivo Excel descargado.");
   }, [rows]);
 
-  if (!isLoaded) return <p className="text-muted-foreground">Cargando…</p>;
+  if (!isLoaded) return <DataTableSkeleton />;
   if (error) return <p className="text-destructive text-sm">{error}</p>;
   if (rows.length === 0) {
     return (

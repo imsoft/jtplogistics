@@ -221,7 +221,7 @@ export default function ClientProfilePage() {
                         {items.map((route) => (
                           <div
                             key={route.id}
-                            className="grid grid-cols-[1fr_minmax(100px,1fr)_minmax(100px,1fr)_minmax(120px,1fr)_minmax(80px,1fr)] gap-x-6 items-center border-b px-4 py-3 last:border-0 transition-colors hover:bg-blue-50 dark:hover:bg-blue-950/30"
+                            className="grid grid-cols-[1fr_minmax(100px,1fr)_minmax(100px,1fr)_minmax(120px,1fr)_minmax(80px,1fr)] gap-x-6 items-center border-b px-4 py-3 last:border-0 transition-colors hover:bg-blue-50"
                           >
                             <div className="min-w-0">
                               <p className="truncate text-sm font-medium">

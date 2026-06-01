@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { FormSkeleton } from "@/components/ui/skeletons";
 import { useParams } from "next/navigation";
 import { LockKeyhole } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -49,7 +50,7 @@ export default function EditShipmentPage() {
     await handleSubmit({ ...(formData as object), _confirmedEmail: unlockEmail.trim().toLowerCase() });
   }
 
-  if (!isLoaded) return <p className="text-muted-foreground">Cargando…</p>;
+  if (!isLoaded) return <FormSkeleton />;
 
   const title = shipment
     ? [shipment.eco, shipment.origin, shipment.destination].filter(Boolean).join(" – ") || "Embarque"
@@ -74,19 +75,19 @@ export default function EditShipmentPage() {
         {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
 
         {isClosed && !isUnlocked && (
-          <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-5 dark:border-amber-900/50 dark:bg-amber-950/20">
+          <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-5">
             <div className="mb-3 flex items-center gap-2">
-              <LockKeyhole className="size-4 shrink-0 text-amber-600 dark:text-amber-500" />
-              <p className="text-sm font-semibold text-amber-800 dark:text-amber-400">
+              <LockKeyhole className="size-4 shrink-0 text-amber-600" />
+              <p className="text-sm font-semibold text-amber-800">
                 Embarque cerrado
               </p>
             </div>
-            <p className="mb-4 text-sm text-amber-700 dark:text-amber-500">
+            <p className="mb-4 text-sm text-amber-700">
               Este embarque está cerrado. Escribe tu correo electrónico para verificar que quieres editarlo.
             </p>
             <form onSubmit={handleUnlock} className="flex flex-col gap-3 sm:flex-row sm:items-end">
               <div className="flex-1 space-y-1.5">
-                <Label htmlFor="unlock-email" className="text-xs text-amber-800 dark:text-amber-400">
+                <Label htmlFor="unlock-email" className="text-xs text-amber-800">
                   Correo electrónico
                 </Label>
                 <Input
@@ -94,7 +95,7 @@ export default function EditShipmentPage() {
                   type="email"
                   value={unlockEmail}
                   onChange={(e) => { setUnlockEmail(e.target.value); setUnlockError(""); }}
-                  className="bg-white dark:bg-transparent"
+                  className="bg-white"
                   autoFocus
                 />
               </div>

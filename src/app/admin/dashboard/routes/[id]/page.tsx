@@ -258,7 +258,7 @@ export default function RouteDetailPage() {
                   <Link
                     key={carrier.id}
                     href={`/admin/dashboard/users/${carrier.carrierId}`}
-                    className="grid grid-cols-[1fr_minmax(100px,1fr)_minmax(100px,1fr)_minmax(100px,1fr)_minmax(100px,1fr)] gap-x-6 items-center border-b px-4 py-3 last:border-0 transition-colors hover:bg-blue-50 dark:hover:bg-blue-950/30"
+                    className="grid grid-cols-[1fr_minmax(100px,1fr)_minmax(100px,1fr)_minmax(100px,1fr)_minmax(100px,1fr)] gap-x-6 items-center border-b px-4 py-3 last:border-0 transition-colors hover:bg-blue-50"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       {carrier.image ? (
@@ -330,7 +330,7 @@ export default function RouteDetailPage() {
                   <Link
                     key={client.id}
                     href={`/admin/dashboard/clients/${client.clientId}`}
-                    className="grid grid-cols-[1fr_minmax(100px,1fr)_minmax(100px,1fr)_minmax(100px,1fr)] gap-x-6 items-center border-b px-4 py-3 last:border-0 transition-colors hover:bg-blue-50 dark:hover:bg-blue-950/30"
+                    className="grid grid-cols-[1fr_minmax(100px,1fr)_minmax(100px,1fr)_minmax(100px,1fr)] gap-x-6 items-center border-b px-4 py-3 last:border-0 transition-colors hover:bg-blue-50"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="bg-primary text-primary-foreground flex size-7 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold">

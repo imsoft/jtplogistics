@@ -178,10 +178,10 @@ export default function UnitTypesPage() {
                             }}
                           />
                           <span className="text-muted-foreground shrink-0 font-mono text-xs">{u.value}</span>
-                          <Button size="icon" variant="ghost" className="size-8 text-green-600 hover:text-green-700" onClick={() => handleSaveEdit(u.id)} disabled={isSaving}>
+                          <Button size="icon" variant="ghost" className="size-8 text-green-600 hover:text-green-700" onClick={() => handleSaveEdit(u.id)} disabled={isSaving} aria-label="Guardar">
                             <Check className="size-4" />
                           </Button>
-                          <Button size="icon" variant="ghost" className="size-8" onClick={() => setEditId(null)} disabled={isSaving}>
+                          <Button size="icon" variant="ghost" className="size-8" onClick={() => setEditId(null)} disabled={isSaving} aria-label="Cancelar">
                             <X className="size-4" />
                           </Button>
                         </>

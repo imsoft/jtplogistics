@@ -12,9 +12,9 @@ import type { Task, TaskStatus } from "@/types/task.types";
 const ALL = "all";
 
 const STATUS_BADGE: Record<TaskStatus, string> = {
-  pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
-  in_progress: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-  completed: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+  pending: "bg-yellow-100 text-yellow-800",
+  in_progress: "bg-blue-100 text-blue-800",
+  completed: "bg-green-100 text-green-800",
 };
 
 export function DeveloperTasksTable() {

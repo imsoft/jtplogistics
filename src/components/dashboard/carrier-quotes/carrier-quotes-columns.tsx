@@ -33,7 +33,7 @@ function TargetIndicator({
     );
   }
   return (
-    <span className="inline-flex items-center gap-0.5 text-xs font-medium text-green-600 dark:text-green-400">
+    <span className="inline-flex items-center gap-0.5 text-xs font-medium text-green-600">
       <TrendingDown className="size-3" /> -{abs}%
     </span>
   );

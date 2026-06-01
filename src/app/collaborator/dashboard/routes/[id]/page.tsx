@@ -130,6 +130,7 @@ export default function CollaboratorRouteDetailPage() {
           size="icon"
           className="shrink-0"
           onClick={() => router.back()}
+          aria-label="Volver"
         >
           <ChevronLeft className="size-4" />
         </Button>

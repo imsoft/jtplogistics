@@ -12,7 +12,7 @@ export default function NewQuotePage() {
     <div className="min-w-0 space-y-4 sm:space-y-6">
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" asChild className="shrink-0">
-          <Link href="/admin/dashboard/quotes">
+          <Link href="/admin/dashboard/quotes" aria-label="Volver a cotizaciones">
             <ChevronLeft className="size-4" />
           </Link>
         </Button>

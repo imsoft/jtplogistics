@@ -177,7 +177,7 @@ export function RouteForm({
           </div>
 
           {isDuplicate && (
-            <div className="flex items-start gap-2 rounded-lg border border-yellow-400/50 bg-yellow-50 px-4 py-3 text-sm text-yellow-800 dark:border-yellow-500/30 dark:bg-yellow-900/20 dark:text-yellow-400">
+            <div className="flex items-start gap-2 rounded-lg border border-yellow-400/50 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
               <TriangleAlert className="mt-0.5 size-4 shrink-0" />
               <span>
                 La ruta <strong>{originCity} → {destCity}</strong> ya está dada de alta.

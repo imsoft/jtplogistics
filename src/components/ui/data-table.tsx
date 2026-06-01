@@ -99,6 +99,9 @@ export function DataTable<TData, TValue>({
         <div className="flex flex-wrap items-center gap-2 py-2">
           {filterKey && (
             <Input
+              type="search"
+              placeholder={filterPlaceholder || "Buscar…"}
+              aria-label={filterPlaceholder || "Buscar"}
               value={(table.getColumn(filterKey)?.getFilterValue() as string) ?? ""}
               onChange={(event) =>
                 table.getColumn(filterKey)?.setFilterValue(event.target.value)
