@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
       messages.map((m) => ({ ...m, createdAt: m.createdAt.toISOString() }))
     );
   } catch (e) {
-    if (e instanceof Response) throw e;
+    if (e instanceof Response) return e;
     console.error(e);
     return Response.json({ error: "Error interno" }, { status: 500 });
   }
@@ -178,7 +178,7 @@ export async function POST(request: NextRequest) {
       createdAt: message.createdAt.toISOString(),
     });
   } catch (e) {
-    if (e instanceof Response) throw e;
+    if (e instanceof Response) return e;
     console.error(e);
     return Response.json({ error: "Error interno" }, { status: 500 });
   }

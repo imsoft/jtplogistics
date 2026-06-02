@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     const diffPercent = ((carrierTarget - adminTarget) / adminTarget) * 100;
     return Response.json({ diffPercent });
   } catch (e) {
-    if (e instanceof Response) throw e;
+    if (e instanceof Response) return e;
     console.error(e);
     return Response.json({ diffPercent: null });
   }

@@ -11,7 +11,7 @@ export async function GET() {
     for (const s of settings) map[s.key] = s.value;
     return Response.json(map);
   } catch (e) {
-    if (e instanceof Response) throw e;
+    if (e instanceof Response) return e;
     console.error(e);
     return Response.json({ error: "Error interno del servidor" }, { status: 500 });
   }
@@ -43,7 +43,7 @@ export async function PATCH(request: NextRequest) {
 
     return Response.json({ ok: true });
   } catch (e) {
-    if (e instanceof Response) throw e;
+    if (e instanceof Response) return e;
     console.error(e);
     return Response.json({ error: "Error interno del servidor" }, { status: 500 });
   }

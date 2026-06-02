@@ -85,7 +85,7 @@ export async function PATCH(
 
     return Response.json(taskToJson(task));
   } catch (e) {
-    if (e instanceof Response) throw e;
+    if (e instanceof Response) return e;
     if (e && typeof e === "object" && "code" in e && e.code === "P2025") {
       return Response.json({ error: "No encontrado" }, { status: 404 });
     }
@@ -114,7 +114,7 @@ export async function DELETE(
 
     return new Response(null, { status: 204 });
   } catch (e) {
-    if (e instanceof Response) throw e;
+    if (e instanceof Response) return e;
     if (e && typeof e === "object" && "code" in e && e.code === "P2025") {
       return Response.json({ error: "No encontrado" }, { status: 404 });
     }

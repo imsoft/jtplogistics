@@ -20,7 +20,7 @@ export async function GET() {
     const types = await prisma.incidentTypeDef.findMany({ orderBy: incidentTypeDefOrderBy });
     return Response.json(types.map(toJson));
   } catch (e) {
-    if (e instanceof Response) throw e;
+    if (e instanceof Response) return e;
     return Response.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
 
     return Response.json(toJson(created), { status: 201 });
   } catch (e) {
-    if (e instanceof Response) throw e;
+    if (e instanceof Response) return e;
     return Response.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }

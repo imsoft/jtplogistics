@@ -30,7 +30,7 @@ export async function GET() {
       }))
     );
   } catch (e) {
-    if (e instanceof Response) throw e;
+    if (e instanceof Response) return e;
     console.error(e);
     return Response.json({ error: "Error interno del servidor" }, { status: 500 });
   }

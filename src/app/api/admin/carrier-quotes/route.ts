@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
 
     return Response.json({ routes, carriers });
   } catch (e) {
-    if (e instanceof Response) throw e;
+    if (e instanceof Response) return e;
     console.error(e);
     return Response.json({ error: "Error interno del servidor" }, { status: 500 });
   }

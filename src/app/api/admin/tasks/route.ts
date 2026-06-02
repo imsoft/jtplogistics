@@ -45,7 +45,7 @@ export async function GET() {
     });
     return Response.json(tasks.map(taskToJson));
   } catch (e) {
-    if (e instanceof Response) throw e;
+    if (e instanceof Response) return e;
     return Response.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
 
     return Response.json(taskToJson(task), { status: 201 });
   } catch (e) {
-    if (e instanceof Response) throw e;
+    if (e instanceof Response) return e;
     return Response.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }

@@ -32,7 +32,7 @@ export async function GET() {
     const next = String(count + 1).padStart(3, "0");
     return Response.json({ quoteNumber: `JTP-${dd}${mm}${aaaa}-${next}` });
   } catch (e) {
-    if (e instanceof Response) throw e;
+    if (e instanceof Response) return e;
     console.error(e);
     return Response.json({ error: "Error interno" }, { status: 500 });
   }

@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
 
     return Response.json({ id: quote.id }, { status: 201 });
   } catch (e) {
-    if (e instanceof Response) throw e;
+    if (e instanceof Response) return e;
     console.error(e);
     return Response.json({ error: "Error interno" }, { status: 500 });
   }

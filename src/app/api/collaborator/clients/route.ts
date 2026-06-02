@@ -52,7 +52,7 @@ export async function GET() {
     });
     return Response.json(clients.map(toJson));
   } catch (e) {
-    if (e instanceof Response) throw e;
+    if (e instanceof Response) return e;
     console.error(e);
     return Response.json({ error: "Error interno del servidor" }, { status: 500 });
   }
@@ -108,7 +108,7 @@ export async function POST(request: Request) {
 
     return Response.json({ id: client.id }, { status: 201 });
   } catch (e) {
-    if (e instanceof Response) throw e;
+    if (e instanceof Response) return e;
     console.error(e);
     return Response.json({ error: "Error interno del servidor" }, { status: 500 });
   }

@@ -21,7 +21,7 @@ export async function GET() {
     });
     return Response.json({ notes: user?.vendorNotes ?? DEFAULT_NOTES });
   } catch (e) {
-    if (e instanceof Response) throw e;
+    if (e instanceof Response) return e;
     console.error(e);
     return Response.json({ error: "Error interno" }, { status: 500 });
   }
@@ -37,7 +37,7 @@ export async function PATCH(request: NextRequest) {
     });
     return Response.json({ ok: true });
   } catch (e) {
-    if (e instanceof Response) throw e;
+    if (e instanceof Response) return e;
     console.error(e);
     return Response.json({ error: "Error interno" }, { status: 500 });
   }

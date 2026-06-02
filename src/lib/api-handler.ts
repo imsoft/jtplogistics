@@ -13,7 +13,7 @@ export function adminHandler(fn: (session: AdminSession) => Promise<Response>): 
       const session = await requireAdmin();
       return await fn(session);
     } catch (e) {
-      if (e instanceof Response) throw e;
+      if (e instanceof Response) return e;
       console.error(e);
       return Response.json({ error: "Error interno del servidor" }, { status: 500 });
     }
@@ -32,7 +32,7 @@ export function ideasHandler(
       const session = await requireCollaboratorOrAdmin();
       return await fn(session);
     } catch (e) {
-      if (e instanceof Response) throw e;
+      if (e instanceof Response) return e;
       console.error(e);
       return Response.json({ error: "Error interno del servidor" }, { status: 500 });
     }
@@ -48,7 +48,7 @@ export function carrierHandler(
       const session = await requireCarrier();
       return await fn(session);
     } catch (e) {
-      if (e instanceof Response) throw e;
+      if (e instanceof Response) return e;
       console.error(e);
       return Response.json({ error: "Error interno del servidor" }, { status: 500 });
     }

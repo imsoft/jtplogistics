@@ -64,7 +64,7 @@ export async function PATCH(
       updatedAt: updated.updatedAt.toISOString(),
     });
   } catch (e) {
-    if (e instanceof Response) throw e;
+    if (e instanceof Response) return e;
     return Response.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }

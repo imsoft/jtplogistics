@@ -57,7 +57,7 @@ export async function GET() {
       department: user.employeeProfile?.department ?? null,
     });
   } catch (e) {
-    if (e instanceof Response) throw e;
+    if (e instanceof Response) return e;
     console.error(e);
     return Response.json({ error: "Error interno del servidor" }, { status: 500 });
   }
@@ -153,7 +153,7 @@ export async function PATCH(request: NextRequest) {
       contacts: updatedContacts,
     });
   } catch (e) {
-    if (e instanceof Response) throw e;
+    if (e instanceof Response) return e;
     console.error(e);
     return Response.json({ error: "Error interno del servidor" }, { status: 500 });
   }

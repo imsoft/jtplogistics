@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
     return Response.json({ url: upload.secure_url });
   } catch (e) {
-    if (e instanceof Response) throw e;
+    if (e instanceof Response) return e;
     const message = e instanceof Error ? e.message : String(e);
     console.error("[settings/cover-image]", message);
     return Response.json(
