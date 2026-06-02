@@ -6,6 +6,8 @@ import { prisma } from "@/lib/db";
 
 const DEFAULT_COVER = "/images/login/login-image.jpg";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   await redirectIfAuthenticated();
 

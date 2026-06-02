@@ -191,7 +191,7 @@ export default function ClientProfilePage() {
             <p className="text-muted-foreground text-sm px-4 pb-4">Cargando rutas…</p>
           ) : routes.length === 0 ? (
             <p className="text-muted-foreground rounded-lg border border-dashed mx-4 mb-4 p-4 text-center text-sm">
-              No hay rutas asignadas. Usa el botón "Seleccionar rutas" para asignarlas.
+              No hay rutas asignadas. Usa el botón {'"Seleccionar rutas"'} para asignarlas.
             </p>
           ) : (
             <div className="space-y-0">

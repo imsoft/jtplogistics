@@ -5,6 +5,8 @@ import { FloatingChat } from "@/components/floating-chat";
 import { CarrierOnboardingTour } from "@/components/dashboard/carrier-onboarding-tour";
 import { dashboardMainWithFloatingChatClassName } from "@/lib/dashboard-shell";
 
+export const dynamic = "force-dynamic";
+
 export default function CarrierDashboardLayout({
   children,
 }: {

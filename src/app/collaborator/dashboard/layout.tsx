@@ -5,6 +5,8 @@ import { NotificationBell } from "@/components/notification-bell";
 import { FloatingChat } from "@/components/floating-chat";
 import { dashboardMainWithFloatingChatClassName } from "@/lib/dashboard-shell";
 
+export const dynamic = "force-dynamic";
+
 export default function CollaboratorDashboardLayout({
   children,
 }: {

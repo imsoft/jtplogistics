@@ -7,6 +7,8 @@ import { OnboardingTour } from "@/components/dashboard/onboarding-tour";
 import { requireAdmin } from "@/lib/auth-server";
 import { dashboardMainWithFloatingChatClassName } from "@/lib/dashboard-shell";
 
+export const dynamic = "force-dynamic";
+
 export default async function DashboardLayout({
   children,
 }: {

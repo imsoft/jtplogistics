@@ -3,6 +3,8 @@ import { DeveloperAppSidebar } from "@/components/dashboard/developer-app-sideba
 import { NotificationBell } from "@/components/notification-bell";
 import { requireDeveloper } from "@/lib/auth-server";
 
+export const dynamic = "force-dynamic";
+
 export default async function DeveloperDashboardLayout({
   children,
 }: {

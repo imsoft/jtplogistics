@@ -2,6 +2,8 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import { VendorAppSidebar } from "@/components/dashboard/vendor-app-sidebar";
 import { requireVendedor } from "@/lib/auth-server";
 
+export const dynamic = "force-dynamic";
+
 export default async function VendorDashboardLayout({
   children,
 }: {

@@ -104,8 +104,7 @@ export function useServerTable<T>({
         }
       }
       return params.toString();
-      // filtersKey representa el contenido de filtersRef.current.
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+      // filtersKey representa el contenido de filtersRef.current (estable por valor).
     },
     [debouncedSearch, sorting, filtersKey]
   );
