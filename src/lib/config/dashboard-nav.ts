@@ -35,24 +35,34 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
     label: "Operaciones",
     items: [
       { title: "Rutas", href: "/admin/dashboard/routes", icon: RouteIcon },
-      { title: "Historial de cambios", href: "/admin/dashboard/routes/logs", icon: ScrollText },
-      { title: "Tipos de unidades", href: "/admin/dashboard/unit-types", icon: Boxes },
-      { title: "Tipos de incidencia", href: "/admin/dashboard/incident-types", icon: AlertTriangle },
       { title: "Cotizador", href: "/admin/dashboard/quotes", icon: Calculator },
-      { title: "Proveedores", href: "/admin/dashboard/providers", icon: Truck },
+      { title: "Tipos de unidades", href: "/admin/dashboard/unit-types", icon: Boxes },
+      { title: "Mensajes", href: "/admin/dashboard/messages", icon: MessageSquare },
+      { title: "Tipos de incidencia", href: "/admin/dashboard/incident-types", icon: AlertTriangle },
       { title: "Rating transportistas", href: "/admin/dashboard/providers/ratings", icon: StarIcon },
+      { title: "Rentabilidad por ruta", href: "/admin/dashboard/finances/analytics", icon: TrendingUp },
+    ],
+  },
+  {
+    label: "Contactos",
+    items: [
       { title: "Clientes", href: "/admin/dashboard/clients", icon: Users },
+      { title: "Proveedores", href: "/admin/dashboard/providers", icon: Truck },
+    ],
+  },
+  {
+    label: "Finanzas",
+    items: [
       { title: "Tabla de embarques", href: "/admin/dashboard/shipments", icon: Ship },
       { title: "Tabla de finanzas", href: "/admin/dashboard/finances", icon: DollarSign },
-      { title: "Rentabilidad por ruta", href: "/admin/dashboard/finances/analytics", icon: TrendingUp },
     ],
   },
   {
     label: "Equipo",
     items: [
+      { title: "Vendedores", href: "/admin/dashboard/vendors", icon: ShoppingBag },
       { title: "Colaboradores", href: "/admin/dashboard/employees", icon: UserRound },
       { title: "Organigrama", href: "/admin/dashboard/employees/org-chart", icon: Network },
-      { title: "Vendedores", href: "/admin/dashboard/vendors", icon: ShoppingBag },
     ],
   },
   {
@@ -66,7 +76,6 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
   {
     label: "Otros",
     items: [
-      { title: "Mensajes", href: "/admin/dashboard/messages", icon: MessageSquare },
       {
         title: "Sugerencias transportistas",
         href: "/admin/dashboard/carrier-suggestions",
@@ -76,6 +85,7 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
       { title: "Tareas", href: "/admin/dashboard/tasks", icon: ClipboardList },
       { title: "Cuenta demo", href: "/admin/dashboard/demo-account", icon: Copy },
       { title: "Configuración", href: "/admin/dashboard/settings", icon: Settings },
+      { title: "Historial de cambios", href: "/admin/dashboard/routes/logs", icon: ScrollText },
     ],
   },
 ];

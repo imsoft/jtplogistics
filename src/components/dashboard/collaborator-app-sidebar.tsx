@@ -54,20 +54,25 @@ const allNavGroups: PermNavGroup[] = [
     label: "Operaciones",
     items: [
       { title: "Rutas", href: `${BASE}/routes`, icon: RouteIcon, permission: "canViewRoutes" },
-      { title: "Historial de cambios", href: `${BASE}/route-logs`, icon: ScrollText, permission: "canViewRouteLogs" },
-      { title: "Tipos de unidades", href: `${BASE}/unit-types`, icon: Boxes, permission: "canViewUnitTypes" },
       { title: "Cotizador", href: `${BASE}/quotes`, icon: Calculator, permission: "canViewQuotes" },
-      { title: "Proveedores", href: `${BASE}/providers`, icon: Truck, permission: "canViewProviders" },
+      { title: "Tipos de unidades", href: `${BASE}/unit-types`, icon: Boxes, permission: "canViewUnitTypes" },
       { title: "Mensajes", href: `${BASE}/messages`, icon: MessageSquare, permission: "canViewMessages" },
+      
+    ],
+  },
+  {
+    label: "Contactos",
+    items: [
       { title: "Clientes", href: `${BASE}/clients`, icon: Users, permission: "canViewClients" },
+      { title: "Proveedores", href: `${BASE}/providers`, icon: Truck, permission: "canViewProviders" },
     ],
   },
   {
     label: "Equipo",
     items: [
+      { title: "Vendedores", href: `${BASE}/vendors`, icon: ShoppingBag, permission: "canViewVendors" },
       { title: "Colaboradores", href: `${BASE}/employees`, icon: UserRound, permission: "canViewEmployees" },
       { title: "Organigrama", href: `${BASE}/employees/org-chart`, icon: Network, permission: "canViewEmployees" },
-      { title: "Vendedores", href: `${BASE}/vendors`, icon: ShoppingBag, permission: "canViewVendors" },
     ],
   },
   {
@@ -83,6 +88,7 @@ const allNavGroups: PermNavGroup[] = [
     items: [
       { title: "Ideas", href: `${BASE}/ideas`, icon: Lightbulb, permission: "canViewIdeas" },
       { title: "Tareas", href: `${BASE}/tasks`, icon: ClipboardList, permission: "canViewTasks" },
+      { title: "Historial de cambios", href: `${BASE}/route-logs`, icon: ScrollText, permission: "canViewRouteLogs" },
     ],
   },
   {
