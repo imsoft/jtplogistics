@@ -204,7 +204,7 @@ function addCurrentRouteToQuote() {
       ).toBlob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url; a.download = `${quoteNumber}.pdf`; a.click();
+      a.href = url; a.download = `Cotizacion-${quoteNumber}.pdf`; a.click();
       URL.revokeObjectURL(url);
 
       await fetch("/api/generated-quotes", {
