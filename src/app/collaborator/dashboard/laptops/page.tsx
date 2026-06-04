@@ -2,10 +2,13 @@
 
 import { useMemo, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
 import { AppSelect } from "@/components/ui/app-select";
+import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 import { type ColumnDef } from "@tanstack/react-table";
 import type { Laptop } from "@/types/resources.types";
 
@@ -53,6 +56,7 @@ function getColumns(): ColumnDef<Laptop>[] {
 
 export default function CollaboratorLaptopsPage() {
   const router = useRouter();
+  const { permissions } = useCollaboratorPermissions();
   const [laptops, setLaptops] = useState<Laptop[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -92,6 +96,14 @@ export default function CollaboratorLaptopsPage() {
             Laptops registradas y su asignación.
           </p>
         </div>
+        {permissions?.canCreateLaptops && (
+          <Button asChild className="w-full shrink-0 sm:w-fit" size="sm">
+            <Link href="/collaborator/dashboard/laptops/new">
+              <Plus className="size-4" />
+              Nueva laptop
+            </Link>
+          </Button>
+        )}
       </div>
       {!isLoaded ? (
         <p className="text-muted-foreground">Cargando…</p>

@@ -19,6 +19,7 @@ export default function NewCollaboratorLaptopPage() {
       error={error}
     >
       <LaptopForm
+        scope="collaborator"
         submitLabel="Crear laptop"
         cancelHref="/collaborator/dashboard/laptops"
         onSubmit={handleSubmit}

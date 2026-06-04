@@ -7,6 +7,7 @@ interface EmployeeSelectProps {
   value: string;
   onValueChange: (value: string) => void;
   placeholder?: string;
+  endpoint?: string;
 }
 
 export function EmployeeSelect({
@@ -14,10 +15,11 @@ export function EmployeeSelect({
   value,
   onValueChange,
   placeholder = "",
+  endpoint = "/api/admin/employees",
 }: EmployeeSelectProps) {
   return (
     <ResourceSelect
-      endpoint="/api/admin/employees"
+      endpoint={endpoint}
       toOption={(e) => ({ id: e.id, label: e.name })}
       label={label}
       value={value}

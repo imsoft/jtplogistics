@@ -16,6 +16,7 @@ interface PhoneFormProps {
   cancelHref: string;
   onSubmit: (data: PhoneFormData) => void;
   isSubmitting?: boolean;
+  scope?: "admin" | "collaborator";
 }
 
 export function PhoneForm({
@@ -24,7 +25,10 @@ export function PhoneForm({
   cancelHref,
   onSubmit,
   isSubmitting = false,
+  scope = "admin",
 }: PhoneFormProps) {
+  const employeeEndpoint = scope === "collaborator" ? "/api/collaborator/employees" : "/api/admin/employees";
+  const emailEndpoint = scope === "collaborator" ? "/api/collaborator/emails" : "/api/admin/emails";
   const [name, setName] = useState(initialValues.name ?? "");
   const [phoneNumber, setPhoneNumber] = useState(initialValues.phoneNumber ?? "");
   const [password, setPassword] = useState(initialValues.password ?? "");
@@ -87,11 +91,13 @@ export function PhoneForm({
           label="Asignado a"
           value={assignedToId}
           onValueChange={setAssignedToId}
+          endpoint={employeeEndpoint}
         />
         <EmailAccountSelect
           label="Correo vinculado"
           value={emailAccountId}
           onValueChange={setEmailAccountId}
+          endpoint={emailEndpoint}
         />
       </div>
       <FormActions submitLabel={submitLabel} cancelHref={cancelHref} isSubmitting={isSubmitting} />

@@ -19,6 +19,7 @@ export default function NewCollaboratorPhonePage() {
       error={error}
     >
       <PhoneForm
+        scope="collaborator"
         submitLabel="Crear celular"
         cancelHref="/collaborator/dashboard/phones"
         onSubmit={handleSubmit}

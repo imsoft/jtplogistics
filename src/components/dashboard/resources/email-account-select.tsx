@@ -7,6 +7,7 @@ interface EmailAccountSelectProps {
   value: string;
   onValueChange: (value: string) => void;
   placeholder?: string;
+  endpoint?: string;
 }
 
 export function EmailAccountSelect({
@@ -14,10 +15,11 @@ export function EmailAccountSelect({
   value,
   onValueChange,
   placeholder = "",
+  endpoint = "/api/admin/emails",
 }: EmailAccountSelectProps) {
   return (
     <ResourceSelect
-      endpoint="/api/admin/emails"
+      endpoint={endpoint}
       toOption={(e) => ({ id: e.id, label: e.email })}
       label={label}
       value={value}

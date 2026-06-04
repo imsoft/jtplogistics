@@ -5,10 +5,12 @@ import { FormSkeleton } from "@/components/ui/skeletons";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { ResourceEditHeader } from "@/components/dashboard/resources/resource-edit-header";
 import { PhoneForm } from "@/components/dashboard/resources/phone-form";
+import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 import type { PhoneDevice } from "@/types/resources.types";
 
 export default function EditCollaboratorPhonePage() {
   const { id } = useParams<{ id: string }>();
+  const { permissions } = useCollaboratorPermissions();
 
   const { data: phone, isLoaded, error, isSubmitting, handleSubmit, handleDelete } =
     useResourceEdit<PhoneDevice>({
@@ -29,11 +31,13 @@ export default function EditCollaboratorPhonePage() {
         deleteTitle="¿Eliminar celular?"
         deleteDescription="Esta acción no se puede deshacer."
         onDelete={handleDelete}
+        showDelete={Boolean(permissions?.canDeletePhones)}
       />
       <div className="w-full min-w-0">
         {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
         {phone && (
           <PhoneForm
+            scope="collaborator"
             initialValues={phone}
             submitLabel="Guardar cambios"
             cancelHref={`/collaborator/dashboard/phones/${id}`}

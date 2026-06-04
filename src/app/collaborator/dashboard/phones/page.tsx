@@ -2,10 +2,13 @@
 
 import { useMemo, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
 import { AppSelect } from "@/components/ui/app-select";
+import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 import { type ColumnDef } from "@tanstack/react-table";
 import { formatPhone } from "@/lib/utils";
 import type { PhoneDevice } from "@/types/resources.types";
@@ -48,6 +51,7 @@ function getColumns(): ColumnDef<PhoneDevice>[] {
 
 export default function CollaboratorPhonesPage() {
   const router = useRouter();
+  const { permissions } = useCollaboratorPermissions();
   const [phones, setPhones] = useState<PhoneDevice[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -87,6 +91,14 @@ export default function CollaboratorPhonesPage() {
             Celulares registrados y su asignación.
           </p>
         </div>
+        {permissions?.canCreatePhones && (
+          <Button asChild className="w-full shrink-0 sm:w-fit" size="sm">
+            <Link href="/collaborator/dashboard/phones/new">
+              <Plus className="size-4" />
+              Nuevo celular
+            </Link>
+          </Button>
+        )}
       </div>
       {!isLoaded ? (
         <p className="text-muted-foreground">Cargando…</p>

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
+import { logAudit } from "@/lib/audit-log";
 
 export async function GET(
   req: Request,
@@ -63,10 +64,101 @@ export async function GET(
   }
 }
 
-export async function PATCH() {
-  return Response.json({ error: "Sin permiso" }, { status: 403 });
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await requireCollaboratorOrAdmin();
+
+    const me = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { canUpdatePhones: true },
+    });
+
+    if (!me?.canUpdatePhones) {
+      return Response.json({ error: "Sin permiso" }, { status: 403 });
+    }
+
+    const { id } = await params;
+    const body = await request.json();
+    const { name, phoneNumber, password, imei, color, assignedToId, emailAccountId } = body as {
+      name?: string;
+      phoneNumber?: string;
+      password?: string;
+      imei?: string;
+      color?: string;
+      assignedToId?: string | null;
+      emailAccountId?: string | null;
+    };
+
+    const phone = await prisma.phone.findUnique({ where: { id } });
+    if (!phone) return Response.json({ error: "No encontrado" }, { status: 404 });
+
+    await prisma.phone.update({
+      where: { id },
+      data: {
+        ...(name !== undefined && { name }),
+        ...(phoneNumber !== undefined && { phoneNumber: phoneNumber || null }),
+        ...(password !== undefined && { password: password || null }),
+        ...(imei !== undefined && { imei: imei || null }),
+        ...(color !== undefined && { color: color || null }),
+        ...(assignedToId !== undefined && { assignedToId: assignedToId || null }),
+        ...(emailAccountId !== undefined && { emailAccountId: emailAccountId || null }),
+      },
+    });
+
+    void logAudit({
+      resource: "phone",
+      resourceId: id,
+      resourceLabel: name ?? phone.name ?? id,
+      action: "updated",
+      userId: session.user.id,
+      userName: session.user.name,
+    });
+
+    return Response.json({ ok: true });
+  } catch (e) {
+    if (e instanceof Response) return e;
+    console.error(e);
+    return Response.json({ error: "Error interno del servidor" }, { status: 500 });
+  }
 }
 
-export async function DELETE() {
-  return Response.json({ error: "Sin permiso" }, { status: 403 });
+export async function DELETE(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await requireCollaboratorOrAdmin();
+
+    const me = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { canDeletePhones: true },
+    });
+
+    if (!me?.canDeletePhones) {
+      return Response.json({ error: "Sin permiso" }, { status: 403 });
+    }
+
+    const { id } = await params;
+    const phone = await prisma.phone.findUnique({ where: { id } });
+    if (!phone) return Response.json({ error: "No encontrado" }, { status: 404 });
+    await prisma.phone.delete({ where: { id } });
+
+    void logAudit({
+      resource: "phone",
+      resourceId: id,
+      resourceLabel: phone.name ?? id,
+      action: "deleted",
+      userId: session.user.id,
+      userName: session.user.name,
+    });
+
+    return Response.json({ ok: true });
+  } catch (e) {
+    if (e instanceof Response) return e;
+    console.error(e);
+    return Response.json({ error: "Error interno del servidor" }, { status: 500 });
+  }
 }

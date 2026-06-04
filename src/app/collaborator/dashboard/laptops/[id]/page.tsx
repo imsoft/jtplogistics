@@ -3,15 +3,17 @@
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoRow } from "@/components/dashboard/users/info-row";
+import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 import type { Laptop } from "@/types/resources.types";
 
 export default function CollaboratorLaptopProfilePage() {
   const params = useParams<{ id: string }>();
   const searchParams = useSearchParams();
+  const { permissions } = useCollaboratorPermissions();
   const [laptop, setLaptop] = useState<Laptop | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +60,14 @@ export default function CollaboratorLaptopProfilePage() {
             )}
           </div>
         </div>
+        {permissions?.canUpdateLaptops && (
+          <Button asChild variant="outline" size="sm" className="w-full shrink-0 sm:w-fit">
+            <Link href={`/collaborator/dashboard/laptops/${laptopId}/edit`}>
+              <Pencil className="size-4" />
+              Editar
+            </Link>
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">

@@ -17,6 +17,7 @@ interface LaptopFormProps {
   cancelHref: string;
   onSubmit: (data: LaptopFormData) => void;
   isSubmitting?: boolean;
+  scope?: "admin" | "collaborator";
 }
 
 export function LaptopForm({
@@ -25,7 +26,10 @@ export function LaptopForm({
   cancelHref,
   onSubmit,
   isSubmitting = false,
+  scope = "admin",
 }: LaptopFormProps) {
+  const employeeEndpoint = scope === "collaborator" ? "/api/collaborator/employees" : "/api/admin/employees";
+  const emailEndpoint = scope === "collaborator" ? "/api/collaborator/emails" : "/api/admin/emails";
   const [name, setName] = useState(initialValues.name ?? "");
   const [password, setPassword] = useState(initialValues.password ?? "");
   const [serialNumber, setSerialNumber] = useState(initialValues.serialNumber ?? "");
@@ -99,11 +103,13 @@ export function LaptopForm({
           label="Asignado a"
           value={assignedToId}
           onValueChange={setAssignedToId}
+          endpoint={employeeEndpoint}
         />
         <EmailAccountSelect
           label="Correo vinculado"
           value={emailAccountId}
           onValueChange={setEmailAccountId}
+          endpoint={emailEndpoint}
         />
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="lap-accessories">Accesorios</Label>
