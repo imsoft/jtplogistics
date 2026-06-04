@@ -46,6 +46,7 @@ export function AppSelect({ value, onValueChange, options, disabled, className }
       value={selected}
       onValueChange={(o) => onValueChange(o?.value ?? "")}
       disabled={disabled}
+      autoHighlight
     >
       <ComboboxInput showClear={!!selected} className={cn("w-full", className)} />
       <ComboboxContent>
