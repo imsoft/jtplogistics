@@ -27,14 +27,16 @@ function StatusBadge({ status }: { status: string }) {
 
 interface ShipmentTimelineProps {
   shipmentId: string;
+  scope?: "admin" | "collaborator";
 }
 
-export function ShipmentTimeline({ shipmentId }: ShipmentTimelineProps) {
+export function ShipmentTimeline({ shipmentId, scope = "admin" }: ShipmentTimelineProps) {
+  const base = scope === "collaborator" ? "/api/collaborator/shipments" : "/api/admin/shipments";
   const [entries, setEntries] = useState<ShipmentTimelineEntry[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/admin/shipments/${shipmentId}/timeline`)
+    fetch(`${base}/${shipmentId}/timeline`)
       .then((r) => (r.ok ? r.json() : []))
       .then((data: ShipmentTimelineEntry[]) => { setEntries(data); setIsLoaded(true); })
       .catch(() => setIsLoaded(true));

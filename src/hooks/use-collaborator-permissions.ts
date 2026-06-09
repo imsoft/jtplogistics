@@ -67,6 +67,10 @@ interface CollaboratorPermissions {
   canCreateFinances: boolean;
   canUpdateFinances: boolean;
   canDeleteFinances: boolean;
+  canViewMaritimeQuotes: boolean;
+  canCreateMaritimeQuotes: boolean;
+  canUpdateMaritimeQuotes: boolean;
+  canDeleteMaritimeQuotes: boolean;
 }
 
 export function useCollaboratorPermissions() {

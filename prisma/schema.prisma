@@ -56,6 +56,7 @@ model User {
   canViewTasks      Boolean       @default(false) @map("can_view_tasks")
   canViewShipments  Boolean       @default(false) @map("can_view_shipments")
   canViewFinances   Boolean       @default(false) @map("can_view_finances")
+  canViewMaritimeQuotes Boolean   @default(false) @map("can_view_maritime_quotes")
   canCreateMessages Boolean       @default(false) @map("can_create_messages")
   canCreateIdeas    Boolean       @default(false) @map("can_create_ideas")
   canCreateRoutes   Boolean       @default(false) @map("can_create_routes")
@@ -72,6 +73,7 @@ model User {
   canCreateTasks    Boolean       @default(false) @map("can_create_tasks")
   canCreateShipments Boolean      @default(false) @map("can_create_shipments")
   canCreateFinances Boolean       @default(false) @map("can_create_finances")
+  canCreateMaritimeQuotes Boolean @default(false) @map("can_create_maritime_quotes")
   canUpdateMessages Boolean       @default(false) @map("can_update_messages")
   canUpdateIdeas    Boolean       @default(false) @map("can_update_ideas")
   canUpdateRoutes   Boolean       @default(false) @map("can_update_routes")
@@ -88,6 +90,7 @@ model User {
   canUpdateTasks    Boolean       @default(false) @map("can_update_tasks")
   canUpdateShipments Boolean      @default(false) @map("can_update_shipments")
   canUpdateFinances Boolean       @default(false) @map("can_update_finances")
+  canUpdateMaritimeQuotes Boolean @default(false) @map("can_update_maritime_quotes")
   canDeleteMessages Boolean       @default(false) @map("can_delete_messages")
   canDeleteIdeas    Boolean       @default(false) @map("can_delete_ideas")
   canDeleteRoutes   Boolean       @default(false) @map("can_delete_routes")
@@ -104,6 +107,7 @@ model User {
   canDeleteTasks    Boolean       @default(false) @map("can_delete_tasks")
   canDeleteShipments Boolean      @default(false) @map("can_delete_shipments")
   canDeleteFinances Boolean       @default(false) @map("can_delete_finances")
+  canDeleteMaritimeQuotes Boolean @default(false) @map("can_delete_maritime_quotes")
   canCreateRecords  Boolean       @default(false) @map("can_create_records")
   canReadRecords    Boolean       @default(false) @map("can_read_records")
   canUpdateRecords  Boolean       @default(false) @map("can_update_records")
@@ -126,6 +130,7 @@ model User {
   assignedTasks    Task[]         @relation("TaskAssignee")
   createdTasks     Task[]         @relation("TaskCreator")
   generatedQuotes  GeneratedQuote[]
+  maritimeQuotes   MaritimeQuote[]
   sentMessages     Message[]      @relation("SentMessages")
   carrierMessages  Message[]      @relation("CarrierMessages")
   notifications    Notification[]
@@ -284,6 +289,7 @@ model Contact {
   type      ContactType @map("type")
   value     String      @map("value")
   label     String?     @map("label")
+  position  String?     @map("position")
   createdAt DateTime    @default(now()) @map("created_at")
 
   @@map("contacts")
@@ -613,19 +619,44 @@ model Task {
 
 // ---- App: cotizaciones generadas ----
 
+enum QuoteStatus {
+  borrador
+  enviada
+  negociacion
+  aceptada
+  rechazada
+}
+
 model GeneratedQuote {
-  id          String   @id @default(cuid()) @map("id")
-  quoteNumber String   @unique @map("quote_number")
-  company     String   @map("company")
-  contact     String   @map("contact")
-  phone       String?  @map("phone")
-  validUntil  DateTime @map("valid_until")
-  rows        Json     @map("rows")
-  createdById String   @map("created_by_id")
-  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now()) @map("created_at")
+  id          String      @id @default(cuid()) @map("id")
+  quoteNumber String      @unique @map("quote_number")
+  company     String      @map("company")
+  contact     String      @map("contact")
+  phone       String?     @map("phone")
+  validUntil  DateTime    @map("valid_until")
+  rows        Json        @map("rows")
+  status      QuoteStatus @default(enviada) @map("status")
+  createdById String      @map("created_by_id")
+  createdBy   User        @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt   DateTime    @default(now()) @map("created_at")
 
   @@map("generated_quotes")
+}
+
+// ---- App: cotizaciones marítimas (solicitud de impuestos de importación) ----
+
+model MaritimeQuote {
+  id          String      @id @default(cuid()) @map("id")
+  reference   String      @unique @map("reference")
+  client      String      @map("client")
+  data        Json        @map("data")
+  status      QuoteStatus @default(enviada) @map("status")
+  validUntil  DateTime    @map("valid_until")
+  createdById String      @map("created_by_id")
+  createdBy   User        @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  @@map("maritime_quotes")
 }
 
 // ---- App: configuración de textos de cotización (singleton) ----

@@ -16,7 +16,8 @@ type PermissionField =
   | "canViewLaptops"
   | "canViewPhones"
   | "canViewEmails"
-  | "canViewTasks";
+  | "canViewTasks"
+  | "canViewMaritimeQuotes";
 
 /**
  * Checks that the current collaborator has a specific permission.
@@ -47,6 +48,7 @@ export async function requireCollaboratorPermission(field: PermissionField) {
       canViewPhones: true,
       canViewEmails: true,
       canViewTasks: true,
+      canViewMaritimeQuotes: true,
     },
   });
 

@@ -1,32 +1,36 @@
 import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 
+/**
+ * Lista de transportistas (usuarios con rol carrier) para el selector "Proveedor"
+ * del formulario de embarques en el panel del colaborador. Devuelve la misma forma
+ * mínima que consume `carrierProviderSelectOptions`. Gateado por canViewShipments.
+ */
 export async function GET() {
   try {
     const session = await requireCollaboratorOrAdmin();
-
     const me = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { canViewProviders: true },
+      select: { canViewShipments: true },
     });
-
-    if (!me?.canViewProviders) {
+    if (!me?.canViewShipments) {
       return Response.json({ error: "Sin permiso" }, { status: 403 });
     }
 
-    const users = await prisma.user.findMany({
+    const carriers = await prisma.user.findMany({
       where: { role: "carrier" },
       orderBy: { createdAt: "desc" },
-      include: { profile: true },
+      include: { profile: { select: { commercialName: true, legalName: true } } },
     });
 
     return Response.json(
-      users.map((u) => ({
+      carriers.map((u) => ({
         id: u.id,
         name: u.name,
         email: u.email,
-        image: u.image,
-        createdAt: u.createdAt.toISOString(),
+        profile: u.profile
+          ? { commercialName: u.profile.commercialName, legalName: u.profile.legalName }
+          : null,
       }))
     );
   } catch (e) {

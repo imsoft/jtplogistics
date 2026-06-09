@@ -243,7 +243,13 @@ function getRowClassName(shipment: Shipment): string {
   return SHIPMENT_STATUS_CONFIG[shipment.status]?.rowClass ?? "";
 }
 
-export function ShipmentsTable() {
+interface ShipmentsTableProps {
+  scope?: "admin" | "collaborator";
+}
+
+export function ShipmentsTable({ scope = "admin" }: ShipmentsTableProps) {
+  const endpoint = scope === "collaborator" ? "/api/collaborator/shipments" : "/api/admin/shipments";
+  const detailBase = scope === "collaborator" ? "/collaborator/dashboard/shipments" : "/admin/dashboard/shipments";
   const router = useRouter();
   const incidentTypes = useIncidentTypes();
   const columns = useMemo(() => getColumns(incidentTypes), [incidentTypes]);
@@ -280,7 +286,7 @@ export function ShipmentsTable() {
     error,
     buildQuery,
   } = useServerTable<Shipment>({
-    endpoint: "/api/admin/shipments",
+    endpoint,
     pageSize: 20,
     filters,
     errorMessage: "Error al cargar embarques",
@@ -308,7 +314,7 @@ export function ShipmentsTable() {
 
   const exportToExcel = useCallback(async () => {
     try {
-      const res = await fetch(`/api/admin/shipments?${buildQuery({ all: "1" })}`);
+      const res = await fetch(`${endpoint}?${buildQuery({ all: "1" })}`);
       if (!res.ok) throw new Error();
       const json = (await res.json()) as { data: Shipment[] };
       const aoa = shipmentsToExcelAoa(json.data, incidentTypes);
@@ -317,7 +323,7 @@ export function ShipmentsTable() {
     } catch {
       toast.error("No se pudo exportar el archivo.");
     }
-  }, [buildQuery, incidentTypes]);
+  }, [buildQuery, incidentTypes, endpoint]);
 
   if (isLoading) return <DataTableSkeleton />;
   if (error) return <p className="text-destructive text-sm">{error}</p>;
@@ -359,7 +365,7 @@ export function ShipmentsTable() {
           : { search: false }
       }
       getRowId={(row) => row.id}
-      onRowClick={(shipment) => router.push(`/admin/dashboard/shipments/${shipment.id}`)}
+      onRowClick={(shipment) => router.push(`${detailBase}/${shipment.id}`)}
       getRowClassName={getRowClassName}
       toolbar={
         <div className="flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">

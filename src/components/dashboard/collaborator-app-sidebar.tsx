@@ -9,7 +9,6 @@ import {
   ScrollText,
   Boxes,
   Calculator,
-  Truck,
   Users,
   UserRound,
   ShoppingBag,
@@ -18,6 +17,9 @@ import {
   Mail,
   ClipboardList,
   Network,
+  Ship,
+  DollarSign,
+  Anchor,
 } from "lucide-react";
 import { DashboardSidebar, type NavItem, type NavGroup } from "@/components/dashboard/dashboard-sidebar";
 
@@ -36,6 +38,9 @@ interface Permissions {
   canViewPhones: boolean;
   canViewEmails: boolean;
   canViewTasks: boolean;
+  canViewShipments: boolean;
+  canViewFinances: boolean;
+  canViewMaritimeQuotes: boolean;
 }
 
 const BASE = "/collaborator/dashboard";
@@ -55,16 +60,23 @@ const allNavGroups: PermNavGroup[] = [
     items: [
       { title: "Rutas", href: `${BASE}/routes`, icon: RouteIcon, permission: "canViewRoutes" },
       { title: "Cotizador", href: `${BASE}/quotes`, icon: Calculator, permission: "canViewQuotes" },
+      { title: "Cotización marítima", href: `${BASE}/maritime-quotes`, icon: Anchor, permission: "canViewMaritimeQuotes" },
       { title: "Tipos de unidades", href: `${BASE}/unit-types`, icon: Boxes, permission: "canViewUnitTypes" },
       { title: "Mensajes", href: `${BASE}/messages`, icon: MessageSquare, permission: "canViewMessages" },
       
     ],
   },
   {
+    label: "Finanzas",
+    items: [
+      { title: "Embarques", href: `${BASE}/shipments`, icon: Ship, permission: "canViewShipments" },
+      { title: "Finanzas", href: `${BASE}/finances`, icon: DollarSign, permission: "canViewFinances" },
+    ],
+  },
+  {
     label: "Contactos",
     items: [
       { title: "Clientes", href: `${BASE}/clients`, icon: Users, permission: "canViewClients" },
-      { title: "Proveedores", href: `${BASE}/providers`, icon: Truck, permission: "canViewProviders" },
     ],
   },
   {

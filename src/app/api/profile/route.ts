@@ -26,7 +26,7 @@ export async function GET() {
             rfc: true,
             address: true,
             contacts: {
-              select: { id: true, type: true, value: true, label: true },
+              select: { id: true, type: true, value: true, label: true, position: true },
               orderBy: { createdAt: "asc" },
             },
           },
@@ -77,7 +77,7 @@ export async function PATCH(request: NextRequest) {
     const legalName = body.legalName != null ? String(body.legalName).trim() || null : undefined;
     const rfc = body.rfc != null ? String(body.rfc).trim().toUpperCase() || null : undefined;
     const address = body.address != null ? String(body.address).trim() || null : undefined;
-    const contacts: { type: "phone" | "email"; value: string; label?: string }[] =
+    const contacts: { type: "phone" | "email"; value: string; label?: string; position?: string }[] =
       Array.isArray(body.contacts) ? body.contacts : [];
 
     const abuse = validateCarrierProfilePayload({
@@ -129,13 +129,14 @@ export async function PATCH(request: NextRequest) {
             type: c.type,
             value: c.value.trim(),
             label: c.label?.trim() || null,
+            position: c.position?.trim() || null,
           })),
       });
     }
 
     const updatedContacts = await prisma.contact.findMany({
       where: { profileId: profile.id },
-      select: { id: true, type: true, value: true, label: true },
+      select: { id: true, type: true, value: true, label: true, position: true },
       orderBy: { createdAt: "asc" },
     });
 

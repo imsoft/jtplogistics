@@ -21,6 +21,7 @@ type ProfileContact = {
   type: "phone" | "email";
   value: string;
   label: string | null;
+  position: string | null;
   createdAt: Date;
 };
 
@@ -205,7 +206,10 @@ export default async function UserProfilePage({
                 {phones.map((c) => (
                   <div key={c.id} className="flex flex-col gap-0.5 border-b py-3 last:border-0 sm:grid sm:grid-cols-[140px_1fr] sm:gap-2">
                     <span className="text-muted-foreground text-sm">{c.label ?? "Teléfono"}</span>
-                    <span className="text-sm font-medium">{formatPhone(c.value)}</span>
+                    <span className="text-sm font-medium">
+                      {formatPhone(c.value)}
+                      {c.position && <span className="text-muted-foreground font-normal"> · {c.position}</span>}
+                    </span>
                   </div>
                 ))}
               </CardContent>
@@ -223,7 +227,10 @@ export default async function UserProfilePage({
                 {emails.map((c) => (
                   <div key={c.id} className="flex flex-col gap-0.5 border-b py-3 last:border-0 sm:grid sm:grid-cols-[140px_1fr] sm:gap-2">
                     <span className="text-muted-foreground text-sm">{c.label ?? "Correo"}</span>
-                    <span className="text-sm font-medium break-all">{c.value}</span>
+                    <span className="text-sm font-medium break-all">
+                      {c.value}
+                      {c.position && <span className="text-muted-foreground font-normal"> · {c.position}</span>}
+                    </span>
                   </div>
                 ))}
               </CardContent>

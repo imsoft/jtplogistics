@@ -18,6 +18,7 @@ interface ContactInput {
   type: "phone" | "email";
   value: string;
   label: string;
+  position: string;
 }
 
 interface FormState {
@@ -75,6 +76,7 @@ export default function CarrierProfilePage() {
           type: c.type,
           value: c.value,
           label: c.label ?? "",
+          position: c.position ?? "",
         })),
       }));
       void loadNotes();
@@ -89,7 +91,7 @@ export default function CarrierProfilePage() {
   function addContact(type: "phone" | "email") {
     setForm((prev) => ({
       ...prev,
-      contacts: [...prev.contacts, { type, value: "", label: "" }],
+      contacts: [...prev.contacts, { type, value: "", label: "", position: "" }],
     }));
   }
 
@@ -100,7 +102,7 @@ export default function CarrierProfilePage() {
     }));
   }
 
-  function updateContact(idx: number, key: "value" | "label", val: string) {
+  function updateContact(idx: number, key: "value" | "label" | "position", val: string) {
     setForm((prev) => {
       const contacts = [...prev.contacts];
       contacts[idx] = { ...contacts[idx], [key]: val };
@@ -127,7 +129,7 @@ export default function CarrierProfilePage() {
             address: form.address.trim() || null,
             contacts: form.contacts
               .filter((c) => c.value.trim())
-              .map((c) => ({ type: c.type, value: c.value.trim(), label: c.label.trim() || null })),
+              .map((c) => ({ type: c.type, value: c.value.trim(), label: c.label.trim() || null, position: c.position.trim() || null })),
           }),
         }),
         fetch("/api/carrier/notes", {
@@ -289,7 +291,14 @@ export default function CarrierProfilePage() {
                     value={c.value}
                     onChange={(e) => updateContact(c.idx, "value", e.target.value)}
                     disabled={isLoading}
-                    className="flex-1"
+                    className="flex-1 min-w-40"
+                  />
+                  <Input
+                    placeholder="Puesto"
+                    value={c.position}
+                    onChange={(e) => updateContact(c.idx, "position", e.target.value)}
+                    disabled={isLoading}
+                    className="flex-1 min-w-36"
                   />
                   <AppSelect
                     value={c.label || PHONE_LABELS[0]}
@@ -339,7 +348,14 @@ export default function CarrierProfilePage() {
                     value={c.value}
                     onChange={(e) => updateContact(c.idx, "value", e.target.value)}
                     disabled={isLoading}
-                    className="flex-1"
+                    className="flex-1 min-w-40"
+                  />
+                  <Input
+                    placeholder="Puesto"
+                    value={c.position}
+                    onChange={(e) => updateContact(c.idx, "position", e.target.value)}
+                    disabled={isLoading}
+                    className="flex-1 min-w-36"
                   />
                   <AppSelect
                     value={c.label || EMAIL_LABELS[0]}

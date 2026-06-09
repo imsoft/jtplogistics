@@ -139,11 +139,17 @@ function getColumns(): ColumnDef<FinanceListRow>[] {
   ];
 }
 
-export function FinancesTable() {
+interface FinancesTableProps {
+  scope?: "admin" | "collaborator";
+}
+
+export function FinancesTable({ scope = "admin" }: FinancesTableProps) {
+  const endpoint = scope === "collaborator" ? "/api/collaborator/finances" : "/api/admin/finances";
+  const detailBase = scope === "collaborator" ? "/collaborator/dashboard/finances" : "/admin/dashboard/finances";
   const router = useRouter();
   const columns = useMemo(() => getColumns(), []);
   const { data: rows, isLoaded, error } = useAdminFetch<FinanceListRow>(
-    "/api/admin/finances",
+    endpoint,
     "Error al cargar finanzas"
   );
 
@@ -171,7 +177,7 @@ export function FinancesTable() {
       filterPlaceholder="Buscar embarques…"
       initialColumnVisibility={{ search: false }}
       getRowId={(row) => row.id}
-      onRowClick={(row) => router.push(`/admin/dashboard/finances/${row.id}`)}
+      onRowClick={(row) => router.push(`${detailBase}/${row.id}`)}
       toolbar={
         <Button
           type="button"

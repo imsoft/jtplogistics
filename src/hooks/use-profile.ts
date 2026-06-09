@@ -11,7 +11,7 @@ export interface ProfileApiData {
   legalName: string;
   rfc: string;
   address: string;
-  contacts: { id?: string; type: "phone" | "email"; value: string; label: string | null }[];
+  contacts: { id?: string; type: "phone" | "email"; value: string; label: string | null; position: string | null }[];
 }
 
 export function useProfile() {
@@ -43,11 +43,12 @@ export function useProfile() {
             rfc: json.rfc ?? "",
             address: json.address ?? "",
             contacts: (json.contacts ?? []).map(
-              (c: { id?: string; type: "phone" | "email"; value: string; label?: string | null }) => ({
+              (c: { id?: string; type: "phone" | "email"; value: string; label?: string | null; position?: string | null }) => ({
                 id: c.id,
                 type: c.type,
                 value: c.value,
                 label: c.label ?? "",
+                position: c.position ?? "",
               })
             ),
           });

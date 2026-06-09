@@ -37,6 +37,7 @@ interface ShipmentFormProps {
   onSubmit: (data: ShipmentFormData) => void;
   isSubmitting?: boolean;
   unlocked?: boolean;
+  scope?: "admin" | "collaborator";
 }
 
 export function ShipmentForm({
@@ -46,7 +47,10 @@ export function ShipmentForm({
   onSubmit,
   isSubmitting = false,
   unlocked = false,
+  scope = "admin",
 }: ShipmentFormProps) {
+  const clientsEndpoint = scope === "collaborator" ? "/api/collaborator/clients" : "/api/admin/clients?all=1";
+  const carriersEndpoint = scope === "collaborator" ? "/api/collaborator/shipment-carriers" : "/api/admin/users?role=carrier";
   const [eco, setEco] = useState(initialValues.eco ?? "");
   const [client, setClient] = useState(initialValues.client ?? "");
   const [origin, setOrigin] = useState(initialValues.origin ?? "");
@@ -82,23 +86,24 @@ export function ShipmentForm({
   }, []);
 
   useEffect(() => {
-    fetch("/api/admin/clients?all=1")
+    fetch(clientsEndpoint)
       .then((r) => (r.ok ? r.json() : { data: [] }))
       .then((res: unknown) => {
-        const arr = (res as { data?: unknown })?.data;
+        // El endpoint admin responde { data: [...] }; el de colaborador responde un arreglo directo.
+        const arr = Array.isArray(res) ? res : (res as { data?: unknown })?.data;
         setClients(Array.isArray(arr) ? (arr as Client[]) : []);
       })
       .catch(() => setClients([]));
-  }, []);
+  }, [clientsEndpoint]);
 
   useEffect(() => {
-    fetch("/api/admin/users?role=carrier")
+    fetch(carriersEndpoint)
       .then((r) => (r.ok ? r.json() : []))
       .then((data: unknown) => {
         setCarriers(Array.isArray(data) ? (data as User[]) : []);
       })
       .catch(() => setCarriers([]));
-  }, []);
+  }, [carriersEndpoint]);
 
   const origins = useMemo(() => {
     const s = new Set(routes.map((r) => r.origin).filter(Boolean));

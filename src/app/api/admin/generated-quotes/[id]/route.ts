@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
-import type { Prisma } from "@prisma/client";
+import type { Prisma, QuoteStatus } from "@prisma/client";
+import { QUOTE_STATUS_VALUES } from "@/lib/constants/quote-status";
 
 export function GET(
   _req: Request,
@@ -31,7 +32,12 @@ export function PATCH(
       phone?: string | null;
       validUntil?: string;
       rows?: Prisma.InputJsonValue[];
+      status?: string;
     };
+
+    if (body.status !== undefined && !QUOTE_STATUS_VALUES.includes(body.status as QuoteStatus)) {
+      return Response.json({ error: "Estado inválido" }, { status: 400 });
+    }
 
     const quote = await prisma.generatedQuote.findUnique({ where: { id } });
     if (!quote) return Response.json({ error: "No encontrado" }, { status: 404 });
@@ -44,6 +50,7 @@ export function PATCH(
         ...(body.phone !== undefined && { phone: body.phone?.trim() || null }),
         ...(body.validUntil && { validUntil: new Date(body.validUntil) }),
         ...(body.rows && { rows: body.rows }),
+        ...(body.status && { status: body.status as QuoteStatus }),
       },
     });
 

@@ -16,6 +16,7 @@ import { Copy } from "lucide-react";
 import { MessageSquare } from "lucide-react";
 import { ScrollText } from "lucide-react";
 import { Ship } from "lucide-react";
+import { Anchor } from "lucide-react";
 import { DollarSign } from "lucide-react";
 import { AlertTriangle, Inbox, TrendingUp, Network, StarIcon } from "lucide-react";
 
@@ -36,6 +37,7 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
     items: [
       { title: "Rutas", href: "/admin/dashboard/routes", icon: RouteIcon },
       { title: "Cotizador", href: "/admin/dashboard/quotes", icon: Calculator },
+      { title: "Cotización marítima", href: "/admin/dashboard/maritime-quotes", icon: Anchor },
       { title: "Tipos de unidades", href: "/admin/dashboard/unit-types", icon: Boxes },
       { title: "Mensajes", href: "/admin/dashboard/messages", icon: MessageSquare },
       { title: "Tipos de incidencia", href: "/admin/dashboard/incident-types", icon: AlertTriangle },
