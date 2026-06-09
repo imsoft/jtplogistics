@@ -271,6 +271,7 @@ export const MEXICO_STATES_CITIES: StateCitiesGroup[] = [
       "Tlalpan",
       "Tláhuac",
       "Tlanepantla",
+      "Vallejo",
       "Venustiano Carranza",
       "Xochimilco",
     ],
