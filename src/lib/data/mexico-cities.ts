@@ -823,6 +823,7 @@ export const MEXICO_STATES_CITIES: StateCitiesGroup[] = [
       "San Mateo Atenco",
       "San Nicolas Tlaxcala",
       "San Simón de Guerrero",
+      "Santiago Chimalpa",
       "Santo Tomás",
       "Soyaniquilpan de Juárez",
       "Sultepec",
