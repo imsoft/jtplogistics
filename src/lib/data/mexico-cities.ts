@@ -267,6 +267,7 @@ export const MEXICO_STATES_CITIES: StateCitiesGroup[] = [
       "La Magdalena Contreras",
       "Miguel Hidalgo",
       "Milpa Alta",
+      "San Nicolas Romero", 
       "Tlalpan",
       "Tláhuac",
       "Tlanepantla",
