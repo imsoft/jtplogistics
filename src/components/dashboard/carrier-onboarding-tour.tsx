@@ -21,7 +21,7 @@ const steps = [
     popover: {
       title: "Menú de navegación",
       description:
-        "Desde aquí accedes a todas las secciones de tu panel: inicio, tipos de unidad, mensajes, sugerencias, colaboradores y tu perfil.",
+        "Desde aquí accedes a todas las secciones de tu panel: inicio, tipos de unidad, mensajes, sugerencias y tu perfil.",
       side: "right" as const,
       align: "start" as const,
     },
@@ -52,16 +52,6 @@ const steps = [
       title: "Sugerencias",
       description:
         "Envía sugerencias o comentarios al equipo de JTP Logistics para mejorar la plataforma.",
-      side: "right" as const,
-      align: "center" as const,
-    },
-  },
-  {
-    element: "[data-sidebar='sidebar'] a[href='/carrier/dashboard/collaborators']",
-    popover: {
-      title: "Colaboradores",
-      description:
-        "Administra a las personas de tu equipo que también tendrán acceso al panel.",
       side: "right" as const,
       align: "center" as const,
     },

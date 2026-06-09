@@ -4,7 +4,6 @@ import {
   User as UserIcon,
   Truck,
   MessageSquare,
-  Users,
   Lightbulb,
 } from "lucide-react";
 
@@ -34,11 +33,6 @@ export const userDashboardNavItems: UserDashboardNavItem[] = [
     title: "Mensajes",
     href: "/carrier/dashboard/messages",
     icon: MessageSquare,
-  },
-  {
-    title: "Colaboradores",
-    href: "/carrier/dashboard/collaborators",
-    icon: Users,
   },
   {
     title: "Perfil",

@@ -28,9 +28,6 @@ export function UserAppSidebar() {
     const suggestionsItem = otherItems.find(
       (item) => item.href === "/carrier/dashboard/suggestions"
     );
-    const collaboratorsItem = otherItems.find(
-      (item) => item.href === "/carrier/dashboard/collaborators"
-    );
     const accountItems: NavItem[] = otherItems.filter(
       (item) => item.href === "/carrier/dashboard/profile"
     );
@@ -55,14 +52,6 @@ export function UserAppSidebar() {
           title: ut.label,
           href: `/carrier/dashboard/unit-types/${ut.value}`,
         })),
-      });
-    }
-
-    if (collaboratorsItem) {
-      mainItems.push({
-        title: collaboratorsItem.title,
-        href: collaboratorsItem.href,
-        icon: collaboratorsItem.icon,
       });
     }
 
