@@ -31,7 +31,24 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AppSelect } from "@/components/ui/app-select";
 import { cn } from "@/lib/utils";
+
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
+
+function PageSizeSelect({ value, onChange }: { value: number; onChange: (size: number) => void }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="text-muted-foreground text-xs font-medium uppercase tracking-wide">Filas</span>
+      <AppSelect
+        value={String(value)}
+        onValueChange={(v) => onChange(Number(v))}
+        options={PAGE_SIZE_OPTIONS.map((n) => ({ value: String(n), label: String(n) }))}
+        className="h-8 w-[76px]"
+      />
+    </div>
+  );
+}
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -54,6 +71,10 @@ interface DataTableProps<TData, TValue> {
   /** Total de registros, para mostrar en el pie. */
   totalCount?: number;
   onPageChange?: (index: number) => void;
+  /** Filas por página en modo servidor (controlado por el consumidor). */
+  pageSize?: number;
+  /** Permite cambiar las filas por página en modo servidor. */
+  onPageSizeChange?: (size: number) => void;
   /** Orden controlado por el servidor. */
   manualSorting?: boolean;
   sorting?: SortingState;
@@ -80,6 +101,8 @@ export function DataTable<TData, TValue>({
   pageIndex,
   totalCount,
   onPageChange,
+  pageSize,
+  onPageSizeChange,
   manualSorting = false,
   sorting: sortingProp,
   onSortingChange: onSortingChangeProp,
@@ -126,7 +149,7 @@ export function DataTable<TData, TValue>({
       sorting,
       columnFilters,
       ...(manualPagination
-        ? { pagination: { pageIndex: pageIndex ?? 0, pageSize: 10 } }
+        ? { pagination: { pageIndex: pageIndex ?? 0, pageSize: pageSize ?? 10 } }
         : {}),
     },
   });
@@ -224,12 +247,16 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
       {manualPagination
-        ? (pageCount ?? 1) > 1 && (
-            <div className="flex flex-wrap items-center justify-end gap-2 py-2">
+        ? ((pageCount ?? 1) > 1 ||
+            (onPageSizeChange && (totalCount ?? 0) > PAGE_SIZE_OPTIONS[0])) && (
+            <div className="flex flex-wrap items-center justify-end gap-3 py-2">
               <p className="text-muted-foreground w-full text-center text-xs font-medium uppercase tracking-wide sm:w-auto sm:mr-auto sm:text-left">
                 Página {(pageIndex ?? 0) + 1} de {pageCount}
                 {typeof totalCount === "number" ? ` · ${totalCount} resultados` : ""}
               </p>
+              {onPageSizeChange && (
+                <PageSizeSelect value={pageSize ?? 10} onChange={onPageSizeChange} />
+              )}
               <div className="flex w-full justify-center gap-2 sm:w-auto sm:justify-end">
                 <Button
                   variant="outline"
@@ -250,12 +277,21 @@ export function DataTable<TData, TValue>({
               </div>
             </div>
           )
-        : table.getPageCount() > 1 && (
-            <div className="flex flex-wrap items-center justify-end gap-2 py-2">
-              <p className="text-muted-foreground w-full text-center text-xs font-medium uppercase tracking-wide sm:w-auto sm:text-left">
+        : (table.getPageCount() > 1 ||
+            table.getFilteredRowModel().rows.length > PAGE_SIZE_OPTIONS[0]) && (
+            <div className="flex flex-wrap items-center justify-end gap-3 py-2">
+              <p className="text-muted-foreground w-full text-center text-xs font-medium uppercase tracking-wide sm:w-auto sm:mr-auto sm:text-left">
                 Página {table.getState().pagination.pageIndex + 1} de{" "}
-                {table.getPageCount()}
+                {table.getPageCount()} · {table.getFilteredRowModel().rows.length}{" "}
+                resultados
               </p>
+              <PageSizeSelect
+                value={table.getState().pagination.pageSize}
+                onChange={(size) => {
+                  table.setPageSize(size);
+                  table.setPageIndex(0);
+                }}
+              />
               <div className="flex w-full justify-center gap-2 sm:w-auto sm:justify-end">
                 <Button
                   variant="outline"

@@ -44,7 +44,9 @@ export function VendorsTable() {
     total,
     pageIndex,
     pageCount,
+    pageSize,
     setPageIndex,
+    setPageSize,
     sorting,
     setSorting,
     search,
@@ -78,6 +80,8 @@ export function VendorsTable() {
       pageIndex={pageIndex}
       totalCount={total}
       onPageChange={setPageIndex}
+      pageSize={pageSize}
+      onPageSizeChange={setPageSize}
       manualSorting
       sorting={sorting}
       onSortingChange={setSorting}

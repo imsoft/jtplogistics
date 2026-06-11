@@ -13,6 +13,7 @@ interface ServerTablePage<T> {
 interface UseServerTableOptions {
   /** Endpoint base (sin query string). */
   endpoint: string;
+  /** Tamaño de página inicial (el usuario puede cambiarlo con setPageSize). */
   pageSize?: number;
   initialSorting?: SortingState;
   /**
@@ -32,6 +33,8 @@ export interface UseServerTableResult<T> {
   pageSize: number;
   pageCount: number;
   setPageIndex: (index: number) => void;
+  /** Cambia el número de filas por página y regresa a la primera página. */
+  setPageSize: (size: number) => void;
   sorting: SortingState;
   setSorting: OnChangeFn<SortingState>;
   search: string;
@@ -53,13 +56,14 @@ export interface UseServerTableResult<T> {
  */
 export function useServerTable<T>({
   endpoint,
-  pageSize = 20,
+  pageSize: initialPageSize = 20,
   initialSorting = [],
   filters,
   searchDebounceMs = 350,
   errorMessage = "Error al cargar los datos",
 }: UseServerTableOptions): UseServerTableResult<T> {
   const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSizeState] = useState(initialPageSize);
   const [sorting, setSortingState] = useState<SortingState>(initialSorting);
   const [search, setSearchState] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -153,6 +157,11 @@ export function useServerTable<T>({
   const setSearch = useCallback((value: string) => setSearchState(value), []);
   const refetch = useCallback(() => setReloadToken((t) => t + 1), []);
 
+  const setPageSize = useCallback((size: number) => {
+    setPageSizeState(size);
+    setPageIndex(0);
+  }, []);
+
   return {
     data,
     total,
@@ -160,6 +169,7 @@ export function useServerTable<T>({
     pageSize,
     pageCount: Math.max(1, Math.ceil(total / pageSize)),
     setPageIndex,
+    setPageSize,
     sorting,
     setSorting,
     search,
