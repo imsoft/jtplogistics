@@ -284,14 +284,16 @@ model Profile {
 }
 
 model Contact {
-  id        String      @id @default(cuid()) @map("id")
-  profileId String      @map("profile_id")
-  profile   Profile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  type      ContactType @map("type")
-  value     String      @map("value")
-  label     String?     @map("label")
-  position  String?     @map("position")
-  createdAt DateTime    @default(now()) @map("created_at")
+  id         String      @id @default(cuid()) @map("id")
+  profileId  String      @map("profile_id")
+  profile    Profile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  type       ContactType @map("type")
+  value      String      @map("value")
+  label      String?     @map("label")
+  position   String?     @map("position")
+  /** Nombre de la persona de contacto; agrupa teléfonos/correos por persona. */
+  personName String?     @map("person_name")
+  createdAt  DateTime    @default(now()) @map("created_at")
 
   @@map("contacts")
 }

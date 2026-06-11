@@ -1,15 +1,18 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, Phone, Mail } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-server";
 import { USER_ROLE_LABELS } from "@/lib/constants/user-role";
 import { InfoRow } from "@/components/dashboard/users/info-row";
-import { formatPhone } from "@/lib/utils";
 import { TargetDiff } from "@/components/dashboard/users/target-diff";
 import { ToggleCarrierPermissions } from "@/components/dashboard/users/toggle-carrier-permissions";
+import {
+  ContactPersonsCards,
+  groupContactsByPerson,
+} from "@/components/dashboard/users/contact-persons-cards";
 import { CarrierRouteUnlockRequests } from "@/components/dashboard/users/carrier-route-unlock-requests";
 import { DeleteUserButton } from "@/components/dashboard/users/delete-user-button";
 import type { UserRole } from "@/types/user.types";
@@ -22,6 +25,7 @@ type ProfileContact = {
   value: string;
   label: string | null;
   position: string | null;
+  personName: string | null;
   createdAt: Date;
 };
 
@@ -93,8 +97,7 @@ export default async function UserProfilePage({
   const isDeletable = user.role === "carrier" || user.role === "collaborator";
 
   const contacts = (user.profile?.contacts ?? []) as ProfileContact[];
-  const phones = contacts.filter((c) => c.type === "phone");
-  const emails = contacts.filter((c) => c.type === "email");
+  const contactPersons = groupContactsByPerson(contacts);
   const carrierRoutes = user.carrierRoutes as CarrierRouteListItem[];
   const pendingUnlockRequests = carrierRoutes
     .filter((cr) => cr.editUnlockRequested && !cr.editUnlockApproved)
@@ -192,52 +195,8 @@ export default async function UserProfilePage({
         </Card>
       </div>
 
-      {/* Contactos */}
-      {user.profile && (phones.length > 0 || emails.length > 0) && (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {phones.length > 0 && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                  <Phone className="size-3.5" /> Teléfonos
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-4 pb-4">
-                {phones.map((c) => (
-                  <div key={c.id} className="flex flex-col gap-0.5 border-b py-3 last:border-0 sm:grid sm:grid-cols-[140px_1fr] sm:gap-2">
-                    <span className="text-muted-foreground text-sm">{c.label ?? "Teléfono"}</span>
-                    <span className="text-sm font-medium">
-                      {formatPhone(c.value)}
-                      {c.position && <span className="text-muted-foreground font-normal"> · {c.position}</span>}
-                    </span>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          )}
-
-          {emails.length > 0 && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                  <Mail className="size-3.5" /> Correos
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-4 pb-4">
-                {emails.map((c) => (
-                  <div key={c.id} className="flex flex-col gap-0.5 border-b py-3 last:border-0 sm:grid sm:grid-cols-[140px_1fr] sm:gap-2">
-                    <span className="text-muted-foreground text-sm">{c.label ?? "Correo"}</span>
-                    <span className="text-sm font-medium break-all">
-                      {c.value}
-                      {c.position && <span className="text-muted-foreground font-normal"> · {c.position}</span>}
-                    </span>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
+      {/* Contactos agrupados por persona (clic para ver toda la información) */}
+      {user.profile && <ContactPersonsCards persons={contactPersons} />}
 
       {/* Notas del transportista — solo para carriers */}
       {isCarrier && (

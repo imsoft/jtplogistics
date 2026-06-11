@@ -1,24 +1,45 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, X, Phone, Mail } from "lucide-react";
+import { Plus, X, Phone, Mail, User, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AppSelect } from "@/components/ui/app-select";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useProfile } from "@/hooks/use-profile";
 
 const PHONE_LABELS = ["Oficina", "Celular", "Casa", "Principal", "Otro"] as const;
 const EMAIL_LABELS = ["Principal", "Operaciones", "Cotizaciones", "Ventas", "Otro"] as const;
 
-interface ContactInput {
-  id?: string;
+interface PersonContactItem {
+  value: string;
+  label: string;
+}
+
+/** Persona de contacto: agrupa sus teléfonos y correos. */
+interface PersonInput {
+  name: string;
+  position: string;
+  phones: PersonContactItem[];
+  emails: PersonContactItem[];
+}
+
+interface FlatContact {
   type: "phone" | "email";
   value: string;
   label: string;
   position: string;
+  personName: string;
 }
 
 interface FormState {
@@ -30,16 +51,61 @@ interface FormState {
   rfc: string;
   address: string;
   notes: string;
-  contacts: ContactInput[];
+  persons: PersonInput[];
 }
 
 const DEFAULT_NOTES = "- Estadías\n- Reparto";
+
+/**
+ * Agrupa los contactos planos en personas. Los contactos guardados antes de
+ * existir "persona" (sin personName) se agrupan por puesto.
+ */
+function groupContactsByPerson(contacts: FlatContact[]): PersonInput[] {
+  const map = new Map<string, PersonInput>();
+  for (const c of contacts) {
+    const key = `${c.personName.trim().toLowerCase()}||${c.position.trim().toLowerCase()}`;
+    let person = map.get(key);
+    if (!person) {
+      person = { name: c.personName.trim(), position: c.position.trim(), phones: [], emails: [] };
+      map.set(key, person);
+    }
+    const item = { value: c.value, label: c.label };
+    if (c.type === "phone") person.phones.push(item);
+    else person.emails.push(item);
+  }
+  return Array.from(map.values());
+}
+
+function flattenPersons(persons: PersonInput[]): FlatContact[] {
+  return persons.flatMap((p) => [
+    ...p.phones
+      .filter((ph) => ph.value.trim())
+      .map((ph) => ({
+        type: "phone" as const,
+        value: ph.value.trim(),
+        label: ph.label,
+        position: p.position.trim(),
+        personName: p.name.trim(),
+      })),
+    ...p.emails
+      .filter((em) => em.value.trim())
+      .map((em) => ({
+        type: "email" as const,
+        value: em.value.trim(),
+        label: em.label,
+        position: p.position.trim(),
+        personName: p.name.trim(),
+      })),
+  ]);
+}
 
 export default function CarrierProfilePage() {
   const { data, isFetching, fetchError } = useProfile();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  /** Índice de la persona abierta en el modal (null = cerrado). */
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   const [form, setForm] = useState<FormState>({
     name: "",
@@ -50,7 +116,7 @@ export default function CarrierProfilePage() {
     rfc: "",
     address: "",
     notes: DEFAULT_NOTES,
-    contacts: [],
+    persons: [],
   });
 
   useEffect(() => {
@@ -71,13 +137,15 @@ export default function CarrierProfilePage() {
         legalName: data.legalName,
         rfc: data.rfc,
         address: data.address,
-        contacts: data.contacts.map((c) => ({
-          id: c.id,
-          type: c.type,
-          value: c.value,
-          label: c.label ?? "",
-          position: c.position ?? "",
-        })),
+        persons: groupContactsByPerson(
+          data.contacts.map((c) => ({
+            type: c.type,
+            value: c.value,
+            label: c.label ?? "",
+            position: c.position ?? "",
+            personName: c.personName ?? "",
+          }))
+        ),
       }));
       void loadNotes();
     }
@@ -88,25 +156,68 @@ export default function CarrierProfilePage() {
       setForm((prev) => ({ ...prev, [key]: e.target.value }));
   }
 
-  function addContact(type: "phone" | "email") {
+  function addPerson() {
     setForm((prev) => ({
       ...prev,
-      contacts: [...prev.contacts, { type, value: "", label: "", position: "" }],
+      persons: [
+        ...prev.persons,
+        { name: "", position: "", phones: [{ value: "", label: PHONE_LABELS[0] }], emails: [{ value: "", label: EMAIL_LABELS[0] }] },
+      ],
     }));
+    setEditingIndex(form.persons.length);
   }
 
-  function removeContact(idx: number) {
+  function removePerson(idx: number) {
     setForm((prev) => ({
       ...prev,
-      contacts: prev.contacts.filter((_, i) => i !== idx),
+      persons: prev.persons.filter((_, i) => i !== idx),
     }));
+    setEditingIndex(null);
   }
 
-  function updateContact(idx: number, key: "value" | "label" | "position", val: string) {
+  function updatePerson(idx: number, patch: Partial<PersonInput>) {
     setForm((prev) => {
-      const contacts = [...prev.contacts];
-      contacts[idx] = { ...contacts[idx], [key]: val };
-      return { ...prev, contacts };
+      const persons = [...prev.persons];
+      persons[idx] = { ...persons[idx], ...patch };
+      return { ...prev, persons };
+    });
+  }
+
+  function updatePersonContact(
+    idx: number,
+    kind: "phones" | "emails",
+    itemIdx: number,
+    patch: Partial<PersonContactItem>
+  ) {
+    setForm((prev) => {
+      const persons = [...prev.persons];
+      const items = [...persons[idx][kind]];
+      items[itemIdx] = { ...items[itemIdx], ...patch };
+      persons[idx] = { ...persons[idx], [kind]: items };
+      return { ...prev, persons };
+    });
+  }
+
+  function addPersonContact(idx: number, kind: "phones" | "emails") {
+    setForm((prev) => {
+      const persons = [...prev.persons];
+      const defaultLabel = kind === "phones" ? PHONE_LABELS[0] : EMAIL_LABELS[0];
+      persons[idx] = {
+        ...persons[idx],
+        [kind]: [...persons[idx][kind], { value: "", label: defaultLabel }],
+      };
+      return { ...prev, persons };
+    });
+  }
+
+  function removePersonContact(idx: number, kind: "phones" | "emails", itemIdx: number) {
+    setForm((prev) => {
+      const persons = [...prev.persons];
+      persons[idx] = {
+        ...persons[idx],
+        [kind]: persons[idx][kind].filter((_, i) => i !== itemIdx),
+      };
+      return { ...prev, persons };
     });
   }
 
@@ -127,9 +238,13 @@ export default function CarrierProfilePage() {
             legalName: form.legalName.trim() || null,
             rfc: form.rfc.trim() || null,
             address: form.address.trim() || null,
-            contacts: form.contacts
-              .filter((c) => c.value.trim())
-              .map((c) => ({ type: c.type, value: c.value.trim(), label: c.label.trim() || null, position: c.position.trim() || null })),
+            contacts: flattenPersons(form.persons).map((c) => ({
+              type: c.type,
+              value: c.value,
+              label: c.label.trim() || null,
+              position: c.position || null,
+              personName: c.personName || null,
+            })),
           }),
         }),
         fetch("/api/carrier/notes", {
@@ -173,8 +288,7 @@ export default function CarrierProfilePage() {
     );
   }
 
-  const phones = form.contacts.map((c, i) => ({ ...c, idx: i })).filter((c) => c.type === "phone");
-  const emails = form.contacts.map((c, i) => ({ ...c, idx: i })).filter((c) => c.type === "email");
+  const editingPerson = editingIndex != null ? form.persons[editingIndex] : null;
 
   return (
     <div className="min-w-0 space-y-6">
@@ -267,118 +381,49 @@ export default function CarrierProfilePage() {
           </div>
         </section>
 
-        {/* ── Teléfonos ── */}
+        {/* ── Personas de contacto ── */}
         <section className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-              <Phone className="size-3.5" /> Teléfonos
+              <User className="size-3.5" /> Personas de contacto
             </h2>
-            <Button type="button" variant="outline" size="sm" onClick={() => addContact("phone")} disabled={isLoading}>
-              <Plus className="size-3.5" /> Agregar
+            <Button type="button" variant="outline" size="sm" onClick={addPerson} disabled={isLoading}>
+              <Plus className="size-3.5" /> Agregar persona
             </Button>
           </div>
 
-          {phones.length === 0 ? (
+          {form.persons.length === 0 ? (
             <p className="text-muted-foreground rounded-lg border border-dashed p-4 text-center text-sm">
-              No hay teléfonos registrados.
+              No hay personas de contacto registradas.
             </p>
           ) : (
-            <div className="space-y-2">
-              {phones.map((c) => (
-                <div key={c.idx} className="flex flex-wrap items-center gap-2">
-                  <Input
-                    type="tel"
-                    value={c.value}
-                    onChange={(e) => updateContact(c.idx, "value", e.target.value)}
-                    disabled={isLoading}
-                    className="flex-1 min-w-40"
-                  />
-                  <Input
-                    placeholder="Puesto"
-                    value={c.position}
-                    onChange={(e) => updateContact(c.idx, "position", e.target.value)}
-                    disabled={isLoading}
-                    className="flex-1 min-w-36"
-                  />
-                  <AppSelect
-                    value={c.label || PHONE_LABELS[0]}
-                    onValueChange={(val) => updateContact(c.idx, "label", val)}
-                    options={PHONE_LABELS.map((l) => ({value: l, label: l}))}
-                    disabled={isLoading}
-                    className="w-28 shrink-0 sm:w-36"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="shrink-0 text-muted-foreground hover:text-destructive"
-                    onClick={() => removeContact(c.idx)}
-                    disabled={isLoading}
-                    aria-label="Eliminar teléfono"
-                  >
-                    <X className="size-4" />
-                  </Button>
-                </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {form.persons.map((p, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setEditingIndex(i)}
+                  className="rounded-lg border p-4 text-left transition-colors hover:bg-hover hover:text-hover-foreground"
+                >
+                  <p className="font-semibold text-sm">{p.position.trim() || "Sin puesto"}</p>
+                  <p className="text-muted-foreground mt-0.5 truncate text-xs">
+                    {p.name.trim() || "Sin nombre"}
+                  </p>
+                  <p className="text-muted-foreground mt-2 flex items-center gap-3 text-xs">
+                    <span className="flex items-center gap-1">
+                      <Phone className="size-3" /> {p.phones.filter((x) => x.value.trim()).length}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Mail className="size-3" /> {p.emails.filter((x) => x.value.trim()).length}
+                    </span>
+                  </p>
+                </button>
               ))}
             </div>
           )}
-        </section>
-
-        {/* ── Correos ── */}
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-              <Mail className="size-3.5" /> Correos de contacto
-            </h2>
-            <Button type="button" variant="outline" size="sm" onClick={() => addContact("email")} disabled={isLoading}>
-              <Plus className="size-3.5" /> Agregar
-            </Button>
-          </div>
-
-          {emails.length === 0 ? (
-            <p className="text-muted-foreground rounded-lg border border-dashed p-4 text-center text-sm">
-              No hay correos de contacto registrados.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {emails.map((c) => (
-                <div key={c.idx} className="flex flex-wrap items-center gap-2">
-                  <Input
-                    type="email"
-                    value={c.value}
-                    onChange={(e) => updateContact(c.idx, "value", e.target.value)}
-                    disabled={isLoading}
-                    className="flex-1 min-w-40"
-                  />
-                  <Input
-                    placeholder="Puesto"
-                    value={c.position}
-                    onChange={(e) => updateContact(c.idx, "position", e.target.value)}
-                    disabled={isLoading}
-                    className="flex-1 min-w-36"
-                  />
-                  <AppSelect
-                    value={c.label || EMAIL_LABELS[0]}
-                    onValueChange={(val) => updateContact(c.idx, "label", val)}
-                    options={EMAIL_LABELS.map((l) => ({value: l, label: l}))}
-                    disabled={isLoading}
-                    className="w-28 shrink-0 sm:w-36"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="shrink-0 text-muted-foreground hover:text-destructive"
-                    onClick={() => removeContact(c.idx)}
-                    disabled={isLoading}
-                    aria-label="Eliminar correo"
-                  >
-                    <X className="size-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
+          <p className="text-xs text-muted-foreground">
+            Haz clic en una persona para ver y editar toda su información.
+          </p>
         </section>
 
         {/* ── Notas de servicios ── */}
@@ -406,6 +451,149 @@ export default function CarrierProfilePage() {
           </Button>
         </div>
       </form>
+
+      {/* ── Modal: toda la información de la persona ── */}
+      <Dialog open={editingIndex != null} onOpenChange={(open) => { if (!open) setEditingIndex(null); }}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+          {editingPerson && editingIndex != null && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{editingPerson.position.trim() || "Persona de contacto"}</DialogTitle>
+                <DialogDescription>
+                  Información completa de la persona. Los cambios se aplican al guardar el perfil.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="person-position">Puesto</Label>
+                    <Input
+                      id="person-position"
+                      placeholder="Ej. Gerente de operaciones"
+                      value={editingPerson.position}
+                      onChange={(e) => updatePerson(editingIndex, { position: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="person-name">Nombre</Label>
+                    <Input
+                      id="person-name"
+                      placeholder="Nombre de la persona"
+                      value={editingPerson.name}
+                      onChange={(e) => updatePerson(editingIndex, { name: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                {/* Teléfonos de la persona */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="flex items-center gap-1.5">
+                      <Phone className="size-3.5" /> Teléfonos
+                    </Label>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => addPersonContact(editingIndex, "phones")}>
+                      <Plus className="size-3.5" /> Agregar
+                    </Button>
+                  </div>
+                  {editingPerson.phones.length === 0 && (
+                    <p className="text-muted-foreground text-xs">Sin teléfonos.</p>
+                  )}
+                  {editingPerson.phones.map((ph, j) => (
+                    <div key={j} className="flex items-center gap-2">
+                      <Input
+                        type="tel"
+                        placeholder="Teléfono"
+                        value={ph.value}
+                        onChange={(e) => updatePersonContact(editingIndex, "phones", j, { value: e.target.value })}
+                        className="flex-1 min-w-0"
+                      />
+                      <AppSelect
+                        value={ph.label || PHONE_LABELS[0]}
+                        onValueChange={(val) => updatePersonContact(editingIndex, "phones", j, { label: val })}
+                        options={PHONE_LABELS.map((l) => ({ value: l, label: l }))}
+                        className="w-28 shrink-0"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0 text-muted-foreground hover:text-destructive"
+                        onClick={() => removePersonContact(editingIndex, "phones", j)}
+                        aria-label="Eliminar teléfono"
+                      >
+                        <X className="size-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Correos de la persona */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="flex items-center gap-1.5">
+                      <Mail className="size-3.5" /> Correos
+                    </Label>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => addPersonContact(editingIndex, "emails")}>
+                      <Plus className="size-3.5" /> Agregar
+                    </Button>
+                  </div>
+                  {editingPerson.emails.length === 0 && (
+                    <p className="text-muted-foreground text-xs">Sin correos.</p>
+                  )}
+                  {editingPerson.emails.map((em, j) => (
+                    <div key={j} className="flex items-center gap-2">
+                      <Input
+                        type="email"
+                        placeholder="Correo"
+                        value={em.value}
+                        onChange={(e) => updatePersonContact(editingIndex, "emails", j, { value: e.target.value })}
+                        className="flex-1 min-w-0"
+                      />
+                      <AppSelect
+                        value={em.label || EMAIL_LABELS[0]}
+                        onValueChange={(val) => updatePersonContact(editingIndex, "emails", j, { label: val })}
+                        options={EMAIL_LABELS.map((l) => ({ value: l, label: l }))}
+                        className="w-28 shrink-0"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0 text-muted-foreground hover:text-destructive"
+                        onClick={() => removePersonContact(editingIndex, "emails", j)}
+                        aria-label="Eliminar correo"
+                      >
+                        <X className="size-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+
+                {flattenPersons([editingPerson]).length === 0 && (
+                  <p className="text-xs text-amber-600">
+                    Agrega al menos un teléfono o correo; de lo contrario esta persona no se guardará.
+                  </p>
+                )}
+              </div>
+
+              <DialogFooter className="gap-2 sm:justify-between">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-destructive hover:text-destructive"
+                  onClick={() => removePerson(editingIndex)}
+                >
+                  <Trash2 className="size-4" /> Eliminar persona
+                </Button>
+                <Button type="button" onClick={() => setEditingIndex(null)}>
+                  Listo
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
