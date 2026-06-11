@@ -6,6 +6,7 @@ import { type PrismaRoute, VALID_STATUSES, routeToJson } from "@/lib/api/route-u
 import { getCityState } from "@/lib/data/mexico-cities";
 import { logRoute, diffSnapshots, type RouteSnapshot } from "@/lib/route-log";
 import { logAudit } from "@/lib/audit-log";
+import { alertMatchingCarriers } from "@/lib/carrier-route-alert";
 import type { RouteStatus } from "@/types/route.types";
 
 export async function GET(
@@ -140,6 +141,24 @@ export async function PATCH(
           action: "updated", userId: session.user.id, userName: (session.user as { name: string }).name,
           changes: changes.map((c) => ({ field: c.field, label: c.label, from: c.from, to: c.to })),
         });
+      }
+
+      // La ruta pasó de pendiente/inactiva a activa: ya es visible para los
+      // transportistas, avisarles por correo y notificación in-app.
+      if (before.status !== "active" && route.status === "active") {
+        const alertUnitTypes =
+          route.unitTargets.length > 0
+            ? route.unitTargets.map((u) => u.unitType)
+            : [route.unitType];
+        for (const ut of alertUnitTypes) {
+          void alertMatchingCarriers({
+            id: route.id,
+            origin: route.origin,
+            destination: route.destination,
+            destinationState: route.destinationState ?? null,
+            unitType: ut,
+          });
+        }
       }
     }
 

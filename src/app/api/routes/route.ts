@@ -144,14 +144,18 @@ export async function POST(request: NextRequest) {
       userId: session.user.id,
       userName: (session.user as { name: string }).name,
     });
-    for (const ut of unitTargets) {
-      void alertMatchingCarriers({
-        id: route.id,
-        origin,
-        destination,
-        destinationState: destinationState ?? null,
-        unitType: ut.unitType,
-      });
+    // Solo avisar a transportistas si la ruta nace activa (las pendientes/inactivas
+    // no son visibles para ellos; se les avisa cuando cambien a activa).
+    if (status === "active") {
+      for (const ut of unitTargets) {
+        void alertMatchingCarriers({
+          id: route.id,
+          origin,
+          destination,
+          destinationState: destinationState ?? null,
+          unitType: ut.unitType,
+        });
+      }
     }
 
     return Response.json({ routes: [routeToJson(route as unknown as PrismaRoute)] });
