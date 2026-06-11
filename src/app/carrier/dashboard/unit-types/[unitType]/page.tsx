@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Lock, MoveRight } from "lucide-react";
+import type { TargetStatus } from "@/lib/target-status";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AppSelect } from "@/components/ui/app-select";
@@ -18,6 +19,8 @@ interface RouteSelection {
   carrierWeeklyVolume: number | null;
   editUnlockRequested: boolean;
   editUnlockApproved: boolean;
+  /** Semáforo contra el target de JTP, calculado en servidor. Nunca expone precio ni porcentaje. */
+  targetStatus: TargetStatus | null;
 }
 
 interface CarrierRouteRow {
@@ -48,6 +51,24 @@ async function fetchCarrierRoutes(): Promise<CarrierRoutesResponse> {
   return res.json();
 }
 
+// Semáforo del target del transportista contra el target de JTP. Solo muestra el color;
+// el cálculo se hace en el servidor sin exponer el precio ni el porcentaje.
+function TargetStatusLight({ status }: { status: TargetStatus | null }) {
+  if (status == null) return null;
+  const emoji = status === "verde" ? "🟢" : status === "amarillo" ? "🟡" : "🔴";
+  const label =
+    status === "verde"
+      ? "Target dentro del objetivo"
+      : status === "amarillo"
+        ? "Target ligeramente por encima del objetivo"
+        : "Target por encima del objetivo";
+  return (
+    <span role="img" aria-label={label} title={label} className="text-base leading-none">
+      {emoji}
+    </span>
+  );
+}
+
 export default function CarrierUnitTypePage() {
   const { unitType } = useParams<{ unitType: string }>();
   const router = useRouter();
@@ -66,6 +87,8 @@ export default function CarrierUnitTypePage() {
   const [originalSelected, setOriginalSelected] = useState<Set<string>>(new Set());
   const [targetByRouteId, setTargetByRouteId] = useState<Record<string, string>>({});
   const [weeklyVolumeByRouteId, setWeeklyVolumeByRouteId] = useState<Record<string, string>>({});
+  const [statusByRouteId, setStatusByRouteId] = useState<Record<string, TargetStatus | null>>({});
+  const statusDebounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const unitTypes = useUnitTypes();
   const unitTypeLabel = useMemo(() => {
@@ -92,18 +115,21 @@ export default function CarrierUnitTypePage() {
     const savedSelected = new Set<string>();
     const savedTargets: Record<string, string> = {};
     const savedVolumes: Record<string, string> = {};
+    const savedStatuses: Record<string, TargetStatus | null> = {};
     for (const r of data.routes) {
       const sel = r.selections?.find((s) => s.unitType === unitType);
       if (sel) {
         savedSelected.add(r.id);
         if (sel.carrierTarget != null) savedTargets[r.id] = formatMxn(sel.carrierTarget);
         if (sel.carrierWeeklyVolume != null) savedVolumes[r.id] = String(sel.carrierWeeklyVolume);
+        savedStatuses[r.id] = sel.targetStatus ?? null;
       }
     }
     setSelected(savedSelected);
     setOriginalSelected(savedSelected);
     setTargetByRouteId(savedTargets);
     setWeeklyVolumeByRouteId(savedVolumes);
+    setStatusByRouteId(savedStatuses);
     setIsLoaded(true);
   }, [unitType]);
 
@@ -171,6 +197,25 @@ export default function CarrierUnitTypePage() {
   function handleTargetChange(routeId: string, raw: string) {
     const formatted = formatMxnLive(raw);
     setTargetByRouteId((prev) => ({ ...prev, [routeId]: formatted }));
+
+    // Recalcular el semáforo en automático (con debounce) mientras escribe.
+    clearTimeout(statusDebounceTimers.current[routeId]);
+    const parsed = parseMxn(formatted);
+    if (parsed == null || parsed <= 0) {
+      setStatusByRouteId((prev) => ({ ...prev, [routeId]: null }));
+      return;
+    }
+    statusDebounceTimers.current[routeId] = setTimeout(async () => {
+      try {
+        const params = new URLSearchParams({ routeId, unitType, carrierTarget: String(parsed) });
+        const res = await fetch(`/api/carrier/routes/diff?${params}`);
+        if (!res.ok) return;
+        const { status } = await res.json();
+        setStatusByRouteId((prev) => ({ ...prev, [routeId]: status ?? null }));
+      } catch {
+        // silently ignore
+      }
+    }, 400);
   }
 
   function handleTargetBlur(routeId: string) {
@@ -318,22 +363,24 @@ export default function CarrierUnitTypePage() {
                         Desde {origin}
                       </span>
                     </div>
-                    <div className="grid grid-cols-[auto_1fr_130px_80px] gap-3 border-b bg-muted/20 px-3 py-1.5 text-xs font-medium text-muted-foreground sm:px-4">
+                    <div className="grid grid-cols-[auto_1fr_130px_80px_70px] gap-3 border-b bg-muted/20 px-3 py-1.5 text-xs font-medium text-muted-foreground sm:px-4">
                       <span className="flex items-center">Sel.</span>
                       <span className="flex items-center">Ruta</span>
                       <span className="flex items-center">Mi target</span>
                       <span className="flex items-center">Vol./sem.</span>
+                      <span className="flex items-center justify-center">Semáforo</span>
                     </div>
                     {items.map((route) => {
                       const isSelected = selected.has(route.id);
                       const isOriginallySelected = originalSelected.has(route.id);
+                      const targetStatus = statusByRouteId[route.id] ?? null;
 
                       const isLocked = isOriginallySelected && !canEditRoutes;
 
                       return (
                         <div
                           key={route.id}
-                          className="grid grid-cols-[auto_1fr_130px_80px] gap-3 items-center border-b px-3 py-3 last:border-b-0 sm:px-4 hover:bg-hover hover:text-hover-foreground transition-colors"
+                          className="grid grid-cols-[auto_1fr_130px_80px_70px] gap-3 items-center border-b px-3 py-3 last:border-b-0 sm:px-4 hover:bg-hover hover:text-hover-foreground transition-colors"
                         >
                           <label className="flex cursor-pointer items-center gap-2">
                             <input
@@ -381,6 +428,10 @@ export default function CarrierUnitTypePage() {
                             className="h-8 w-full text-sm"
                             aria-label={`Volumen semanal para ${route.origin} a ${route.destination}`}
                           />
+
+                          <div className="flex items-center justify-center">
+                            <TargetStatusLight status={targetStatus} />
+                          </div>
                         </div>
                       );
                     })}

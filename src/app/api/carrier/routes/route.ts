@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireCarrier } from "@/lib/auth-server";
 import { sendEmail } from "@/lib/email";
 import { logAudit } from "@/lib/audit-log";
+import { computeTargetStatus, type TargetStatus } from "@/lib/target-status";
 
 const PRICING_EMAIL = "pricing@jtp.com.mx";
 
@@ -42,16 +43,8 @@ export async function GET() {
       }
     }
 
-    /** Sólo el % de diferencia (nunca el precio). */
-    function computeDiffPercent(routeId: string, unitType: string, carrierTarget: number | null): number | null {
-      if (carrierTarget == null) return null;
-      const adminTarget = adminTargetByRouteUnit.get(`${routeId}:${unitType}`);
-      if (adminTarget == null || adminTarget === 0) return null;
-      return ((carrierTarget - adminTarget) / adminTarget) * 100;
-    }
-
     // Build per-unitType selection info
-    const selectionsByRoute = new Map<string, { unitType: string; carrierTarget: number | null; carrierWeeklyVolume: number | null; editUnlockRequested: boolean; editUnlockApproved: boolean; targetDiffPercent: number | null }[]>();
+    const selectionsByRoute = new Map<string, { unitType: string; carrierTarget: number | null; carrierWeeklyVolume: number | null; editUnlockRequested: boolean; editUnlockApproved: boolean; targetStatus: TargetStatus | null }[]>();
     for (const cr of carrierRoutes) {
       const list = selectionsByRoute.get(cr.routeId) ?? [];
       list.push({
@@ -60,7 +53,8 @@ export async function GET() {
         carrierWeeklyVolume: cr.carrierWeeklyVolume ?? null,
         editUnlockRequested: cr.editUnlockRequested,
         editUnlockApproved: cr.editUnlockApproved,
-        targetDiffPercent: computeDiffPercent(cr.routeId, cr.unitType, cr.carrierTarget ?? null),
+        // Solo el semáforo (nunca el precio ni el porcentaje).
+        targetStatus: computeTargetStatus(adminTargetByRouteUnit.get(`${cr.routeId}:${cr.unitType}`), cr.carrierTarget ?? null),
       });
       selectionsByRoute.set(cr.routeId, list);
     }
