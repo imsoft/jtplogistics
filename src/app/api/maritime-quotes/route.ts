@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { gateMaritime } from "@/lib/maritime-quote-auth";
 import { computeMaritimeQuote, type MaritimeQuoteInput } from "@/lib/maritime-quote";
+import { logAudit } from "@/lib/audit-log";
 import type { Prisma } from "@prisma/client";
 
 export async function GET() {
@@ -62,6 +63,12 @@ export async function POST(request: NextRequest) {
         data: body.data as unknown as Prisma.InputJsonValue,
         createdById: session.user.id,
       },
+    });
+
+    void logAudit({
+      resource: "maritime_quote", resourceId: quote.id,
+      resourceLabel: `${quote.reference} — ${quote.client}`,
+      action: "created", userId: session.user.id, userName: (session.user as { name: string }).name,
     });
 
     return Response.json({ id: quote.id }, { status: 201 });

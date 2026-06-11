@@ -2,8 +2,16 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { gateMaritime } from "@/lib/maritime-quote-auth";
 import { QUOTE_STATUS_VALUES } from "@/lib/constants/quote-status";
+import { logAudit, diffObjects } from "@/lib/audit-log";
 import type { Prisma, QuoteStatus } from "@prisma/client";
 import type { MaritimeQuoteInput } from "@/lib/maritime-quote";
+
+const FIELD_LABELS: Record<string, string> = {
+  reference: "Referencia",
+  client: "Cliente",
+  validUntil: "Vigencia",
+  status: "Estado",
+};
 
 /**
  * Una cotización aceptada queda bloqueada: solo el admin, o un colaborador al
@@ -78,7 +86,7 @@ export async function PATCH(
 
     await assertCanModifyAccepted(session, quote.status);
 
-    await prisma.maritimeQuote.update({
+    const updated = await prisma.maritimeQuote.update({
       where: { id },
       data: {
         ...(body.reference && { reference: body.reference.trim() }),
@@ -88,6 +96,33 @@ export async function PATCH(
         ...(body.status && { status: body.status as QuoteStatus }),
       },
     });
+
+    const changes = diffObjects(
+      {
+        reference: quote.reference,
+        client: quote.client,
+        validUntil: quote.validUntil.toISOString().split("T")[0],
+        status: quote.status,
+      },
+      {
+        reference: updated.reference,
+        client: updated.client,
+        validUntil: updated.validUntil.toISOString().split("T")[0],
+        status: updated.status,
+      },
+      FIELD_LABELS
+    );
+    if (body.data && JSON.stringify(quote.data) !== JSON.stringify(updated.data)) {
+      changes.push({ field: "data", label: "Contenido", from: null, to: "Actualizado" });
+    }
+    if (changes.length > 0) {
+      void logAudit({
+        resource: "maritime_quote", resourceId: id,
+        resourceLabel: `${quote.reference} — ${updated.client}`,
+        action: "updated", userId: session.user.id, userName: (session.user as { name: string }).name,
+        changes,
+      });
+    }
 
     return Response.json({ ok: true });
   } catch (e) {
@@ -108,6 +143,11 @@ export async function DELETE(
     if (!quote) return Response.json({ error: "No encontrado" }, { status: 404 });
     await assertCanModifyAccepted(session, quote.status);
     await prisma.maritimeQuote.delete({ where: { id } });
+    void logAudit({
+      resource: "maritime_quote", resourceId: id,
+      resourceLabel: `${quote.reference} — ${quote.client}`,
+      action: "deleted", userId: session.user.id, userName: (session.user as { name: string }).name,
+    });
     return Response.json({ ok: true });
   } catch (e) {
     if (e instanceof Response) return e;

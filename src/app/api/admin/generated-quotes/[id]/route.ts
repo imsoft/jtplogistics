@@ -3,6 +3,22 @@ import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
 import type { Prisma, QuoteStatus } from "@prisma/client";
 import { QUOTE_STATUS_VALUES } from "@/lib/constants/quote-status";
+import { logAudit, diffObjects } from "@/lib/audit-log";
+
+const FIELD_LABELS: Record<string, string> = {
+  company: "Compañía",
+  contact: "Contacto",
+  phone: "Teléfono",
+  validUntil: "Vigencia",
+  status: "Estado",
+};
+
+/** Resumen legible de las rutas de la cotización para la bitácora. */
+function summarizeRows(rows: unknown): string {
+  const list = Array.isArray(rows) ? (rows as { cost?: number }[]) : [];
+  const total = list.reduce((sum, r) => sum + (Number(r.cost) || 0), 0);
+  return `${list.length} ruta${list.length !== 1 ? "s" : ""} · $${total.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+}
 
 export function GET(
   _req: Request,
@@ -24,7 +40,7 @@ export function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const { id } = await params;
     const body = await request.json() as {
       company?: string;
@@ -42,7 +58,7 @@ export function PATCH(
     const quote = await prisma.generatedQuote.findUnique({ where: { id } });
     if (!quote) return Response.json({ error: "No encontrado" }, { status: 404 });
 
-    await prisma.generatedQuote.update({
+    const updated = await prisma.generatedQuote.update({
       where: { id },
       data: {
         ...(body.company && { company: body.company.trim() }),
@@ -54,6 +70,40 @@ export function PATCH(
       },
     });
 
+    const changes = diffObjects(
+      {
+        company: quote.company,
+        contact: quote.contact,
+        phone: quote.phone,
+        validUntil: quote.validUntil.toISOString().split("T")[0],
+        status: quote.status,
+      },
+      {
+        company: updated.company,
+        contact: updated.contact,
+        phone: updated.phone,
+        validUntil: updated.validUntil.toISOString().split("T")[0],
+        status: updated.status,
+      },
+      FIELD_LABELS
+    );
+    if (body.rows && JSON.stringify(quote.rows) !== JSON.stringify(updated.rows)) {
+      changes.push({
+        field: "rows",
+        label: "Rutas",
+        from: summarizeRows(quote.rows),
+        to: summarizeRows(updated.rows),
+      });
+    }
+    if (changes.length > 0) {
+      void logAudit({
+        resource: "generated_quote", resourceId: id,
+        resourceLabel: `${quote.quoteNumber} — ${updated.company}`,
+        action: "updated", userId: session.user.id, userName: (session.user as { name: string }).name,
+        changes,
+      });
+    }
+
     return Response.json({ ok: true });
   });
 }
@@ -62,11 +112,16 @@ export function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return adminHandler(async () => {
+  return adminHandler(async (session) => {
     const { id } = await params;
     const quote = await prisma.generatedQuote.findUnique({ where: { id } });
     if (!quote) return Response.json({ error: "No encontrado" }, { status: 404 });
     await prisma.generatedQuote.delete({ where: { id } });
+    void logAudit({
+      resource: "generated_quote", resourceId: id,
+      resourceLabel: `${quote.quoteNumber} — ${quote.company}`,
+      action: "deleted", userId: session.user.id, userName: (session.user as { name: string }).name,
+    });
     return Response.json({ ok: true });
   });
 }

@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
+import { logAudit } from "@/lib/audit-log";
 import type { Prisma } from "@prisma/client";
 
 export async function POST(request: NextRequest) {
@@ -43,6 +44,12 @@ export async function POST(request: NextRequest) {
         rows,
         createdById: session.user.id,
       },
+    });
+
+    void logAudit({
+      resource: "generated_quote", resourceId: quote.id,
+      resourceLabel: `${quoteNumber} — ${company}`,
+      action: "created", userId: session.user.id, userName: (session.user as { name: string }).name,
     });
 
     return Response.json({ id: quote.id }, { status: 201 });

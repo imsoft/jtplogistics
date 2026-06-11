@@ -48,6 +48,8 @@ const RESOURCE_LABELS: Record<string, string> = {
   message: "Mensaje",
   profile: "Perfil",
   carrier_suggestion: "Sugerencia de transportista",
+  generated_quote: "Cotización",
+  maritime_quote: "Cotización marítima",
 };
 
 function formatDateTime(iso: string) {
