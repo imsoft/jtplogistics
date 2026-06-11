@@ -176,7 +176,7 @@ export function QuotesCrmTable({ initialQuotes }: { initialQuotes: CrmQuote[] })
                   <th className="px-4 py-2 text-left font-medium hidden md:table-cell">Vigencia</th>
                   <th className="px-4 py-2 text-left font-medium hidden lg:table-cell">Generado por</th>
                   <th className="px-4 py-2 text-left font-medium">Fecha</th>
-                  <th className="px-4 py-2 w-16" />
+                  <th className="px-4 py-2 w-24" />
                 </tr>
               </thead>
               <tbody>

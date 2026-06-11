@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { FormSkeleton } from "@/components/ui/skeletons";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, Trash2 } from "lucide-react";
+import { ChevronLeft, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,12 +72,29 @@ export default function EditQuotePage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    const cleanRows = rows
+      .map((r) => ({
+        ...r,
+        origin: r.origin.trim(),
+        destination: r.destination.trim(),
+        destinationState: r.destinationState?.trim() || null,
+        unitLabel: r.unitLabel.trim(),
+      }))
+      .filter((r) => r.origin || r.destination || r.unitLabel || r.cost > 0);
+    if (cleanRows.some((r) => !r.origin || !r.destination)) {
+      setError("Todas las rutas deben tener origen y destino.");
+      return;
+    }
+    if (cleanRows.length === 0) {
+      setError("Agrega al menos una ruta.");
+      return;
+    }
     setIsSubmitting(true);
     try {
       const res = await fetch(`/api/admin/generated-quotes/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ company, contact, phone: phone || null, validUntil, rows }),
+        body: JSON.stringify({ company, contact, phone: phone || null, validUntil, rows: cleanRows }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({})) as { error?: string };
@@ -101,9 +118,21 @@ export default function EditQuotePage() {
     }
   }
 
+  function updateRow(i: number, patch: Partial<QuoteRow>) {
+    setRows((prev) => prev.map((r, idx) => idx === i ? { ...r, ...patch } : r));
+  }
+
   function updateCost(i: number, value: string) {
     const cost = parseFloat(value.replace(/[^0-9.]/g, "")) || 0;
-    setRows((prev) => prev.map((r, idx) => idx === i ? { ...r, cost } : r));
+    updateRow(i, { cost });
+  }
+
+  function addRow() {
+    setRows((prev) => [...prev, { origin: "", destination: "", destinationState: null, cost: 0, unitLabel: "" }]);
+  }
+
+  function removeRow(i: number) {
+    setRows((prev) => prev.filter((_, idx) => idx !== i));
   }
 
   if (!isLoaded) return <FormSkeleton />;
@@ -169,27 +198,62 @@ export default function EditQuotePage() {
           </div>
         </div>
 
-        {/* Rutas */}
-        {rows.length > 0 && (
-          <div className="space-y-2">
+        {/* Rutas: todos los campos editables */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
             <Label>Rutas incluidas</Label>
-            <div className="rounded-lg border overflow-hidden">
-              <table className="w-full text-sm">
+            <Button type="button" variant="outline" size="sm" onClick={addRow} disabled={isSubmitting}>
+              <Plus className="size-3.5" />
+              Agregar ruta
+            </Button>
+          </div>
+          {rows.length === 0 ? (
+            <p className="text-sm text-muted-foreground rounded-lg border border-dashed p-6 text-center">
+              No hay rutas. Agrega al menos una.
+            </p>
+          ) : (
+            <div className="rounded-lg border overflow-x-auto">
+              <table className="w-full min-w-[640px] text-sm">
                 <thead className="bg-muted/50 border-b">
                   <tr>
                     <th className="text-left px-3 py-2 font-medium text-xs">Origen</th>
                     <th className="text-left px-3 py-2 font-medium text-xs">Destino</th>
-                    <th className="text-left px-3 py-2 font-medium text-xs hidden sm:table-cell">Estado</th>
+                    <th className="text-left px-3 py-2 font-medium text-xs">Estado</th>
                     <th className="text-left px-3 py-2 font-medium text-xs">Costo ($)</th>
-                    <th className="text-left px-3 py-2 font-medium text-xs hidden md:table-cell">Unidad</th>
+                    <th className="text-left px-3 py-2 font-medium text-xs">Unidad</th>
+                    <th className="px-2 py-2 w-10" />
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map((row, i) => (
                     <tr key={i} className="border-t">
-                      <td className="px-3 py-2 text-sm">{row.origin}</td>
-                      <td className="px-3 py-2 text-sm">{row.destination}</td>
-                      <td className="px-3 py-2 text-sm text-muted-foreground hidden sm:table-cell">{row.destinationState ?? "—"}</td>
+                      <td className="px-3 py-2">
+                        <Input
+                          value={row.origin}
+                          onChange={(e) => updateRow(i, { origin: e.target.value })}
+                          disabled={isSubmitting}
+                          className="h-8 min-w-28"
+                          aria-label={`Origen de la ruta ${i + 1}`}
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <Input
+                          value={row.destination}
+                          onChange={(e) => updateRow(i, { destination: e.target.value })}
+                          disabled={isSubmitting}
+                          className="h-8 min-w-28"
+                          aria-label={`Destino de la ruta ${i + 1}`}
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <Input
+                          value={row.destinationState ?? ""}
+                          onChange={(e) => updateRow(i, { destinationState: e.target.value || null })}
+                          disabled={isSubmitting}
+                          className="h-8 min-w-24"
+                          aria-label={`Estado de destino de la ruta ${i + 1}`}
+                        />
+                      </td>
                       <td className="px-3 py-2">
                         <Input
                           type="number" min="0" step="100"
@@ -197,16 +261,38 @@ export default function EditQuotePage() {
                           onChange={(e) => updateCost(i, e.target.value)}
                           disabled={isSubmitting}
                           className="w-28 h-8"
+                          aria-label={`Costo de la ruta ${i + 1}`}
                         />
                       </td>
-                      <td className="px-3 py-2 text-xs text-muted-foreground hidden md:table-cell">{row.unitLabel}</td>
+                      <td className="px-3 py-2">
+                        <Input
+                          value={row.unitLabel}
+                          onChange={(e) => updateRow(i, { unitLabel: e.target.value })}
+                          disabled={isSubmitting}
+                          className="h-8 min-w-24"
+                          aria-label={`Unidad de la ruta ${i + 1}`}
+                        />
+                      </td>
+                      <td className="px-2 py-2">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="size-7"
+                          onClick={() => removeRow(i)}
+                          disabled={isSubmitting}
+                          aria-label={`Eliminar ruta ${i + 1}`}
+                        >
+                          <Trash2 className="size-3.5 text-destructive" />
+                        </Button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         <div className="flex justify-end gap-3">
           <Button type="button" variant="outline" asChild>
