@@ -219,7 +219,7 @@ export default function RouteDetailPage() {
               />
             )}
             <InfoRow
-              label="Volumen semanal"
+              label="Volumen mensual"
               value={route.weeklyVolume != null ? route.weeklyVolume : null}
             />
             <InfoRow

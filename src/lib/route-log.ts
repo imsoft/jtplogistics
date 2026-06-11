@@ -30,7 +30,7 @@ const FIELD_LABELS: Record<string, string> = {
   destinationState: "Estado destino",
   description:      "Descripción",
   target:           "Target",
-  weeklyVolume:     "Vol./semana",
+  weeklyVolume:     "Vol./mes",
   unitType:         "Tipo de unidad",
   status:           "Estado",
 };

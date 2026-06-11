@@ -211,7 +211,7 @@ export default function CollaboratorRouteDetailPage() {
               />
             )}
             <InfoRow
-              label="Volumen semanal"
+              label="Volumen mensual"
               value={route.weeklyVolume != null ? route.weeklyVolume : null}
             />
             <InfoRow label="Descripción" value={route.description} />

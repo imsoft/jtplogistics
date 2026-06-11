@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { Lock, MoveRight } from "lucide-react";
 import type { TargetStatus } from "@/lib/target-status";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,9 @@ interface CarrierRouteRow {
   unitType: string;
   /** Tipos de unidad disponibles para esta ruta (sin precios, confidenciales para el admin). */
   unitTargets: { unitType: string }[];
+  status: "active" | "pending" | "inactive";
+  /** Volumen mensual escrito por JTP (solo se muestra en rutas activas). */
+  jtpVolume: number | null;
   selected: boolean;
   selections: RouteSelection[];
   carrierTarget: number | null;
@@ -199,7 +203,9 @@ export default function CarrierUnitTypePage() {
     setTargetByRouteId((prev) => ({ ...prev, [routeId]: formatted }));
 
     // Recalcular el semáforo en automático (con debounce) mientras escribe.
+    // En rutas activas el transportista no ve el semáforo, no hay nada que calcular.
     clearTimeout(statusDebounceTimers.current[routeId]);
+    if (allRoutes.find((r) => r.id === routeId)?.status === "active") return;
     const parsed = parseMxn(formatted);
     if (parsed == null || parsed <= 0) {
       setStatusByRouteId((prev) => ({ ...prev, [routeId]: null }));
@@ -285,7 +291,7 @@ export default function CarrierUnitTypePage() {
           <CardHeader className="space-y-1 py-3 sm:py-4">
             <CardTitle className="text-base">Primer paso: tus rutas</CardTitle>
             <CardDescription className="text-xs sm:text-sm">
-              Marca las rutas que operas, completa tu target y volumen semanal, y guarda. Repite en cada
+              Marca las rutas que operas, completa tu target y volumen mensual, y guarda. Repite en cada
               tipo de unidad que manejes. Cuando termines, en <strong>Inicio</strong> verás el resumen de
               toda tu operación.
             </CardDescription>
@@ -367,15 +373,17 @@ export default function CarrierUnitTypePage() {
                       <span className="flex items-center">Sel.</span>
                       <span className="flex items-center">Ruta</span>
                       <span className="flex items-center">Mi target</span>
-                      <span className="flex items-center">Vol./sem.</span>
+                      <span className="flex items-center">Vol./mes</span>
                       <span className="flex items-center justify-center">Semáforo</span>
                     </div>
                     {items.map((route) => {
                       const isSelected = selected.has(route.id);
                       const isOriginallySelected = originalSelected.has(route.id);
+                      const isActiveRoute = route.status === "active";
                       const targetStatus = statusByRouteId[route.id] ?? null;
 
                       const isLocked = isOriginallySelected && !canEditRoutes;
+                      const contactDraft = `Hola, quiero hablar con el gerente de compras de JTP sobre la ruta ${route.origin} → ${route.destination} (${pageTitle}).`;
 
                       return (
                         <div
@@ -402,6 +410,17 @@ export default function CarrierUnitTypePage() {
                             {route.description && (
                               <p className="text-muted-foreground truncate text-xs">{route.description}</p>
                             )}
+                            {!isActiveRoute && (
+                              <p className="text-xs text-muted-foreground">
+                                Favor de contactar al{" "}
+                                <Link
+                                  href={`/carrier/dashboard/messages?draft=${encodeURIComponent(contactDraft)}`}
+                                  className="font-medium text-primary underline underline-offset-2"
+                                >
+                                  gerente de compras de JTP
+                                </Link>
+                              </p>
+                            )}
                           </div>
 
                           <div className="flex items-center gap-1.5">
@@ -418,19 +437,28 @@ export default function CarrierUnitTypePage() {
                             />
                           </div>
 
-                          <Input
-                            type="number"
-                            inputMode="numeric"
-                            min={0}
-                            value={weeklyVolumeByRouteId[route.id] ?? ""}
-                            onChange={(e) => handleVolumeChange(route.id, e.target.value)}
-                            disabled={!isSelected || isLocked}
-                            className="h-8 w-full text-sm"
-                            aria-label={`Volumen semanal para ${route.origin} a ${route.destination}`}
-                          />
+                          {isActiveRoute ? (
+                            <p
+                              className="text-sm text-muted-foreground"
+                              title="Volumen mensual definido por JTP"
+                            >
+                              {route.jtpVolume ?? "—"}
+                            </p>
+                          ) : (
+                            <Input
+                              type="number"
+                              inputMode="numeric"
+                              min={0}
+                              value={weeklyVolumeByRouteId[route.id] ?? ""}
+                              onChange={(e) => handleVolumeChange(route.id, e.target.value)}
+                              disabled={!isSelected || isLocked}
+                              className="h-8 w-full text-sm"
+                              aria-label={`Volumen mensual para ${route.origin} a ${route.destination}`}
+                            />
+                          )}
 
                           <div className="flex items-center justify-center">
-                            <TargetStatusLight status={targetStatus} />
+                            {!isActiveRoute && <TargetStatusLight status={targetStatus} />}
                           </div>
                         </div>
                       );

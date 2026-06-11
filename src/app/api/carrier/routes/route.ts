@@ -13,8 +13,9 @@ export async function GET() {
     const session = await requireCarrier();
 
     const [routes, carrierRoutes, userRecord] = await Promise.all([
+      // Incluye también pendientes/inactivas: el transportista las ve con
+      // comportamiento distinto (escribe su volumen y contacta a compras).
       prisma.route.findMany({
-        where: { status: "active" },
         orderBy: { createdAt: "desc" },
         include: { unitTargets: true },
       }),
@@ -76,6 +77,9 @@ export async function GET() {
           description: r.description ?? null,
           unitType: r.unitType,
           unitTargets,
+          status: r.status,
+          // Volumen mensual escrito por JTP (visible para el transportista en rutas activas).
+          jtpVolume: r.weeklyVolume ?? null,
           selected: selectedRouteIds.has(r.id),
           selections: selectionsByRoute.get(r.id) ?? [],
           carrierTarget: null,
@@ -240,7 +244,7 @@ async function notifyPricing(
         const target = item.carrierTarget != null
           ? `$${item.carrierTarget.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`
           : "Sin target";
-        const vol = item.carrierWeeklyVolume != null ? `${item.carrierWeeklyVolume} unid./sem.` : "—";
+        const vol = item.carrierWeeklyVolume != null ? `${item.carrierWeeklyVolume} unid./mes` : "—";
         return `• ${r.origin} → ${r.destination} | Target: ${target} | Volumen: ${vol}`;
       })
       .filter(Boolean)

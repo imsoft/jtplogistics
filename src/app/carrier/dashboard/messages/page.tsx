@@ -1,10 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import { useSession } from "@/lib/auth-client";
 import { ChatWindow } from "@/components/dashboard/messages/chat-window";
 
 export default function CarrierMessagesPage() {
   const { data: session } = useSession();
+  // Borrador prellenado vía ?draft= (p. ej. desde el enlace "contactar al gerente
+  // de compras" en rutas pendientes/inactivas). Se lee una sola vez al montar.
+  const [draft] = useState(() =>
+    typeof window === "undefined"
+      ? ""
+      : new URLSearchParams(window.location.search).get("draft") ?? ""
+  );
 
   if (!session) {
     return <p className="text-muted-foreground">Cargando…</p>;
@@ -23,6 +31,7 @@ export default function CarrierMessagesPage() {
         <ChatWindow
           carrierId={session.user.id}
           currentUserId={session.user.id}
+          initialText={draft}
         />
       </div>
     </div>

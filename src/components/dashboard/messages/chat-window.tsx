@@ -21,6 +21,8 @@ interface ChatWindowProps {
   currentUserId: string;
   /** Título visible arriba del chat (nombre del transportista o "Mi conversación") */
   title?: string;
+  /** Texto inicial del input (p. ej. borrador prellenado desde un enlace) */
+  initialText?: string;
 }
 
 function formatTime(iso: string) {
@@ -38,9 +40,9 @@ function formatDate(iso: string) {
   });
 }
 
-export function ChatWindow({ carrierId, currentUserId, title }: ChatWindowProps) {
+export function ChatWindow({ carrierId, currentUserId, title, initialText }: ChatWindowProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [text, setText] = useState("");
+  const [text, setText] = useState(initialText ?? "");
   const [isSending, setIsSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);

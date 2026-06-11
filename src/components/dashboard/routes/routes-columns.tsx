@@ -123,7 +123,7 @@ export function getRoutesColumns({
           },
           {
             accessorKey: "weeklyVolume",
-            header: "Vol./semana",
+            header: "Vol./mes",
             cell: ({ row }: { row: Row<Route> }) => {
               const v = row.original.weeklyVolume;
               return v != null ? v : <span className="text-muted-foreground">—</span>;

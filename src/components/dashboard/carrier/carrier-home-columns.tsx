@@ -46,7 +46,7 @@ export function getCarrierHomeColumns(): ColumnDef<CarrierHomeRouteRow>[] {
     },
     {
       accessorKey: "carrierWeeklyVolume",
-      header: "Vol./semana",
+      header: "Vol./mes",
       cell: ({ row }) => {
         const v = row.original.carrierWeeklyVolume;
         return v != null ? v : <span className="text-muted-foreground">—</span>;
