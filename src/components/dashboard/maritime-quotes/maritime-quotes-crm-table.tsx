@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, Pencil, Trash2 } from "lucide-react";
+import { ChevronDown, Lock, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { QuoteStatus } from "@prisma/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -50,9 +50,12 @@ type FilterValue = typeof FILTER_ALL | QuoteStatusDisplay;
 export function MaritimeQuotesCrmTable({
   initialQuotes,
   editBase,
+  canEditAccepted = false,
 }: {
   initialQuotes: CrmMaritimeQuote[];
   editBase: string;
+  /** Permite editar/eliminar cotizaciones ya aceptadas (admin o permiso otorgado por el admin). */
+  canEditAccepted?: boolean;
 }) {
   const [quotes, setQuotes] = useState<CrmMaritimeQuote[]>(initialQuotes);
   const [filter, setFilter] = useState<FilterValue>(FILTER_ALL);
@@ -153,11 +156,17 @@ export function MaritimeQuotesCrmTable({
               <tbody>
                 {filtered.map((q) => {
                   const display = getQuoteDisplayStatus(q.status, q.validUntil);
+                  const isLocked = q.status === "aceptada" && !canEditAccepted;
                   return (
                     <tr key={q.id} className="border-b last:border-0">
                       <td className="px-4 py-3 font-mono text-xs font-medium">{q.reference}</td>
                       <td className="px-4 py-3">{q.client}</td>
                       <td className="px-4 py-3">
+                        {isLocked ? (
+                          <Badge variant="outline" className={cn("border-0", QUOTE_STATUS_CONFIG[display].badgeClass)}>
+                            {QUOTE_STATUS_CONFIG[display].label}
+                          </Badge>
+                        ) : (
                         <DropdownMenu>
                           <DropdownMenuTrigger className="inline-flex items-center gap-1 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring">
                             <Badge variant="outline" className={cn("border-0", QUOTE_STATUS_CONFIG[display].badgeClass)}>
@@ -178,6 +187,7 @@ export function MaritimeQuotesCrmTable({
                             ))}
                           </DropdownMenuContent>
                         </DropdownMenu>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-right font-medium">{formatMxn(q.total)}</td>
                       <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
@@ -188,6 +198,14 @@ export function MaritimeQuotesCrmTable({
                         {new Date(q.createdAt).toLocaleDateString("es-MX", { year: "numeric", month: "short", day: "numeric" })}
                       </td>
                       <td className="px-2 py-2">
+                        {isLocked ? (
+                          <div
+                            className="flex items-center justify-center text-muted-foreground"
+                            title="Cotización aceptada: requiere permiso del administrador para editar o eliminar"
+                          >
+                            <Lock className="size-3.5" aria-label="Bloqueada" />
+                          </div>
+                        ) : (
                         <div className="flex items-center gap-1">
                           <Button variant="ghost" size="icon" className="size-7" asChild>
                             <Link href={`${editBase}/${q.id}/edit`} aria-label="Editar">
@@ -219,6 +237,7 @@ export function MaritimeQuotesCrmTable({
                             </AlertDialogContent>
                           </AlertDialog>
                         </div>
+                        )}
                       </td>
                     </tr>
                   );

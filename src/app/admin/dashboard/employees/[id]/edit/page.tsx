@@ -36,18 +36,23 @@ const MODULES = [
   { suffix: "MaritimeQuotes", label: "Cotización marítima" },
 ] as const;
 
-const PERMISSION_FIELDS = MODULES.flatMap((module) => [
-  { key: `canView${module.suffix}`, label: `${module.label}: leer` },
-  { key: `canCreate${module.suffix}`, label: `${module.label}: crear` },
-  { key: `canUpdate${module.suffix}`, label: `${module.label}: editar` },
-  { key: `canDelete${module.suffix}`, label: `${module.label}: eliminar` },
-]);
+const PERMISSION_FIELDS = [
+  ...MODULES.flatMap((module) => [
+    { key: `canView${module.suffix}`, label: `${module.label}: leer` },
+    { key: `canCreate${module.suffix}`, label: `${module.label}: crear` },
+    { key: `canUpdate${module.suffix}`, label: `${module.label}: editar` },
+    { key: `canDelete${module.suffix}`, label: `${module.label}: eliminar` },
+  ]),
+  // Desbloqueo especial: permite editar/eliminar cotizaciones ya aceptadas.
+  { key: "canEditAcceptedQuotes", label: "Cotizaciones aceptadas: editar y eliminar" },
+];
 
 const PERM_ICONS: Record<string, React.ElementType> = {
   canView: Eye,
   canCreate: Plus,
   canUpdate: Pencil,
   canDelete: Trash2,
+  canEdit: Pencil,
 };
 
 function getPermIcon(key: string): React.ElementType {

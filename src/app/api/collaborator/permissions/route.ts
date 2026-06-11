@@ -79,6 +79,7 @@ export async function GET() {
         canReadRecords: true,
         canUpdateRecords: true,
         canDeleteRecords: true,
+        canEditAcceptedQuotes: true,
       },
     });
 

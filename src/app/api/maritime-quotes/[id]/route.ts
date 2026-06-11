@@ -5,6 +5,28 @@ import { QUOTE_STATUS_VALUES } from "@/lib/constants/quote-status";
 import type { Prisma, QuoteStatus } from "@prisma/client";
 import type { MaritimeQuoteInput } from "@/lib/maritime-quote";
 
+/**
+ * Una cotización aceptada queda bloqueada: solo el admin, o un colaborador al
+ * que el admin le dio el permiso canEditAcceptedQuotes, puede editarla o eliminarla.
+ * Lanza Response 403 si no tiene permiso.
+ */
+async function assertCanModifyAccepted(
+  session: { user: { id: string; role?: string } },
+  status: QuoteStatus
+) {
+  if (status !== "aceptada" || session.user.role !== "collaborator") return;
+  const me = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { canEditAcceptedQuotes: true },
+  });
+  if (!me?.canEditAcceptedQuotes) {
+    throw Response.json(
+      { error: "Esta cotización ya fue aceptada. Solicita al administrador permiso para modificarla." },
+      { status: 403 }
+    );
+  }
+}
+
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -45,7 +67,7 @@ export async function PATCH(
     };
 
     // Cambiar solo el estado requiere canUpdate; editar contenido también.
-    await gateMaritime("canUpdateMaritimeQuotes");
+    const session = await gateMaritime("canUpdateMaritimeQuotes");
 
     if (body.status !== undefined && !QUOTE_STATUS_VALUES.includes(body.status as QuoteStatus)) {
       return Response.json({ error: "Estado inválido" }, { status: 400 });
@@ -53,6 +75,8 @@ export async function PATCH(
 
     const quote = await prisma.maritimeQuote.findUnique({ where: { id } });
     if (!quote) return Response.json({ error: "No encontrado" }, { status: 404 });
+
+    await assertCanModifyAccepted(session, quote.status);
 
     await prisma.maritimeQuote.update({
       where: { id },
@@ -78,10 +102,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await gateMaritime("canDeleteMaritimeQuotes");
+    const session = await gateMaritime("canDeleteMaritimeQuotes");
     const { id } = await params;
     const quote = await prisma.maritimeQuote.findUnique({ where: { id } });
     if (!quote) return Response.json({ error: "No encontrado" }, { status: 404 });
+    await assertCanModifyAccepted(session, quote.status);
     await prisma.maritimeQuote.delete({ where: { id } });
     return Response.json({ ok: true });
   } catch (e) {

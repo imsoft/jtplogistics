@@ -55,7 +55,11 @@ export default function CollaboratorMaritimeQuotesPage() {
           Aún no se han generado cotizaciones marítimas.
         </p>
       ) : (
-        <MaritimeQuotesCrmTable initialQuotes={quotes} editBase="/collaborator/dashboard/maritime-quotes" />
+        <MaritimeQuotesCrmTable
+          initialQuotes={quotes}
+          editBase="/collaborator/dashboard/maritime-quotes"
+          canEditAccepted={Boolean(permissions?.canEditAcceptedQuotes)}
+        />
       )}
     </div>
   );

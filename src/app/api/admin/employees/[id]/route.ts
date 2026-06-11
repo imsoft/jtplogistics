@@ -22,21 +22,25 @@ const PERMISSION_MODULES = [
   { suffix: "MaritimeQuotes", label: "Cotización marítima" },
 ] as const;
 
-const PERMISSION_FIELDS = PERMISSION_MODULES.flatMap((module) => [
-  `canView${module.suffix}`,
-  `canCreate${module.suffix}`,
-  `canUpdate${module.suffix}`,
-  `canDelete${module.suffix}`,
-]);
+const PERMISSION_FIELDS = [
+  ...PERMISSION_MODULES.flatMap((module) => [
+    `canView${module.suffix}`,
+    `canCreate${module.suffix}`,
+    `canUpdate${module.suffix}`,
+    `canDelete${module.suffix}`,
+  ]),
+  "canEditAcceptedQuotes",
+];
 
-const PERMISSION_LABELS: Record<string, string> = Object.fromEntries(
-  PERMISSION_MODULES.flatMap((module) => [
+const PERMISSION_LABELS: Record<string, string> = Object.fromEntries([
+  ...PERMISSION_MODULES.flatMap((module) => [
     [`canView${module.suffix}`, `${module.label}: leer`],
     [`canCreate${module.suffix}`, `${module.label}: crear`],
     [`canUpdate${module.suffix}`, `${module.label}: editar`],
     [`canDelete${module.suffix}`, `${module.label}: eliminar`],
-  ])
-);
+  ]),
+  ["canEditAcceptedQuotes", "Cotizaciones aceptadas: editar y eliminar"],
+]);
 
 export function GET(
   _req: Request,

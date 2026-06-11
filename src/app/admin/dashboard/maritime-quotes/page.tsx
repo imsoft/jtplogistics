@@ -63,7 +63,7 @@ export default async function MaritimeQuotesPage() {
           Aún no se han generado cotizaciones marítimas.
         </p>
       ) : (
-        <MaritimeQuotesCrmTable initialQuotes={crmQuotes} editBase="/admin/dashboard/maritime-quotes" />
+        <MaritimeQuotesCrmTable initialQuotes={crmQuotes} editBase="/admin/dashboard/maritime-quotes" canEditAccepted />
       )}
     </div>
   );

@@ -71,6 +71,7 @@ interface CollaboratorPermissions {
   canCreateMaritimeQuotes: boolean;
   canUpdateMaritimeQuotes: boolean;
   canDeleteMaritimeQuotes: boolean;
+  canEditAcceptedQuotes: boolean;
 }
 
 export function useCollaboratorPermissions() {

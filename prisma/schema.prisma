@@ -40,6 +40,7 @@ model User {
   canEditTarget Boolean        @default(true) @map("can_edit_target")
   canEditRoutes  Boolean        @default(false) @map("can_edit_routes")
   canAddRoutes   Boolean        @default(true) @map("can_add_routes")
+  canEditAcceptedQuotes Boolean  @default(false) @map("can_edit_accepted_quotes")
   canViewMessages   Boolean       @default(false) @map("can_view_messages")
   canViewIdeas      Boolean       @default(false) @map("can_view_ideas")
   canViewRoutes     Boolean       @default(false) @map("can_view_routes")
