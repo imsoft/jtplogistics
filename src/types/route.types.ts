@@ -24,7 +24,8 @@ export interface RouteFormData {
   destinationState: string;
   description: string;
   target?: number;
-  weeklyVolume?: number;
+  /** null = limpiar el volumen guardado; undefined = sin cambio. */
+  weeklyVolume?: number | null;
   unitType: UnitType;
   unitTargets: Array<{ unitType: UnitType; target?: number }>;
   status: RouteStatus;

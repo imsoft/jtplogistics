@@ -47,7 +47,13 @@ export async function PATCH(
     const destinationState = body.destinationState != null ? String(body.destinationState).trim() : undefined;
     const description = body.description != null ? String(body.description).trim() : undefined;
     const target = body.target != null ? Number(body.target) : undefined;
-    const weeklyVolume = body.weeklyVolume != null ? Math.round(Number(body.weeklyVolume)) : undefined;
+    // null explícito = borrar el volumen; ausente = sin cambio.
+    const weeklyVolume =
+      body.weeklyVolume === undefined
+        ? undefined
+        : body.weeklyVolume == null || body.weeklyVolume === ""
+          ? null
+          : Math.round(Number(body.weeklyVolume));
     const unitTargetsRaw: Array<{ unitType?: unknown; target?: unknown }> = Array.isArray(body.unitTargets) ? body.unitTargets : [];
     const normalizedUnitTargets = (
       unitTargetsRaw.length > 0
@@ -80,7 +86,8 @@ export async function PATCH(
       updateData.destinationState = state || null;
     }
     if (destinationState !== undefined && destination === undefined) updateData.destinationState = destinationState || null;
-    if (description !== undefined) updateData.description = description;
+    // Cadena vacía = borrar la descripción guardada.
+    if (description !== undefined) updateData.description = description || null;
     if (target !== undefined) updateData.target = target;
     if (weeklyVolume !== undefined) updateData.weeklyVolume = weeklyVolume;
     if (unitTargets[0]?.unitType) updateData.unitType = unitTargets[0].unitType;

@@ -24,9 +24,11 @@ export function EditRouteForm({ route }: { route: Route }) {
           origin: data.origin.trim(),
           destination: data.destination.trim(),
           destinationState: data.destinationState?.trim() || undefined,
-          description: data.description?.trim() || undefined,
+          // Siempre se envía: vacía significa borrar la descripción guardada.
+          description: data.description?.trim() ?? "",
           target: data.target,
-          weeklyVolume: data.weeklyVolume,
+          // null significa borrar el volumen guardado.
+          weeklyVolume: data.weeklyVolume ?? null,
           unitType: data.unitType,
           unitTargets: data.unitTargets,
           status: data.status,

@@ -118,12 +118,15 @@ export function RouteForm({
       unitType: item.unitType,
       target: parseMxn(item.targetDisplay),
     }));
+    const volumeRaw = (formData.get("weeklyVolume") as string)?.trim() ?? "";
+    const parsedVolume = volumeRaw ? Math.round(Number(volumeRaw)) : null;
     const data: RouteFormData = {
       origin: originCity,
       destination: destCity,
       destinationState: destState || destinationState.trim(),
       description: (formData.get("description") as string)?.trim() ?? "",
       target: normalizedUnitTargets[0]?.target,
+      weeklyVolume: parsedVolume != null && !isNaN(parsedVolume) ? parsedVolume : null,
       unitType: normalizedUnitTargets[0]?.unitType ?? "caja_seca",
       unitTargets: normalizedUnitTargets,
       status,
@@ -247,6 +250,23 @@ export function RouteForm({
             )}
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="route-weekly-volume">
+                Volumen mensual <span className="text-muted-foreground font-normal">(opcional)</span>
+              </Label>
+              <Input
+                id="route-weekly-volume"
+                name="weeklyVolume"
+                type="number"
+                inputMode="numeric"
+                min={0}
+                defaultValue={initialValues.weeklyVolume ?? ""}
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground">
+                Visible para los transportistas cuando la ruta está activa.
+              </p>
+            </div>
             <div className="space-y-2">
               <Label>Estado</Label>
               <AppSelect
