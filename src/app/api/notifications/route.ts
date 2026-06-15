@@ -1,5 +1,6 @@
 import { getSession } from "@/lib/auth-server";
 import { prisma } from "@/lib/db";
+import { logAudit } from "@/lib/audit-log";
 
 // GET /api/notifications — últimas 30 del usuario actual
 export async function GET() {
@@ -41,13 +42,24 @@ export async function PATCH(request: Request) {
     const body = await request.json().catch(() => ({}));
     const ids: string[] | undefined = Array.isArray(body.ids) ? body.ids : undefined;
 
-    await prisma.notification.updateMany({
+    const result = await prisma.notification.updateMany({
       where: {
         userId: session.user.id,
+        read: false,
         ...(ids ? { id: { in: ids } } : {}),
       },
       data: { read: true },
     });
+
+    // Solo registrar si efectivamente se marcó alguna como leída.
+    if (result.count > 0) {
+      void logAudit({
+        resource: "notification", resourceId: session.user.id,
+        resourceLabel: `${result.count} notificación${result.count !== 1 ? "es" : ""}`,
+        action: "updated", userId: session.user.id, userName: session.user.name,
+        changes: [{ field: "read", label: "Leídas", from: null, to: String(result.count) }],
+      });
+    }
 
     return Response.json({ ok: true });
   } catch (e) {
