@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 import { createAuthUser } from "@/lib/create-auth-user";
+import { logAudit } from "@/lib/audit-log";
 
 export async function GET() {
   try {
@@ -79,6 +80,11 @@ export async function POST(request: Request) {
         position: position?.trim() || null,
         ...(birthDate ? { birthDate: new Date(birthDate) } : {}),
       },
+    });
+
+    void logAudit({
+      resource: "vendor", resourceId: userId, resourceLabel: name,
+      action: "created", userId: session.user.id, userName: session.user.name,
     });
 
     return Response.json({ id: userId }, { status: 201 });

@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/auth-server";
 import { uploadToCloudinary } from "@/lib/cloudinary";
+import { logAudit } from "@/lib/audit-log";
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,6 +31,12 @@ export async function POST(request: NextRequest) {
     await prisma.user.update({
       where: { id: userId },
       data: { image: upload.secure_url },
+    });
+
+    void logAudit({
+      resource: "profile", resourceId: userId, resourceLabel: session.user.name,
+      action: "updated", userId, userName: session.user.name,
+      changes: [{ field: "image", label: "Foto de perfil", from: null, to: "Actualizada" }],
     });
 
     return Response.json({ url: upload.secure_url });

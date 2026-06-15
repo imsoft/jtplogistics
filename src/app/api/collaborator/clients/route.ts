@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 import { parseClientProductTypes } from "@/lib/parse-client-product-types";
+import { logAudit } from "@/lib/audit-log";
 
 function toJson(c: {
   id: string;
@@ -104,6 +105,11 @@ export async function POST(request: Request) {
         detentionConditions: detentionConditions?.trim() || null,
         productTypes: parseClientProductTypes(productTypes),
       },
+    });
+
+    void logAudit({
+      resource: "client", resourceId: client.id, resourceLabel: client.name,
+      action: "created", userId: session.user.id, userName: session.user.name,
     });
 
     return Response.json({ id: client.id }, { status: 201 });

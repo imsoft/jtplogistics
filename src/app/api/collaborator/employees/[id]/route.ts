@@ -1,5 +1,12 @@
 import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
+import { logAudit, diffObjects } from "@/lib/audit-log";
+
+const EMPLOYEE_LABELS: Record<string, string> = {
+  name: "Nombre", birthDate: "Fecha de nacimiento", hireDate: "Fecha de ingreso",
+  position: "Puesto", department: "Departamento", phone: "Teléfono",
+  nss: "NSS", rfc: "RFC", curp: "CURP", address: "Domicilio",
+};
 
 type EmployeeAction = "read" | "update" | "delete";
 
@@ -142,10 +149,19 @@ export async function PATCH(
       address?: string;
     };
 
-    const u = await prisma.user.findUnique({ where: { id } });
+    const u = await prisma.user.findUnique({ where: { id }, include: { employeeProfile: true } });
     if (!u || u.role !== "collaborator") {
       return Response.json({ error: "No encontrado" }, { status: 404 });
     }
+
+    const ep = u.employeeProfile;
+    const before = {
+      name: u.name,
+      birthDate: u.birthDate ? u.birthDate.toISOString().split("T")[0] : null,
+      hireDate: ep?.hireDate ? ep.hireDate.toISOString().split("T")[0] : null,
+      position: ep?.position ?? null, department: ep?.department ?? null, phone: ep?.phone ?? null,
+      nss: ep?.nss ?? null, rfc: ep?.rfc ?? null, curp: ep?.curp ?? null, address: ep?.address ?? null,
+    };
 
     const parsedBirthDate =
       birthDate !== undefined ? (birthDate ? new Date(birthDate) : null) : undefined;
@@ -187,6 +203,29 @@ export async function PATCH(
       },
     });
 
+    const after = {
+      name: name ?? u.name,
+      birthDate: parsedBirthDate !== undefined ? (birthDate ?? null) : before.birthDate,
+      hireDate: parsedHireDate !== undefined ? (hireDate ?? null) : before.hireDate,
+      position: position !== undefined ? (position.trim() || null) : before.position,
+      department: department !== undefined ? (department.trim() || null) : before.department,
+      phone: phone !== undefined ? (phone.trim() || null) : before.phone,
+      nss: nss !== undefined ? (nss.trim() || null) : before.nss,
+      rfc: rfc !== undefined ? (rfc.trim() || null) : before.rfc,
+      curp: curp !== undefined ? (curp.trim() || null) : before.curp,
+      address: address !== undefined ? (address.trim() || null) : before.address,
+    };
+    const changes = diffObjects(before, after, EMPLOYEE_LABELS);
+    if (password !== undefined && password) {
+      changes.push({ field: "password", label: "Contraseña", from: null, to: "Actualizada" });
+    }
+    if (changes.length > 0) {
+      void logAudit({
+        resource: "employee", resourceId: id, resourceLabel: (name ?? u.name) ?? "",
+        action: "updated", userId: session.user.id, userName: session.user.name, changes,
+      });
+    }
+
     return Response.json({ ok: true });
   } catch (e) {
     if (e instanceof Response) return e;
@@ -210,6 +249,10 @@ export async function DELETE(
     }
 
     await prisma.user.delete({ where: { id } });
+    void logAudit({
+      resource: "employee", resourceId: id, resourceLabel: u.name ?? "",
+      action: "deleted", userId: session.user.id, userName: session.user.name,
+    });
     return Response.json({ ok: true });
   } catch (e) {
     if (e instanceof Response) return e;

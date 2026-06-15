@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { requireCarrierOrVendor } from "@/lib/auth-server";
 import { createAuthUser } from "@/lib/create-auth-user";
+import { logAudit } from "@/lib/audit-log";
 
 export async function GET() {
   try {
@@ -84,6 +85,11 @@ export async function POST(request: Request) {
         // No duplicar la contraseña de acceso en perfil; solo nota opcional vía PATCH.
         password: null,
       },
+    });
+
+    void logAudit({
+      resource: "employee", resourceId: userId, resourceLabel: name,
+      action: "created", userId: session.user.id, userName: session.user.name,
     });
 
     return Response.json({ id: userId }, { status: 201 });

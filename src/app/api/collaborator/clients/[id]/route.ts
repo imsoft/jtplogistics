@@ -1,6 +1,14 @@
 import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 import { parseClientProductTypes } from "@/lib/parse-client-product-types";
+import { logAudit, diffObjects } from "@/lib/audit-log";
+
+const CLIENT_LABELS: Record<string, string> = {
+  name: "Nombre", legalName: "Razón social", rfc: "RFC", email: "Correo",
+  contactName: "Nombre de contacto", position: "Puesto",
+  phone: "Teléfono", address: "Dirección", notes: "Notas",
+  detentionConditions: "Condiciones de estadías", productTypes: "Tipos de producto",
+};
 
 function toJson(c: {
   id: string;
@@ -106,7 +114,7 @@ export async function PATCH(
       return Response.json({ error: "El nombre es requerido" }, { status: 400 });
     }
 
-    await prisma.client.update({
+    const updated = await prisma.client.update({
       where: { id },
       data: {
         ...(name !== undefined && { name: String(name).trim() }),
@@ -122,6 +130,14 @@ export async function PATCH(
         ...(productTypes !== undefined && { productTypes: parseClientProductTypes(productTypes) }),
       },
     });
+
+    const changes = diffObjects(client as Record<string, unknown>, updated as Record<string, unknown>, CLIENT_LABELS);
+    if (changes.length > 0) {
+      void logAudit({
+        resource: "client", resourceId: id, resourceLabel: updated.name,
+        action: "updated", userId: session.user.id, userName: session.user.name, changes,
+      });
+    }
 
     return Response.json({ ok: true });
   } catch (e) {
@@ -146,6 +162,10 @@ export async function DELETE(
     const client = await prisma.client.findUnique({ where: { id } });
     if (!client) return Response.json({ error: "No encontrado" }, { status: 404 });
     await prisma.client.delete({ where: { id } });
+    void logAudit({
+      resource: "client", resourceId: id, resourceLabel: client.name,
+      action: "deleted", userId: session.user.id, userName: session.user.name,
+    });
     return Response.json({ ok: true });
   } catch (e) {
     if (e instanceof Response) return e;

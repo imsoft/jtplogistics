@@ -1,5 +1,11 @@
 import { prisma } from "@/lib/db";
 import { requireCarrierOrVendor } from "@/lib/auth-server";
+import { logAudit, diffObjects } from "@/lib/audit-log";
+
+const COLLABORATOR_LABELS: Record<string, string> = {
+  name: "Nombre", birthDate: "Fecha de nacimiento", hireDate: "Fecha de ingreso",
+  position: "Puesto", department: "Departamento", phone: "Teléfono",
+};
 
 export async function GET(
   _req: Request,
@@ -72,6 +78,14 @@ export async function PATCH(
       return Response.json({ error: "No encontrado" }, { status: 404 });
     }
 
+    const ep = user.employeeProfile;
+    const before = {
+      name: user.name,
+      birthDate: user.birthDate ? user.birthDate.toISOString().split("T")[0] : null,
+      hireDate: ep?.hireDate ? ep.hireDate.toISOString().split("T")[0] : null,
+      position: ep?.position ?? null, department: ep?.department ?? null, phone: ep?.phone ?? null,
+    };
+
     const parsedBirthDate =
       birthDate !== undefined ? (birthDate ? new Date(birthDate) : null) : undefined;
     const parsedHireDate =
@@ -105,6 +119,25 @@ export async function PATCH(
       },
     });
 
+    const after = {
+      name: name !== undefined && name.trim() ? name.trim() : before.name,
+      birthDate: parsedBirthDate !== undefined ? (birthDate ?? null) : before.birthDate,
+      hireDate: parsedHireDate !== undefined ? (hireDate ?? null) : before.hireDate,
+      position: position !== undefined ? (position.trim() || null) : before.position,
+      department: department !== undefined ? (department.trim() || null) : before.department,
+      phone: phone !== undefined ? (phone.trim() || null) : before.phone,
+    };
+    const changes = diffObjects(before, after, COLLABORATOR_LABELS);
+    if (password !== undefined && password) {
+      changes.push({ field: "password", label: "Contraseña", from: null, to: "Actualizada" });
+    }
+    if (changes.length > 0) {
+      void logAudit({
+        resource: "employee", resourceId: id, resourceLabel: after.name ?? "",
+        action: "updated", userId: session.user.id, userName: session.user.name, changes,
+      });
+    }
+
     return Response.json({ ok: true });
   } catch (e) {
     if (e instanceof Response) return e;
@@ -127,7 +160,7 @@ export async function DELETE(
         role: "collaborator",
         employeeProfile: { ownerUserId: session.user.id },
       },
-      select: { id: true },
+      select: { id: true, name: true },
     });
 
     if (!user) {
@@ -135,6 +168,10 @@ export async function DELETE(
     }
 
     await prisma.user.delete({ where: { id } });
+    void logAudit({
+      resource: "employee", resourceId: id, resourceLabel: user.name ?? "",
+      action: "deleted", userId: session.user.id, userName: session.user.name,
+    });
     return Response.json({ ok: true });
   } catch (e) {
     if (e instanceof Response) return e;

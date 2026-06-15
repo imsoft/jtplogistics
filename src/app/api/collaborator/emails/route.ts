@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
+import { logAudit } from "@/lib/audit-log";
 
 export async function GET() {
   try {
@@ -83,6 +84,11 @@ export async function POST(request: Request) {
           ? { create: assigneeIds.map((userId) => ({ userId })) }
           : undefined,
       },
+    });
+
+    void logAudit({
+      resource: "email", resourceId: account.id, resourceLabel: account.email,
+      action: "created", userId: session.user.id, userName: session.user.name,
     });
 
     return Response.json({ id: account.id }, { status: 201 });

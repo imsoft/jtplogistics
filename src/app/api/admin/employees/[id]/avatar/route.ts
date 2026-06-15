@@ -2,13 +2,14 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-server";
 import { uploadToCloudinary } from "@/lib/cloudinary";
+import { logAudit } from "@/lib/audit-log";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdmin();
+    const session = await requireAdmin();
     const { id } = await params;
 
     const u = await prisma.user.findUnique({ where: { id } });
@@ -38,6 +39,12 @@ export async function POST(
     await prisma.user.update({
       where: { id },
       data: { image: upload.secure_url },
+    });
+
+    void logAudit({
+      resource: "employee", resourceId: id, resourceLabel: u.name ?? "",
+      action: "updated", userId: session.user.id, userName: session.user.name,
+      changes: [{ field: "image", label: "Foto de perfil", from: null, to: "Actualizada" }],
     });
 
     return Response.json({ url: upload.secure_url });

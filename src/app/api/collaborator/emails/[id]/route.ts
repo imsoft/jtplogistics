@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
+import { logAudit } from "@/lib/audit-log";
 
 async function checkPermission(userId: string) {
   const me = await prisma.user.findUnique({
@@ -114,6 +115,11 @@ export async function PATCH(
       }
     }
 
+    void logAudit({
+      resource: "email", resourceId: id, resourceLabel: email ?? account.email,
+      action: "updated", userId: session.user.id, userName: session.user.name,
+    });
+
     return Response.json({ ok: true });
   } catch (e) {
     if (e instanceof Response) return e;
@@ -137,6 +143,10 @@ export async function DELETE(
     const account = await prisma.emailAccount.findUnique({ where: { id } });
     if (!account) return Response.json({ error: "No encontrado" }, { status: 404 });
     await prisma.emailAccount.delete({ where: { id } });
+    void logAudit({
+      resource: "email", resourceId: id, resourceLabel: account.email,
+      action: "deleted", userId: session.user.id, userName: session.user.name,
+    });
     return Response.json({ ok: true });
   } catch (e) {
     if (e instanceof Response) return e;
