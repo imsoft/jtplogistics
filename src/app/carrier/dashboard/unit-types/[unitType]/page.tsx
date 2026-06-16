@@ -203,9 +203,8 @@ export default function CarrierUnitTypePage() {
     setTargetByRouteId((prev) => ({ ...prev, [routeId]: formatted }));
 
     // Recalcular el semáforo en automático (con debounce) mientras escribe.
-    // En rutas activas el transportista no ve el semáforo, no hay nada que calcular.
+    // Aplica a todas las rutas (activas, pendientes e inactivas).
     clearTimeout(statusDebounceTimers.current[routeId]);
-    if (allRoutes.find((r) => r.id === routeId)?.status === "active") return;
     const parsed = parseMxn(formatted);
     if (parsed == null || parsed <= 0) {
       setStatusByRouteId((prev) => ({ ...prev, [routeId]: null }));
@@ -417,7 +416,7 @@ export default function CarrierUnitTypePage() {
                                   href={`/carrier/dashboard/messages?draft=${encodeURIComponent(contactDraft)}`}
                                   className="font-medium text-primary underline underline-offset-2"
                                 >
-                                  gerente de compras de JTP
+                                  encargado de compras de JTP
                                 </Link>
                               </p>
                             )}
@@ -458,7 +457,7 @@ export default function CarrierUnitTypePage() {
                           )}
 
                           <div className="flex items-center justify-center">
-                            {!isActiveRoute && <TargetStatusLight status={targetStatus} />}
+                            <TargetStatusLight status={targetStatus} />
                           </div>
                         </div>
                       );
