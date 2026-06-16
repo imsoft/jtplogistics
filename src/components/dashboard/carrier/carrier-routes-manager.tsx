@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Lock, MoveRight } from "lucide-react";
@@ -96,7 +96,6 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
   const [targetByRouteId, setTargetByRouteId] = useState<Record<string, string>>({});
   const [weeklyVolumeByRouteId, setWeeklyVolumeByRouteId] = useState<Record<string, string>>({});
   const [statusByRouteId, setStatusByRouteId] = useState<Record<string, TargetStatus | null>>({});
-  const statusDebounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const unitTypes = useUnitTypes();
   const unitTypeLabel = useMemo(() => {
@@ -211,29 +210,10 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
     const formatted = formatMxnLive(raw);
     setTargetByRouteId((prev) => ({ ...prev, [routeId]: formatted }));
 
-    // El semáforo solo existe en la vista con showSemaforo; si no se muestra,
-    // no hace falta recalcularlo ni llamar al servidor.
+    // El semáforo NO se calcula en automático mientras se escribe: solo refleja
+    // lo ya guardado. Al editar el target, se oculta hasta que se vuelva a guardar.
     if (!showSemaforo) return;
-
-    // Recalcular el semáforo en automático (con debounce) mientras escribe.
-    // Aplica a todas las rutas (activas, pendientes e inactivas).
-    clearTimeout(statusDebounceTimers.current[routeId]);
-    const parsed = parseMxn(formatted);
-    if (parsed == null || parsed <= 0) {
-      setStatusByRouteId((prev) => ({ ...prev, [routeId]: null }));
-      return;
-    }
-    statusDebounceTimers.current[routeId] = setTimeout(async () => {
-      try {
-        const params = new URLSearchParams({ routeId, unitType, carrierTarget: String(parsed) });
-        const res = await fetch(`/api/carrier/routes/diff?${params}`);
-        if (!res.ok) return;
-        const { status } = await res.json();
-        setStatusByRouteId((prev) => ({ ...prev, [routeId]: status ?? null }));
-      } catch {
-        // silently ignore
-      }
-    }, 400);
+    setStatusByRouteId((prev) => ({ ...prev, [routeId]: null }));
   }
 
   function handleTargetBlur(routeId: string) {
