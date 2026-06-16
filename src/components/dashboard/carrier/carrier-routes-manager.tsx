@@ -1,0 +1,510 @@
+"use client";
+
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { Lock, MoveRight } from "lucide-react";
+import type { TargetStatus } from "@/lib/target-status";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { AppSelect } from "@/components/ui/app-select";
+import { Label } from "@/components/ui/label";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatMxnLive, formatMxn, parseMxn } from "@/lib/utils";
+import { useUnitTypes } from "@/hooks/use-unit-types";
+import { toast } from "sonner";
+
+interface RouteSelection {
+  unitType: string;
+  carrierTarget: number | null;
+  carrierWeeklyVolume: number | null;
+  editUnlockRequested: boolean;
+  editUnlockApproved: boolean;
+  /** Semáforo contra el target de JTP, calculado en servidor. Nunca expone precio ni porcentaje. */
+  targetStatus: TargetStatus | null;
+}
+
+interface CarrierRouteRow {
+  id: string;
+  origin: string;
+  destination: string;
+  description: string | null;
+  unitType: string;
+  /** Tipos de unidad disponibles para esta ruta (sin precios, confidenciales para el admin). */
+  unitTargets: { unitType: string }[];
+  status: "active" | "pending" | "inactive";
+  /** Volumen mensual escrito por JTP (solo se muestra en rutas activas). */
+  jtpVolume: number | null;
+  selected: boolean;
+  selections: RouteSelection[];
+  carrierTarget: number | null;
+  carrierWeeklyVolume: number | null;
+  createdAt: string;
+}
+
+interface CarrierRoutesResponse {
+  canEditTarget: boolean;
+  canEditRoutes: boolean;
+  canAddRoutes: boolean;
+  routes: CarrierRouteRow[];
+}
+
+async function fetchCarrierRoutes(): Promise<CarrierRoutesResponse> {
+  const res = await fetch("/api/carrier/routes");
+  if (!res.ok) return { canEditTarget: false, canEditRoutes: false, canAddRoutes: false, routes: [] };
+  return res.json();
+}
+
+// Semáforo del target del transportista contra el target de JTP. Solo muestra el color;
+// el cálculo se hace en el servidor sin exponer el precio ni el porcentaje.
+function TargetStatusLight({ status }: { status: TargetStatus | null }) {
+  if (status == null) return null;
+  const emoji = status === "verde" ? "🟢" : status === "amarillo" ? "🟡" : "🔴";
+  const label =
+    status === "verde"
+      ? "Target dentro del objetivo"
+      : status === "amarillo"
+        ? "Target ligeramente por encima del objetivo"
+        : "Target por encima del objetivo";
+  return (
+    <span role="img" aria-label={label} title={label} className="text-base leading-none">
+      {emoji}
+    </span>
+  );
+}
+
+/**
+ * Gestor de rutas del transportista por tipo de unidad. Se usa en dos páginas
+ * idénticas: una sin la columna del semáforo y otra con ella (showSemaforo).
+ */
+export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }) {
+  const { unitType } = useParams<{ unitType: string }>();
+  const router = useRouter();
+  const [allRoutes, setAllRoutes] = useState<CarrierRouteRow[]>([]);
+  const [canEditTarget, setCanEditTarget] = useState(false);
+  const [canEditRoutes, setCanEditRoutes] = useState(false);
+  const [canAddRoutes, setCanAddRoutes] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const [filterOrigin, setFilterOrigin] = useState<string | null>(null);
+  const [filterDestination, setFilterDestination] = useState<string | null>(null);
+
+  // Selection state for THIS unit type page only
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [originalSelected, setOriginalSelected] = useState<Set<string>>(new Set());
+  const [targetByRouteId, setTargetByRouteId] = useState<Record<string, string>>({});
+  const [weeklyVolumeByRouteId, setWeeklyVolumeByRouteId] = useState<Record<string, string>>({});
+  const [statusByRouteId, setStatusByRouteId] = useState<Record<string, TargetStatus | null>>({});
+  const statusDebounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  const unitTypes = useUnitTypes();
+  const unitTypeLabel = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const ut of unitTypes) map[ut.value] = ut.label;
+    return map;
+  }, [unitTypes]);
+
+  const pageTitle = unitTypeLabel[unitType] ?? unitType;
+
+  // Columnas del grid: con o sin la columna del semáforo.
+  const gridCols = showSemaforo
+    ? "grid-cols-[auto_1fr_130px_80px_70px]"
+    : "grid-cols-[auto_1fr_130px_80px]";
+
+  const hasAnySelectionGlobally = useMemo(
+    () => allRoutes.some((r) => r.selections.length > 0),
+    [allRoutes]
+  );
+
+  const loadRoutes = useCallback(async () => {
+    const data = await fetchCarrierRoutes();
+    setCanEditTarget(data.canEditTarget);
+    setCanEditRoutes(data.canEditRoutes);
+    setCanAddRoutes(data.canAddRoutes);
+    setAllRoutes(data.routes);
+
+    // Load selections for the current unitType page
+    const savedSelected = new Set<string>();
+    const savedTargets: Record<string, string> = {};
+    const savedVolumes: Record<string, string> = {};
+    const savedStatuses: Record<string, TargetStatus | null> = {};
+    for (const r of data.routes) {
+      const sel = r.selections?.find((s) => s.unitType === unitType);
+      if (sel) {
+        savedSelected.add(r.id);
+        if (sel.carrierTarget != null) savedTargets[r.id] = formatMxn(sel.carrierTarget);
+        if (sel.carrierWeeklyVolume != null) savedVolumes[r.id] = String(sel.carrierWeeklyVolume);
+        savedStatuses[r.id] = sel.targetStatus ?? null;
+      }
+    }
+    setSelected(savedSelected);
+    setOriginalSelected(savedSelected);
+    setTargetByRouteId(savedTargets);
+    setWeeklyVolumeByRouteId(savedVolumes);
+    setStatusByRouteId(savedStatuses);
+    setIsLoaded(true);
+  }, [unitType]);
+
+  useEffect(() => {
+    setIsLoaded(false);
+    loadRoutes();
+  }, [loadRoutes]);
+
+  // Rutas que incluyen este tipo de unidad (perfil de la ruta, no filas duplicadas)
+  const routes = useMemo(
+    () =>
+      allRoutes.filter((route) =>
+        route.unitTargets?.some((t) => t.unitType === unitType) ?? route.unitType === unitType
+      ),
+    [allRoutes, unitType]
+  );
+
+  const origins = useMemo(
+    () => [...new Set(routes.map((r) => r.origin))].sort(),
+    [routes]
+  );
+
+  const destinations = useMemo(() => {
+    const base = filterOrigin
+      ? routes.filter((r) => r.origin === filterOrigin)
+      : routes;
+    return [...new Set(base.map((r) => r.destination))].sort();
+  }, [routes, filterOrigin]);
+
+  const filteredRoutes = useMemo(() => {
+    return routes.filter((r) => {
+      if (filterOrigin && r.origin !== filterOrigin) return false;
+      if (filterDestination && r.destination !== filterDestination) return false;
+      return true;
+    });
+  }, [routes, filterOrigin, filterDestination]);
+
+  // Group by origin
+  const groupedRoutes = useMemo(() => {
+    const map = new Map<string, CarrierRouteRow[]>();
+    for (const r of filteredRoutes) {
+      const group = map.get(r.origin) ?? [];
+      group.push(r);
+      map.set(r.origin, group);
+    }
+    return Array.from(map.entries()).map(([origin, items]) => ({ origin, items }));
+  }, [filteredRoutes]);
+
+  const newSelections = useMemo(
+    () => new Set([...selected].filter((id) => !originalSelected.has(id))),
+    [selected, originalSelected]
+  );
+
+  const selectedCount = selected.size;
+
+  function toggleSelected(routeId: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(routeId)) next.delete(routeId);
+      else next.add(routeId);
+      return next;
+    });
+  }
+
+  function handleTargetChange(routeId: string, raw: string) {
+    const formatted = formatMxnLive(raw);
+    setTargetByRouteId((prev) => ({ ...prev, [routeId]: formatted }));
+
+    // El semáforo solo existe en la vista con showSemaforo; si no se muestra,
+    // no hace falta recalcularlo ni llamar al servidor.
+    if (!showSemaforo) return;
+
+    // Recalcular el semáforo en automático (con debounce) mientras escribe.
+    // Aplica a todas las rutas (activas, pendientes e inactivas).
+    clearTimeout(statusDebounceTimers.current[routeId]);
+    const parsed = parseMxn(formatted);
+    if (parsed == null || parsed <= 0) {
+      setStatusByRouteId((prev) => ({ ...prev, [routeId]: null }));
+      return;
+    }
+    statusDebounceTimers.current[routeId] = setTimeout(async () => {
+      try {
+        const params = new URLSearchParams({ routeId, unitType, carrierTarget: String(parsed) });
+        const res = await fetch(`/api/carrier/routes/diff?${params}`);
+        if (!res.ok) return;
+        const { status } = await res.json();
+        setStatusByRouteId((prev) => ({ ...prev, [routeId]: status ?? null }));
+      } catch {
+        // silently ignore
+      }
+    }, 400);
+  }
+
+  function handleTargetBlur(routeId: string) {
+    const raw = targetByRouteId[routeId];
+    if (raw == null) return;
+    const parsed = parseMxn(raw);
+    if (parsed != null) {
+      setTargetByRouteId((prev) => ({ ...prev, [routeId]: formatMxn(parsed) }));
+    }
+  }
+
+  function handleVolumeChange(routeId: string, value: string) {
+    setWeeklyVolumeByRouteId((prev) => ({ ...prev, [routeId]: value }));
+  }
+
+  async function handleSubmit() {
+    setIsSaving(true);
+    try {
+      // Only send selected routes for THIS unit type page
+      const body = [...selected].map((routeId) => {
+        const rawVolume = weeklyVolumeByRouteId[routeId]?.trim();
+        const parsedVolume = rawVolume ? Math.round(Number(rawVolume)) : null;
+        return {
+          routeId,
+          unitType,
+          carrierTarget: parseMxn(targetByRouteId[routeId] ?? "") ?? null,
+          carrierWeeklyVolume: rawVolume && !isNaN(parsedVolume as number) ? parsedVolume : null,
+        };
+      });
+
+      const res = await fetch(`/api/carrier/routes?unitType=${encodeURIComponent(unitType)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? "Error al guardar");
+      }
+      toast.success(`Selecciones de ${pageTitle} guardadas correctamente.`);
+      router.push("/carrier/dashboard");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudieron guardar las selecciones. Intenta de nuevo.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  if (!isLoaded) {
+    return <p className="text-muted-foreground">Cargando…</p>;
+  }
+
+  const canSave = newSelections.size > 0 || canEditRoutes;
+
+  return (
+    <div className="min-w-0 space-y-4 sm:space-y-6">
+      <div>
+        <h1 className="page-heading">{pageTitle}</h1>
+        <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
+          Selecciona las rutas que ofreces para <strong>{pageTitle}</strong> y establece tu target.
+        </p>
+      </div>
+
+      {isLoaded && !hasAnySelectionGlobally && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardHeader className="space-y-1 py-3 sm:py-4">
+            <CardTitle className="text-base">Primer paso: tus rutas</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
+              Marca las rutas que operas, completa tu target y volumen mensual, y guarda. Repite en cada
+              tipo de unidad que manejes. Cuando termines, en <strong>Inicio</strong> verás el resumen de
+              toda tu operación.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      )}
+
+      {isLoaded && originalSelected.size > 0 && (
+        <div className="rounded-lg border p-3 sm:p-4 flex items-start gap-2">
+          <Lock className="size-3.5 shrink-0 mt-0.5 text-muted-foreground" />
+          <p className="text-xs text-muted-foreground">
+            Las rutas ya guardadas no se pueden modificar. Solo puedes agregar rutas nuevas.
+          </p>
+        </div>
+      )}
+
+      {routes.length === 0 ? (
+        <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
+          No hay rutas disponibles por el momento.
+        </p>
+      ) : (
+        <>
+          {/* Filtros de origen/destino */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="filter-origin">Origen</Label>
+              <AppSelect
+                value={filterOrigin ?? "__all__"}
+                onValueChange={(v) => {
+                  setFilterOrigin(v === "__all__" ? null : v);
+                  setFilterDestination(null);
+                }}
+                options={[{value: "__all__", label: "Todos"}, ...origins.map((o) => ({value: o, label: o}))]}
+                className="w-full"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="filter-destination">Destino</Label>
+              <AppSelect
+                value={filterDestination ?? "__all__"}
+                onValueChange={(v) => setFilterDestination(v === "__all__" ? null : v)}
+                options={[{value: "__all__", label: "Todos"}, ...destinations.map((d) => ({value: d, label: d}))]}
+                disabled={origins.length === 0}
+                className="w-full"
+              />
+            </div>
+            <div className="space-y-2">
+              <span aria-hidden className="invisible block text-sm font-medium leading-none">_</span>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setFilterOrigin(null);
+                  setFilterDestination(null);
+                }}
+              >
+                Limpiar filtros
+              </Button>
+            </div>
+          </div>
+
+          {/* Tabla agrupada por origen */}
+          {filteredRoutes.length === 0 ? (
+            <p className="text-muted-foreground rounded-lg border border-dashed p-6 text-center text-sm">
+              No hay rutas con esos filtros.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {groupedRoutes.map(({ origin, items }) => (
+                <div key={origin} className="overflow-x-auto rounded-lg border">
+                  <div className="min-w-[480px]">
+                    <div className="border-b bg-muted/60 px-3 py-2 sm:px-4">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Desde {origin}
+                      </span>
+                    </div>
+                    <div className={`grid ${gridCols} gap-3 border-b bg-muted/20 px-3 py-1.5 text-xs font-medium text-muted-foreground sm:px-4`}>
+                      <span className="flex items-center">Sel.</span>
+                      <span className="flex items-center">Ruta</span>
+                      <span className="flex items-center">Mi target</span>
+                      <span className="flex items-center">Vol./mes</span>
+                      {showSemaforo && <span className="flex items-center justify-center">Semáforo</span>}
+                    </div>
+                    {items.map((route) => {
+                      const isSelected = selected.has(route.id);
+                      const isOriginallySelected = originalSelected.has(route.id);
+                      const isActiveRoute = route.status === "active";
+                      const targetStatus = statusByRouteId[route.id] ?? null;
+
+                      const isLocked = isOriginallySelected && !canEditRoutes;
+                      const contactDraft = `Hola, quiero hablar con el gerente de compras de JTP sobre la ruta ${route.origin} → ${route.destination} (${pageTitle}).`;
+
+                      return (
+                        <div
+                          key={route.id}
+                          className={`grid ${gridCols} gap-3 items-center border-b px-3 py-3 last:border-b-0 sm:px-4 hover:bg-hover hover:text-hover-foreground transition-colors`}
+                        >
+                          <label className="flex cursor-pointer items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleSelected(route.id)}
+                              disabled={isLocked}
+                              className="size-4 rounded border-input accent-primary disabled:cursor-not-allowed disabled:opacity-50"
+                              aria-label={`Seleccionar ${route.origin} a ${route.destination}`}
+                            />
+                          </label>
+
+                          <div className="min-w-0">
+                            <p className="flex items-center gap-1 text-sm font-medium">
+                              <span className="truncate">{route.origin}</span>
+                              <MoveRight className="size-3.5 shrink-0 text-muted-foreground" />
+                              <span className="truncate">{route.destination}</span>
+                            </p>
+                            {route.description && (
+                              <p className="text-muted-foreground truncate text-xs">{route.description}</p>
+                            )}
+                            {!isActiveRoute && (
+                              <p className="text-xs text-muted-foreground">
+                                Favor de contactar al{" "}
+                                <Link
+                                  href={`/carrier/dashboard/messages?draft=${encodeURIComponent(contactDraft)}`}
+                                  className="font-medium text-primary underline underline-offset-2"
+                                >
+                                  encargado de compras de JTP
+                                </Link>
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-muted-foreground text-sm shrink-0">$</span>
+                            <Input
+                              type="text"
+                              inputMode="decimal"
+                              value={targetByRouteId[route.id] ?? ""}
+                              onChange={(e) => handleTargetChange(route.id, e.target.value)}
+                              onBlur={() => handleTargetBlur(route.id)}
+                              disabled={!isSelected || isLocked}
+                              className="h-8 min-w-0 w-full text-sm"
+                              aria-label={`Mi target para ${route.origin} a ${route.destination}`}
+                            />
+                          </div>
+
+                          {isActiveRoute ? (
+                            <p
+                              className="text-sm text-muted-foreground"
+                              title="Volumen mensual definido por JTP"
+                            >
+                              {route.jtpVolume ?? "—"}
+                            </p>
+                          ) : (
+                            <Input
+                              type="number"
+                              inputMode="numeric"
+                              min={0}
+                              value={weeklyVolumeByRouteId[route.id] ?? ""}
+                              onChange={(e) => handleVolumeChange(route.id, e.target.value)}
+                              disabled={!isSelected || isLocked}
+                              className="h-8 w-full text-sm"
+                              aria-label={`Volumen mensual para ${route.origin} a ${route.destination}`}
+                            />
+                          )}
+
+                          {showSemaforo && (
+                            <div className="flex items-center justify-center">
+                              <TargetStatusLight status={targetStatus} />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Footer */}
+          <div className="flex flex-col gap-2 pt-2 sm:items-end">
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:gap-3">
+              <span className="text-muted-foreground text-xs text-center sm:text-left">
+                {selectedCount} ruta{selectedCount !== 1 ? "s" : ""} seleccionada
+                {selectedCount !== 1 ? "s" : ""} para {pageTitle}
+                {!canEditRoutes && canAddRoutes && newSelections.size > 0 && (
+                  <span className="ml-1">({newSelections.size} nueva{newSelections.size !== 1 ? "s" : ""})</span>
+                )}
+              </span>
+              <Button
+                type="button"
+                onClick={handleSubmit}
+                disabled={isSaving || !canSave}
+                className="w-full sm:w-auto"
+              >
+                {isSaving ? "Guardando…" : "Guardar selección"}
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}

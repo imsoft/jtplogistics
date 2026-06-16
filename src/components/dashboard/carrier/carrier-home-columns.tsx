@@ -57,7 +57,7 @@ export function getCarrierHomeColumns(): ColumnDef<CarrierHomeRouteRow>[] {
       header: () => <span className="sr-only">Acciones</span>,
       cell: ({ row }) => (
         <Link
-          href={`/carrier/dashboard/unit-types/${row.original.unitType}`}
+          href={`/carrier/dashboard/unit-types/${row.original.unitType}/gestionar`}
           className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
         >
           Gestionar
