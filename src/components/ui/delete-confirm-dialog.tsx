@@ -18,17 +18,34 @@ interface DeleteConfirmDialogProps {
   title: string;
   description?: string;
   onConfirm: () => void;
+  /**
+   * Modo controlado: cuando se pasa `open`/`onOpenChange`, el diálogo no
+   * renderiza su botón disparador y se abre desde el exterior (p. ej. un
+   * elemento de menú).
+   */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function DeleteConfirmDialog({ title, description, onConfirm }: DeleteConfirmDialogProps) {
+export function DeleteConfirmDialog({
+  title,
+  description,
+  onConfirm,
+  open,
+  onOpenChange,
+}: DeleteConfirmDialogProps) {
+  const controlled = open !== undefined || onOpenChange !== undefined;
+
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button variant="destructive" size="sm" className="shrink-0">
-          <Trash2 className="size-4" />
-          Eliminar
-        </Button>
-      </AlertDialogTrigger>
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      {!controlled && (
+        <AlertDialogTrigger asChild>
+          <Button variant="destructive" size="sm" className="shrink-0">
+            <Trash2 className="size-4" />
+            Eliminar
+          </Button>
+        </AlertDialogTrigger>
+      )}
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
