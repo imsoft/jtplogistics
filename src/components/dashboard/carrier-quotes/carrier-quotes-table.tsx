@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { DataTableSkeleton } from "@/components/ui/skeletons";
 import Link from "next/link";
 import { pdf } from "@react-pdf/renderer";
@@ -22,9 +23,22 @@ import { fuzzyMatch } from "@/lib/search";
 
 interface UnitTypeOption { value: string; label: string; }
 
+/** Cotización existente para precargar el constructor en modo edición. */
+export interface EditQuote {
+  id: string;
+  quoteNumber: string;
+  company: string;
+  contact: string;
+  phone: string;
+  validUntil: string;
+  rows: QuoteRow[];
+}
+
 interface CarrierQuotesTableProps {
   apiEndpoint?: string;
   showTermsLink?: boolean;
+  /** Si se pasa, el constructor arranca precargado y guarda con PATCH en vez de crear. */
+  editQuote?: EditQuote;
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -55,7 +69,11 @@ function defaultValidUntil() {
 export function CarrierQuotesTable({
   apiEndpoint = "/api/admin/carrier-quotes",
   showTermsLink = false,
+  editQuote,
 }: CarrierQuotesTableProps) {
+  const router = useRouter();
+  const isEditing = !!editQuote;
+
   // ── Explorer state ──
   const [routes, setRoutes] = useState<ActiveRoute[]>([]);
   const [carriers, setCarriers] = useState<CarrierQuote[]>([]);
@@ -69,14 +87,15 @@ export function CarrierQuotesTable({
   const [filterPrice, setFilterPrice] = useState("all");
   const [finalPrice, setFinalPrice] = useState<number | null>(null);
 
-  // ── Quote builder state ──
-  const [quoteNumber, setQuoteNumber] = useState("");
-  const [company, setCompany] = useState("");
-  const [contact, setContact] = useState("");
-  const [phone, setPhone] = useState("");
-  const [validUntil, setValidUntil] = useState(defaultValidUntil);
-  const [quoteRows, setQuoteRows] = useState<QuoteRow[]>([]);
+  // ── Quote builder state (precargado en modo edición) ──
+  const [quoteNumber, setQuoteNumber] = useState(editQuote?.quoteNumber ?? "");
+  const [company, setCompany] = useState(editQuote?.company ?? "");
+  const [contact, setContact] = useState(editQuote?.contact ?? "");
+  const [phone, setPhone] = useState(editQuote?.phone ?? "");
+  const [validUntil, setValidUntil] = useState(editQuote?.validUntil ?? defaultValidUntil());
+  const [quoteRows, setQuoteRows] = useState<QuoteRow[]>(editQuote?.rows ?? []);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [quoteError, setQuoteError] = useState<string | null>(null);
 
   const builderRef = useRef<HTMLDivElement>(null);
@@ -86,13 +105,14 @@ export function CarrierQuotesTable({
     const [data, utRes, numRes] = await Promise.all([
       fetchQuotes(apiEndpoint),
       fetch("/api/unit-types").then((r) => r.ok ? r.json() : []),
-      fetch("/api/generated-quotes/next-number").then((r) => r.ok ? r.json() : null),
+      // En modo edición se conserva el número existente.
+      isEditing ? Promise.resolve(null) : fetch("/api/generated-quotes/next-number").then((r) => r.ok ? r.json() : null),
     ]);
     setRoutes(data.routes);
     setUnitTypes(utRes);
-    if (numRes?.quoteNumber) setQuoteNumber(numRes.quoteNumber);
+    if (!isEditing && numRes?.quoteNumber) setQuoteNumber(numRes.quoteNumber);
     setIsLoaded(true);
-  }, [apiEndpoint]);
+  }, [apiEndpoint, isEditing]);
 
   useEffect(() => { loadRoutes(); }, [loadRoutes]);
 
@@ -187,6 +207,32 @@ function addCurrentRouteToQuote() {
   function updateCost(i: number, v: string) {
     const num = parseFloat(v.replace(/[^0-9.]/g, "")) || 0;
     setQuoteRows((prev) => prev.map((r, idx) => idx === i ? { ...r, cost: num } : r));
+  }
+
+  async function handleSaveEdit() {
+    if (!editQuote) return;
+    setQuoteError(null);
+    if (!company.trim()) { setQuoteError("Ingresa el nombre de la compañía."); return; }
+    if (!contact.trim()) { setQuoteError("Ingresa el nombre del contacto."); return; }
+    if (quoteRows.length === 0) { setQuoteError("Agrega al menos una ruta."); return; }
+    setIsSaving(true);
+    try {
+      const res = await fetch(`/api/admin/generated-quotes/${editQuote.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ company, contact, phone: phone || null, validUntil, rows: quoteRows }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({})) as { error?: string };
+        throw new Error(err.error ?? "Error al guardar");
+      }
+      router.push("/admin/dashboard/quotes");
+      router.refresh();
+    } catch (e) {
+      setQuoteError(e instanceof Error ? e.message : "Error al guardar.");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   async function handleDownloadPdf() {
@@ -404,12 +450,24 @@ function addCurrentRouteToQuote() {
 
         {quoteError && <p className="text-sm text-destructive">{quoteError}</p>}
 
-        <div className="flex justify-end pb-4">
-          <Button onClick={handleDownloadPdf} disabled={isGenerating} size="lg">
-            {isGenerating ? <Loader2 className="size-4 animate-spin" /> : <FileText className="size-4" />}
-            {isGenerating ? "Generando PDF…" : "Descargar cotización PDF"}
-          </Button>
-        </div>
+        {isEditing ? (
+          <div className="flex justify-end gap-3 pb-4">
+            <Button type="button" variant="outline" asChild>
+              <Link href="/admin/dashboard/quotes">Cancelar</Link>
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={isSaving} size="lg">
+              {isSaving ? <Loader2 className="size-4 animate-spin" /> : null}
+              {isSaving ? "Guardando…" : "Guardar cambios"}
+            </Button>
+          </div>
+        ) : (
+          <div className="flex justify-end pb-4">
+            <Button onClick={handleDownloadPdf} disabled={isGenerating} size="lg">
+              {isGenerating ? <Loader2 className="size-4 animate-spin" /> : <FileText className="size-4" />}
+              {isGenerating ? "Generando PDF…" : "Descargar cotización PDF"}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
