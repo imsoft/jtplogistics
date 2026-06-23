@@ -79,7 +79,7 @@ export function ConversationList({ selectedCarrierId, onSelect, initialCarrierId
     return (
       <div className="flex flex-col items-center justify-center gap-2 p-8 text-center text-sm text-muted-foreground">
         <MessageSquare className="size-8 opacity-30" />
-        <p>No hay transportistas registrados.</p>
+        <p className="uppercase tracking-wide">No hay transportistas registrados.</p>
       </div>
     );
   }
@@ -113,9 +113,9 @@ export function ConversationList({ selectedCarrierId, onSelect, initialCarrierId
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-1">
-                  <span className="text-sm font-medium truncate">{conv.carrierName}</span>
+                  <span className="text-sm font-medium uppercase tracking-wide truncate">{conv.carrierName}</span>
                   {conv.lastMessage && (
-                    <span className="text-[10px] text-muted-foreground shrink-0">
+                    <span className="text-[10px] text-muted-foreground uppercase shrink-0">
                       {timeAgo(conv.lastMessage.createdAt)}
                     </span>
                   )}
@@ -127,7 +127,7 @@ export function ConversationList({ selectedCarrierId, onSelect, initialCarrierId
                       : `Tú: ${conv.lastMessage.body}`}
                   </p>
                 ) : (
-                  <p className="text-xs text-muted-foreground italic">Sin mensajes</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide italic">Sin mensajes</p>
                 )}
               </div>
             </div>

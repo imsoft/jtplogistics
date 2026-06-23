@@ -75,7 +75,7 @@ export function StaffMessagesView() {
                 <Button variant="ghost" size="icon" onClick={handleBack} aria-label="Volver">
                   <ChevronLeft className="size-4" />
                 </Button>
-                <span className="text-sm font-medium">{selectedCarrierName}</span>
+                <span className="text-sm font-medium uppercase tracking-wide">{selectedCarrierName}</span>
               </div>
               <div className="flex-1 min-h-0">
                 <ChatWindow
@@ -88,7 +88,7 @@ export function StaffMessagesView() {
           ) : (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
               <MessageSquare className="size-10 opacity-20" />
-              <p className="text-sm">Selecciona un transportista para ver su conversación</p>
+              <p className="text-sm uppercase tracking-wide">Selecciona un transportista para ver su conversación</p>
             </div>
           )}
         </div>

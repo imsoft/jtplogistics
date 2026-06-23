@@ -110,14 +110,14 @@ export function ChatWindow({ carrierId, currentUserId, title, initialText }: Cha
     <div className="flex h-full flex-col">
       {title && (
         <div className="border-b px-4 py-3">
-          <p className="font-semibold text-sm">{title}</p>
+          <p className="font-semibold text-sm uppercase tracking-wide">{title}</p>
         </div>
       )}
 
       {/* Área de mensajes */}
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 space-y-4">
         {messages.length === 0 && (
-          <p className="text-center text-sm text-muted-foreground pt-8">
+          <p className="text-center text-sm text-muted-foreground uppercase tracking-wide pt-8">
             No hay mensajes aún. ¡Escribe el primero!
           </p>
         )}
@@ -127,7 +127,7 @@ export function ChatWindow({ carrierId, currentUserId, title, initialText }: Cha
             {/* Separador de fecha */}
             <div className="flex items-center gap-2">
               <div className="flex-1 h-px bg-border" />
-              <span className="text-xs text-muted-foreground shrink-0">{date}</span>
+              <span className="text-xs text-muted-foreground uppercase tracking-wide shrink-0">{date}</span>
               <div className="flex-1 h-px bg-border" />
             </div>
 
@@ -140,7 +140,7 @@ export function ChatWindow({ carrierId, currentUserId, title, initialText }: Cha
                 >
                   {/* Nombre del remitente (solo si no es propio) */}
                   {!isOwn && (
-                    <span className="text-xs text-muted-foreground px-1">
+                    <span className="text-xs text-muted-foreground uppercase tracking-wide px-1">
                       {msg.senderName}
                     </span>
                   )}
@@ -153,7 +153,7 @@ export function ChatWindow({ carrierId, currentUserId, title, initialText }: Cha
                   >
                     {msg.body}
                   </div>
-                  <span className="text-[10px] text-muted-foreground px-1">
+                  <span className="text-[10px] text-muted-foreground uppercase px-1">
                     {formatTime(msg.createdAt)}
                   </span>
                 </div>
