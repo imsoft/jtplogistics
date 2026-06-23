@@ -19,6 +19,12 @@ export interface CarrierRating {
   overallScore: number;
   /** 1–5 */
   stars: number;
+  /** Calificación manual del admin (1–5) | null si no se ha calificado */
+  manualStars: number | null;
+  manualNotes: string | null;
+  manualRatedByName: string | null;
+  /** ISO | null */
+  manualRatedAt: string | null;
 }
 
 function toStars(score: number): number {
@@ -36,14 +42,27 @@ function hasIncident(value: string | null): boolean {
 
 export function GET() {
   return adminHandler(async () => {
-    const shipments = await prisma.shipment.findMany({
-      where: { legalName: { not: null } },
-      select: {
-        legalName: true,
-        status: true,
-        incident: true,
-      },
-    });
+    const [shipments, manualRatings] = await Promise.all([
+      prisma.shipment.findMany({
+        where: { legalName: { not: null } },
+        select: {
+          legalName: true,
+          status: true,
+          incident: true,
+        },
+      }),
+      prisma.carrierManualRating.findMany({
+        select: {
+          legalName: true,
+          stars: true,
+          notes: true,
+          updatedAt: true,
+          ratedBy: { select: { name: true } },
+        },
+      }),
+    ]);
+
+    const manualMap = new Map(manualRatings.map((m) => [m.legalName, m]));
 
     // Group by legalName
     const map = new Map<string, {
@@ -103,6 +122,8 @@ export function GET() {
         overallScore = incidentFreeScore;
       }
 
+      const manual = manualMap.get(legalName);
+
       ratings.push({
         legalName,
         totalShipments: d.total,
@@ -116,6 +137,10 @@ export function GET() {
         deliveryRateScore: deliveryRateScore !== null ? Math.round(deliveryRateScore) : null,
         overallScore: Math.round(overallScore),
         stars: toStars(overallScore),
+        manualStars: manual?.stars ?? null,
+        manualNotes: manual?.notes ?? null,
+        manualRatedByName: manual?.ratedBy?.name ?? null,
+        manualRatedAt: manual?.updatedAt.toISOString() ?? null,
       });
     }
 

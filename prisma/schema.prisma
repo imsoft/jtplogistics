@@ -135,6 +135,7 @@ model User {
   sentMessages     Message[]      @relation("SentMessages")
   carrierMessages  Message[]      @relation("CarrierMessages")
   notifications    Notification[]
+  carrierManualRatings CarrierManualRating[] @relation("CarrierRatingRatedBy")
 
   @@map("users")
 }
@@ -501,6 +502,22 @@ model CarrierSuggestion {
 
   @@index([carrierId])
   @@map("carrier_suggestions")
+}
+
+// ---- App: calificación manual de transportistas (admin) ----
+// Identidad por razón social (legalName), igual que el rating automático.
+
+model CarrierManualRating {
+  id        String   @id @default(cuid()) @map("id")
+  legalName String   @unique @map("legal_name")
+  stars     Int      @map("stars")
+  notes     String?  @map("notes")
+  ratedById String?  @map("rated_by_id")
+  ratedBy   User?    @relation("CarrierRatingRatedBy", fields: [ratedById], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("carrier_manual_ratings")
 }
 
 // ---- App: ideas (colaboradores + admins) ----

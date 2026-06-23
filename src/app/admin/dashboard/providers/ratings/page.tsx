@@ -5,8 +5,8 @@ import Link from "next/link";
 import { ChevronLeft, Star, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import { AppSelect } from "@/components/ui/app-select";
 import type { CarrierRating } from "@/app/api/admin/carriers/ratings/route";
 
@@ -21,6 +21,42 @@ function StarRating({ stars, size = "sm" }: { stars: number; size?: "sm" | "lg" 
           key={n}
           className={`${s} ${n <= stars ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`}
         />
+      ))}
+    </span>
+  );
+}
+
+// ── Interactive star input (calificación manual) ─────────────────────────────
+
+function InteractiveStars({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: number;
+  onChange: (n: number) => void;
+  disabled?: boolean;
+}) {
+  const [hover, setHover] = useState(0);
+  return (
+    <span className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          key={n}
+          type="button"
+          disabled={disabled}
+          onClick={() => onChange(n)}
+          onMouseEnter={() => setHover(n)}
+          onMouseLeave={() => setHover(0)}
+          className="p-0.5 disabled:cursor-not-allowed"
+          aria-label={`${n} estrella${n !== 1 ? "s" : ""}`}
+        >
+          <Star
+            className={`size-6 transition-colors ${
+              n <= (hover || value) ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"
+            }`}
+          />
+        </button>
       ))}
     </span>
   );
@@ -70,7 +106,146 @@ function ScoreBadge({ score }: { score: number }) {
 
 // ── Carrier card ─────────────────────────────────────────────────────────────
 
-function CarrierCard({ carrier, rank }: { carrier: CarrierRating; rank: number }) {
+type ManualPatch = Pick<
+  CarrierRating,
+  "manualStars" | "manualNotes" | "manualRatedByName" | "manualRatedAt"
+>;
+
+function ManualRatingEditor({
+  carrier,
+  onSaved,
+}: {
+  carrier: CarrierRating;
+  onSaved: (legalName: string, patch: ManualPatch) => void;
+}) {
+  const [stars, setStars] = useState(carrier.manualStars ?? 0);
+  const [notes, setNotes] = useState(carrier.manualNotes ?? "");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const dirty =
+    stars !== (carrier.manualStars ?? 0) ||
+    notes.trim() !== (carrier.manualNotes ?? "");
+
+  async function handleSave() {
+    if (stars < 1) {
+      setError("Selecciona de 1 a 5 estrellas.");
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/carriers/manual-rating", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ legalName: carrier.legalName, stars, notes }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "No se pudo guardar.");
+        return;
+      }
+      onSaved(carrier.legalName, {
+        manualStars: data.stars,
+        manualNotes: data.notes,
+        manualRatedByName: data.ratedByName,
+        manualRatedAt: data.ratedAt,
+      });
+    } catch {
+      setError("Error de red. Intenta de nuevo.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleClear() {
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/carriers/manual-rating", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ legalName: carrier.legalName }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error ?? "No se pudo borrar.");
+        return;
+      }
+      setStars(0);
+      setNotes("");
+      onSaved(carrier.legalName, {
+        manualStars: null,
+        manualNotes: null,
+        manualRatedByName: null,
+        manualRatedAt: null,
+      });
+    } catch {
+      setError("Error de red. Intenta de nuevo.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="mt-3 border-t pt-3 space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          Tu calificación
+        </p>
+        {carrier.manualRatedByName && carrier.manualRatedAt && (
+          <span className="text-[10px] text-muted-foreground truncate">
+            {carrier.manualRatedByName} ·{" "}
+            {new Date(carrier.manualRatedAt).toLocaleDateString("es-MX", {
+              day: "numeric",
+              month: "short",
+            })}
+          </span>
+        )}
+      </div>
+
+      <InteractiveStars value={stars} onChange={setStars} disabled={saving} />
+
+      <Textarea
+        rows={2}
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        placeholder="Notas (opcional): por qué le das esta calificación…"
+        className="resize-none text-sm"
+        disabled={saving}
+      />
+
+      {error && <p className="text-xs text-destructive">{error}</p>}
+
+      <div className="flex items-center gap-2">
+        <Button size="sm" onClick={handleSave} disabled={saving || !dirty}>
+          {saving ? "Guardando…" : carrier.manualStars ? "Actualizar" : "Calificar"}
+        </Button>
+        {carrier.manualStars != null && (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleClear}
+            disabled={saving}
+            className="text-muted-foreground"
+          >
+            Quitar
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CarrierCard({
+  carrier,
+  rank,
+  onManualSaved,
+}: {
+  carrier: CarrierRating;
+  rank: number;
+  onManualSaved: (legalName: string, patch: ManualPatch) => void;
+}) {
   return (
     <Card className="relative overflow-hidden transition-shadow hover:shadow-md">
       {/* Rank ribbon */}
@@ -91,11 +266,11 @@ function CarrierCard({ carrier, rank }: { carrier: CarrierRating; rank: number }
               <ScoreBadge score={carrier.overallScore} />
             </div>
 
-            {/* Stars + shipments count */}
+            {/* Automatic stars + shipments count */}
             <div className="flex items-center gap-3 mb-3">
               <StarRating stars={carrier.stars} />
-              <span className="text-xs text-muted-foreground">
-                {carrier.totalShipments} embarque{carrier.totalShipments !== 1 ? "s" : ""}
+              <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                Automático · {carrier.totalShipments} embarque{carrier.totalShipments !== 1 ? "s" : ""}
               </span>
             </div>
 
@@ -141,6 +316,9 @@ function CarrierCard({ carrier, rank }: { carrier: CarrierRating; rank: number }
             )}
           </div>
         </div>
+
+        {/* Manual rating */}
+        <ManualRatingEditor carrier={carrier} onSaved={onManualSaved} />
       </CardContent>
     </Card>
   );
@@ -170,6 +348,12 @@ export default function CarrierRatingsPage() {
       .then((data: CarrierRating[]) => { setRatings(data); setIsLoaded(true); })
       .catch(() => setIsLoaded(true));
   }, []);
+
+  function handleManualSaved(legalName: string, patch: ManualPatch) {
+    setRatings((prev) =>
+      prev.map((r) => (r.legalName === legalName ? { ...r, ...patch } : r))
+    );
+  }
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -246,11 +430,14 @@ export default function CarrierRatingsPage() {
           <Card className="bg-muted/40 border-dashed">
             <CardContent className="px-4 py-3">
               <p className="text-xs text-muted-foreground leading-relaxed">
-                <strong>Metodología:</strong>{" "}
-                Puntualidad 40% (entregado = 100 pts, con retraso = 50 pts, no entregado = 0 pts) ·
-                Sin incidencias 30% ·
-                Tasa de entrega 30%.{" "}
-                Solo se consideran embarques con razón social registrada.
+                <strong>Dos calificaciones:</strong>{" "}
+                la <strong>automática</strong> (estrellas amarillas) la calcula el
+                sistema solo, con el desempeño de los embarques —Puntualidad 40%
+                (entregado = 100 pts, con retraso = 50 pts, no entregado = 0 pts) ·
+                Sin incidencias 30% · Tasa de entrega 30%—. La{" "}
+                <strong>manual</strong> (&ldquo;Tu calificación&rdquo;, al pie de cada
+                tarjeta) la pones tú: elige las estrellas y, si quieres, agrega una
+                nota. Solo se consideran embarques con razón social registrada.
               </p>
             </CardContent>
           </Card>
@@ -296,11 +483,12 @@ export default function CarrierRatingsPage() {
             </p>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {filtered.map((carrier, i) => (
+              {filtered.map((carrier) => (
                 <CarrierCard
                   key={carrier.legalName}
                   carrier={carrier}
                   rank={ratings.indexOf(carrier) + 1}
+                  onManualSaved={handleManualSaved}
                 />
               ))}
             </div>
