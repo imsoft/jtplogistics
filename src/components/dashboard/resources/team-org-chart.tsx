@@ -29,9 +29,9 @@ function EmployeeCard({ emp }: { emp: OrgEmployee }) {
           {initials(emp.name)}
         </div>
       )}
-      <p className="text-xs font-semibold text-center leading-tight line-clamp-2 w-full">{emp.name}</p>
+      <p className="text-xs font-semibold uppercase tracking-wide text-center leading-tight line-clamp-2 w-full">{emp.name}</p>
       {emp.position ? (
-        <p className="text-[10px] text-muted-foreground text-center leading-tight line-clamp-2 w-full">
+        <p className="text-[10px] uppercase tracking-wide text-muted-foreground text-center leading-tight line-clamp-2 w-full">
           {emp.position}
         </p>
       ) : null}
@@ -77,10 +77,10 @@ export function TeamOrgChart({ apiEndpoint, companyName = "JTP Logistics" }: Tea
       .map(([name, emps]) => ({ name, employees: emps }));
   }, [employees]);
 
-  if (!isLoaded) return <p className="text-sm text-muted-foreground py-6">Cargando…</p>;
-  if (error) return <p className="text-sm text-destructive py-6">{error}</p>;
+  if (!isLoaded) return <p className="text-sm text-muted-foreground uppercase tracking-wide py-6">Cargando…</p>;
+  if (error) return <p className="text-sm text-destructive uppercase tracking-wide py-6">{error}</p>;
   if (employees.length === 0) return (
-    <p className="text-sm text-muted-foreground rounded-lg border border-dashed p-8 text-center">
+    <p className="text-sm text-muted-foreground uppercase tracking-wide rounded-lg border border-dashed p-8 text-center">
       No hay colaboradores registrados.
     </p>
   );
@@ -94,8 +94,8 @@ export function TeamOrgChart({ apiEndpoint, companyName = "JTP Logistics" }: Tea
 
         {/* ── Root node ── */}
         <div className="rounded-xl border-2 border-primary bg-primary/5 px-8 py-3 text-center shadow-sm">
-          <p className="text-sm font-bold">{companyName}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">{employees.length} colaborador{employees.length !== 1 ? "es" : ""}</p>
+          <p className="text-sm font-bold uppercase tracking-wide">{companyName}</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide mt-0.5">{employees.length} colaborador{employees.length !== 1 ? "es" : ""}</p>
         </div>
 
         {/* ── Vertical connector root → horizontal bar ── */}
@@ -109,18 +109,19 @@ export function TeamOrgChart({ apiEndpoint, companyName = "JTP Logistics" }: Tea
               className="flex flex-col items-center"
               style={{ width: COLUMN_W }}
             >
-              {/* Horizontal bar half + vertical connector to dept */}
+              {/* Barra horizontal (arriba, para unir con el conector de la raíz)
+                  + línea vertical que baja hacia el departamento */}
               <div className="flex w-full h-8">
                 {/* Left half (transparent for first dept) */}
                 <div
-                  className="flex-1 self-end h-px"
+                  className="flex-1 self-start h-px"
                   style={{ background: i === 0 ? "transparent" : "hsl(var(--border))" }}
                 />
                 {/* Vertical center line */}
                 <div className="w-px bg-border" />
                 {/* Right half (transparent for last dept) */}
                 <div
-                  className="flex-1 self-end h-px"
+                  className="flex-1 self-start h-px"
                   style={{ background: i === deptCount - 1 ? "transparent" : "hsl(var(--border))" }}
                 />
               </div>
