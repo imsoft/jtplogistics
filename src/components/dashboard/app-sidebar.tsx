@@ -9,6 +9,7 @@ export function AppSidebar() {
       navGroups={dashboardNavGroups}
       label="Administración"
       homeHref="/admin/dashboard"
+      homeLabel="Inicio"
       profileHref="/admin/dashboard/profile"
     />
   );

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut, type LucideIcon } from "lucide-react";
+import { LogOut, LayoutDashboard, type LucideIcon } from "lucide-react";
 import { useMemo, useEffect, useState } from "react";
 import {
   Sidebar,
@@ -49,6 +49,8 @@ interface DashboardSidebarProps {
   homeHref: string;
   profileHref: string;
   showWhatsAppContact?: boolean;
+  /** Si se pasa, muestra un enlace al inicio del dashboard (homeHref) arriba del menú. */
+  homeLabel?: string;
 }
 
 const WHATSAPP_DEFAULT_MESSAGE = "Hola, soy transportista y necesito ayuda con la plataforma JTP Logistics.";
@@ -60,6 +62,7 @@ export function DashboardSidebar({
   homeHref,
   profileHref,
   showWhatsAppContact = false,
+  homeLabel,
 }: DashboardSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -114,6 +117,26 @@ export function DashboardSidebar({
       </SidebarHeader>
 
       <SidebarContent>
+        {homeLabel && (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === homeHref}
+                    tooltip={homeLabel}
+                  >
+                    <Link href={homeHref}>
+                      <LayoutDashboard />
+                      <span>{homeLabel}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
         {navGroups
           ? navGroups.map((group) => (
               <SidebarGroup key={group.label}>
