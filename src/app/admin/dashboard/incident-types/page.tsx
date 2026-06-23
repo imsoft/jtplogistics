@@ -235,7 +235,7 @@ export default function IncidentTypesPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction variant="destructive" onClick={handleDelete}>
               Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>

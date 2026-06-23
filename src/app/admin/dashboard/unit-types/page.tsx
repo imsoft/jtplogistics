@@ -216,7 +216,7 @@ export default function UnitTypesPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction variant="destructive" onClick={handleDelete}>
               Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>

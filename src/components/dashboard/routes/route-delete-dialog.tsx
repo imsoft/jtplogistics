@@ -44,8 +44,8 @@ export function RouteDeleteDialog({
         <AlertDialogFooter>
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
           <AlertDialogAction
+            variant="destructive"
             onClick={handleConfirm}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             Eliminar
           </AlertDialogAction>
