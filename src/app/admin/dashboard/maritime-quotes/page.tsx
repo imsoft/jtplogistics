@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth-server";
+import { requireAdminPage } from "@/lib/auth-server";
 import { computeMaritimeQuote, type MaritimeQuoteInput } from "@/lib/maritime-quote";
 import {
   MaritimeQuotesCrmTable,
@@ -14,7 +14,7 @@ export const metadata = {
 };
 
 export default async function MaritimeQuotesPage() {
-  await requireAdmin();
+  await requireAdminPage();
 
   const quotes = await prisma.maritimeQuote.findMany({
     orderBy: { createdAt: "desc" },

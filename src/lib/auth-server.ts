@@ -91,6 +91,30 @@ export async function requireDeveloper() {
   return session;
 }
 
+// ── Guardias para SERVER COMPONENTS (páginas y layouts) ──────────────────────
+// A diferencia de las versiones para rutas API (que lanzan un Response), estas
+// REDIRIGEN. En un server component un `throw new Response()` no lo maneja Next
+// y termina mostrando el error boundary ("Algo salió mal") en vez de mandar al
+// login —p. ej. al navegar con la sesión ya vencida—. Úsalas en page.tsx/layout.tsx.
+
+export async function requireSessionPage() {
+  const session = await getSession();
+  if (!session) redirect("/login");
+  return session;
+}
+
+export async function requireAdminPage() {
+  const session = await requireSessionPage();
+  if (session.user.role !== "admin") redirect("/login");
+  return session;
+}
+
+export async function requireDeveloperPage() {
+  const session = await requireSessionPage();
+  if (session.user.role !== "developer") redirect("/login");
+  return session;
+}
+
 /** Redirects to the user's dashboard if they already have an active session. */
 export async function redirectIfAuthenticated() {
   const session = await getSession();

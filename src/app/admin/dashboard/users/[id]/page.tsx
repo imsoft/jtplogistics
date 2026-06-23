@@ -4,7 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth-server";
+import { requireAdminPage } from "@/lib/auth-server";
 import { USER_ROLE_LABELS } from "@/lib/constants/user-role";
 import { InfoRow } from "@/components/dashboard/users/info-row";
 import { TargetDiff } from "@/components/dashboard/users/target-diff";
@@ -66,7 +66,7 @@ export default async function UserProfilePage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ from?: string }>;
 }) {
-  await requireAdmin();
+  await requireAdminPage();
   const { id } = await params;
   const { from } = await searchParams;
   const backHref = from ? decodeURIComponent(from) : "/admin/dashboard/users";

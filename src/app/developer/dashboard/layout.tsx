@@ -1,7 +1,7 @@
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { DeveloperAppSidebar } from "@/components/dashboard/developer-app-sidebar";
 import { NotificationBell } from "@/components/notification-bell";
-import { requireDeveloper } from "@/lib/auth-server";
+import { requireDeveloperPage } from "@/lib/auth-server";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +10,7 @@ export default async function DeveloperDashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  await requireDeveloper();
+  await requireDeveloperPage();
 
   return (
     <SidebarProvider>

@@ -1,7 +1,7 @@
 import { Separator } from "@/components/ui/separator";
 import { UsersTable } from "@/components/dashboard/users/users-table";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth-server";
+import { requireAdminPage } from "@/lib/auth-server";
 
 export const metadata = {
   title: "Proveedores | JTP Logistics",
@@ -9,7 +9,7 @@ export const metadata = {
 };
 
 export default async function ProvidersPage() {
-  await requireAdmin();
+  await requireAdminPage();
   const providersCount = await prisma.user.count({ where: { role: "carrier" } });
 
   return (

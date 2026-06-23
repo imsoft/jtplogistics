@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth-server";
+import { requireAdminPage } from "@/lib/auth-server";
 import { AuditLogTable } from "@/components/dashboard/audit/audit-log-table";
 import { Separator } from "@/components/ui/separator";
 
@@ -7,7 +7,7 @@ export const metadata = {
 };
 
 export default async function AuditLogsPage() {
-  await requireAdmin();
+  await requireAdminPage();
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">

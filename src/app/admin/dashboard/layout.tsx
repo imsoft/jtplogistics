@@ -4,7 +4,7 @@ import { GlobalSearch } from "@/components/global-search";
 import { NotificationBell } from "@/components/notification-bell";
 import { FloatingChat } from "@/components/floating-chat";
 import { OnboardingTour } from "@/components/dashboard/onboarding-tour";
-import { requireAdmin } from "@/lib/auth-server";
+import { requireAdminPage } from "@/lib/auth-server";
 import { dashboardMainWithFloatingChatClassName } from "@/lib/dashboard-shell";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +14,7 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  await requireAdmin();
+  await requireAdminPage();
 
   return (
     <SidebarProvider>

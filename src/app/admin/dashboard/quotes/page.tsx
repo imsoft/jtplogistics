@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth-server";
+import { requireAdminPage } from "@/lib/auth-server";
 import {
   QuotesCrmTable,
   type CrmQuote,
@@ -13,7 +13,7 @@ export const metadata = {
 };
 
 export default async function QuotesPage() {
-  await requireAdmin();
+  await requireAdminPage();
 
   const quotes = await prisma.generatedQuote.findMany({
     orderBy: { createdAt: "desc" },

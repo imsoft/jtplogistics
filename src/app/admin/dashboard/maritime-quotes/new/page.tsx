@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { requireAdmin } from "@/lib/auth-server";
+import { requireAdminPage } from "@/lib/auth-server";
 import { MaritimeQuoteForm } from "@/components/dashboard/maritime-quotes/maritime-quote-form";
 
 export const metadata = {
@@ -9,7 +9,7 @@ export const metadata = {
 };
 
 export default async function NewMaritimeQuotePage() {
-  await requireAdmin();
+  await requireAdminPage();
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
       <div className="flex items-center gap-2">

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth-server";
+import { requireAdminPage } from "@/lib/auth-server";
 import { routeToJson, type PrismaRoute } from "@/lib/api/route-utils";
 import { EditRouteForm } from "@/components/dashboard/routes/edit-route-form";
 
@@ -26,7 +26,7 @@ export default async function EditRoutePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireAdmin();
+  await requireAdminPage();
   const { id } = await params;
 
   const route = await prisma.route.findUnique({

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth-server";
+import { requireAdminPage } from "@/lib/auth-server";
 import { MaritimeQuoteForm } from "@/components/dashboard/maritime-quotes/maritime-quote-form";
 import type { MaritimeQuoteInput } from "@/lib/maritime-quote";
 
@@ -16,7 +16,7 @@ export default async function EditMaritimeQuotePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireAdmin();
+  await requireAdminPage();
   const { id } = await params;
   const quote = await prisma.maritimeQuote.findUnique({ where: { id } });
   if (!quote) notFound();
