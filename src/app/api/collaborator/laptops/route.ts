@@ -27,14 +27,20 @@ export async function GET() {
       laptops.map((l) => ({
         id: l.id,
         name: l.name,
+        equipmentCode: l.equipmentCode,
         password: l.password,
         serialNumber: l.serialNumber,
         equipmentType: l.equipmentType,
         brand: l.brand,
         model: l.model,
+        color: l.color,
         accessories: l.accessories,
         generalState: l.generalState,
         software: l.software,
+        observations: l.observations,
+        maintenanceProvider: l.maintenanceProvider,
+        imageUrl: l.imageUrl,
+        imagePublicId: l.imagePublicId,
         assignedToId: l.assignedToId,
         assignedTo: l.assignedTo,
         emailAccountId: l.emailAccountId,
@@ -63,16 +69,22 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, password, serialNumber, equipmentType, brand, model, accessories, generalState, software, assignedToId, emailAccountId } = body as {
+    const { name, equipmentCode, password, serialNumber, equipmentType, brand, model, color, accessories, generalState, software, observations, maintenanceProvider, imageUrl, imagePublicId, assignedToId, emailAccountId } = body as {
       name: string;
+      equipmentCode?: string;
       password?: string;
       serialNumber?: string;
       equipmentType?: string;
       brand?: string;
       model?: string;
+      color?: string;
       accessories?: string;
       generalState?: string;
       software?: string;
+      observations?: string;
+      maintenanceProvider?: string;
+      imageUrl?: string;
+      imagePublicId?: string;
       assignedToId?: string;
       emailAccountId?: string;
     };
@@ -84,14 +96,20 @@ export async function POST(request: Request) {
     const laptop = await prisma.laptop.create({
       data: {
         name,
+        equipmentCode: equipmentCode || null,
         password: password || null,
         serialNumber: serialNumber || null,
         equipmentType: equipmentType || null,
         brand: brand || null,
         model: model || null,
+        color: color || null,
         accessories: accessories || null,
         generalState: generalState || null,
         software: software || null,
+        observations: observations || null,
+        maintenanceProvider: maintenanceProvider || null,
+        imageUrl: imageUrl || null,
+        imagePublicId: imagePublicId || null,
         assignedToId: assignedToId || null,
         emailAccountId: emailAccountId || null,
       },

@@ -20,6 +20,8 @@ interface RouteSelection {
   carrierWeeklyVolume: number | null;
   editUnlockRequested: boolean;
   editUnlockApproved: boolean;
+  /** Ya usó su segunda oportunidad para reajustar el target (solo aplica a rutas en rojo). */
+  redRetryUsed: boolean;
   /** Semáforo contra el target de JTP, calculado en servidor. Nunca expone precio ni porcentaje. */
   targetStatus: TargetStatus | null;
 }
@@ -96,6 +98,8 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
   const [targetByRouteId, setTargetByRouteId] = useState<Record<string, string>>({});
   const [weeklyVolumeByRouteId, setWeeklyVolumeByRouteId] = useState<Record<string, string>>({});
   const [statusByRouteId, setStatusByRouteId] = useState<Record<string, TargetStatus | null>>({});
+  // Rutas guardadas en rojo que aún conservan su segunda oportunidad de reajuste.
+  const [retryEligibleByRouteId, setRetryEligibleByRouteId] = useState<Record<string, boolean>>({});
 
   const unitTypes = useUnitTypes();
   const unitTypeLabel = useMemo(() => {
@@ -128,6 +132,7 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
     const savedTargets: Record<string, string> = {};
     const savedVolumes: Record<string, string> = {};
     const savedStatuses: Record<string, TargetStatus | null> = {};
+    const savedRetryEligible: Record<string, boolean> = {};
     for (const r of data.routes) {
       const sel = r.selections?.find((s) => s.unitType === unitType);
       if (sel) {
@@ -135,6 +140,8 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
         if (sel.carrierTarget != null) savedTargets[r.id] = formatMxn(sel.carrierTarget);
         if (sel.carrierWeeklyVolume != null) savedVolumes[r.id] = String(sel.carrierWeeklyVolume);
         savedStatuses[r.id] = sel.targetStatus ?? null;
+        // Segunda oportunidad: solo donde se ve el semáforo, si está en rojo y no la ha usado.
+        savedRetryEligible[r.id] = showSemaforo && sel.targetStatus === "rojo" && !sel.redRetryUsed;
       }
     }
     setSelected(savedSelected);
@@ -142,8 +149,9 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
     setTargetByRouteId(savedTargets);
     setWeeklyVolumeByRouteId(savedVolumes);
     setStatusByRouteId(savedStatuses);
+    setRetryEligibleByRouteId(savedRetryEligible);
     setIsLoaded(true);
-  }, [unitType]);
+  }, [unitType, showSemaforo]);
 
   useEffect(() => {
     setIsLoaded(false);
@@ -196,6 +204,12 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
   );
 
   const selectedCount = selected.size;
+
+  // ¿Hay alguna ruta en rojo con su segunda oportunidad disponible?
+  const hasRetryEligible = useMemo(
+    () => Object.values(retryEligibleByRouteId).some(Boolean),
+    [retryEligibleByRouteId]
+  );
 
   function toggleSelected(routeId: string) {
     setSelected((prev) => {
@@ -267,7 +281,7 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
     return <p className="text-muted-foreground">Cargando…</p>;
   }
 
-  const canSave = newSelections.size > 0 || canEditRoutes;
+  const canSave = newSelections.size > 0 || canEditRoutes || hasRetryEligible;
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
@@ -296,6 +310,14 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
           <Lock className="size-3.5 shrink-0 mt-0.5 text-muted-foreground" />
           <p className="text-xs text-muted-foreground">
             Las rutas ya guardadas no se pueden modificar. Solo puedes agregar rutas nuevas.
+            {hasRetryEligible && (
+              <>
+                {" "}
+                <span className="font-medium text-red-600">
+                  Las rutas cuyo target quedó en rojo puedes ajustarlas una sola vez más.
+                </span>
+              </>
+            )}
           </p>
         </div>
       )}
@@ -374,7 +396,8 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
                       const isActiveRoute = route.status === "active";
                       const targetStatus = statusByRouteId[route.id] ?? null;
 
-                      const isLocked = isOriginallySelected && !canEditRoutes;
+                      const isRetryEligible = retryEligibleByRouteId[route.id] ?? false;
+                      const isLocked = isOriginallySelected && !canEditRoutes && !isRetryEligible;
                       const contactDraft = `Hola, quiero hablar con el gerente de compras de JTP sobre la ruta ${route.origin} → ${route.destination} (${pageTitle}).`;
 
                       return (
@@ -411,6 +434,11 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
                                 >
                                   encargado de compras de JTP
                                 </Link>
+                              </p>
+                            )}
+                            {isRetryEligible && (
+                              <p className="text-xs font-medium text-red-600">
+                                Tu target quedó en rojo. Puedes ajustarlo una vez más.
                               </p>
                             )}
                           </div>

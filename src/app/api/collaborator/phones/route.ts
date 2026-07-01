@@ -33,10 +33,18 @@ export async function GET() {
       phones.map((p) => ({
         id: p.id,
         name: p.name,
+        equipmentCode: p.equipmentCode,
         phoneNumber: p.phoneNumber,
         password: p.password,
         imei: p.imei,
+        serialNumber: p.serialNumber,
+        brand: p.brand,
+        model: p.model,
         color: p.color,
+        observations: p.observations,
+        maintenanceProvider: p.maintenanceProvider,
+        imageUrl: p.imageUrl,
+        imagePublicId: p.imagePublicId,
         department: p.assignedTo?.employeeProfile?.department ?? null,
         assignedToId: p.assignedToId,
         assignedTo: p.assignedTo
@@ -68,12 +76,20 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, phoneNumber, password, imei, color, assignedToId, emailAccountId } = body as {
+    const { name, equipmentCode, phoneNumber, password, imei, serialNumber, brand, model, color, observations, maintenanceProvider, imageUrl, imagePublicId, assignedToId, emailAccountId } = body as {
       name: string;
+      equipmentCode?: string;
       phoneNumber?: string;
       password?: string;
       imei?: string;
+      serialNumber?: string;
+      brand?: string;
+      model?: string;
       color?: string;
+      observations?: string;
+      maintenanceProvider?: string;
+      imageUrl?: string;
+      imagePublicId?: string;
       assignedToId?: string;
       emailAccountId?: string;
     };
@@ -85,10 +101,18 @@ export async function POST(request: Request) {
     const phone = await prisma.phone.create({
       data: {
         name,
+        equipmentCode: equipmentCode || null,
         phoneNumber: phoneNumber || null,
         password: password || null,
         imei: imei || null,
+        serialNumber: serialNumber || null,
+        brand: brand || null,
+        model: model || null,
         color: color || null,
+        observations: observations || null,
+        maintenanceProvider: maintenanceProvider || null,
+        imageUrl: imageUrl || null,
+        imagePublicId: imagePublicId || null,
         assignedToId: assignedToId || null,
         emailAccountId: emailAccountId || null,
       },

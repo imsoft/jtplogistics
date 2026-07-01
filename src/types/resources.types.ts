@@ -97,14 +97,20 @@ export interface VendorFormData {
 export interface Laptop {
   id: string;
   name: string;
+  equipmentCode: string | null;
   password: string | null;
   serialNumber: string | null;
   equipmentType: string | null;
   brand: string | null;
   model: string | null;
+  color: string | null;
   accessories: string | null;
   generalState: string | null;
   software: string | null;
+  observations: string | null;
+  maintenanceProvider: string | null;
+  imageUrl: string | null;
+  imagePublicId: string | null;
   assignedToId: string | null;
   assignedTo: { id: string; name: string } | null;
   emailAccountId: string | null;
@@ -114,14 +120,20 @@ export interface Laptop {
 
 export interface LaptopFormData {
   name: string;
+  equipmentCode: string;
   password: string;
   serialNumber: string;
   equipmentType: string;
   brand: string;
   model: string;
+  color: string;
   accessories: string;
   generalState: string;
   software: string;
+  observations: string;
+  maintenanceProvider: string;
+  imageUrl: string;
+  imagePublicId: string;
   assignedToId: string;
   emailAccountId: string;
 }
@@ -129,10 +141,18 @@ export interface LaptopFormData {
 export interface PhoneDevice {
   id: string;
   name: string;
+  equipmentCode: string | null;
   phoneNumber: string | null;
   password: string | null;
   imei: string | null;
+  serialNumber: string | null;
+  brand: string | null;
+  model: string | null;
   color: string | null;
+  observations: string | null;
+  maintenanceProvider: string | null;
+  imageUrl: string | null;
+  imagePublicId: string | null;
   department: string | null;
   assignedToId: string | null;
   assignedTo: { id: string; name: string } | null;
@@ -143,10 +163,18 @@ export interface PhoneDevice {
 
 export interface PhoneFormData {
   name: string;
+  equipmentCode: string;
   phoneNumber: string;
   password: string;
   imei: string;
+  serialNumber: string;
+  brand: string;
+  model: string;
   color: string;
+  observations: string;
+  maintenanceProvider: string;
+  imageUrl: string;
+  imagePublicId: string;
   assignedToId: string;
   emailAccountId: string;
 }

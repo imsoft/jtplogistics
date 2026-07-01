@@ -25,10 +25,18 @@ export function GET(
     return Response.json({
       id: phone.id,
       name: phone.name,
+      equipmentCode: phone.equipmentCode,
       phoneNumber: phone.phoneNumber,
       password: phone.password,
       imei: phone.imei,
+      serialNumber: phone.serialNumber,
+      brand: phone.brand,
+      model: phone.model,
       color: phone.color,
+      observations: phone.observations,
+      maintenanceProvider: phone.maintenanceProvider,
+      imageUrl: phone.imageUrl,
+      imagePublicId: phone.imagePublicId,
       department: phone.assignedTo?.employeeProfile?.department ?? null,
       assignedToId: phone.assignedToId,
       assignedTo: phone.assignedTo
@@ -48,12 +56,20 @@ export function PATCH(
   return adminHandler(async (session) => {
     const { id } = await params;
     const body = await request.json();
-    const { name, phoneNumber, password, imei, color, assignedToId, emailAccountId } = body as {
+    const { name, equipmentCode, phoneNumber, password, imei, serialNumber, brand, model, color, observations, maintenanceProvider, imageUrl, imagePublicId, assignedToId, emailAccountId } = body as {
       name?: string;
+      equipmentCode?: string;
       phoneNumber?: string;
       password?: string;
       imei?: string;
+      serialNumber?: string;
+      brand?: string;
+      model?: string;
       color?: string;
+      observations?: string;
+      maintenanceProvider?: string;
+      imageUrl?: string;
+      imagePublicId?: string;
       assignedToId?: string | null;
       emailAccountId?: string | null;
     };
@@ -65,10 +81,18 @@ export function PATCH(
       where: { id },
       data: {
         ...(name !== undefined && { name }),
+        ...(equipmentCode !== undefined && { equipmentCode: equipmentCode || null }),
         ...(phoneNumber !== undefined && { phoneNumber: phoneNumber || null }),
         ...(password !== undefined && { password: password || null }),
         ...(imei !== undefined && { imei: imei || null }),
+        ...(serialNumber !== undefined && { serialNumber: serialNumber || null }),
+        ...(brand !== undefined && { brand: brand || null }),
+        ...(model !== undefined && { model: model || null }),
         ...(color !== undefined && { color: color || null }),
+        ...(observations !== undefined && { observations: observations || null }),
+        ...(maintenanceProvider !== undefined && { maintenanceProvider: maintenanceProvider || null }),
+        ...(imageUrl !== undefined && { imageUrl: imageUrl || null }),
+        ...(imagePublicId !== undefined && { imagePublicId: imagePublicId || null }),
         ...(assignedToId !== undefined && { assignedToId: assignedToId || null }),
         ...(emailAccountId !== undefined && { emailAccountId: emailAccountId || null }),
       },

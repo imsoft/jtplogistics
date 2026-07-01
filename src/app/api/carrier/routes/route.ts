@@ -45,7 +45,7 @@ export async function GET() {
     }
 
     // Build per-unitType selection info
-    const selectionsByRoute = new Map<string, { unitType: string; carrierTarget: number | null; carrierWeeklyVolume: number | null; editUnlockRequested: boolean; editUnlockApproved: boolean; targetStatus: TargetStatus | null }[]>();
+    const selectionsByRoute = new Map<string, { unitType: string; carrierTarget: number | null; carrierWeeklyVolume: number | null; editUnlockRequested: boolean; editUnlockApproved: boolean; redRetryUsed: boolean; targetStatus: TargetStatus | null }[]>();
     for (const cr of carrierRoutes) {
       const list = selectionsByRoute.get(cr.routeId) ?? [];
       list.push({
@@ -54,6 +54,8 @@ export async function GET() {
         carrierWeeklyVolume: cr.carrierWeeklyVolume ?? null,
         editUnlockRequested: cr.editUnlockRequested,
         editUnlockApproved: cr.editUnlockApproved,
+        // Si ya usó su segunda oportunidad de reajuste (solo aplica a rutas en rojo).
+        redRetryUsed: cr.redRetryUsed,
         // Solo el semáforo (nunca el precio ni el porcentaje).
         targetStatus: computeTargetStatus(adminTargetByRouteUnit.get(`${cr.routeId}:${cr.unitType}`), cr.carrierTarget ?? null),
       });
@@ -122,19 +124,43 @@ export async function PUT(request: NextRequest) {
     const incomingKeys = new Set(body.map((r) => `${r.routeId}:${r.unitType}`));
     const canEditGlobally = userRecord?.canEditRoutes ?? false;
 
+    // Targets de JTP para calcular el semáforo de las filas ya guardadas.
+    // Solo se usa en el servidor para decidir la "segunda oportunidad"; nunca se expone.
+    const routeIds = [...new Set(existingRoutes.map((r) => r.routeId))];
+    const routesForStatus = await prisma.route.findMany({
+      where: { id: { in: routeIds } },
+      select: { id: true, unitType: true, target: true, unitTargets: { select: { unitType: true, target: true } } },
+    });
+    const adminTargetByRouteUnit = new Map<string, number | null>();
+    for (const r of routesForStatus) {
+      if (r.unitTargets.length > 0) {
+        for (const ut of r.unitTargets) adminTargetByRouteUnit.set(`${r.id}:${ut.unitType}`, ut.target ?? null);
+      } else {
+        adminTargetByRouteUnit.set(`${r.id}:${r.unitType}`, r.target ?? null);
+      }
+    }
+
+    // Segunda oportunidad: la fila guardada está en rojo y aún no la usó.
+    const canRedRetry = (prev: (typeof existingRoutes)[number]) =>
+      !prev.redRetryUsed &&
+      computeTargetStatus(
+        adminTargetByRouteUnit.get(`${prev.routeId}:${prev.unitType}`),
+        prev.carrierTarget ?? null
+      ) === "rojo";
+
     // Categorize routes
     const toCreate = body.filter((item) => !existingMap.has(`${item.routeId}:${item.unitType}`));
     const toDelete = existingRoutes.filter((item) => !incomingKeys.has(`${item.routeId}:${item.unitType}`));
     const toUpdate = body.filter((item) => existingMap.has(`${item.routeId}:${item.unitType}`));
 
-    // Check permissions for deletions
+    // Check permissions for deletions (la segunda oportunidad es solo para el target, no para desmarcar)
     const unauthorizedDeletes = toDelete.filter((item) => !canEditGlobally && !item.editUnlockApproved);
     // Check permissions for updates (only block if something actually changed)
     const unauthorizedUpdates = toUpdate.filter((item) => {
       const prev = existingMap.get(`${item.routeId}:${item.unitType}`)!;
       const changed = (prev.carrierTarget ?? null) !== (item.carrierTarget ?? null)
         || (prev.carrierWeeklyVolume ?? null) !== (item.carrierWeeklyVolume ?? null);
-      return changed && !canEditGlobally && !prev.editUnlockApproved;
+      return changed && !canEditGlobally && !prev.editUnlockApproved && !canRedRetry(prev);
     });
 
     if (unauthorizedDeletes.length > 0 || unauthorizedUpdates.length > 0) {
@@ -167,10 +193,15 @@ export async function PUT(request: NextRequest) {
       ops.push(prisma.carrierRoute.delete({ where: { id: item.id } }));
     }
 
-    // Update existing routes that have permission (global or per-route)
+    // Update existing routes that have permission (global, per-route unlock, o segunda oportunidad)
     for (const item of toUpdate) {
       const prev = existingMap.get(`${item.routeId}:${item.unitType}`)!;
-      if (!canEditGlobally && !prev.editUnlockApproved) continue; // skip locked rows silently
+      const authorized = canEditGlobally || prev.editUnlockApproved;
+      const changed = (prev.carrierTarget ?? null) !== (item.carrierTarget ?? null)
+        || (prev.carrierWeeklyVolume ?? null) !== (item.carrierWeeklyVolume ?? null);
+      // Solo se consume la segunda oportunidad si de verdad cambió el target de una fila en rojo.
+      const viaRedRetry = !authorized && changed && canRedRetry(prev);
+      if (!authorized && !viaRedRetry) continue; // skip locked rows silently
       ops.push(
         prisma.carrierRoute.update({
           where: { id: prev.id },
@@ -180,6 +211,9 @@ export async function PUT(request: NextRequest) {
             // Reset per-route approval after saving so each edit requires fresh approval
             editUnlockApproved: false,
             editUnlockRequested: false,
+            // Al usar la segunda oportunidad se agota (aunque siga en rojo). Si fue una
+            // edición autorizada por el admin (nuevo ciclo), se restablece para el futuro.
+            redRetryUsed: viaRedRetry ? true : false,
           },
         })
       );

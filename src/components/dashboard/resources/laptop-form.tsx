@@ -9,6 +9,7 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { AppSelect } from "@/components/ui/app-select";
 import { EmployeeSelect } from "./employee-select";
 import { EmailAccountSelect } from "./email-account-select";
+import { DeviceImageUpload } from "./device-image-upload";
 import type { Laptop, LaptopFormData } from "@/types/resources.types";
 
 interface LaptopFormProps {
@@ -30,20 +31,27 @@ export function LaptopForm({
 }: LaptopFormProps) {
   const employeeEndpoint = scope === "collaborator" ? "/api/collaborator/employees" : "/api/admin/employees";
   const emailEndpoint = scope === "collaborator" ? "/api/collaborator/emails" : "/api/admin/emails";
+  const uploadEndpoint = scope === "collaborator" ? "/api/collaborator/uploads" : "/api/admin/uploads";
   const [name, setName] = useState(initialValues.name ?? "");
+  const [equipmentCode, setEquipmentCode] = useState(initialValues.equipmentCode ?? "");
   const [password, setPassword] = useState(initialValues.password ?? "");
   const [serialNumber, setSerialNumber] = useState(initialValues.serialNumber ?? "");
   const [brand, setBrand] = useState(initialValues.brand ?? "");
   const [model, setModel] = useState(initialValues.model ?? "");
+  const [color, setColor] = useState(initialValues.color ?? "");
   const [accessories, setAccessories] = useState(initialValues.accessories ?? "");
   const [generalState, setGeneralState] = useState(initialValues.generalState ?? "");
   const [software, setSoftware] = useState(initialValues.software ?? "");
+  const [observations, setObservations] = useState(initialValues.observations ?? "");
+  const [maintenanceProvider, setMaintenanceProvider] = useState(initialValues.maintenanceProvider ?? "");
+  const [imageUrl, setImageUrl] = useState(initialValues.imageUrl ?? "");
+  const [imagePublicId, setImagePublicId] = useState(initialValues.imagePublicId ?? "");
   const [assignedToId, setAssignedToId] = useState(initialValues.assignedToId ?? "");
   const [emailAccountId, setEmailAccountId] = useState(initialValues.emailAccountId ?? "");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSubmit({ name, password, serialNumber, equipmentType: "", brand, model, accessories, generalState, software, assignedToId, emailAccountId });
+    onSubmit({ name, equipmentCode, password, serialNumber, equipmentType: "", brand, model, color, accessories, generalState, software, observations, maintenanceProvider, imageUrl, imagePublicId, assignedToId, emailAccountId });
   }
 
   return (
@@ -56,6 +64,14 @@ export function LaptopForm({
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lap-code">Código del equipo</Label>
+          <Input
+            id="lap-code"
+            value={equipmentCode}
+            onChange={(e) => setEquipmentCode(e.target.value)}
           />
         </div>
         <div className="space-y-2">
@@ -80,6 +96,14 @@ export function LaptopForm({
             id="lap-serial"
             value={serialNumber}
             onChange={(e) => setSerialNumber(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lap-color">Color</Label>
+          <Input
+            id="lap-color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
           />
         </div>
         <div className="space-y-2">
@@ -111,6 +135,14 @@ export function LaptopForm({
           onValueChange={setEmailAccountId}
           endpoint={emailEndpoint}
         />
+        <div className="space-y-2">
+          <Label htmlFor="lap-maintenance">Proveedor de mantenimiento</Label>
+          <Input
+            id="lap-maintenance"
+            value={maintenanceProvider}
+            onChange={(e) => setMaintenanceProvider(e.target.value)}
+          />
+        </div>
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="lap-accessories">Accesorios</Label>
           <Textarea
@@ -127,6 +159,27 @@ export function LaptopForm({
             value={software}
             onChange={(e) => setSoftware(e.target.value)}
             rows={2}
+          />
+        </div>
+        <div className="space-y-2 sm:col-span-2">
+          <Label htmlFor="lap-observations">Observaciones</Label>
+          <Textarea
+            id="lap-observations"
+            value={observations}
+            onChange={(e) => setObservations(e.target.value)}
+            rows={2}
+            placeholder="Recomendaciones del proveedor, garantías, etc."
+          />
+        </div>
+        <div className="sm:col-span-2">
+          <DeviceImageUpload
+            imageUrl={imageUrl}
+            endpoint={uploadEndpoint}
+            folder="Devices/Laptops"
+            onChange={(url, publicId) => {
+              setImageUrl(url);
+              setImagePublicId(publicId);
+            }}
           />
         </div>
       </div>
