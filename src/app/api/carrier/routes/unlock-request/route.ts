@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireCarrier } from "@/lib/auth-server";
 import { logAudit } from "@/lib/audit-log";
+import { computeTargetStatus } from "@/lib/target-status";
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,11 +17,31 @@ export async function POST(request: NextRequest) {
     // Find the carrier route record
     const carrierRoute = await prisma.carrierRoute.findUnique({
       where: { carrierId_routeId_unitType: { carrierId: session.user.id, routeId, unitType } },
-      include: { route: { select: { origin: true, destination: true } } },
+      include: {
+        route: {
+          select: { origin: true, destination: true, unitType: true, target: true, unitTargets: true },
+        },
+      },
     });
 
     if (!carrierRoute) {
       return Response.json({ error: "Ruta no encontrada" }, { status: 404 });
+    }
+
+    // Solo se puede solicitar desbloqueo de rutas cuyo target quedó en rojo.
+    // El target de JTP solo se usa aquí para validar; nunca se expone.
+    const jtpTarget =
+      carrierRoute.route.unitTargets.length > 0
+        ? carrierRoute.route.unitTargets.find((ut) => ut.unitType === unitType)?.target ?? null
+        : carrierRoute.route.unitType === unitType
+          ? carrierRoute.route.target
+          : null;
+    const status = computeTargetStatus(jtpTarget, carrierRoute.carrierTarget ?? null);
+    if (status !== "rojo") {
+      return Response.json(
+        { error: "Solo puedes solicitar el desbloqueo de rutas cuyo target está en rojo." },
+        { status: 403 }
+      );
     }
 
     // Mark as requested

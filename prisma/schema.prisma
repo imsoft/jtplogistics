@@ -255,11 +255,6 @@ model CarrierRoute {
   carrierWeeklyVolume  Int?     @map("carrier_weekly_volume")
   editUnlockRequested  Boolean  @default(false) @map("edit_unlock_requested")
   editUnlockApproved   Boolean  @default(false) @map("edit_unlock_approved")
-  // Segunda oportunidad autoservicio: cuando el target quedó en rojo, el
-  // transportista puede reajustarlo UNA sola vez sin pedir desbloqueo al admin.
-  // Se marca true al usar ese reajuste y se restablece si el admin vuelve a
-  // habilitar la edición (nuevo ciclo de licitación).
-  redRetryUsed         Boolean  @default(false) @map("red_retry_used")
   createdAt            DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
   carrier       User     @relation(fields: [carrierId], references: [id], onDelete: Cascade)

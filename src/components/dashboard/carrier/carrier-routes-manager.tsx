@@ -18,10 +18,10 @@ interface RouteSelection {
   unitType: string;
   carrierTarget: number | null;
   carrierWeeklyVolume: number | null;
+  /** El transportista ya solicitó el desbloqueo de esta ruta (pendiente de aprobación de JTP). */
   editUnlockRequested: boolean;
+  /** JTP aprobó el desbloqueo: la ruta puede editarse una vez hasta que se guarde. */
   editUnlockApproved: boolean;
-  /** Ya usó su segunda oportunidad para reajustar el target (solo aplica a rutas en rojo). */
-  redRetryUsed: boolean;
   /** Semáforo contra el target de JTP, calculado en servidor. Nunca expone precio ni porcentaje. */
   targetStatus: TargetStatus | null;
 }
@@ -98,8 +98,11 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
   const [targetByRouteId, setTargetByRouteId] = useState<Record<string, string>>({});
   const [weeklyVolumeByRouteId, setWeeklyVolumeByRouteId] = useState<Record<string, string>>({});
   const [statusByRouteId, setStatusByRouteId] = useState<Record<string, TargetStatus | null>>({});
-  // Rutas guardadas en rojo que aún conservan su segunda oportunidad de reajuste.
-  const [retryEligibleByRouteId, setRetryEligibleByRouteId] = useState<Record<string, boolean>>({});
+  // Estado del desbloqueo por ruta (para el tipo de unidad actual).
+  const [unlockApprovedByRouteId, setUnlockApprovedByRouteId] = useState<Record<string, boolean>>({});
+  const [unlockRequestedByRouteId, setUnlockRequestedByRouteId] = useState<Record<string, boolean>>({});
+  // Rutas para las que se está enviando la solicitud de desbloqueo en este momento.
+  const [requestingUnlock, setRequestingUnlock] = useState<Set<string>>(new Set());
 
   const unitTypes = useUnitTypes();
   const unitTypeLabel = useMemo(() => {
@@ -132,7 +135,8 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
     const savedTargets: Record<string, string> = {};
     const savedVolumes: Record<string, string> = {};
     const savedStatuses: Record<string, TargetStatus | null> = {};
-    const savedRetryEligible: Record<string, boolean> = {};
+    const savedApproved: Record<string, boolean> = {};
+    const savedRequested: Record<string, boolean> = {};
     for (const r of data.routes) {
       const sel = r.selections?.find((s) => s.unitType === unitType);
       if (sel) {
@@ -140,8 +144,8 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
         if (sel.carrierTarget != null) savedTargets[r.id] = formatMxn(sel.carrierTarget);
         if (sel.carrierWeeklyVolume != null) savedVolumes[r.id] = String(sel.carrierWeeklyVolume);
         savedStatuses[r.id] = sel.targetStatus ?? null;
-        // Segunda oportunidad: solo donde se ve el semáforo, si está en rojo y no la ha usado.
-        savedRetryEligible[r.id] = showSemaforo && sel.targetStatus === "rojo" && !sel.redRetryUsed;
+        savedApproved[r.id] = sel.editUnlockApproved;
+        savedRequested[r.id] = sel.editUnlockRequested;
       }
     }
     setSelected(savedSelected);
@@ -149,9 +153,10 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
     setTargetByRouteId(savedTargets);
     setWeeklyVolumeByRouteId(savedVolumes);
     setStatusByRouteId(savedStatuses);
-    setRetryEligibleByRouteId(savedRetryEligible);
+    setUnlockApprovedByRouteId(savedApproved);
+    setUnlockRequestedByRouteId(savedRequested);
     setIsLoaded(true);
-  }, [unitType, showSemaforo]);
+  }, [unitType]);
 
   useEffect(() => {
     setIsLoaded(false);
@@ -205,11 +210,36 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
 
   const selectedCount = selected.size;
 
-  // ¿Hay alguna ruta en rojo con su segunda oportunidad disponible?
-  const hasRetryEligible = useMemo(
-    () => Object.values(retryEligibleByRouteId).some(Boolean),
-    [retryEligibleByRouteId]
+  // ¿Hay alguna ruta con desbloqueo aprobado por JTP (editable ahora)?
+  const hasApprovedUnlock = useMemo(
+    () => Object.values(unlockApprovedByRouteId).some(Boolean),
+    [unlockApprovedByRouteId]
   );
+
+  async function requestUnlock(routeId: string) {
+    setRequestingUnlock((prev) => new Set(prev).add(routeId));
+    try {
+      const res = await fetch("/api/carrier/routes/unlock-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ routeId, unitType }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? "No se pudo enviar la solicitud");
+      }
+      setUnlockRequestedByRouteId((prev) => ({ ...prev, [routeId]: true }));
+      toast.success("Solicitud de desbloqueo enviada a JTP. Te avisaremos cuando la revisen.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo enviar la solicitud. Intenta de nuevo.");
+    } finally {
+      setRequestingUnlock((prev) => {
+        const next = new Set(prev);
+        next.delete(routeId);
+        return next;
+      });
+    }
+  }
 
   function toggleSelected(routeId: string) {
     setSelected((prev) => {
@@ -281,7 +311,7 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
     return <p className="text-muted-foreground">Cargando…</p>;
   }
 
-  const canSave = newSelections.size > 0 || canEditRoutes || hasRetryEligible;
+  const canSave = newSelections.size > 0 || canEditRoutes || hasApprovedUnlock;
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
@@ -309,12 +339,13 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
         <div className="rounded-lg border p-3 sm:p-4 flex items-start gap-2">
           <Lock className="size-3.5 shrink-0 mt-0.5 text-muted-foreground" />
           <p className="text-xs text-muted-foreground">
-            Las rutas ya guardadas no se pueden modificar. Solo puedes agregar rutas nuevas.
-            {hasRetryEligible && (
+            Las rutas ya guardadas no se pueden modificar; solo puedes agregar rutas nuevas.
+            {showSemaforo && (
               <>
                 {" "}
-                <span className="font-medium text-red-600">
-                  Las rutas cuyo target quedó en rojo puedes ajustarlas una sola vez más.
+                <span className="font-medium text-foreground">
+                  Si una ruta salió en rojo (🔴), puedes contactar a pricing de JTP o solicitar el
+                  desbloqueo de esa ruta para actualizar tu target.
                 </span>
               </>
             )}
@@ -396,9 +427,13 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
                       const isActiveRoute = route.status === "active";
                       const targetStatus = statusByRouteId[route.id] ?? null;
 
-                      const isRetryEligible = retryEligibleByRouteId[route.id] ?? false;
-                      const isLocked = isOriginallySelected && !canEditRoutes && !isRetryEligible;
+                      const isApproved = unlockApprovedByRouteId[route.id] ?? false;
+                      const isRequested = unlockRequestedByRouteId[route.id] ?? false;
+                      const isLocked = isOriginallySelected && !canEditRoutes && !isApproved;
+                      // Ruta guardada, bloqueada y en rojo: puede contactar a pricing o solicitar desbloqueo.
+                      const canAskUnlock = showSemaforo && isLocked && (statusByRouteId[route.id] ?? null) === "rojo";
                       const contactDraft = `Hola, quiero hablar con el gerente de compras de JTP sobre la ruta ${route.origin} → ${route.destination} (${pageTitle}).`;
+                      const pricingDraft = `Hola, quiero revisar la situación de mi target para la ruta ${route.origin} → ${route.destination} (${pageTitle}), que salió en rojo.`;
 
                       return (
                         <div
@@ -436,9 +471,34 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
                                 </Link>
                               </p>
                             )}
-                            {isRetryEligible && (
-                              <p className="text-xs font-medium text-red-600">
-                                Tu target quedó en rojo. Puedes ajustarlo una vez más.
+                            {canAskUnlock && (
+                              isRequested ? (
+                                <p className="text-xs text-muted-foreground">
+                                  Solicitud de desbloqueo enviada. JTP la revisará.
+                                </p>
+                              ) : (
+                                <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                                  <span className="font-medium text-red-600">En rojo:</span>
+                                  <Link
+                                    href={`/carrier/dashboard/messages?draft=${encodeURIComponent(pricingDraft)}`}
+                                    className="font-medium text-primary underline underline-offset-2"
+                                  >
+                                    Contactar a pricing de JTP
+                                  </Link>
+                                  <button
+                                    type="button"
+                                    onClick={() => requestUnlock(route.id)}
+                                    disabled={requestingUnlock.has(route.id)}
+                                    className="font-medium text-primary underline underline-offset-2 disabled:opacity-50"
+                                  >
+                                    {requestingUnlock.has(route.id) ? "Enviando…" : "Solicitar desbloqueo"}
+                                  </button>
+                                </div>
+                              )
+                            )}
+                            {isApproved && (
+                              <p className="text-xs font-medium text-green-600">
+                                Desbloqueo aprobado por JTP. Actualiza tu target y guarda.
                               </p>
                             )}
                           </div>
