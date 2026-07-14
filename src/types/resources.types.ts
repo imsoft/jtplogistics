@@ -1,14 +1,36 @@
 export interface EmployeeLinkedLaptop {
   id: string;
   name: string;
+  equipmentCode: string | null;
+  equipmentType: string | null;
+  brand: string | null;
+  model: string | null;
+  color: string | null;
   serialNumber: string | null;
+  password: string | null;
+  accessories: string | null;
+  generalState: string | null;
+  software: string | null;
+  observations: string | null;
+  maintenanceProvider: string | null;
+  imageUrl: string | null;
   emailAccount: { id: string; email: string } | null;
 }
 
 export interface EmployeeLinkedPhone {
   id: string;
   name: string;
+  equipmentCode: string | null;
   phoneNumber: string | null;
+  imei: string | null;
+  serialNumber: string | null;
+  brand: string | null;
+  model: string | null;
+  color: string | null;
+  password: string | null;
+  observations: string | null;
+  maintenanceProvider: string | null;
+  imageUrl: string | null;
   emailAccount: { id: string; email: string } | null;
 }
 
@@ -16,6 +38,7 @@ export interface EmployeeLinkedEmail {
   id: string;
   type: string;
   email: string;
+  password: string | null;
 }
 
 export interface Employee {

@@ -32,6 +32,39 @@ function ageFromDate(iso: string): string {
   return `${months} mes${months !== 1 ? "es" : ""}`;
 }
 
+function ResourceCardHeader({
+  name,
+  imageUrl,
+  href,
+}: {
+  name: string;
+  imageUrl: string | null;
+  href: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center justify-between gap-2 rounded-t-lg border-b bg-muted/40 px-3 py-2 transition-colors hover:bg-muted/70 sm:px-4"
+    >
+      <span className="flex min-w-0 items-center gap-2">
+        {imageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={imageUrl}
+            alt={name}
+            className="size-8 shrink-0 rounded-md border object-cover"
+          />
+        )}
+        <span className="truncate text-sm font-medium">{name}</span>
+      </span>
+      <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+        Ver ficha
+        <ChevronRight className="size-4" />
+      </span>
+    </Link>
+  );
+}
+
 export default function EmployeeProfilePage() {
   const { id } = useParams<{ id: string }>();
   const { data: employee, isLoaded, error } = useResourceEdit<Employee>({
@@ -116,29 +149,60 @@ export default function EmployeeProfilePage() {
         </CardContent>
       </Card>
 
-      {hasLinks && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Recursos vinculados
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 px-4 pb-4">
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            Recursos vinculados
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 px-4 pb-4">
+          {!hasLinks && (
+            <p className="text-muted-foreground rounded-lg border border-dashed p-4 text-center text-sm">
+              Este colaborador no tiene laptops, celulares ni correos asignados. Asígnalos desde la
+              ficha de cada equipo o correo.
+            </p>
+          )}
             {laptops.length > 0 && (
               <div className="space-y-2">
                 <h4 className="flex items-center gap-2 text-sm font-medium">
                   <Laptop className="size-4" /> Laptops ({laptops.length})
                 </h4>
-                <div className="space-y-1">
+                <div className="space-y-2">
                   {laptops.map((l) => (
-                    <Link
-                      key={l.id}
-                      href={`/admin/dashboard/laptops/${l.id}`}
-                      className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
-                    >
-                      <span className="font-medium">{l.name}</span>
-                      <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                    </Link>
+                    <div key={l.id} className="rounded-lg border">
+                      <ResourceCardHeader
+                        name={l.name}
+                        imageUrl={l.imageUrl}
+                        href={`/admin/dashboard/laptops/${l.id}`}
+                      />
+                      <div className="grid grid-cols-1 gap-x-8 px-3 pb-3 sm:grid-cols-2 sm:px-4">
+                        <InfoRow label="Código de equipo" value={l.equipmentCode} />
+                        <InfoRow label="Tipo de equipo" value={l.equipmentType} />
+                        <InfoRow label="Marca" value={l.brand} />
+                        <InfoRow label="Modelo" value={l.model} />
+                        <InfoRow label="Color" value={l.color} />
+                        <InfoRow label="Número de serie" value={l.serialNumber} />
+                        <InfoRow label="Contraseña" value={l.password} />
+                        <InfoRow label="Estado general" value={l.generalState} />
+                        <InfoRow label="Accesorios" value={l.accessories} />
+                        <InfoRow label="Software" value={l.software} />
+                        <InfoRow label="Proveedor de mantenimiento" value={l.maintenanceProvider} />
+                        <InfoRow
+                          label="Correo vinculado"
+                          value={
+                            l.emailAccount ? (
+                              <Link
+                                href={`/admin/dashboard/emails/${l.emailAccount.id}`}
+                                className="text-primary underline underline-offset-2"
+                              >
+                                {l.emailAccount.email}
+                              </Link>
+                            ) : null
+                          }
+                        />
+                        <InfoRow label="Observaciones" value={l.observations} />
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -148,16 +212,40 @@ export default function EmployeeProfilePage() {
                 <h4 className="flex items-center gap-2 text-sm font-medium">
                   <Smartphone className="size-4" /> Celulares ({phones.length})
                 </h4>
-                <div className="space-y-1">
+                <div className="space-y-2">
                   {phones.map((p) => (
-                    <Link
-                      key={p.id}
-                      href={`/admin/dashboard/phones/${p.id}`}
-                      className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
-                    >
-                      <span className="font-medium">{p.name}</span>
-                      <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                    </Link>
+                    <div key={p.id} className="rounded-lg border">
+                      <ResourceCardHeader
+                        name={p.name}
+                        imageUrl={p.imageUrl}
+                        href={`/admin/dashboard/phones/${p.id}`}
+                      />
+                      <div className="grid grid-cols-1 gap-x-8 px-3 pb-3 sm:grid-cols-2 sm:px-4">
+                        <InfoRow label="Código de equipo" value={p.equipmentCode} />
+                        <InfoRow label="Número telefónico" value={formatPhone(p.phoneNumber)} />
+                        <InfoRow label="IMEI" value={p.imei} />
+                        <InfoRow label="Número de serie" value={p.serialNumber} />
+                        <InfoRow label="Marca" value={p.brand} />
+                        <InfoRow label="Modelo" value={p.model} />
+                        <InfoRow label="Color" value={p.color} />
+                        <InfoRow label="Contraseña" value={p.password} />
+                        <InfoRow label="Proveedor de mantenimiento" value={p.maintenanceProvider} />
+                        <InfoRow
+                          label="Correo vinculado"
+                          value={
+                            p.emailAccount ? (
+                              <Link
+                                href={`/admin/dashboard/emails/${p.emailAccount.id}`}
+                                className="text-primary underline underline-offset-2"
+                              >
+                                {p.emailAccount.email}
+                              </Link>
+                            ) : null
+                          }
+                        />
+                        <InfoRow label="Observaciones" value={p.observations} />
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -167,23 +255,25 @@ export default function EmployeeProfilePage() {
                 <h4 className="flex items-center gap-2 text-sm font-medium">
                   <Mail className="size-4" /> Correos ({emailAccounts.length})
                 </h4>
-                <div className="space-y-1">
+                <div className="space-y-2">
                   {emailAccounts.map((ea) => (
-                    <Link
-                      key={ea.id}
-                      href={`/admin/dashboard/emails/${ea.id}`}
-                      className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
-                    >
-                      <span className="font-medium">{ea.email}</span>
-                      <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                    </Link>
+                    <div key={ea.id} className="rounded-lg border">
+                      <ResourceCardHeader
+                        name={ea.email}
+                        imageUrl={null}
+                        href={`/admin/dashboard/emails/${ea.id}`}
+                      />
+                      <div className="grid grid-cols-1 gap-x-8 px-3 pb-3 sm:grid-cols-2 sm:px-4">
+                        <InfoRow label="Tipo" value={ea.type} />
+                        <InfoRow label="Contraseña" value={ea.password} />
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
             )}
-          </CardContent>
-        </Card>
-      )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
