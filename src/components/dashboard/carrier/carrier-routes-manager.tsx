@@ -97,6 +97,7 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
   const [originalSelected, setOriginalSelected] = useState<Set<string>>(new Set());
   const [targetByRouteId, setTargetByRouteId] = useState<Record<string, string>>({});
   const [weeklyVolumeByRouteId, setWeeklyVolumeByRouteId] = useState<Record<string, string>>({});
+  const [originalVolumeByRouteId, setOriginalVolumeByRouteId] = useState<Record<string, string>>({});
   const [statusByRouteId, setStatusByRouteId] = useState<Record<string, TargetStatus | null>>({});
   // Estado del desbloqueo por ruta (para el tipo de unidad actual).
   const [unlockApprovedByRouteId, setUnlockApprovedByRouteId] = useState<Record<string, boolean>>({});
@@ -152,6 +153,7 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
     setOriginalSelected(savedSelected);
     setTargetByRouteId(savedTargets);
     setWeeklyVolumeByRouteId(savedVolumes);
+    setOriginalVolumeByRouteId(savedVolumes);
     setStatusByRouteId(savedStatuses);
     setUnlockApprovedByRouteId(savedApproved);
     setUnlockRequestedByRouteId(savedRequested);
@@ -311,14 +313,21 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
     return <p className="text-muted-foreground">Cargando…</p>;
   }
 
-  const canSave = newSelections.size > 0 || canEditRoutes || hasApprovedUnlock;
+  // El volumen no está bloqueado por el candado (solo protege el target),
+  // así que un cambio de volumen también habilita guardar.
+  const volumesChanged = [...selected].some(
+    (id) => (weeklyVolumeByRouteId[id]?.trim() ?? "") !== (originalVolumeByRouteId[id] ?? "")
+  );
+
+  const canSave = newSelections.size > 0 || canEditRoutes || hasApprovedUnlock || volumesChanged;
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
       <div>
         <h1 className="page-heading">{pageTitle}</h1>
         <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
-          Selecciona las rutas que ofreces para <strong>{pageTitle}</strong> y establece tu target.
+          Selecciona las rutas que ofreces para <strong>{pageTitle}</strong> y establece tu target y
+          volumen mensual.
         </p>
       </div>
 
@@ -339,7 +348,8 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
         <div className="rounded-lg border p-3 sm:p-4 flex items-start gap-2">
           <Lock className="size-3.5 shrink-0 mt-0.5 text-muted-foreground" />
           <p className="text-xs text-muted-foreground">
-            Las rutas ya guardadas no se pueden modificar; solo puedes agregar rutas nuevas.
+            En las rutas ya guardadas solo puedes actualizar tu volumen mensual; el target queda
+            bloqueado y únicamente puedes agregar rutas nuevas.
             {showSemaforo && (
               <>
                 {" "}
@@ -517,25 +527,26 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
                             />
                           </div>
 
-                          {isActiveRoute ? (
-                            <p
-                              className="text-sm text-muted-foreground"
-                              title="Volumen mensual definido por JTP"
-                            >
-                              {route.jtpVolume ?? "—"}
-                            </p>
-                          ) : (
+                          <div className="min-w-0">
                             <Input
                               type="number"
                               inputMode="numeric"
                               min={0}
                               value={weeklyVolumeByRouteId[route.id] ?? ""}
                               onChange={(e) => handleVolumeChange(route.id, e.target.value)}
-                              disabled={!isSelected || isLocked}
+                              disabled={!isSelected}
                               className="h-8 w-full text-sm"
                               aria-label={`Volumen mensual para ${route.origin} a ${route.destination}`}
                             />
-                          )}
+                            {isActiveRoute && route.jtpVolume != null && (
+                              <p
+                                className="mt-0.5 text-[10px] text-muted-foreground"
+                                title="Volumen mensual definido por JTP"
+                              >
+                                JTP: {route.jtpVolume}
+                              </p>
+                            )}
+                          </div>
 
                           {showSemaforo && (
                             <div className="flex items-center justify-center">

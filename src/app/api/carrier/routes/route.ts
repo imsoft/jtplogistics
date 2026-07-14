@@ -130,13 +130,13 @@ export async function PUT(request: NextRequest) {
     // Check permissions for deletions
     const unauthorizedDeletes = toDelete.filter((item) => !canEditGlobally && !item.editUnlockApproved);
     // Check permissions for updates (only block if something actually changed).
-    // Una fila guardada solo se puede editar con permiso global o con el desbloqueo
-    // por ruta aprobado por el admin (solicitado desde el semáforo en rojo).
+    // El candado protege el TARGET: una fila guardada solo puede cambiar su target
+    // con permiso global o con el desbloqueo por ruta aprobado por el admin.
+    // El volumen mensual es información operativa y siempre puede actualizarse.
     const unauthorizedUpdates = toUpdate.filter((item) => {
       const prev = existingMap.get(`${item.routeId}:${item.unitType}`)!;
-      const changed = (prev.carrierTarget ?? null) !== (item.carrierTarget ?? null)
-        || (prev.carrierWeeklyVolume ?? null) !== (item.carrierWeeklyVolume ?? null);
-      return changed && !canEditGlobally && !prev.editUnlockApproved;
+      const targetChanged = (prev.carrierTarget ?? null) !== (item.carrierTarget ?? null);
+      return targetChanged && !canEditGlobally && !prev.editUnlockApproved;
     });
 
     if (unauthorizedDeletes.length > 0 || unauthorizedUpdates.length > 0) {
@@ -172,7 +172,18 @@ export async function PUT(request: NextRequest) {
     // Update existing routes that have permission (global or per-route unlock)
     for (const item of toUpdate) {
       const prev = existingMap.get(`${item.routeId}:${item.unitType}`)!;
-      if (!canEditGlobally && !prev.editUnlockApproved) continue; // skip locked rows silently
+      if (!canEditGlobally && !prev.editUnlockApproved) {
+        // Fila con target bloqueado: solo se permite actualizar el volumen mensual.
+        if ((prev.carrierWeeklyVolume ?? null) !== (item.carrierWeeklyVolume ?? null)) {
+          ops.push(
+            prisma.carrierRoute.update({
+              where: { id: prev.id },
+              data: { carrierWeeklyVolume: item.carrierWeeklyVolume },
+            })
+          );
+        }
+        continue;
+      }
       ops.push(
         prisma.carrierRoute.update({
           where: { id: prev.id },
