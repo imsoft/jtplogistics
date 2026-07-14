@@ -114,6 +114,7 @@ model User {
   canUpdateRecords  Boolean       @default(false) @map("can_update_records")
   canDeleteRecords  Boolean       @default(false) @map("can_delete_records")
   whatsappPhone  String?        @map("whatsapp_phone")
+  onboardingTourCompletedAt DateTime? @map("onboarding_tour_completed_at")
   createdAt     DateTime       @map("created_at")
   updatedAt     DateTime       @map("updated_at")
   sessions         Session[]

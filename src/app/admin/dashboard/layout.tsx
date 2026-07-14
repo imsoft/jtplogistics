@@ -5,6 +5,7 @@ import { NotificationBell } from "@/components/notification-bell";
 import { FloatingChat } from "@/components/floating-chat";
 import { OnboardingTour } from "@/components/dashboard/onboarding-tour";
 import { requireAdminPage } from "@/lib/auth-server";
+import { prisma } from "@/lib/db";
 import { dashboardMainWithFloatingChatClassName } from "@/lib/dashboard-shell";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +15,12 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  await requireAdminPage();
+  const session = await requireAdminPage();
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { onboardingTourCompletedAt: true },
+  });
+  const tourCompleted = !user || user.onboardingTourCompletedAt !== null;
 
   return (
     <SidebarProvider>
@@ -36,7 +42,7 @@ export default async function DashboardLayout({
         </header>
         <div className={dashboardMainWithFloatingChatClassName}>{children}</div>
       </SidebarInset>
-      <OnboardingTour />
+      <OnboardingTour completed={tourCompleted} />
     </SidebarProvider>
   );
 }

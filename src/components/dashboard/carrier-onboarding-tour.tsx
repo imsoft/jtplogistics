@@ -4,8 +4,6 @@ import { useEffect, useCallback } from "react";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 
-const TOUR_KEY = "jtp_carrier_tour_v1";
-
 const steps = [
   {
     popover: {
@@ -68,33 +66,34 @@ const steps = [
   },
 ];
 
-export function CarrierOnboardingTour() {
-  const startTour = useCallback((onFinish?: () => void) => {
+export function CarrierOnboardingTour({ completed }: { completed: boolean }) {
+  const startTour = useCallback(() => {
     const driverObj = driver({
       showProgress: true,
       progressText: "{{current}} / {{total}}",
       nextBtnText: "Siguiente →",
       prevBtnText: "← Anterior",
       doneBtnText: "¡Listo!",
+      // Un clic accidental sobre el fondo avanza en vez de cerrar el tour;
+      // cerrarlo requiere la X o ESC, que sí son intencionales.
+      overlayClickBehavior: "nextStep",
       steps: steps.filter((s) => {
         if (!s.element) return true;
         return document.querySelector(s.element) !== null;
       }),
       onDestroyStarted: () => {
         driverObj.destroy();
-        localStorage.setItem(TOUR_KEY, "done");
-        onFinish?.();
+        void fetch("/api/tour", { method: "POST" });
       },
     });
     driverObj.drive();
   }, []);
 
   useEffect(() => {
-    const done = localStorage.getItem(TOUR_KEY);
-    if (done) return;
+    if (completed) return;
     const t = setTimeout(() => startTour(), 900);
     return () => clearTimeout(t);
-  }, [startTour]);
+  }, [completed, startTour]);
 
   return (
     <button

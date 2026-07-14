@@ -4,14 +4,25 @@ import { NotificationBell } from "@/components/notification-bell";
 import { FloatingChat } from "@/components/floating-chat";
 import { CarrierOnboardingTour } from "@/components/dashboard/carrier-onboarding-tour";
 import { dashboardMainWithFloatingChatClassName } from "@/lib/dashboard-shell";
+import { getSession } from "@/lib/auth-server";
+import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-export default function CarrierDashboardLayout({
+export default async function CarrierDashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await getSession();
+  const user = session
+    ? await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { onboardingTourCompletedAt: true },
+      })
+    : null;
+  const tourCompleted = !user || user.onboardingTourCompletedAt !== null;
+
   return (
     <SidebarProvider>
       <UserAppSidebar />
@@ -27,7 +38,7 @@ export default function CarrierDashboardLayout({
         </header>
         <div className={dashboardMainWithFloatingChatClassName}>{children}</div>
       </SidebarInset>
-      <CarrierOnboardingTour />
+      <CarrierOnboardingTour completed={tourCompleted} />
     </SidebarProvider>
   );
 }
