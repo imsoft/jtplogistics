@@ -132,6 +132,7 @@ model User {
   assignedTasks    Task[]         @relation("TaskAssignee")
   createdTasks     Task[]         @relation("TaskCreator")
   generatedQuotes  GeneratedQuote[]
+  quoteComments    QuoteComment[]
   maritimeQuotes   MaritimeQuote[]
   sentMessages     Message[]      @relation("SentMessages")
   carrierMessages  Message[]      @relation("CarrierMessages")
@@ -663,19 +664,34 @@ enum QuoteStatus {
 }
 
 model GeneratedQuote {
-  id          String      @id @default(cuid()) @map("id")
-  quoteNumber String      @unique @map("quote_number")
-  company     String      @map("company")
-  contact     String      @map("contact")
-  phone       String?     @map("phone")
-  validUntil  DateTime    @map("valid_until")
-  rows        Json        @map("rows")
-  status      QuoteStatus @default(enviada) @map("status")
-  createdById String      @map("created_by_id")
-  createdBy   User        @relation(fields: [createdById], references: [id], onDelete: Cascade)
-  createdAt   DateTime    @default(now()) @map("created_at")
+  id          String         @id @default(cuid()) @map("id")
+  quoteNumber String         @unique @map("quote_number")
+  company     String         @map("company")
+  contact     String         @map("contact")
+  phone       String?        @map("phone")
+  validUntil  DateTime       @map("valid_until")
+  rows        Json           @map("rows")
+  status      QuoteStatus    @default(enviada) @map("status")
+  createdById String         @map("created_by_id")
+  createdBy   User           @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  comments    QuoteComment[]
+  createdAt   DateTime       @default(now()) @map("created_at")
 
   @@map("generated_quotes")
+}
+
+model QuoteComment {
+  id        String   @id @default(cuid()) @map("id")
+  quoteId   String   @map("quote_id")
+  quote     GeneratedQuote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment   String   @map("comment")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([quoteId])
+  @@index([userId])
+  @@map("quote_comments")
 }
 
 // ---- App: cotizaciones marítimas (solicitud de impuestos de importación) ----

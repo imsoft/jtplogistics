@@ -11,6 +11,7 @@ import {
   CarrierQuotesTable,
   type EditQuote,
 } from "@/components/dashboard/carrier-quotes/carrier-quotes-table";
+import { QuoteComments } from "@/components/dashboard/quotes/quote-comments";
 
 export default function EditQuotePage() {
   const { id } = useParams<{ id: string }>();
@@ -78,7 +79,14 @@ export default function EditQuotePage() {
         />
       </div>
 
-      <CarrierQuotesTable editQuote={quote} showTermsLink />
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <CarrierQuotesTable editQuote={quote} showTermsLink />
+        </div>
+        <div>
+          <QuoteComments quoteId={id} />
+        </div>
+      </div>
     </div>
   );
 }
