@@ -9,8 +9,8 @@ import { getUsersColumns } from "./users-columns";
 import { USER_ROLE_LABELS } from "@/lib/constants/user-role";
 import type { User, UserRole } from "@/types/user.types";
 
-async function fetchUsers(): Promise<User[]> {
-  const res = await fetch("/api/admin/users");
+async function fetchUsers(endpoint: string): Promise<User[]> {
+  const res = await fetch(endpoint);
   if (!res.ok) {
     if (res.status === 401) return [];
     throw new Error("Error al cargar usuarios");
@@ -20,7 +20,15 @@ async function fetchUsers(): Promise<User[]> {
 
 type RoleFilter = UserRole | "all";
 
-export function UsersTable({ defaultRole, detailBasePath }: { defaultRole?: UserRole; detailBasePath?: string }) {
+export function UsersTable({
+  defaultRole,
+  detailBasePath,
+  apiEndpoint = "/api/admin/users",
+}: {
+  defaultRole?: UserRole;
+  detailBasePath?: string;
+  apiEndpoint?: string;
+}) {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -30,7 +38,7 @@ export function UsersTable({ defaultRole, detailBasePath }: { defaultRole?: User
   const loadUsers = useCallback(async () => {
     setError(null);
     try {
-      const data = await fetchUsers();
+      const data = await fetchUsers(apiEndpoint);
       setUsers(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al cargar usuarios");
@@ -38,7 +46,7 @@ export function UsersTable({ defaultRole, detailBasePath }: { defaultRole?: User
     } finally {
       setIsLoaded(true);
     }
-  }, []);
+  }, [apiEndpoint]);
 
   useEffect(() => {
     loadUsers();

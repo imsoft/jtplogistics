@@ -30,7 +30,11 @@ export default function ProvidersPage() {
         </p>
       </div>
       <Separator />
-      <UsersTable defaultRole="carrier" detailBasePath="/collaborator/dashboard/providers" />
+      <UsersTable
+        defaultRole="carrier"
+        detailBasePath="/collaborator/dashboard/providers"
+        apiEndpoint="/api/collaborator/users"
+      />
     </div>
   );
 }
