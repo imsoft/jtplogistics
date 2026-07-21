@@ -85,7 +85,7 @@ export function UsersTable({
       onRowClick={(user) => {
         const base = detailBasePath ?? "/admin/dashboard/users";
         const from = detailBasePath ? `?from=${encodeURIComponent(detailBasePath)}` : "";
-        router.push(`/admin/dashboard/users/${user.id}${from}`);
+        router.push(`${base}/${user.id}${from}`);
       }}
       toolbar={
         !defaultRole ? (
