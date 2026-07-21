@@ -221,11 +221,17 @@ export function RoutesCrud() {
                               )}
                             </td>
                             <td className="px-4 py-3">
-                              {route.target != null ? (
-                                `$${formatMxn(route.target)}`
-                              ) : (
-                                <span className="text-muted-foreground">—</span>
-                              )}
+                              {(() => {
+                                const displayTarget =
+                                  (route.unitTargets && route.unitTargets.length > 0)
+                                    ? route.unitTargets[0].target
+                                    : route.target;
+                                return displayTarget != null ? (
+                                  `$${formatMxn(displayTarget)}`
+                                ) : (
+                                  <span className="text-muted-foreground">—</span>
+                                );
+                              })()}
                             </td>
                             <td className="px-4 py-3">
                               {ROUTE_STATUS_LABELS[route.status]}
