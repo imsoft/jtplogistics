@@ -160,7 +160,7 @@ export function RoutesCrud() {
                     </span>
                   </div>
                   <table className="w-full min-w-[680px] text-sm uppercase">
-                    <thead>
+                    <thead className="sticky top-0 z-10">
                       <tr className="border-b bg-muted/20 text-xs font-medium text-muted-foreground">
                         <th className="px-4 py-1.5 text-left font-medium">Ruta</th>
                         <th className="px-4 py-1.5 text-left font-medium">Estado</th>
