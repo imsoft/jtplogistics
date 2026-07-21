@@ -1,5 +1,4 @@
 import { ResourceListPage } from "@/components/dashboard/resources/resource-list-page";
-import { QuotesTable } from "@/components/dashboard/quotes/quotes-table";
 
 export const metadata = {
   title: "Cotizador | JTP Logistics",
@@ -14,10 +13,7 @@ export default function CollaboratorQuotesPage() {
       newHref="/collaborator/dashboard/quotes/new"
       newLabel="Nueva cotización"
     >
-      <QuotesTable
-        apiEndpoint="/api/admin/quotes"
-        detailBasePath="/collaborator/dashboard/quotes"
-      />
+      <p className="text-muted-foreground">Sección de cotizador.</p>
     </ResourceListPage>
   );
 }

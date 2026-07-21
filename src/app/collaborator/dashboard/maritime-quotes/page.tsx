@@ -1,5 +1,4 @@
 import { ResourceListPage } from "@/components/dashboard/resources/resource-list-page";
-import { MaritimeQuotesTable } from "@/components/dashboard/quotes/maritime-quotes-table";
 
 export const metadata = {
   title: "Cotización Marítima | JTP Logistics",
@@ -14,10 +13,7 @@ export default function CollaboratorMaritimeQuotesPage() {
       newHref="/collaborator/dashboard/maritime-quotes/new"
       newLabel="Nueva cotización"
     >
-      <MaritimeQuotesTable
-        apiEndpoint="/api/admin/maritime-quotes"
-        detailBasePath="/collaborator/dashboard/maritime-quotes"
-      />
+      <p className="text-muted-foreground">Sección de cotizaciones marítimas.</p>
     </ResourceListPage>
   );
 }

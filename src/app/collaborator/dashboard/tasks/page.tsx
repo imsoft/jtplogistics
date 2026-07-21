@@ -1,5 +1,4 @@
 import { ResourceListPage } from "@/components/dashboard/resources/resource-list-page";
-import { TasksTable } from "@/components/dashboard/tasks/tasks-table";
 
 export const metadata = {
   title: "Tareas | JTP Logistics",
@@ -14,10 +13,7 @@ export default function CollaboratorTasksPage() {
       newHref="/collaborator/dashboard/tasks/new"
       newLabel="Nueva tarea"
     >
-      <TasksTable
-        apiEndpoint="/api/admin/tasks"
-        detailBasePath="/collaborator/dashboard/tasks"
-      />
+      <p className="text-muted-foreground">Sección de tareas.</p>
     </ResourceListPage>
   );
 }

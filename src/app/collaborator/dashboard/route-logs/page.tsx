@@ -1,5 +1,4 @@
 import { ResourceListPage } from "@/components/dashboard/resources/resource-list-page";
-import { RouteLogsTable } from "@/components/dashboard/routes/route-logs-table";
 
 export const metadata = {
   title: "Historial de Cambios | JTP Logistics",
@@ -12,10 +11,7 @@ export default function CollaboratorRouteLogsPage() {
       title="Historial de cambios"
       description="Registro de todos los cambios realizados en rutas."
     >
-      <RouteLogsTable
-        apiEndpoint="/api/admin/route-logs"
-        detailBasePath="/collaborator/dashboard/route-logs"
-      />
+      <p className="text-muted-foreground">Sección de historial de cambios.</p>
     </ResourceListPage>
   );
 }

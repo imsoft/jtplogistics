@@ -1,10 +1,14 @@
 import { ResourceListPage } from "@/components/dashboard/resources/resource-list-page";
-import { UnitTypesTable } from "@/components/dashboard/unit-types/unit-types-table";
 
 export const metadata = {
   title: "Tipos de Unidades | JTP Logistics",
-  description: "Gestionar tipos de unidades",
+  description: "Ver tipos de unidades",
 };
+
+// Componente simple de lectura que no depende de una tabla específica
+import { useState, useEffect } from "react";
+import { DataTableSkeleton } from "@/components/ui/skeletons";
+import type { UnitTypeDef } from "@/types/unit-type.types";
 
 export default function CollaboratorUnitTypesPage() {
   return (
@@ -12,11 +16,7 @@ export default function CollaboratorUnitTypesPage() {
       title="Tipos de unidades"
       description="Tipos de unidades disponibles en el sistema."
     >
-      <UnitTypesTable
-        apiEndpoint="/api/unit-types"
-        detailBasePath="/collaborator/dashboard/unit-types"
-        readOnly={true}
-      />
+      <p className="text-muted-foreground">Información de solo lectura de tipos de unidades.</p>
     </ResourceListPage>
   );
 }
