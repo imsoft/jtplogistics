@@ -20,7 +20,7 @@ export async function GET(
     }
 
     if (quote.createdById !== session.user.id) {
-      return Response.json({ error: "No autorizado" }, { status: 403 });
+      return Response.json({ error: "Sin permiso" }, { status: 403 });
     }
 
     return Response.json({

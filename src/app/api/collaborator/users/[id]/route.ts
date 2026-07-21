@@ -17,7 +17,7 @@ export async function GET(
     });
 
     if (!currentUser?.canViewProviders) {
-      return Response.json({ error: "Prohibido" }, { status: 403 });
+      return Response.json({ error: "Sin permiso" }, { status: 403 });
     }
 
     // Obtener el usuario solo si es carrier (proveedor)

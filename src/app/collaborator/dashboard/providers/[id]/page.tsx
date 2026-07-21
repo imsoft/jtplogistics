@@ -41,7 +41,7 @@ export default function ProviderDetailPage() {
 
   useEffect(() => {
     if (!permissionsLoaded || !permissions?.canViewProviders || !id) return;
-    fetch(`/api/admin/users/${id}`)
+    fetch(`/api/collaborator/users/${id}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.error || data.role !== "carrier") {

@@ -13,7 +13,7 @@ export async function GET(_req: NextRequest) {
     });
 
     if (!user?.canViewProviders) {
-      return Response.json({ error: "Prohibido" }, { status: 403 });
+      return Response.json({ error: "Sin permiso" }, { status: 403 });
     }
 
     // Retornar solo usuarios con rol "carrier" (proveedores)

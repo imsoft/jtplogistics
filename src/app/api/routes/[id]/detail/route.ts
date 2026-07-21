@@ -7,8 +7,18 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireCollaboratorOrAdmin();
+    const session = await requireCollaboratorOrAdmin();
     const { id } = await params;
+
+    // Validar permiso específico
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { canViewRoutes: true, role: true },
+    });
+
+    if (user?.role !== "admin" && !user?.canViewRoutes) {
+      return Response.json({ error: "Sin permiso" }, { status: 403 });
+    }
 
     const route = await prisma.route.findUnique({
       where: { id },
