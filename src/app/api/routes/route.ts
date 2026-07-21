@@ -11,7 +11,23 @@ import type { RouteStatus } from "@/types/route.types";
 export async function GET() {
   try {
     // Esta ruta expone targets confidenciales, restringido a admin/colaborador.
-    await requireCollaboratorOrAdmin();
+    const session = await requireCollaboratorOrAdmin();
+
+    // Verificar permiso específico
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { canViewRoutes: true, role: true },
+    });
+
+    if (!user) {
+      return Response.json({ error: "Usuario no encontrado" }, { status: 404 });
+    }
+
+    // Admins siempre pueden ver, colaboradores necesitan permiso
+    if (user.role !== "admin" && !user.canViewRoutes) {
+      return Response.json({ error: "Sin permiso para ver rutas" }, { status: 403 });
+    }
+
     const routes = await prisma.route.findMany({
       orderBy: { createdAt: "desc" },
       include: {

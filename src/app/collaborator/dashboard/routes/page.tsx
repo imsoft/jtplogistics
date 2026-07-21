@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { DataTable } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
+import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 import { type ColumnDef } from "@tanstack/react-table";
 
 interface Route {
@@ -88,14 +89,21 @@ function getColumns(onRowClick: (r: Route) => void): ColumnDef<Route>[] {
 
 export default function CollaboratorRoutesPage() {
   const router = useRouter();
+  const { permissions, isLoaded: permissionsLoaded } = useCollaboratorPermissions();
   const [routes, setRoutes] = useState<Route[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const hasFetched = useRef(false);
+  const hasRedirected = useRef(false);
 
   useEffect(() => {
-    if (hasFetched.current) return;
-    hasFetched.current = true;
+    if (permissionsLoaded && !permissions?.canViewRoutes && !hasRedirected.current) {
+      hasRedirected.current = true;
+      router.push("/collaborator/dashboard/profile");
+    }
+  }, [permissionsLoaded, permissions, router]);
+
+  useEffect(() => {
+    if (!permissionsLoaded || !permissions?.canViewRoutes) return;
     fetch("/api/routes")
       .then((r) => {
         if (!r.ok) throw new Error("Error al cargar rutas");
@@ -109,10 +117,18 @@ export default function CollaboratorRoutesPage() {
         setError(e.message);
         setIsLoaded(true);
       });
-  }, []);
+  }, [permissionsLoaded, permissions]);
 
   function handleRowClick(route: Route) {
     router.push(`/collaborator/dashboard/routes/${route.id}`);
+  }
+
+  if (!permissionsLoaded) {
+    return <p className="text-muted-foreground py-6">Cargando…</p>;
+  }
+
+  if (!permissions?.canViewRoutes) {
+    return null;
   }
 
   return (
