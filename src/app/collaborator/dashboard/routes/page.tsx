@@ -94,6 +94,7 @@ export default function CollaboratorRoutesPage() {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [totalRoutes, setTotalRoutes] = useState(0);
   const hasRedirected = useRef(false);
 
   useEffect(() => {
@@ -112,6 +113,7 @@ export default function CollaboratorRoutesPage() {
       })
       .then((data: Route[]) => {
         setRoutes(data);
+        setTotalRoutes(data.length);
         setIsLoaded(true);
       })
       .catch((e: Error) => {
@@ -127,11 +129,13 @@ export default function CollaboratorRoutesPage() {
   if (!permissionsLoaded) {
     return (
       <div className="min-w-0 space-y-4 sm:space-y-6">
-        <div className="min-w-0">
-          <h1 className="page-heading">Rutas</h1>
-          <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
-            Rutas de entrega registradas en el sistema.
-          </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="page-heading">Rutas</h1>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
+              Rutas de entrega registradas en el sistema.
+            </p>
+          </div>
         </div>
         <Separator />
         <DataTableSkeleton />
@@ -145,11 +149,18 @@ export default function CollaboratorRoutesPage() {
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
-      <div className="min-w-0">
-        <h1 className="page-heading">Rutas</h1>
-        <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
-          Rutas de entrega registradas en el sistema.
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="page-heading flex items-center gap-2">
+            Rutas
+            {isLoaded && (
+              <span className="text-sm font-normal text-muted-foreground">({totalRoutes})</span>
+            )}
+          </h1>
+          <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
+            Rutas de entrega registradas en el sistema.
+          </p>
+        </div>
       </div>
       <Separator />
       {!isLoaded ? (
