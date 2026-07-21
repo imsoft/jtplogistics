@@ -5,11 +5,6 @@ export const metadata = {
   description: "Ver tipos de unidades",
 };
 
-// Componente simple de lectura que no depende de una tabla específica
-import { useState, useEffect } from "react";
-import { DataTableSkeleton } from "@/components/ui/skeletons";
-import type { UnitTypeDef } from "@/types/unit-type.types";
-
 export default function CollaboratorUnitTypesPage() {
   return (
     <ResourceListPage
