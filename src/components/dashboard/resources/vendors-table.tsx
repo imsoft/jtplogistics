@@ -37,8 +37,15 @@ function getColumns(): ColumnDef<Vendor>[] {
   ];
 }
 
-interface VendorsTableProps { apiEndpoint?: string; detailBasePath?: string; }
-export function VendorsTable({ apiEndpoint = apiEndpoint, detailBasePath = "/admin/dashboard/vendors" }: VendorsTableProps = {}) {
+interface VendorsTableProps {
+  apiEndpoint?: string;
+  detailBasePath?: string;
+}
+
+export function VendorsTable({
+  apiEndpoint = "/api/admin/vendors",
+  detailBasePath = "/admin/dashboard/vendors",
+}: VendorsTableProps = {}) {
   const router = useRouter();
   const {
     data: vendors,
@@ -91,7 +98,7 @@ export function VendorsTable({ apiEndpoint = apiEndpoint, detailBasePath = "/adm
       isFetching={isFetching}
       initialColumnVisibility={{ search: false }}
       getRowId={(row) => row.id}
-      onRowClick={(v) => router.push(`/admin/dashboard/vendors/${v.id}`)}
+      onRowClick={(v) => router.push(`${detailBasePath}/${v.id}`)}
     />
   );
 }

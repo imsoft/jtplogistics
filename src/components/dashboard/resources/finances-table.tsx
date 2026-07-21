@@ -140,12 +140,16 @@ function getColumns(): ColumnDef<FinanceListRow>[] {
 }
 
 interface FinancesTableProps {
-  scope?: "admin" | "collaborator";
+  apiEndpoint?: string;
+  detailBasePath?: string;
 }
 
-export function FinancesTable({ scope = "admin" }: FinancesTableProps) {
-  const endpoint = scope === "collaborator" ? "/api/collaborator/finances" : "/api/admin/finances";
-  const detailBase = scope === "collaborator" ? "/collaborator/dashboard/finances" : "/admin/dashboard/finances";
+export function FinancesTable({
+  apiEndpoint = "/api/admin/finances",
+  detailBasePath = "/admin/dashboard/finances",
+}: FinancesTableProps = {}) {
+  const endpoint = apiEndpoint;
+  const detailBase = detailBasePath;
   const router = useRouter();
   const columns = useMemo(() => getColumns(), []);
   const { data: rows, isLoaded, error } = useAdminFetch<FinanceListRow>(

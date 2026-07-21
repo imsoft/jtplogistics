@@ -244,12 +244,16 @@ function getRowClassName(shipment: Shipment): string {
 }
 
 interface ShipmentsTableProps {
-  scope?: "admin" | "collaborator";
+  apiEndpoint?: string;
+  detailBasePath?: string;
 }
 
-export function ShipmentsTable({ scope = "admin" }: ShipmentsTableProps) {
-  const endpoint = scope === "collaborator" ? "/api/collaborator/shipments" : "/api/admin/shipments";
-  const detailBase = scope === "collaborator" ? "/collaborator/dashboard/shipments" : "/admin/dashboard/shipments";
+export function ShipmentsTable({
+  apiEndpoint = "/api/admin/shipments",
+  detailBasePath = "/admin/dashboard/shipments",
+}: ShipmentsTableProps = {}) {
+  const endpoint = apiEndpoint;
+  const detailBase = detailBasePath;
   const router = useRouter();
   const incidentTypes = useIncidentTypes();
   const columns = useMemo(() => getColumns(incidentTypes), [incidentTypes]);
