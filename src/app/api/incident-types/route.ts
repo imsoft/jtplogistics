@@ -6,7 +6,7 @@ export async function GET() {
   try {
     await requireSession();
     const types = await prisma.incidentTypeDef.findMany({ orderBy: incidentTypeDefOrderBy });
-    return Response.json(types.map((t) => ({ value: t.value, label: t.name })));
+    return Response.json(types.map((t) => ({ id: t.id, name: t.name, value: t.value, label: t.name })));
   } catch (e) {
     if (e instanceof Response) return e;
     return Response.json({ error: "Error interno del servidor" }, { status: 500 });
