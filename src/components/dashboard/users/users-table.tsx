@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { AppSelect } from "@/components/ui/app-select";
+import { DataTableSkeleton } from "@/components/ui/skeletons";
 import { getUsersColumns } from "./users-columns";
 import { USER_ROLE_LABELS } from "@/lib/constants/user-role";
 import type { User, UserRole } from "@/types/user.types";
@@ -59,7 +60,7 @@ export function UsersTable({
   const columns = useMemo(() => getUsersColumns(), []);
 
   if (!isLoaded) {
-    return <p className="text-muted-foreground">Cargando…</p>;
+    return <DataTableSkeleton />;
   }
 
   if (error) {

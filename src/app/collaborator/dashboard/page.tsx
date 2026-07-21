@@ -67,10 +67,12 @@ export default async function CollaboratorDashboard() {
             <CardContent>
               <div className="text-2xl font-bold">{quotesCount}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                Cotizaciones creadas
+                {quotesCount === 0 ? "Sin cotizaciones aún" : "Cotizaciones creadas"}
               </p>
               <Button asChild variant="link" className="mt-3 h-auto p-0">
-                <Link href="/collaborator/dashboard/quotes">Ver todas</Link>
+                <Link href="/collaborator/dashboard/quotes/{quotesCount === 0 ? 'new' : ''}">
+                  {quotesCount === 0 ? "Crear primera cotización" : "Ver todas"}
+                </Link>
               </Button>
             </CardContent>
           </Card>

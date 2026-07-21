@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/skeletons";
 import { type ColumnDef } from "@tanstack/react-table";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
 
@@ -112,7 +113,7 @@ export function GeneratedQuotesTable() {
   }, [loadQuotes]);
 
   if (isLoading) {
-    return <p className="text-muted-foreground text-sm">Cargando cotizaciones…</p>;
+    return <DataTableSkeleton />;
   }
 
   if (quotes.length === 0) {

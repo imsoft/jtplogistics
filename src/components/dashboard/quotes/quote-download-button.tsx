@@ -78,7 +78,8 @@ export function QuoteDownloadButton({
       size="sm"
       onClick={handleDownloadPdf}
       disabled={isDownloading}
-      aria-label="Descargar PDF"
+      aria-label={`Descargar PDF de cotización ${quoteNumber}`}
+      aria-disabled={isDownloading}
       className="gap-2"
     >
       {isDownloading ? (

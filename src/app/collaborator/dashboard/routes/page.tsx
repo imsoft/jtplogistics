@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { DataTable } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
+import { DataTableSkeleton } from "@/components/ui/skeletons";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 import { type ColumnDef } from "@tanstack/react-table";
@@ -124,7 +125,18 @@ export default function CollaboratorRoutesPage() {
   }
 
   if (!permissionsLoaded) {
-    return <p className="text-muted-foreground py-6">Cargando…</p>;
+    return (
+      <div className="min-w-0 space-y-4 sm:space-y-6">
+        <div className="min-w-0">
+          <h1 className="page-heading">Rutas</h1>
+          <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
+            Rutas de entrega registradas en el sistema.
+          </p>
+        </div>
+        <Separator />
+        <DataTableSkeleton />
+      </div>
+    );
   }
 
   if (!permissions?.canViewRoutes) {
@@ -141,7 +153,7 @@ export default function CollaboratorRoutesPage() {
       </div>
       <Separator />
       {!isLoaded ? (
-        <p className="text-muted-foreground">Cargando…</p>
+        <DataTableSkeleton />
       ) : error ? (
         <p className="text-destructive text-sm">{error}</p>
       ) : routes.length === 0 ? (
