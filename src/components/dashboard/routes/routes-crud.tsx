@@ -222,10 +222,20 @@ export function RoutesCrud() {
                             </td>
                             <td className="px-4 py-3">
                               {(() => {
-                                const displayTarget =
-                                  (route.unitTargets && route.unitTargets.length > 0)
-                                    ? route.unitTargets[0].target
-                                    : route.target;
+                                let displayTarget: number | undefined;
+
+                                // Si hay filtro de tipo de unidad específico, buscar ese target
+                                if (filterUnitType !== UNIT_FILTER_ALL && route.unitTargets && route.unitTargets.length > 0) {
+                                  const matchingTarget = route.unitTargets.find(ut => ut.unitType === filterUnitType);
+                                  displayTarget = matchingTarget?.target;
+                                } else {
+                                  // Sin filtro o no encontrado: mostrar el del primer unitType o el heredado
+                                  displayTarget =
+                                    (route.unitTargets && route.unitTargets.length > 0)
+                                      ? route.unitTargets[0].target
+                                      : route.target;
+                                }
+
                                 return displayTarget != null ? (
                                   `$${formatMxn(displayTarget)}`
                                 ) : (
