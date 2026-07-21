@@ -1,9 +1,9 @@
 import { prisma } from "@/lib/db";
-import { requireSession } from "@/lib/auth-server";
+import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 
 export async function GET() {
   try {
-    const session = await requireSession();
+    const session = await requireCollaboratorOrAdmin();
 
     const quotes = await prisma.generatedQuote.findMany({
       where: { createdById: session.user.id },

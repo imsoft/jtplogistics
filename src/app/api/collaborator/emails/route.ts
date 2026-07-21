@@ -37,7 +37,6 @@ export async function GET() {
         id: e.id,
         type: e.type,
         email: e.email,
-        password: e.password,
         department: e.assignees[0]?.user?.employeeProfile?.department ?? null,
         assignees: e.assignees.map((a) => ({ id: a.user.id, name: a.user.name })),
         createdAt: e.createdAt.toISOString(),

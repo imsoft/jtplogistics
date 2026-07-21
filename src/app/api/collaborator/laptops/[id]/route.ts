@@ -38,7 +38,6 @@ export async function GET(
       id: laptop.id,
       name: laptop.name,
       equipmentCode: laptop.equipmentCode,
-      password: laptop.password,
       serialNumber: laptop.serialNumber,
       equipmentType: laptop.equipmentType,
       brand: laptop.brand,
@@ -110,7 +109,6 @@ export async function PATCH(
       data: {
         ...(name !== undefined && { name }),
         ...(equipmentCode !== undefined && { equipmentCode: equipmentCode || null }),
-        ...(password !== undefined && { password: password || null }),
         ...(serialNumber !== undefined && { serialNumber: serialNumber || null }),
         ...(equipmentType !== undefined && { equipmentType: equipmentType || null }),
         ...(brand !== undefined && { brand: brand || null }),

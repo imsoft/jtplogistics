@@ -28,7 +28,6 @@ export async function GET() {
         id: l.id,
         name: l.name,
         equipmentCode: l.equipmentCode,
-        password: l.password,
         serialNumber: l.serialNumber,
         equipmentType: l.equipmentType,
         brand: l.brand,
@@ -97,7 +96,6 @@ export async function POST(request: Request) {
       data: {
         name,
         equipmentCode: equipmentCode || null,
-        password: password || null,
         serialNumber: serialNumber || null,
         equipmentType: equipmentType || null,
         brand: brand || null,

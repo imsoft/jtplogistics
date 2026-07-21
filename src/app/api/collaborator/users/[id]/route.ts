@@ -1,13 +1,13 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireSession } from "@/lib/auth-server";
+import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await requireSession();
+    const session = await requireCollaboratorOrAdmin();
     const { id } = await params;
 
     // Verificar que el usuario tiene permisos para ver proveedores
