@@ -22,7 +22,7 @@ export function QuoteDownloadButton({
     try {
       const [quoteRes, termsRes] = await Promise.all([
         fetch(`${apiEndpoint}/${id}`),
-        fetch("/api/admin/quote-config"),
+        fetch("/api/quote-config"),
       ]);
       if (!quoteRes.ok) throw new Error("No se pudo cargar la cotización");
       const quote = await quoteRes.json() as {

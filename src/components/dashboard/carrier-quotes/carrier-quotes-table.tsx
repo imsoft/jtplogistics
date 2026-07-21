@@ -243,7 +243,7 @@ function addCurrentRouteToQuote() {
     if (quoteRows.length === 0) { setQuoteError("Agrega al menos una ruta."); return; }
     setIsGenerating(true);
     try {
-      const termsRes = await fetch("/api/admin/quote-config");
+      const termsRes = await fetch("/api/quote-config");
       const termsJson: QuoteTermsJson = termsRes.ok ? await termsRes.json() : { bulletsJson: "", contractJson: "", privacyJson: "", limitsJson: "" };
       const logoUrl = window.location.origin + "/images/logo/jtp-logistics.png";
       const blob = await pdf(
