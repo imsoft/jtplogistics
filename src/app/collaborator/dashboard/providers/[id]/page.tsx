@@ -3,12 +3,16 @@
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { InfoRow } from "@/components/dashboard/users/info-row";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
+import { DataTableSkeleton } from "@/components/ui/skeletons";
 import { formatPhone } from "@/lib/utils";
+import { USER_ROLE_LABELS } from "@/lib/constants/user-role";
+import type { UserRole } from "@/types/user.types";
 
 function initials(name: string) {
   return name.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase();
@@ -52,18 +56,35 @@ export default function ProviderDetailPage() {
       });
   }, [permissionsLoaded, permissions, id]);
 
-  if (!permissionsLoaded || !isLoaded)
-    return <p className="text-muted-foreground py-6">Cargando…</p>;
-  if (!permissions?.canViewProviders || error || !provider)
+  if (!permissionsLoaded || !isLoaded) {
     return (
-      <p className="text-destructive py-6 text-sm">
-        {error ?? "No autorizado"}
-      </p>
+      <div className="min-w-0 space-y-4 sm:space-y-6">
+        <div className="flex items-start gap-3">
+          <div className="size-10 rounded-full bg-muted" />
+          <div className="flex-1 space-y-2">
+            <div className="h-4 w-32 bg-muted rounded" />
+            <div className="h-3 w-24 bg-muted rounded" />
+          </div>
+        </div>
+        <DataTableSkeleton />
+      </div>
     );
+  }
+
+  if (!permissions?.canViewProviders || error || !provider) {
+    return (
+      <div className="rounded-lg border border-dashed p-8 text-center">
+        <p className="text-destructive text-sm">
+          {error ?? "No autorizado"}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-w-0 space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      {/* Header con botón atrás */}
+      <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <Button variant="ghost" size="icon" asChild className="shrink-0">
             <Link
@@ -73,7 +94,7 @@ export default function ProviderDetailPage() {
               <ChevronLeft className="size-4" />
             </Link>
           </Button>
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex min-w-0 items-center gap-3">
             {provider.image ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -86,32 +107,71 @@ export default function ProviderDetailPage() {
                 {initials(provider.name)}
               </div>
             )}
-            <h1 className="page-heading truncate">{provider.name}</h1>
+            <div className="min-w-0">
+              <h1 className="page-heading truncate">
+                {provider.profile?.commercialName ?? provider.name}
+              </h1>
+              {provider.profile?.commercialName && (
+                <p className="truncate text-sm font-medium text-foreground/70">
+                  {provider.name}
+                </p>
+              )}
+              <p className="text-muted-foreground truncate text-xs sm:text-sm">
+                {provider.email}
+              </p>
+            </div>
           </div>
         </div>
+        <Badge variant="outline" className="shrink-0">
+          <Lock className="size-3 mr-1" />
+          Solo lectura
+        </Badge>
       </div>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Información General
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-4 pb-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
-            <InfoRow label="Correo" value={provider.email} />
-            {provider.profile?.commercialName && (
-              <InfoRow label="Nombre Comercial" value={provider.profile.commercialName} />
+      {/* Grid de tarjetas: Cuenta y Perfil */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        {/* Tarjeta de Cuenta */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              Cuenta
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            <InfoRow label="Rol" value={USER_ROLE_LABELS[provider.role as UserRole]} />
+            <InfoRow
+              label="Registro"
+              value={new Date(provider.createdAt).toLocaleDateString("es-MX", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Tarjeta de Perfil */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              Perfil
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            {provider.profile ? (
+              <>
+                <InfoRow label="Nombre comercial" value={provider.profile.commercialName} />
+                <InfoRow label="Razón social" value={provider.profile.legalName} />
+                <InfoRow label="RFC" value={provider.profile.rfc} />
+              </>
+            ) : (
+              <p className="text-muted-foreground rounded-lg border border-dashed p-4 text-center text-sm">
+                Este proveedor no tiene perfil registrado.
+              </p>
             )}
-            {provider.profile?.legalName && (
-              <InfoRow label="Nombre Legal" value={provider.profile.legalName} />
-            )}
-            {provider.profile?.rfc && (
-              <InfoRow label="RFC" value={provider.profile.rfc} />
-            )}
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
 
       {provider.profile?.address && (
         <Card>
@@ -121,39 +181,47 @@ export default function ProviderDetailPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4">
-            <p className="text-sm">{provider.profile.address}</p>
+            <p className="text-sm whitespace-pre-wrap">{provider.profile.address}</p>
           </CardContent>
         </Card>
       )}
 
       {provider.profile?.contacts && provider.profile.contacts.length > 0 && (
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Contactos
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-base sm:text-lg">
+              Contactos ({provider.profile.contacts.length})
             </CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
+              Personas de contacto asociadas a este proveedor.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="px-4 pb-4">
-            <div className="space-y-3">
-              {provider.profile.contacts.map((contact) => (
-                <div key={contact.id} className="border-b pb-3 last:border-b-0 last:pb-0">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm font-medium">
+          <CardContent className="p-0">
+            <div className="divide-y">
+              {provider.profile.contacts.map((contact, index) => (
+                <div
+                  key={contact.id}
+                  className="px-4 py-3 hover:bg-muted/50 transition-colors"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium text-sm">
                         {contact.personName || (contact.type === "phone" ? "Teléfono" : "Correo")}
                       </p>
-                      {contact.position && (
-                        <p className="text-xs text-muted-foreground">{contact.position}</p>
-                      )}
-                      <p className="text-sm text-muted-foreground">
-                        {contact.type === "phone"
-                          ? formatPhone(contact.value)
-                          : contact.value}
-                      </p>
                       {contact.label && (
-                        <p className="text-xs text-muted-foreground mt-1">{contact.label}</p>
+                        <Badge variant="secondary" className="text-xs">
+                          {contact.label}
+                        </Badge>
                       )}
                     </div>
+                    {contact.position && (
+                      <p className="text-xs text-muted-foreground">{contact.position}</p>
+                    )}
+                    <p className="text-sm font-mono text-muted-foreground">
+                      {contact.type === "phone"
+                        ? formatPhone(contact.value)
+                        : contact.value}
+                    </p>
                   </div>
                 </div>
               ))}
