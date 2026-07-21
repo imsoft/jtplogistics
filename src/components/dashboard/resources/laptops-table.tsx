@@ -56,7 +56,10 @@ interface LaptopsTableProps {
   detailBasePath?: string;
 }
 
-export function LaptopsTable({ apiEndpoint = apiEndpoint, detailBasePath = "/admin/dashboard/laptops" }: LaptopsTableProps = {}) {
+export function LaptopsTable({
+  apiEndpoint = "/api/admin/laptops",
+  detailBasePath = "/admin/dashboard/laptops",
+}: LaptopsTableProps = {}) {
   const router = useRouter();
   const { data: laptops, isLoaded, error } = useAdminFetch<Laptop>(
     apiEndpoint,

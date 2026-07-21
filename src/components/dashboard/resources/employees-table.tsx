@@ -125,8 +125,15 @@ function getColumns(): ColumnDef<Employee>[] {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-interface EmployeesTableProps { apiEndpoint?: string; detailBasePath?: string; }
-export function EmployeesTable({ apiEndpoint = apiEndpoint, detailBasePath = "/admin/dashboard/employees" }: EmployeesTableProps = {}) {
+interface EmployeesTableProps {
+  apiEndpoint?: string;
+  detailBasePath?: string;
+}
+
+export function EmployeesTable({
+  apiEndpoint = "/api/admin/employees",
+  detailBasePath = "/admin/dashboard/employees",
+}: EmployeesTableProps = {}) {
   const router = useRouter();
   const { data: employees, isLoaded, error } = useAdminFetch<Employee>(
     apiEndpoint,
