@@ -12,6 +12,7 @@ import {
   Users,
   UserRound,
   ShoppingBag,
+  Truck,
   Laptop,
   Smartphone,
   Mail,
@@ -77,6 +78,7 @@ const allNavGroups: PermNavGroup[] = [
     label: "Contactos",
     items: [
       { title: "Clientes", href: `${BASE}/clients`, icon: Users, permission: "canViewClients" },
+      { title: "Proveedores", href: `${BASE}/providers`, icon: Truck, permission: "canViewProviders" },
     ],
   },
   {
