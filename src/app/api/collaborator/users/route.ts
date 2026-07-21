@@ -26,6 +26,16 @@ export async function GET(_req: NextRequest) {
             legalName: true,
             rfc: true,
             address: true,
+            contacts: {
+              select: {
+                id: true,
+                type: true,
+                value: true,
+                label: true,
+                personName: true,
+                position: true,
+              },
+            },
           },
         },
       },
@@ -41,6 +51,8 @@ export async function GET(_req: NextRequest) {
         commercialName: u.profile?.commercialName,
         legalName: u.profile?.legalName,
         rfc: u.profile?.rfc,
+        address: u.profile?.address,
+        contacts: u.profile?.contacts ?? [],
         role: u.role,
         createdAt: u.createdAt.toISOString(),
       }))

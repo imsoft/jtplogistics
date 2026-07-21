@@ -30,6 +30,16 @@ export async function GET(
             legalName: true,
             rfc: true,
             address: true,
+            contacts: {
+              select: {
+                id: true,
+                type: true,
+                value: true,
+                label: true,
+                personName: true,
+                position: true,
+              },
+            },
           },
         },
       },
@@ -48,6 +58,7 @@ export async function GET(
       legalName: user.profile?.legalName,
       rfc: user.profile?.rfc,
       address: user.profile?.address,
+      contacts: user.profile?.contacts ?? [],
       role: user.role,
       createdAt: user.createdAt.toISOString(),
     });

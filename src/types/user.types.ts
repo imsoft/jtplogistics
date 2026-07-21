@@ -7,6 +7,8 @@ export interface UserContact {
   type: "phone" | "email";
   value: string;
   label: string | null;
+  personName: string | null;
+  position: string | null;
 }
 
 export interface UserProfile {

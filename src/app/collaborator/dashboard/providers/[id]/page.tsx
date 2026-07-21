@@ -14,13 +14,26 @@ function initials(name: string) {
   return name.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase();
 }
 
+interface Contact {
+  id: string;
+  type: "phone" | "email";
+  value: string;
+  label: string | null;
+  personName: string | null;
+  position: string | null;
+}
+
 interface ProviderData {
   id: string;
   name: string;
   email: string;
-  phone: string | null;
   image: string | null;
   role: string;
+  commercialName: string | null;
+  legalName: string | null;
+  rfc: string | null;
+  address: string | null;
+  contacts: Contact[];
 }
 
 export default function ProviderDetailPage() {
@@ -99,16 +112,73 @@ export default function ProviderDetailPage() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Información
+            Información General
           </CardTitle>
         </CardHeader>
         <CardContent className="px-4 pb-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
             <InfoRow label="Correo" value={provider.email} />
-            <InfoRow label="Teléfono" value={formatPhone(provider.phone)} />
+            {provider.commercialName && (
+              <InfoRow label="Nombre Comercial" value={provider.commercialName} />
+            )}
+            {provider.legalName && (
+              <InfoRow label="Nombre Legal" value={provider.legalName} />
+            )}
+            {provider.rfc && (
+              <InfoRow label="RFC" value={provider.rfc} />
+            )}
           </div>
         </CardContent>
       </Card>
+
+      {provider.address && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              Dirección
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            <p className="text-sm">{provider.address}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {provider.contacts && provider.contacts.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              Contactos
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            <div className="space-y-3">
+              {provider.contacts.map((contact) => (
+                <div key={contact.id} className="border-b pb-3 last:border-b-0 last:pb-0">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm font-medium">
+                        {contact.personName || (contact.type === "phone" ? "Teléfono" : "Correo")}
+                      </p>
+                      {contact.position && (
+                        <p className="text-xs text-muted-foreground">{contact.position}</p>
+                      )}
+                      <p className="text-sm text-muted-foreground">
+                        {contact.type === "phone"
+                          ? formatPhone(contact.value)
+                          : contact.value}
+                      </p>
+                      {contact.label && (
+                        <p className="text-xs text-muted-foreground mt-1">{contact.label}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
