@@ -166,7 +166,9 @@ export function RoutesCrud() {
                         <th className="px-4 py-1.5 text-left font-medium">Estado</th>
                         <th className="px-4 py-1.5 text-left font-medium">Tipo</th>
                         <th className="px-4 py-1.5 text-left font-medium">Descripción</th>
-                        <th className="px-4 py-1.5 text-left font-medium">Target (MXN)</th>
+                        <th className="px-4 py-1.5 text-left font-medium">
+                          Target {filterUnitType !== UNIT_FILTER_ALL && `${unitTypeLabel[filterUnitType] ?? filterUnitType}`} (MXN)
+                        </th>
                         <th className="px-4 py-1.5 text-left font-medium">Estatus</th>
                         <th className="px-4 py-1.5 text-left font-medium">Creado por</th>
                         <th className="px-4 py-1.5 text-right font-medium">
