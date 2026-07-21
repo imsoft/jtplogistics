@@ -19,18 +19,32 @@ export async function GET(_req: NextRequest) {
     // Retornar solo usuarios con rol "carrier" (proveedores)
     const users = await prisma.user.findMany({
       where: { role: "carrier" },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        image: true,
-        role: true,
-        createdAt: true,
+      include: {
+        profile: {
+          select: {
+            commercialName: true,
+            legalName: true,
+            rfc: true,
+            address: true,
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
     });
 
-    return Response.json(users);
+    return Response.json(
+      users.map((u) => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        image: u.image,
+        commercialName: u.profile?.commercialName,
+        legalName: u.profile?.legalName,
+        rfc: u.profile?.rfc,
+        role: u.role,
+        createdAt: u.createdAt.toISOString(),
+      }))
+    );
   } catch (e) {
     if (e instanceof Response) return e;
     console.error("Error al obtener usuarios:", e);

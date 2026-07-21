@@ -23,13 +23,15 @@ export async function GET(
     // Obtener el usuario solo si es carrier (proveedor)
     const user = await prisma.user.findUnique({
       where: { id },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        image: true,
-        role: true,
-        createdAt: true,
+      include: {
+        profile: {
+          select: {
+            commercialName: true,
+            legalName: true,
+            rfc: true,
+            address: true,
+          },
+        },
       },
     });
 
@@ -37,7 +39,18 @@ export async function GET(
       return Response.json({ error: "No encontrado" }, { status: 404 });
     }
 
-    return Response.json(user);
+    return Response.json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      image: user.image,
+      commercialName: user.profile?.commercialName,
+      legalName: user.profile?.legalName,
+      rfc: user.profile?.rfc,
+      address: user.profile?.address,
+      role: user.role,
+      createdAt: user.createdAt.toISOString(),
+    });
   } catch (e) {
     if (e instanceof Response) return e;
     console.error("Error al obtener usuario:", e);
