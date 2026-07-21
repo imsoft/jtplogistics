@@ -82,7 +82,15 @@ function getColumns(): ColumnDef<Client>[] {
   ];
 }
 
-export function ClientsTable() {
+interface ClientsTableProps {
+  apiEndpoint?: string;
+  detailBasePath?: string;
+}
+
+export function ClientsTable({
+  apiEndpoint = "/api/admin/clients",
+  detailBasePath = "/admin/dashboard/clients",
+}: ClientsTableProps = {}) {
   const router = useRouter();
   const {
     data: clients,
@@ -100,7 +108,7 @@ export function ClientsTable() {
     isFetching,
     error,
   } = useServerTable<Client>({
-    endpoint: "/api/admin/clients",
+    endpoint: apiEndpoint,
     pageSize: 20,
     errorMessage: "Error al cargar clientes",
   });
@@ -135,7 +143,7 @@ export function ClientsTable() {
       isFetching={isFetching}
       initialColumnVisibility={{ search: false }}
       getRowId={(row) => row.id}
-      onRowClick={(client) => router.push(`/admin/dashboard/clients/${client.id}`)}
+      onRowClick={(client) => router.push(`${detailBasePath}/${client.id}`)}
     />
   );
 }
