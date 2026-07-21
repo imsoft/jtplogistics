@@ -1,21 +1,23 @@
-"use client";
-
 import { ResourceListPage } from "@/components/dashboard/resources/resource-list-page";
 import { ShipmentsTable } from "@/components/dashboard/resources/shipments-table";
-import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
+
+export const metadata = {
+  title: "Embarques | JTP Logistics",
+  description: "Gestionar embarques",
+};
 
 export default function CollaboratorShipmentsPage() {
-  const { permissions } = useCollaboratorPermissions();
-  const canCreate = Boolean(permissions?.canCreateShipments);
-
   return (
     <ResourceListPage
-      title="Tabla de embarques"
+      title="Embarques"
       description="Embarques registrados en el sistema."
-      newHref={canCreate ? "/collaborator/dashboard/shipments/new" : undefined}
-      newLabel={canCreate ? "Nuevo embarque" : undefined}
+      newHref="/collaborator/dashboard/shipments/new"
+      newLabel="Nuevo embarque"
     >
-      <ShipmentsTable scope="collaborator" />
+      <ShipmentsTable
+        apiEndpoint="/api/collaborator/shipments"
+        detailBasePath="/collaborator/dashboard/shipments"
+      />
     </ResourceListPage>
   );
 }
