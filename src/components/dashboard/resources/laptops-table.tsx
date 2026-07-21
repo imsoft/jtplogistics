@@ -51,10 +51,15 @@ function getColumns(): ColumnDef<Laptop>[] {
   ];
 }
 
-export function LaptopsTable() {
+interface LaptopsTableProps {
+  apiEndpoint?: string;
+  detailBasePath?: string;
+}
+
+export function LaptopsTable({ apiEndpoint = apiEndpoint, detailBasePath = "/admin/dashboard/laptops" }: LaptopsTableProps = {}) {
   const router = useRouter();
   const { data: laptops, isLoaded, error } = useAdminFetch<Laptop>(
-    "/api/admin/laptops",
+    apiEndpoint,
     "Error al cargar laptops"
   );
 
@@ -91,7 +96,7 @@ export function LaptopsTable() {
             filterColumn="search"
             initialColumnVisibility={{ search: false }}
             getRowId={(row) => row.id}
-            onRowClick={(laptop) => router.push(`/admin/dashboard/laptops/${laptop.id}`)}
+            onRowClick={(laptop) => router.push(`${detailBasePath}/${laptop.id}`)}
           />
         )}
       </div>
@@ -112,7 +117,7 @@ export function LaptopsTable() {
             filterColumn="search"
             initialColumnVisibility={{ search: false }}
             getRowId={(row) => row.id}
-            onRowClick={(laptop) => router.push(`/admin/dashboard/laptops/${laptop.id}`)}
+            onRowClick={(laptop) => router.push(`${detailBasePath}/${laptop.id}`)}
           />
         )}
       </div>

@@ -66,10 +66,18 @@ function getColumns(): ColumnDef<EmailAccount>[] {
   ];
 }
 
-export function EmailsTable() {
+interface EmailsTableProps {
+  apiEndpoint?: string;
+  detailBasePath?: string;
+}
+
+export function EmailsTable({
+  apiEndpoint = "/api/admin/emails",
+  detailBasePath = "/admin/dashboard/emails",
+}: EmailsTableProps = {}) {
   const router = useRouter();
   const { data: emails, isLoaded, error } = useAdminFetch<EmailAccount>(
-    "/api/admin/emails",
+    apiEndpoint,
     "Error al cargar correos"
   );
   const [filterType, setFilterType] = useState("all");
@@ -155,7 +163,7 @@ export function EmailsTable() {
             filterColumn="search"
             initialColumnVisibility={{ search: false }}
             getRowId={(row) => row.id}
-            onRowClick={(email) => router.push(`/admin/dashboard/emails/${email.id}`)}
+            onRowClick={(email) => router.push(`${detailBasePath}/${email.id}`)}
           />
         )}
       </div>
@@ -176,7 +184,7 @@ export function EmailsTable() {
             filterColumn="search"
             initialColumnVisibility={{ search: false }}
             getRowId={(row) => row.id}
-            onRowClick={(email) => router.push(`/admin/dashboard/emails/${email.id}`)}
+            onRowClick={(email) => router.push(`${detailBasePath}/${email.id}`)}
           />
         )}
       </div>

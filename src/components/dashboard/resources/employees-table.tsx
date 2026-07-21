@@ -125,10 +125,11 @@ function getColumns(): ColumnDef<Employee>[] {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function EmployeesTable() {
+interface EmployeesTableProps { apiEndpoint?: string; detailBasePath?: string; }
+export function EmployeesTable({ apiEndpoint = apiEndpoint, detailBasePath = "/admin/dashboard/employees" }: EmployeesTableProps = {}) {
   const router = useRouter();
   const { data: employees, isLoaded, error } = useAdminFetch<Employee>(
-    "/api/admin/employees",
+    apiEndpoint,
     "Error al cargar colaboradores"
   );
   const [filterDepartment, setFilterDepartment] = useState("all");

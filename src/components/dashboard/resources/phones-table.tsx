@@ -81,10 +81,18 @@ function getColumns(): ColumnDef<PhoneDevice>[] {
   ];
 }
 
-export function PhonesTable() {
+interface PhonesTableProps {
+  apiEndpoint?: string;
+  detailBasePath?: string;
+}
+
+export function PhonesTable({
+  apiEndpoint = "/api/admin/phones",
+  detailBasePath = "/admin/dashboard/phones",
+}: PhonesTableProps = {}) {
   const router = useRouter();
   const { data: phones, isLoaded, error } = useAdminFetch<PhoneDevice>(
-    "/api/admin/phones",
+    apiEndpoint,
     "Error al cargar celulares"
   );
   const [filterDepartment, setFilterDepartment] = useState("all");
@@ -147,7 +155,7 @@ export function PhonesTable() {
             filterColumn="search"
             initialColumnVisibility={{ search: false }}
             getRowId={(row) => row.id}
-            onRowClick={(phone) => router.push(`/admin/dashboard/phones/${phone.id}`)}
+            onRowClick={(phone) => router.push(`${detailBasePath}/${phone.id}`)}
           />
         )}
       </div>
@@ -168,7 +176,7 @@ export function PhonesTable() {
             filterColumn="search"
             initialColumnVisibility={{ search: false }}
             getRowId={(row) => row.id}
-            onRowClick={(phone) => router.push(`/admin/dashboard/phones/${phone.id}`)}
+            onRowClick={(phone) => router.push(`${detailBasePath}/${phone.id}`)}
           />
         )}
       </div>

@@ -37,7 +37,8 @@ function getColumns(): ColumnDef<Vendor>[] {
   ];
 }
 
-export function VendorsTable() {
+interface VendorsTableProps { apiEndpoint?: string; detailBasePath?: string; }
+export function VendorsTable({ apiEndpoint = apiEndpoint, detailBasePath = "/admin/dashboard/vendors" }: VendorsTableProps = {}) {
   const router = useRouter();
   const {
     data: vendors,
@@ -55,7 +56,7 @@ export function VendorsTable() {
     isFetching,
     error,
   } = useServerTable<Vendor>({
-    endpoint: "/api/admin/vendors",
+    endpoint: apiEndpoint,
     pageSize: 20,
     errorMessage: "Error al cargar vendedores",
   });
