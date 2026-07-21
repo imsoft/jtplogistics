@@ -47,14 +47,20 @@ export async function GET(_req: NextRequest) {
         id: u.id,
         name: u.name,
         email: u.email,
+        emailVerified: false,
         image: u.image,
-        commercialName: u.profile?.commercialName,
-        legalName: u.profile?.legalName,
-        rfc: u.profile?.rfc,
-        address: u.profile?.address,
-        contacts: u.profile?.contacts ?? [],
+        profile: u.profile
+          ? {
+              commercialName: u.profile.commercialName,
+              legalName: u.profile.legalName,
+              rfc: u.profile.rfc,
+              address: u.profile.address,
+              contacts: u.profile.contacts,
+            }
+          : null,
         role: u.role,
         createdAt: u.createdAt.toISOString(),
+        updatedAt: new Date().toISOString(),
       }))
     );
   } catch (e) {

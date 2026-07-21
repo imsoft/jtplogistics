@@ -14,27 +14,9 @@ function initials(name: string) {
   return name.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase();
 }
 
-interface Contact {
-  id: string;
-  type: "phone" | "email";
-  value: string;
-  label: string | null;
-  personName: string | null;
-  position: string | null;
-}
+import type { User } from "@/types/user.types";
 
-interface ProviderData {
-  id: string;
-  name: string;
-  email: string;
-  image: string | null;
-  role: string;
-  commercialName: string | null;
-  legalName: string | null;
-  rfc: string | null;
-  address: string | null;
-  contacts: Contact[];
-}
+type ProviderData = User;
 
 export default function ProviderDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -118,20 +100,20 @@ export default function ProviderDetailPage() {
         <CardContent className="px-4 pb-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
             <InfoRow label="Correo" value={provider.email} />
-            {provider.commercialName && (
-              <InfoRow label="Nombre Comercial" value={provider.commercialName} />
+            {provider.profile?.commercialName && (
+              <InfoRow label="Nombre Comercial" value={provider.profile.commercialName} />
             )}
-            {provider.legalName && (
-              <InfoRow label="Nombre Legal" value={provider.legalName} />
+            {provider.profile?.legalName && (
+              <InfoRow label="Nombre Legal" value={provider.profile.legalName} />
             )}
-            {provider.rfc && (
-              <InfoRow label="RFC" value={provider.rfc} />
+            {provider.profile?.rfc && (
+              <InfoRow label="RFC" value={provider.profile.rfc} />
             )}
           </div>
         </CardContent>
       </Card>
 
-      {provider.address && (
+      {provider.profile?.address && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
@@ -139,12 +121,12 @@ export default function ProviderDetailPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4">
-            <p className="text-sm">{provider.address}</p>
+            <p className="text-sm">{provider.profile.address}</p>
           </CardContent>
         </Card>
       )}
 
-      {provider.contacts && provider.contacts.length > 0 && (
+      {provider.profile?.contacts && provider.profile.contacts.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
@@ -153,7 +135,7 @@ export default function ProviderDetailPage() {
           </CardHeader>
           <CardContent className="px-4 pb-4">
             <div className="space-y-3">
-              {provider.contacts.map((contact) => (
+              {provider.profile.contacts.map((contact) => (
                 <div key={contact.id} className="border-b pb-3 last:border-b-0 last:pb-0">
                   <div className="flex items-start justify-between">
                     <div>

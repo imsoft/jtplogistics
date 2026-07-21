@@ -53,14 +53,20 @@ export async function GET(
       id: user.id,
       name: user.name,
       email: user.email,
+      emailVerified: false,
       image: user.image,
-      commercialName: user.profile?.commercialName,
-      legalName: user.profile?.legalName,
-      rfc: user.profile?.rfc,
-      address: user.profile?.address,
-      contacts: user.profile?.contacts ?? [],
+      profile: user.profile
+        ? {
+            commercialName: user.profile.commercialName,
+            legalName: user.profile.legalName,
+            rfc: user.profile.rfc,
+            address: user.profile.address,
+            contacts: user.profile.contacts,
+          }
+        : null,
       role: user.role,
       createdAt: user.createdAt.toISOString(),
+      updatedAt: new Date().toISOString(),
     });
   } catch (e) {
     if (e instanceof Response) return e;
