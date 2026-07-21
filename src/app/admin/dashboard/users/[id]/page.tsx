@@ -7,11 +7,11 @@ import { prisma } from "@/lib/db";
 import { requireAdminPage } from "@/lib/auth-server";
 import { USER_ROLE_LABELS } from "@/lib/constants/user-role";
 import { InfoRow } from "@/components/dashboard/users/info-row";
-import { TargetDiff } from "@/components/dashboard/users/target-diff";
 import { ToggleCarrierPermissions } from "@/components/dashboard/users/toggle-carrier-permissions";
 import { ContactPersonsCards } from "@/components/dashboard/users/contact-persons-cards";
 import { groupContactsByPerson } from "@/lib/contacts";
 import { CarrierRouteUnlockRequests } from "@/components/dashboard/users/carrier-route-unlock-requests";
+import { CarrierRoutesManager } from "@/components/dashboard/users/carrier-routes-manager";
 import { DeleteUserButton } from "@/components/dashboard/users/delete-user-button";
 import type { UserRole } from "@/types/user.types";
 
@@ -51,10 +51,6 @@ export async function generateMetadata({
   return {
     title: user ? `${user.name} | JTP Logistics` : "Usuario | JTP Logistics",
   };
-}
-
-function formatMxn(value: number) {
-  return new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(value);
 }
 
 export default async function UserProfilePage({
@@ -233,46 +229,7 @@ export default async function UserProfilePage({
             />
           </CardContent>
           <CardContent className="px-0 pb-0">
-            {carrierRoutes.length === 0 ? (
-              <p className="text-muted-foreground rounded-lg border border-dashed mx-4 mb-4 p-4 text-center text-sm">
-                Este transportista no ha seleccionado ninguna ruta.
-              </p>
-            ) : (
-              <div className="overflow-x-auto">
-                <div className="min-w-[420px]">
-                <div className="grid grid-cols-[1fr_120px_120px_72px] gap-3 border-b bg-muted/40 px-4 py-2 text-xs font-medium text-muted-foreground">
-                  <span>Ruta</span>
-                  <span>Target JTP</span>
-                  <span>Target carrier</span>
-                  <span>Dif.</span>
-                </div>
-                {carrierRoutes.map((cr) => (
-                  <div
-                    key={cr.id}
-                    className="grid grid-cols-[1fr_120px_120px_72px] gap-3 items-center border-b px-4 py-3 last:border-0"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">
-                        {cr.route.origin} → {cr.route.destination}
-                      </p>
-                      {cr.route.description && (
-                        <p className="text-muted-foreground truncate text-xs">
-                          {cr.route.description}
-                        </p>
-                      )}
-                    </div>
-                    <span className="font-mono text-sm text-muted-foreground">
-                      {cr.route.target != null ? formatMxn(cr.route.target) : "—"}
-                    </span>
-                    <span className="font-mono text-sm font-medium">
-                      {cr.carrierTarget != null ? formatMxn(cr.carrierTarget) : "—"}
-                    </span>
-                    <TargetDiff jtpTarget={cr.route.target} carrierTarget={cr.carrierTarget} />
-                  </div>
-                ))}
-                </div>
-              </div>
-            )}
+            <CarrierRoutesManager routes={carrierRoutes} />
           </CardContent>
         </Card>
       )}
