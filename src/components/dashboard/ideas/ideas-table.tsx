@@ -9,13 +9,17 @@ import { IDEA_CATEGORY_COLORS, IDEA_STATUS_COLORS, IDEA_STATUS_LABELS } from "@/
 import type { Idea } from "@/types/idea.types";
 
 interface IdeasTableProps {
-  isAdmin: boolean;
+  apiEndpoint?: string;
+  detailBasePath?: string;
 }
 
-export function IdeasTable({ isAdmin }: IdeasTableProps) {
+export function IdeasTable({
+  apiEndpoint = "/api/ideas",
+  detailBasePath = "/admin/dashboard/ideas",
+}: IdeasTableProps = {}) {
   const router = useRouter();
   const { data: ideas, isLoaded, error } = useAdminFetch<Idea>(
-    "/api/ideas",
+    apiEndpoint,
     "Error al cargar ideas"
   );
 
@@ -93,11 +97,7 @@ export function IdeasTable({ isAdmin }: IdeasTableProps) {
       columns={columns}
       data={ideas}
       filterColumn="title"
-      onRowClick={
-        isAdmin
-          ? (idea) => router.push(`/admin/dashboard/ideas/${idea.id}`)
-          : undefined
-      }
+      onRowClick={(idea) => router.push(`${detailBasePath}/${idea.id}`)}
     />
   );
 }

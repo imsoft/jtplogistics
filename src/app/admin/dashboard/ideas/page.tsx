@@ -9,7 +9,10 @@ export default function IdeasPage() {
       newHref="/admin/dashboard/ideas/new"
       newLabel="Nueva idea"
     >
-      <IdeasTable isAdmin />
+      <IdeasTable
+        apiEndpoint="/api/ideas"
+        detailBasePath="/admin/dashboard/ideas"
+      />
     </ResourceListPage>
   );
 }
