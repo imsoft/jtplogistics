@@ -12,6 +12,7 @@ import {
   type EditQuote,
 } from "@/components/dashboard/carrier-quotes/carrier-quotes-table";
 import { QuoteComments } from "@/components/dashboard/quotes/quote-comments";
+import { QuoteDownloadButton } from "@/components/dashboard/quotes/quote-download-button";
 
 export default function EditQuotePage() {
   const { id } = useParams<{ id: string }>();
@@ -37,6 +38,7 @@ export default function EditQuotePage() {
       phone: data.phone ?? "",
       validUntil: data.validUntil,
       rows: data.rows ?? [],
+      creatorName: data.creatorName,
     });
     setIsLoaded(true);
   }, [id]);
@@ -72,11 +74,14 @@ export default function EditQuotePage() {
             </p>
           </div>
         </div>
-        <DeleteConfirmDialog
-          title="¿Eliminar cotización?"
-          description={`Esta acción no se puede deshacer. Se eliminará la cotización ${quote.quoteNumber} del historial.`}
-          onConfirm={handleDelete}
-        />
+        <div className="flex items-center gap-2">
+          <QuoteDownloadButton id={id} quoteNumber={quote.quoteNumber} />
+          <DeleteConfirmDialog
+            title="¿Eliminar cotización?"
+            description={`Esta acción no se puede deshacer. Se eliminará la cotización ${quote.quoteNumber} del historial.`}
+            onConfirm={handleDelete}
+          />
+        </div>
       </div>
 
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">

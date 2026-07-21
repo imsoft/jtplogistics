@@ -32,6 +32,7 @@ export interface EditQuote {
   phone: string;
   validUntil: string;
   rows: QuoteRow[];
+  creatorName?: string;
 }
 
 interface CarrierQuotesTableProps {

@@ -89,14 +89,14 @@ function PageFooter() {
   );
 }
 
-function Signatures({ date }: { date: string }) {
+function Signatures({ date, creatorName }: { date: string; creatorName?: string }) {
   return (
     <View>
       <View style={s.sigBlock}>
         <View style={s.sigColumn}>
           <Text style={s.sigLabel}>ATENTAMENTE</Text>
           <View style={s.sigLine} />
-          <Text style={s.sigName}>LCI. José Octavio Tirado Peña</Text>
+          <Text style={s.sigName}>{creatorName ?? "LCI. José Octavio Tirado Peña"}</Text>
           <Text style={{ fontSize: 8, color: MUTED, textAlign: "center" }}>Director General</Text>
         </View>
         <View style={s.sigColumn}>
@@ -120,9 +120,10 @@ interface Props {
   data: QuoteData;
   logoUrl: string;
   termsJson: QuoteTermsJson;
+  creatorName?: string;
 }
 
-export function QuotePdf({ data, logoUrl, termsJson }: Props) {
+export function QuotePdf({ data, logoUrl, termsJson, creatorName }: Props) {
   const today = new Date();
   const dateStr = formatDateEs(today);
   const rowBg = (i: number) => (i % 2 === 0 ? BRAND_LIGHT : WHITE);
@@ -176,7 +177,7 @@ export function QuotePdf({ data, logoUrl, termsJson }: Props) {
         <Text style={s.termsTitle}>TERMINOS Y CONDICIONES</Text>
         {renderLexicalContent(termsJson.bulletsJson, lexStyles)}
         <Text style={s.validity}>{formatValidUntilEs(data.validUntil)}</Text>
-        <Signatures date={dateStr} />
+        <Signatures date={dateStr} creatorName={creatorName} />
       </Page>
 
       {/* ── Página 2: Términos del contrato ── */}
@@ -185,7 +186,7 @@ export function QuotePdf({ data, logoUrl, termsJson }: Props) {
         <PageFooter />
         <Text style={s.pageTitle}>TERMINOS INSERTOS EN EL CONTRATO</Text>
         {renderLexicalContent(termsJson.contractJson, lexStyles)}
-        <Signatures date={dateStr} />
+        <Signatures date={dateStr} creatorName={creatorName} />
       </Page>
 
       {/* ── Página 3: Aviso de privacidad ── */}
@@ -194,7 +195,7 @@ export function QuotePdf({ data, logoUrl, termsJson }: Props) {
         <PageFooter />
         <Text style={s.pageTitle}>AVISO DE PRIVACIDAD</Text>
         {renderLexicalContent(termsJson.privacyJson, lexStyles)}
-        <Signatures date={dateStr} />
+        <Signatures date={dateStr} creatorName={creatorName} />
       </Page>
 
       {/* ── Página 4: Límites de responsabilidad ── */}
@@ -202,7 +203,7 @@ export function QuotePdf({ data, logoUrl, termsJson }: Props) {
         <PageHeader logoUrl={logoUrl} date={dateStr} />
         <PageFooter />
         {renderLexicalContent(termsJson.limitsJson, lexStyles)}
-        <Signatures date={dateStr} />
+        <Signatures date={dateStr} creatorName={creatorName} />
       </Page>
     </Document>
   );

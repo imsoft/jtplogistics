@@ -19,14 +19,25 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { QuoteRow } from "@/types/carrier-quote.types";
 
-export function QuoteRowActions({ id, quoteNumber }: { id: string; quoteNumber: string }) {
+export function QuoteRowActions({
+  id,
+  quoteNumber,
+  apiEndpoint = "/api/admin/generated-quotes",
+}: {
+  id: string;
+  quoteNumber: string;
+  apiEndpoint?: string;
+}) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
   async function handleDelete() {
     setIsDeleting(true);
-    await fetch(`/api/admin/generated-quotes/${id}`, { method: "DELETE" });
+    const endpoint = apiEndpoint.includes("/collaborator/")
+      ? `${apiEndpoint}/${id}/delete`
+      : `${apiEndpoint}/${id}`;
+    await fetch(endpoint, { method: "DELETE" });
     router.refresh();
   }
 
@@ -36,7 +47,7 @@ export function QuoteRowActions({ id, quoteNumber }: { id: string; quoteNumber: 
     setIsDownloading(true);
     try {
       const [quoteRes, termsRes] = await Promise.all([
-        fetch(`/api/admin/generated-quotes/${id}`),
+        fetch(`${apiEndpoint}/${id}`),
         fetch("/api/admin/quote-config"),
       ]);
       if (!quoteRes.ok) throw new Error("No se pudo cargar la cotización");
@@ -47,6 +58,7 @@ export function QuoteRowActions({ id, quoteNumber }: { id: string; quoteNumber: 
         phone: string | null;
         validUntil: string;
         rows: QuoteRow[];
+        creatorName: string;
       };
       const termsJson = termsRes.ok
         ? await termsRes.json()
@@ -69,6 +81,7 @@ export function QuoteRowActions({ id, quoteNumber }: { id: string; quoteNumber: 
           }}
           logoUrl={logoUrl}
           termsJson={termsJson}
+          creatorName={quote.creatorName}
         />
       ).toBlob();
       const url = URL.createObjectURL(blob);

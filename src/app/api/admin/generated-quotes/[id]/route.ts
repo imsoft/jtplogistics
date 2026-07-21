@@ -26,12 +26,16 @@ export function GET(
 ) {
   return adminHandler(async () => {
     const { id } = await params;
-    const quote = await prisma.generatedQuote.findUnique({ where: { id } });
+    const quote = await prisma.generatedQuote.findUnique({
+      where: { id },
+      include: { createdBy: { select: { name: true } } },
+    });
     if (!quote) return Response.json({ error: "No encontrado" }, { status: 404 });
     return Response.json({
       ...quote,
       validUntil: quote.validUntil.toISOString().split("T")[0],
       createdAt: quote.createdAt.toISOString(),
+      creatorName: quote.createdBy.name,
     });
   });
 }
