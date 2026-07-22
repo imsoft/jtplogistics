@@ -119,6 +119,8 @@ export default async function DashboardPage() {
   const [
     routesTotal,
     routesActive,
+    routesPending,
+    routesInactive,
     clientsTotal,
     usersByRole,
     shipmentsByStatus,
@@ -129,6 +131,8 @@ export default async function DashboardPage() {
   ] = await Promise.all([
     prisma.route.count(),
     prisma.route.count({ where: { status: "active" } }),
+    prisma.route.count({ where: { status: "pending" } }),
+    prisma.route.count({ where: { status: "inactive" } }),
     prisma.client.count(),
     prisma.user.groupBy({ by: ["role"], _count: { _all: true } }),
     prisma.shipment.groupBy({ by: ["status"], _count: { _all: true } }),
@@ -188,7 +192,23 @@ export default async function DashboardPage() {
           value={fmtInt(routesActive)}
           hint={`${fmtInt(routesTotal)} en total`}
           icon={<Route className="size-5" />}
-          href="/admin/dashboard/routes"
+          href="/admin/dashboard/routes?status=active"
+        />
+        <StatCard
+          label="Rutas pendientes"
+          value={fmtInt(routesPending)}
+          hint="ver con el filtro aplicado"
+          icon={<Route className="size-5" />}
+          href="/admin/dashboard/routes?status=pending"
+          accent={routesPending > 0}
+        />
+        <StatCard
+          label="Rutas inactivas"
+          value={fmtInt(routesInactive)}
+          hint="ver con el filtro aplicado"
+          icon={<Route className="size-5" />}
+          href="/admin/dashboard/routes?status=inactive"
+          accent={routesInactive > 0}
         />
         <StatCard
           label="Clientes"

@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { MoveRight, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -25,6 +26,16 @@ import { ROUTE_STATUS_OPTIONS } from "@/lib/constants/route-status";
 const STATUS_FILTER_ALL = "all";
 const UNIT_FILTER_ALL = "all";
 
+const VALID_STATUS_FILTERS = new Set<string>(ROUTE_STATUS_OPTIONS.map((o) => o.value));
+
+/**
+ * Lee el filtro de estado desde la URL (?status=pending|active|inactive), para
+ * poder llegar desde el panel principal con el filtro ya aplicado.
+ */
+function statusFromParam(value: string | null): string {
+  return value && VALID_STATUS_FILTERS.has(value) ? value : STATUS_FILTER_ALL;
+}
+
 interface RoutesCrudProps {
   basePath?: string;
   canEdit?: boolean;
@@ -42,10 +53,13 @@ export function RoutesCrud({
     () => Object.fromEntries(unitTypes.map((u) => [u.value, u.label])),
     [unitTypes]
   );
+  const searchParams = useSearchParams();
   const [deleteRoute, setDeleteRoute] = useState<Route | null>(null);
   const [filterOrigin, setFilterOrigin] = useState<string | null>(null);
   const [filterDestination, setFilterDestination] = useState<string | null>(null);
-  const [filterStatus, setFilterStatus] = useState<string>(STATUS_FILTER_ALL);
+  const [filterStatus, setFilterStatus] = useState<string>(() =>
+    statusFromParam(searchParams.get("status"))
+  );
   const [filterUnitType, setFilterUnitType] = useState<string>(UNIT_FILTER_ALL);
 
   const openDelete = useCallback((route: Route) => {
