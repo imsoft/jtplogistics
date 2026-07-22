@@ -135,7 +135,7 @@ export function PhonesTable({
               value={filterDepartment}
               onValueChange={setFilterDepartment}
               options={[{value: "all", label: "Todos los depto."}, ...departments.map((d) => ({value: d, label: d}))]}
-              className="w-full sm:w-[160px]"
+              className="w-full sm:w-40"
             />
             {filterDepartment !== "all" && (
               <Button type="button" variant="outline" onClick={() => setFilterDepartment("all")}>

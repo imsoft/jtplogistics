@@ -260,7 +260,7 @@ function CarrierCard({
             {/* Header row */}
             <div className="flex flex-wrap items-center gap-2 mb-1">
               <span className="text-xs font-bold text-muted-foreground tabular-nums">#{rank}</span>
-              <p className="font-semibold text-sm leading-tight truncate max-w-[240px]" title={carrier.legalName}>
+              <p className="font-semibold text-sm leading-tight truncate max-w-60" title={carrier.legalName}>
                 {carrier.legalName}
               </p>
               <ScoreBadge score={carrier.overallScore} />
@@ -444,7 +444,7 @@ export default function CarrierRatingsPage() {
 
           {/* Filters */}
           <div className="flex flex-wrap gap-3">
-            <div className="relative flex-1 min-w-[200px]">
+            <div className="relative flex-1 min-w-50">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
               <Input
                 className="pl-8"
@@ -456,7 +456,7 @@ export default function CarrierRatingsPage() {
               value={starFilter}
               onValueChange={setStarFilter}
               options={STAR_FILTER_OPTIONS}
-              className="w-[180px]"
+              className="w-45"
             />
             <AppSelect
               value={minShipments}
@@ -467,7 +467,7 @@ export default function CarrierRatingsPage() {
                 {value: "5", label: "Mín. 5 embarques"},
                 {value: "10", label: "Mín. 10 embarques"},
               ]}
-              className="w-[160px]"
+              className="w-40"
             />
           </div>
 

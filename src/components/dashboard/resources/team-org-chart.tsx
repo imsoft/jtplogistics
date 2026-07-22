@@ -16,7 +16,7 @@ function initials(name: string) {
 
 function EmployeeCard({ emp }: { emp: OrgEmployee }) {
   return (
-    <div className="flex flex-col items-center gap-1.5 rounded-xl border bg-card px-3 py-3 w-[148px] shadow-sm transition-shadow hover:shadow-md">
+    <div className="flex flex-col items-center gap-1.5 rounded-xl border bg-card px-3 py-3 w-37 shadow-sm transition-shadow hover:shadow-md">
       {emp.image ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -127,7 +127,7 @@ export function TeamOrgChart({ apiEndpoint, companyName = "JTP Logistics" }: Tea
               </div>
 
               {/* Department badge */}
-              <div className="rounded-full border bg-muted px-3 py-1 text-[10px] font-semibold uppercase tracking-wider max-w-[148px] truncate">
+              <div className="rounded-full border bg-muted px-3 py-1 text-[10px] font-semibold uppercase tracking-wider max-w-37 truncate">
                 {dept.name}
               </div>
 

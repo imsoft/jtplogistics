@@ -115,7 +115,7 @@ function getColumns(incidentTypes: { value: string; label: string }[]): ColumnDe
       cell: ({ row }) => {
         const v = row.getValue<string | null>("client");
         return v ? (
-          <span className="block max-w-[180px] truncate sm:max-w-[220px]" title={v}>
+          <span className="block max-w-45 truncate sm:max-w-55" title={v}>
             {v}
           </span>
         ) : (
@@ -157,7 +157,7 @@ function getColumns(incidentTypes: { value: string; label: string }[]): ColumnDe
       cell: ({ row }) => {
         const v = row.getValue<string | null>("legalName");
         return v ? (
-          <span className="block max-w-[140px] truncate sm:max-w-[180px]" title={v}>
+          <span className="block max-w-35 truncate sm:max-w-45" title={v}>
             {v}
           </span>
         ) : (
@@ -175,7 +175,7 @@ function getColumns(incidentTypes: { value: string; label: string }[]): ColumnDe
         return (
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="block max-w-[200px] cursor-default truncate text-left sm:max-w-[260px]">
+              <span className="block max-w-50 cursor-default truncate text-left sm:max-w-65">
                 {shortText}
               </span>
             </TooltipTrigger>
@@ -196,7 +196,7 @@ function getColumns(incidentTypes: { value: string; label: string }[]): ColumnDe
         return (
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="block max-w-[140px] cursor-default truncate sm:max-w-[180px]">{display}</span>
+              <span className="block max-w-35 cursor-default truncate sm:max-w-45">{display}</span>
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-xs whitespace-pre-wrap">
               {display}
@@ -227,7 +227,7 @@ function getColumns(incidentTypes: { value: string; label: string }[]): ColumnDe
         return (
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="block max-w-[140px] cursor-default truncate sm:max-w-[180px]">{display}</span>
+              <span className="block max-w-35 cursor-default truncate sm:max-w-45">{display}</span>
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-xs whitespace-pre-wrap">
               {display}
@@ -377,7 +377,7 @@ export function ShipmentsTable({
       getRowClassName={getRowClassName}
       toolbar={
         <div className="flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-          <div className="space-y-1.5 w-full sm:w-auto sm:min-w-[200px]">
+          <div className="space-y-1.5 w-full sm:w-auto sm:min-w-50">
             <Label htmlFor="shipment-filter-status" className="text-xs text-muted-foreground">
               Estado
             </Label>
@@ -389,7 +389,7 @@ export function ShipmentsTable({
             />
           </div>
           <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end sm:gap-2">
-            <div className="space-y-1.5 min-w-0 sm:w-[150px]">
+            <div className="space-y-1.5 min-w-0 sm:w-37.5">
               <Label htmlFor="shipment-filter-pickup-from" className="text-xs text-muted-foreground">
                 Recolección desde
               </Label>
@@ -401,7 +401,7 @@ export function ShipmentsTable({
                 className="w-full"
               />
             </div>
-            <div className="space-y-1.5 min-w-0 sm:w-[150px]">
+            <div className="space-y-1.5 min-w-0 sm:w-37.5">
               <Label htmlFor="shipment-filter-pickup-to" className="text-xs text-muted-foreground">
                 Recolección hasta
               </Label>
@@ -413,7 +413,7 @@ export function ShipmentsTable({
                 className="w-full"
               />
             </div>
-            <div className="space-y-1.5 min-w-0 sm:w-[150px]">
+            <div className="space-y-1.5 min-w-0 sm:w-37.5">
               <Label htmlFor="shipment-filter-delivery-from" className="text-xs text-muted-foreground">
                 Entrega desde
               </Label>
@@ -425,7 +425,7 @@ export function ShipmentsTable({
                 className="w-full"
               />
             </div>
-            <div className="space-y-1.5 min-w-0 sm:w-[150px]">
+            <div className="space-y-1.5 min-w-0 sm:w-37.5">
               <Label htmlFor="shipment-filter-delivery-to" className="text-xs text-muted-foreground">
                 Entrega hasta
               </Label>

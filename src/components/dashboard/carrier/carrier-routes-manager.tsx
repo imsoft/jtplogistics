@@ -418,7 +418,7 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
             <div className="space-y-4">
               {groupedRoutes.map(({ origin, items }) => (
                 <div key={origin} className="overflow-x-auto rounded-lg border">
-                  <div className="min-w-[480px]">
+                  <div className="min-w-120">
                     <div className="border-b bg-muted/60 px-3 py-2 sm:px-4">
                       <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                         Desde {origin}

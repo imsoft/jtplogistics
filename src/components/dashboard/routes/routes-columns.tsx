@@ -87,7 +87,7 @@ export function getRoutesColumns({
               return (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="block max-w-[140px] truncate cursor-default sm:max-w-[220px]">
+                    <span className="block max-w-35 truncate cursor-default sm:max-w-55">
                       {description}
                     </span>
                   </TooltipTrigger>

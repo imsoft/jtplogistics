@@ -102,7 +102,7 @@ export function UsersTable({
               value={roleFilter}
               onValueChange={(v) => setRoleFilter(v as RoleFilter)}
               options={[{value: "all", label: "Todos los roles"}, ...(Object.keys(USER_ROLE_LABELS) as UserRole[]).map((role) => ({value: role, label: USER_ROLE_LABELS[role]}))]}
-              className="w-full sm:w-[160px]"
+              className="w-full sm:w-40"
             />
             <Button
               type="button"

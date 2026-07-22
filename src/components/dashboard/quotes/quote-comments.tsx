@@ -106,7 +106,7 @@ export function QuoteComments({ quoteId }: QuoteCommentsProps) {
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             disabled={isSubmitting}
-            className="min-h-[80px] resize-none"
+            className="min-h-20 resize-none"
           />
           <div className="flex justify-end">
             <Button

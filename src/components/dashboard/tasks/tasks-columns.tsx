@@ -85,7 +85,7 @@ export function getTasksColumns({
           <div className="flex items-center gap-1.5 min-w-0">
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="font-medium max-w-[260px] truncate block cursor-default sm:max-w-[360px]">
+                <span className="font-medium max-w-65 truncate block cursor-default sm:max-w-90">
                   {desc}
                 </span>
               </TooltipTrigger>

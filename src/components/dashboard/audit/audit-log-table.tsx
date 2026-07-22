@@ -177,7 +177,7 @@ export function AuditLogTable() {
           value={resourceFilter}
           onValueChange={setResourceFilter}
           options={[{value: "__all__", label: "Todos"}, ...Object.entries(RESOURCE_LABELS).map(([value, label]) => ({value, label}))]}
-          className="w-[200px]"
+          className="w-50"
         />
       </div>
 

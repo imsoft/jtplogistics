@@ -183,7 +183,7 @@ export function RoutesCrud({
                       Desde {origin}
                     </span>
                   </div>
-                  <table className="w-full min-w-[680px] text-sm uppercase">
+                  <table className="w-full min-w-170 text-sm uppercase">
                     <thead className="sticky top-0 z-10">
                       <tr className="border-b bg-muted/20 text-xs font-medium text-muted-foreground">
                         <th className="px-4 py-1.5 text-left font-medium">Ruta</th>
@@ -234,7 +234,7 @@ export function RoutesCrud({
                               {description ? (
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <span className="block max-w-[140px] cursor-default truncate sm:max-w-[200px]">
+                                    <span className="block max-w-35 cursor-default truncate sm:max-w-50">
                                       {description}
                                     </span>
                                   </TooltipTrigger>

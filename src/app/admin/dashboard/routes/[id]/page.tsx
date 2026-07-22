@@ -246,7 +246,7 @@ export default function RouteDetailPage() {
             </p>
           ) : (
             <div className="overflow-x-auto">
-              <div className="min-w-[580px]">
+              <div className="min-w-145">
                 <div className="grid grid-cols-[1fr_minmax(100px,1fr)_minmax(100px,1fr)_minmax(100px,1fr)_minmax(100px,1fr)] gap-x-6 border-b bg-muted/20 px-4 py-1.5 text-xs font-medium text-muted-foreground">
                   <span>Transportista</span>
                   <span>Tipo de unidad</span>
@@ -319,7 +319,7 @@ export default function RouteDetailPage() {
             </p>
           ) : (
             <div className="overflow-x-auto">
-              <div className="min-w-[480px]">
+              <div className="min-w-120">
                 <div className="grid grid-cols-[1fr_minmax(100px,1fr)_minmax(100px,1fr)_minmax(100px,1fr)] gap-x-6 border-b bg-muted/20 px-4 py-1.5 text-xs font-medium text-muted-foreground">
                   <span>Cliente</span>
                   <span>Tarifa</span>

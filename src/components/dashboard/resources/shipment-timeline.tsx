@@ -62,7 +62,7 @@ export function ShipmentTimeline({ shipmentId, scope = "admin" }: ShipmentTimeli
               return (
                 <li key={i} className={`ml-5 ${isLast ? "" : "pb-6"}`}>
                   <span
-                    className={`absolute -left-[9px] flex size-4 items-center justify-center rounded-full ring-2 ring-background ${isLast ? "bg-primary" : "bg-muted"}`}
+                    className={`absolute -left-2.25 flex size-4 items-center justify-center rounded-full ring-2 ring-background ${isLast ? "bg-primary" : "bg-muted"}`}
                   />
 
                   <div className="flex flex-wrap items-center gap-1.5">

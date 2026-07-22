@@ -210,7 +210,7 @@ export default function ClientProfilePage() {
                       </span>
                     </div>
                     <div className="overflow-x-auto">
-                      <div className="min-w-[660px]">
+                      <div className="min-w-165">
                         <div className="grid grid-cols-[1fr_minmax(100px,1fr)_minmax(100px,1fr)_minmax(120px,1fr)_minmax(80px,1fr)] gap-x-6 border-b bg-muted/20 px-4 py-1.5 text-xs font-medium text-muted-foreground">
                           <span>Ruta</span>
                           <span>Tarifa</span>

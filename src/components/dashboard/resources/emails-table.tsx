@@ -137,13 +137,13 @@ export function EmailsTable({
               value={filterDepartment}
               onValueChange={setFilterDepartment}
               options={[{value: "all", label: "Todos los depto."}, ...departments.map((d) => ({value: d, label: d}))]}
-              className="w-full sm:w-[160px]"
+              className="w-full sm:w-40"
             />
             <AppSelect
               value={filterType}
               onValueChange={setFilterType}
               options={[{value: "all", label: "Todos los tipos"}, ...availableTypes.map((t) => ({value: t, label: emailTypeLabel(t)}))]}
-              className="w-full sm:w-[140px]"
+              className="w-full sm:w-35"
             />
             {hasActiveFilters && (
               <Button type="button" variant="outline" onClick={() => { setFilterType("all"); setFilterDepartment("all"); }}>

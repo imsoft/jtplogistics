@@ -57,7 +57,7 @@ function getColumns(): ColumnDef<Client>[] {
         return (
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="block max-w-[220px] cursor-default truncate sm:max-w-[280px]">{short}</span>
+              <span className="block max-w-55 cursor-default truncate sm:max-w-70">{short}</span>
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-xs whitespace-pre-wrap">
               {text}

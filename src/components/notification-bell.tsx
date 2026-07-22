@@ -117,7 +117,7 @@ export function NotificationBell() {
         </div>
 
         {/* Lista */}
-        <div className="max-h-[360px] overflow-y-auto">
+        <div className="max-h-90 overflow-y-auto">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 py-10 text-muted-foreground">
               <Bell className="size-8 opacity-20" />

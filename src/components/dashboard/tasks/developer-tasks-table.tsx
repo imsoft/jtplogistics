@@ -65,7 +65,7 @@ export function DeveloperTasksTable() {
               value={task.status}
               onValueChange={(v) => handleStatusChange(task.id, v as TaskStatus)}
               options={TASK_STATUS_OPTIONS}
-              className="w-[160px]"
+              className="w-40"
             />
           );
         },

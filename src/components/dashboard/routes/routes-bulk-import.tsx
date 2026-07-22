@@ -284,7 +284,7 @@ export function RoutesBulkImport() {
           Formato esperado: <strong>Tipo de Equipo | Origen | Destino</strong> — una fila por línea.
         </p>
         <textarea
-          className="min-h-[180px] w-full rounded-md border bg-background px-3 py-2 font-mono text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="min-h-45 w-full rounded-md border bg-background px-3 py-2 font-mono text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           value={inputText}
           onChange={(e) => {
             setInputText(e.target.value);

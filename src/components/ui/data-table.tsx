@@ -44,7 +44,7 @@ function PageSizeSelect({ value, onChange }: { value: number; onChange: (size: n
         value={String(value)}
         onValueChange={(v) => onChange(Number(v))}
         options={PAGE_SIZE_OPTIONS.map((n) => ({ value: String(n), label: String(n) }))}
-        className="h-8 w-[76px]"
+        className="h-8 w-19"
       />
     </div>
   );

@@ -178,7 +178,7 @@ export default function FinancesAnalyticsPage() {
               </CardHeader>
               <CardContent className="px-0 pb-0">
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[480px] text-sm">
+                  <table className="w-full min-w-120 text-sm">
                     <thead>
                       <tr className="border-b bg-muted/40 text-xs text-muted-foreground">
                         <th className="px-4 py-2 text-left font-medium">Ruta</th>
