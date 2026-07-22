@@ -1,6 +1,12 @@
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
+import { gateTasks } from "@/lib/task-auth";
+import { notify } from "@/lib/notify";
+import { logAudit } from "@/lib/audit-log";
 import type { TaskStatus } from "@/types/task.types";
+
+const VALID_STATUSES: TaskStatus[] = ["pending", "in_progress", "completed"];
 
 function taskToJson(t: {
   id: string;
@@ -50,6 +56,62 @@ export async function GET() {
     });
 
     return Response.json(tasks.map(taskToJson));
+  } catch (e) {
+    if (e instanceof Response) return e;
+    console.error(e);
+    return Response.json({ error: "Error interno del servidor" }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const session = await gateTasks("canCreateTasks");
+    const body = await request.json();
+
+    const description = body.description ? String(body.description).trim() : null;
+    const title = body.title ? String(body.title).trim() : (description?.slice(0, 80) ?? "—");
+    const status: TaskStatus = VALID_STATUSES.includes(body.status) ? body.status : "pending";
+
+    const assigneeIdFromBody = body.assigneeId ? String(body.assigneeId).trim() : null;
+    let assigneeId = assigneeIdFromBody;
+
+    if (!assigneeId) {
+      const developer = await prisma.user.findFirst({ where: { role: "developer" }, orderBy: { createdAt: "asc" } });
+      if (!developer) return Response.json({ error: "No hay ningún desarrollador registrado" }, { status: 400 });
+      assigneeId = developer.id;
+    } else {
+      const assignee = await prisma.user.findUnique({ where: { id: assigneeId } });
+      if (!assignee || assignee.role !== "developer") {
+        return Response.json({ error: "El usuario asignado no es un desarrollador" }, { status: 400 });
+      }
+    }
+
+    const task = await prisma.task.create({
+      data: { title, description, status, assigneeId, createdById: session.user.id },
+      include: {
+        assignee: { select: { name: true } },
+        createdBy: { select: { name: true } },
+      },
+    });
+
+    void notify({
+      userId: task.assigneeId,
+      type: "new_task",
+      title: `Nueva tarea: ${task.title.slice(0, 60)}`,
+      body: task.description?.slice(0, 80) ?? undefined,
+      href: `/developer/dashboard/tasks/${task.id}`,
+    });
+
+    void logAudit({
+      resource: "task",
+      resourceId: task.id,
+      resourceLabel: task.title,
+      action: "created",
+      userId: session.user.id,
+      userName: session.user.name,
+    });
+
+    return Response.json(taskToJson(task), { status: 201 });
   } catch (e) {
     if (e instanceof Response) return e;
     console.error(e);

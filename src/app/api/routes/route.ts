@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireCollaboratorOrAdmin, requireAdmin } from "@/lib/auth-server";
+import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
+import { gateRoutes } from "@/lib/route-auth";
 import { type PrismaRoute, VALID_STATUSES, routeToJson } from "@/lib/api/route-utils";
 import { getCityState } from "@/lib/data/mexico-cities";
 import { logRoute } from "@/lib/route-log";
@@ -45,7 +46,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireAdmin();
+    const session = await gateRoutes("canCreateRoutes");
 
     const body = await request.json();
     const origin = String(body.origin ?? "").trim();

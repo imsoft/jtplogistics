@@ -11,7 +11,13 @@ import { RouteForm } from "./route-form";
 import { RouteLogTable } from "./route-log-table";
 import type { Route, RouteFormData } from "@/types/route.types";
 
-export function EditRouteForm({ route }: { route: Route }) {
+export function EditRouteForm({
+  route,
+  basePath = "/admin/dashboard/routes",
+}: {
+  route: Route;
+  basePath?: string;
+}) {
   const router = useRouter();
   const [historyOpen, setHistoryOpen] = useState(false);
 
@@ -39,7 +45,7 @@ export function EditRouteForm({ route }: { route: Route }) {
         throw new Error(err.error ?? "No se pudo guardar.");
       }
       toast.success("Ruta guardada correctamente.");
-      router.push("/admin/dashboard/routes");
+      router.push(basePath);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "No se pudo guardar. Verifica tener permisos de administrador.");
     }
@@ -49,7 +55,7 @@ export function EditRouteForm({ route }: { route: Route }) {
     <div className="min-w-0 space-y-4 sm:space-y-6">
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" asChild className="shrink-0">
-          <Link href="/admin/dashboard/routes" aria-label="Volver a rutas">
+          <Link href={basePath} aria-label="Volver a rutas">
             <ChevronLeft className="size-4" />
           </Link>
         </Button>
@@ -89,7 +95,7 @@ export function EditRouteForm({ route }: { route: Route }) {
               status: route.status,
             }}
             submitLabel="Guardar cambios"
-            cancelHref="/admin/dashboard/routes"
+            cancelHref={basePath}
             onSubmit={handleSubmit}
           />
         </CardContent>

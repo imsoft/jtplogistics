@@ -6,6 +6,7 @@ import Link from "next/link";
 import {
   ChevronLeft,
   MoveRight,
+  Pencil,
   Truck,
   Users,
 } from "lucide-react";
@@ -14,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { InfoRow } from "@/components/dashboard/users/info-row";
 import { useUnitTypes } from "@/hooks/use-unit-types";
+import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 import { formatMxn } from "@/lib/utils";
 import { ROUTE_STATUS_LABELS } from "@/lib/constants/route-status";
 import type { RouteStatus } from "@/types/route.types";
@@ -84,6 +86,7 @@ function formatDate(iso: string) {
 export default function CollaboratorRouteDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { permissions } = useCollaboratorPermissions();
   const [route, setRoute] = useState<RouteDetail | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -124,36 +127,46 @@ export default function CollaboratorRouteDetailPage() {
   return (
     <div className="min-w-0 space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-2 min-w-0">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="shrink-0"
-          onClick={() => router.back()}
-          aria-label="Volver"
-        >
-          <ChevronLeft className="size-4" />
-        </Button>
-        <div className="min-w-0">
-          <h1 className="page-heading flex items-center gap-2">
-            <span className="truncate">{route.origin}</span>
-            <MoveRight className="size-5 shrink-0 text-muted-foreground" />
-            <span className="truncate">{route.destination}</span>
-          </h1>
-          <div className="flex items-center gap-2 mt-1">
-            <Badge
-              variant={STATUS_VARIANT[route.status] ?? "outline"}
-              className="text-xs"
-            >
-              {ROUTE_STATUS_LABELS[route.status] ?? route.status}
-            </Badge>
-            {route.destinationState && (
-              <span className="text-muted-foreground text-xs">
-                {route.destinationState}
-              </span>
-            )}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="shrink-0"
+            onClick={() => router.back()}
+            aria-label="Volver"
+          >
+            <ChevronLeft className="size-4" />
+          </Button>
+          <div className="min-w-0">
+            <h1 className="page-heading flex items-center gap-2">
+              <span className="truncate">{route.origin}</span>
+              <MoveRight className="size-5 shrink-0 text-muted-foreground" />
+              <span className="truncate">{route.destination}</span>
+            </h1>
+            <div className="flex items-center gap-2 mt-1">
+              <Badge
+                variant={STATUS_VARIANT[route.status] ?? "outline"}
+                className="text-xs"
+              >
+                {ROUTE_STATUS_LABELS[route.status] ?? route.status}
+              </Badge>
+              {route.destinationState && (
+                <span className="text-muted-foreground text-xs">
+                  {route.destinationState}
+                </span>
+              )}
+            </div>
           </div>
         </div>
+        {permissions?.canUpdateRoutes && (
+          <Button asChild variant="outline" size="sm" className="shrink-0">
+            <Link href={`/collaborator/dashboard/routes/${id}/edit`}>
+              <Pencil className="size-4" />
+              Editar
+            </Link>
+          </Button>
+        )}
       </div>
 
       {/* Info cards */}

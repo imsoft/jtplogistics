@@ -15,15 +15,28 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { getTasksColumns } from "./tasks-columns";
+import { DataTableSkeleton } from "@/components/ui/skeletons";
 import { TASK_STATUS_LABELS, TASK_STATUS_OPTIONS } from "@/lib/constants/task-status";
 import { toast } from "sonner";
 import type { Task, TaskStatus } from "@/types/task.types";
 
 const ALL = "all";
 
-export function AdminTasksTable() {
+interface AdminTasksTableProps {
+  apiEndpoint?: string;
+  editBasePath?: string;
+  canEdit?: boolean;
+  canDelete?: boolean;
+}
+
+export function AdminTasksTable({
+  apiEndpoint = "/api/admin/tasks",
+  editBasePath = "/admin/dashboard/tasks",
+  canEdit = true,
+  canDelete = true,
+}: AdminTasksTableProps = {}) {
   const { data: tasks, isLoaded, error } = useAdminFetch<Task>(
-    "/api/admin/tasks",
+    apiEndpoint,
     "Error al cargar tareas"
   );
   const [localTasks, setLocalTasks] = useState<Task[] | null>(null);
@@ -39,7 +52,7 @@ export function AdminTasksTable() {
   const handleDelete = useCallback(async () => {
     if (!deleteTask) return;
     try {
-      const res = await fetch(`/api/admin/tasks/${deleteTask.id}`, { method: "DELETE" });
+      const res = await fetch(`${apiEndpoint}/${deleteTask.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Error al eliminar");
       setLocalTasks((prev) => (prev ?? tasks).filter((t) => t.id !== deleteTask.id));
       toast.success("Tarea eliminada.");
@@ -48,14 +61,20 @@ export function AdminTasksTable() {
     } finally {
       setDeleteTask(null);
     }
-  }, [deleteTask, tasks]);
+  }, [deleteTask, tasks, apiEndpoint]);
 
   const columns = useMemo(
-    () => getTasksColumns({ adminView: true, onDelete: (t) => setDeleteTask(t) }),
-    []
+    () => getTasksColumns({
+      adminView: true,
+      editBasePath,
+      canEdit,
+      canDelete,
+      onDelete: (t) => setDeleteTask(t),
+    }),
+    [editBasePath, canEdit, canDelete]
   );
 
-  if (!isLoaded) return <p className="text-muted-foreground text-sm">Cargando…</p>;
+  if (!isLoaded) return <DataTableSkeleton />;
   if (error) return <p className="text-destructive text-sm">{error}</p>;
 
   return (

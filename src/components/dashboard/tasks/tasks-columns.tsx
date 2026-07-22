@@ -50,9 +50,21 @@ const STATUS_BADGE: Record<Task["status"], string> = {
 interface TasksColumnsOptions {
   onDelete?: (task: Task) => void;
   adminView?: boolean;
+  /** Base para el enlace de edición (por defecto admin). */
+  editBasePath?: string;
+  /** Muestra el botón editar (por defecto true cuando adminView). */
+  canEdit?: boolean;
+  /** Muestra el botón eliminar (por defecto true cuando adminView). */
+  canDelete?: boolean;
 }
 
-export function getTasksColumns({ onDelete, adminView = false }: TasksColumnsOptions): ColumnDef<Task>[] {
+export function getTasksColumns({
+  onDelete,
+  adminView = false,
+  editBasePath = "/admin/dashboard/tasks",
+  canEdit = true,
+  canDelete = true,
+}: TasksColumnsOptions): ColumnDef<Task>[] {
   const columns: ColumnDef<Task>[] = [
     {
       id: "search",
@@ -110,7 +122,7 @@ export function getTasksColumns({ onDelete, adminView = false }: TasksColumnsOpt
     },
   ];
 
-  if (adminView && onDelete) {
+  if (adminView && (canEdit || canDelete)) {
     columns.push({
       id: "actions",
       header: () => <span className="sr-only">Acciones</span>,
@@ -118,20 +130,24 @@ export function getTasksColumns({ onDelete, adminView = false }: TasksColumnsOpt
         const task = row.original;
         return (
           <div className="flex justify-end gap-2">
-            <Button variant="ghost" size="icon" asChild aria-label="Editar tarea">
-              <Link href={`/admin/dashboard/tasks/${task.id}/edit`}>
-                <Pencil className="size-4" />
-              </Link>
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onDelete(task)}
-              aria-label="Eliminar tarea"
-              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-            >
-              <Trash2 className="size-4" />
-            </Button>
+            {canEdit && (
+              <Button variant="ghost" size="icon" asChild aria-label="Editar tarea">
+                <Link href={`${editBasePath}/${task.id}/edit`}>
+                  <Pencil className="size-4" />
+                </Link>
+              </Button>
+            )}
+            {canDelete && onDelete && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onDelete(task)}
+                aria-label="Eliminar tarea"
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            )}
           </div>
         );
       },

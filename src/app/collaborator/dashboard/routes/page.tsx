@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { RoutesCrud } from "@/components/dashboard/routes/routes-crud";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
@@ -43,12 +46,20 @@ export default function CollaboratorRoutesPage() {
             Rutas de entrega registradas en el sistema.
           </p>
         </div>
+        {permissions.canCreateRoutes && (
+          <Button asChild className="w-full shrink-0 sm:w-fit" size="sm">
+            <Link href="/collaborator/dashboard/routes/new">
+              <Plus className="size-4" />
+              Nueva ruta
+            </Link>
+          </Button>
+        )}
       </div>
       <Separator />
       <RoutesCrud
         basePath="/collaborator/dashboard/routes"
-        canEdit={false}
-        canDelete={false}
+        canEdit={permissions.canUpdateRoutes}
+        canDelete={permissions.canDeleteRoutes}
       />
     </div>
   );
