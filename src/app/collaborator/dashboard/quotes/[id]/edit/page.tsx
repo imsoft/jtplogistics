@@ -90,7 +90,12 @@ export default function EditQuotePage() {
 
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <CarrierQuotesTable editQuote={quote} showTermsLink apiEndpoint="/api/collaborator/carrier-quotes" />
+          <CarrierQuotesTable
+            editQuote={quote}
+            showTermsLink
+            apiEndpoint="/api/collaborator/carrier-quotes"
+            updateEndpoint="/api/collaborator/generated-quotes"
+          />
         </div>
         <div>
           <QuoteComments quoteId={id} />

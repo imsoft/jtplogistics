@@ -40,6 +40,8 @@ interface CarrierQuotesTableProps {
   showTermsLink?: boolean;
   /** Si se pasa, el constructor arranca precargado y guarda con PATCH en vez de crear. */
   editQuote?: EditQuote;
+  /** Base para guardar la edición (PATCH `${updateEndpoint}/${id}`). Admin por defecto. */
+  updateEndpoint?: string;
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -71,6 +73,7 @@ export function CarrierQuotesTable({
   apiEndpoint = "/api/admin/carrier-quotes",
   showTermsLink = false,
   editQuote,
+  updateEndpoint = "/api/admin/generated-quotes",
 }: CarrierQuotesTableProps) {
   const router = useRouter();
   const isEditing = !!editQuote;
@@ -218,7 +221,7 @@ function addCurrentRouteToQuote() {
     if (quoteRows.length === 0) { setQuoteError("Agrega al menos una ruta."); return; }
     setIsSaving(true);
     try {
-      const res = await fetch(`/api/admin/generated-quotes/${editQuote.id}`, {
+      const res = await fetch(`${updateEndpoint}/${editQuote.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ company, contact, phone: phone || null, validUntil, rows: quoteRows }),

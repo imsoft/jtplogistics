@@ -8,14 +8,18 @@ function isStaff(role: string) {
   return role === "admin" || role === "collaborator";
 }
 
-async function checkMessagesPermission(userId: string, role: string) {
+async function checkMessagesPermission(
+  userId: string,
+  role: string,
+  field: "canViewMessages" | "canCreateMessages" = "canViewMessages",
+) {
   if (role === "collaborator") {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { canViewMessages: true },
+      select: { [field]: true },
     });
-    if (!user?.canViewMessages) {
-      return Response.json({ error: "No tienes permiso para ver mensajes" }, { status: 403 });
+    if (!user || !(user as Record<string, unknown>)[field]) {
+      return Response.json({ error: "Sin permiso" }, { status: 403 });
     }
   }
   return null;
@@ -91,7 +95,13 @@ export async function POST(request: NextRequest) {
       name: string;
     };
 
-    const denied = await checkMessagesPermission(userId, role);
+    // Enviar mensaje requiere permiso de creación para colaboradores.
+    // Excepción: un carrier siempre puede escribir en su propia conversación.
+    const denied = await checkMessagesPermission(
+      userId,
+      role,
+      role === "carrier" ? "canViewMessages" : "canCreateMessages",
+    );
     if (denied) return denied;
 
     const body = await request.json();

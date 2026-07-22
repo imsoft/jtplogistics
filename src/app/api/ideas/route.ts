@@ -3,14 +3,17 @@ import { ideasHandler } from "@/lib/api-handler";
 import { notifyRole } from "@/lib/notify";
 import { logAudit } from "@/lib/audit-log";
 
-async function checkIdeasPermission(session: { user: { id: string; role?: string } }) {
+async function checkIdeasPermission(
+  session: { user: { id: string; role?: string } },
+  field: "canViewIdeas" | "canCreateIdeas" = "canViewIdeas",
+) {
   if (session.user.role === "collaborator") {
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { canViewIdeas: true },
+      select: { [field]: true },
     });
-    if (!user?.canViewIdeas) {
-      return Response.json({ error: "No tienes permiso para ver ideas" }, { status: 403 });
+    if (!user || !(user as Record<string, unknown>)[field]) {
+      return Response.json({ error: "Sin permiso" }, { status: 403 });
     }
   }
   return null;
@@ -42,7 +45,7 @@ export function GET() {
 
 export function POST(request: Request) {
   return ideasHandler(async (session) => {
-    const denied = await checkIdeasPermission(session);
+    const denied = await checkIdeasPermission(session, "canCreateIdeas");
     if (denied) return denied;
 
     const body = await request.json();
