@@ -26,7 +26,13 @@ export default async function ProvidersPage() {
         </p>
       </div>
       <Separator />
-      <UsersTable defaultRole="carrier" detailBasePath="/admin/dashboard/providers" />
+      {/* El detalle del proveedor vive en la ficha de usuario del admin; se
+          vuelve a Proveedores gracias a detailBasePath (?from=). */}
+      <UsersTable
+        defaultRole="carrier"
+        detailBasePath="/admin/dashboard/providers"
+        detailHref="/admin/dashboard/users"
+      />
     </div>
   );
 }

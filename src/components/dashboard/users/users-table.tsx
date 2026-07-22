@@ -24,10 +24,18 @@ type RoleFilter = UserRole | "all";
 export function UsersTable({
   defaultRole,
   detailBasePath,
+  detailHref,
   apiEndpoint = "/api/admin/users",
 }: {
   defaultRole?: UserRole;
+  /** Ruta a la que se vuelve desde el detalle (viaja como ?from=). */
   detailBasePath?: string;
+  /**
+   * Dónde vive realmente la página de detalle. Se separa de `detailBasePath`
+   * porque una sección puede listar usuarios y enviar a un detalle que vive en
+   * otra ruta (p. ej. Proveedores del admin usa el detalle de Usuarios).
+   */
+  detailHref?: string;
   apiEndpoint?: string;
 }) {
   const router = useRouter();
@@ -83,7 +91,7 @@ export function UsersTable({
       initialColumnVisibility={{ search: false }}
       getRowId={(row) => row.id}
       onRowClick={(user) => {
-        const base = detailBasePath ?? "/admin/dashboard/users";
+        const base = detailHref ?? detailBasePath ?? "/admin/dashboard/users";
         const from = detailBasePath ? `?from=${encodeURIComponent(detailBasePath)}` : "";
         router.push(`${base}/${user.id}${from}`);
       }}

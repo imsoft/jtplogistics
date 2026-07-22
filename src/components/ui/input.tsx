@@ -5,11 +5,14 @@ import { cn } from "@/lib/utils"
 function Input({ className, type, onChange, ...props }: React.ComponentProps<"input">) {
   // Reglas de capitalización: correo siempre en minúsculas, contraseña tal
   // cual la escribió el usuario, todo lo demás en mayúsculas.
+  // Se usan utilidades de Tailwind (no clases propias) para que twMerge pueda
+  // resolver el conflicto de text-transform cuando quien nos usa manda la suya:
+  // una clase propia no se reconoce como del mismo grupo y `uppercase` ganaría.
   const casingClass =
     type === "email"
-      ? "text-email"
+      ? "lowercase tracking-normal"
       : type === "password"
-        ? "text-password"
+        ? "normal-case tracking-normal"
         : "uppercase tracking-wide"
 
   const handleChange = React.useCallback(

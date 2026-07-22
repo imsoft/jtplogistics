@@ -24,7 +24,10 @@ function PasswordInput({ className, ...props }: PasswordInputProps) {
     <InputGroup className={cn("w-full", className)}>
       <InputGroupInput
         type={showPassword ? "text" : "password"}
-        className="text-password"
+        // Al pulsar el ojo el type pasa a "text", así que el input dejaría de
+        // ser reconocido como contraseña y se mostraría en mayúsculas. Esta
+        // clase viaja después de la del primitivo, así que twMerge la conserva.
+        className="normal-case tracking-normal"
         {...props}
       />
       <InputGroupAddon align="inline-end">
