@@ -14,6 +14,8 @@ import { Label } from "@/components/ui/label";
 import { AppSelect } from "@/components/ui/app-select";
 import { getCarrierQuotesColumns } from "./carrier-quotes-columns";
 import { QuotePdf } from "./quote-pdf";
+import { CityCombobox } from "@/components/dashboard/routes/city-combobox";
+import { parseCityValue } from "@/lib/data/mexico-cities";
 import { ROUTE_STATUS_LABELS } from "@/lib/constants/route-status";
 import type { ActiveRoute, CarrierQuote, CarrierQuotesResponse, QuoteRow } from "@/types/carrier-quote.types";
 import type { QuoteTermsJson } from "./quote-pdf";
@@ -89,8 +91,9 @@ export function CarrierQuotesTable({
   const [unitTypes, setUnitTypes] = useState<UnitTypeOption[]>([]);
   const [currentUser, setCurrentUser] = useState<{ name: string; position: string | null } | null>(null);
   const [selectedUnitType, setSelectedUnitType] = useState("");
-  const [selectedOrigin, setSelectedOrigin] = useState("");
-  const [selectedDestination, setSelectedDestination] = useState("");
+  // Valores del catálogo de ciudades, con formato "Estado|Ciudad".
+  const [selectedOrigin, setSelectedOrigin] = useState<string | null>(null);
+  const [selectedDestination, setSelectedDestination] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filterPrice, setFilterPrice] = useState("all");
   const [finalPrice, setFinalPrice] = useState<number | null>(null);
@@ -144,17 +147,32 @@ export function CarrierQuotesTable({
     [routes, selectedUnitType]
   );
 
-  const origins = useMemo(
-    () => Array.from(new Set(filteredByUnit.map((r) => r.origin))).sort(),
-    [filteredByUnit]
+  // Origen y destino se eligen del catálogo completo de ciudades ("Estado|Ciudad"),
+  // no solo de las rutas registradas: se puede cotizar cualquier trayecto.
+  const originCity = useMemo(() => parseCityValue(selectedOrigin).city, [selectedOrigin]);
+  const destinationCity = useMemo(
+    () => parseCityValue(selectedDestination).city,
+    [selectedDestination]
   );
-  const destinations = useMemo(
-    () => filteredByUnit.filter((r) => r.origin === selectedOrigin).map((r) => r.destination).sort(),
-    [filteredByUnit, selectedOrigin]
+  const destinationState = useMemo(
+    () => parseCityValue(selectedDestination).state || null,
+    [selectedDestination]
   );
+  const hasCityPair = Boolean(originCity && destinationCity);
+
+  const sameCity = (a: string, b: string) =>
+    a.trim().toLowerCase() === b.trim().toLowerCase();
+
+  // Si el trayecto coincide con una ruta registrada se muestran sus
+  // transportistas y targets; si no, se cotiza capturando el precio a mano.
   const selectedRoute = useMemo(
-    () => filteredByUnit.find((r) => r.origin === selectedOrigin && r.destination === selectedDestination) ?? null,
-    [filteredByUnit, selectedOrigin, selectedDestination]
+    () =>
+      hasCityPair
+        ? filteredByUnit.find(
+            (r) => sameCity(r.origin, originCity) && sameCity(r.destination, destinationCity)
+          ) ?? null
+        : null,
+    [filteredByUnit, originCity, destinationCity, hasCityPair]
   );
   const selectedRouteId = selectedRoute?.id ?? null;
   const routeTarget = selectedRoute?.target ?? null;
@@ -172,13 +190,13 @@ export function CarrierQuotesTable({
 
   // ── Handlers ──
   function handleUnitTypeChange(v: string) {
-    setSelectedUnitType(v); setSelectedOrigin(""); setSelectedDestination(""); setCarriers([]); setSearch(""); setFilterPrice("all");
+    setSelectedUnitType(v); setCarriers([]); setSearch(""); setFilterPrice("all");
   }
-  function handleOriginChange(v: string) {
-    setSelectedOrigin(v); setSelectedDestination(""); setCarriers([]); setSearch(""); setFilterPrice("all");
+  function handleOriginChange(v: string | null) {
+    setSelectedOrigin(v); setCarriers([]); setSearch(""); setFilterPrice("all");
   }
   function handleClear() {
-    setSelectedUnitType(""); setSelectedOrigin(""); setSelectedDestination(""); setCarriers([]); setSearch(""); setFilterPrice("all");
+    setSelectedUnitType(""); setSelectedOrigin(null); setSelectedDestination(null); setCarriers([]); setSearch(""); setFilterPrice("all");
   }
 
   // Quien firma la cotización: al editar es su creador original; al crear una
@@ -191,14 +209,13 @@ export function CarrierQuotesTable({
     [isEditing, editQuote, currentUser]
   );
 
-  // Etiqueta legible del tipo de unidad de la ruta seleccionada.
+  // Etiqueta legible del tipo de unidad: la de la ruta si existe, y si no la
+  // que se haya elegido en el filtro (trayecto sin ruta registrada).
   const selectedUnitLabel = useMemo(() => {
-    if (!selectedRoute) return null;
-    return (
-      unitTypes.find((u) => u.value === selectedRoute.unitType)?.label ??
-      selectedRoute.unitType
-    );
-  }, [selectedRoute, unitTypes]);
+    const value = selectedRoute?.unitType ?? selectedUnitType;
+    if (!value) return null;
+    return unitTypes.find((u) => u.value === value)?.label ?? value;
+  }, [selectedRoute, selectedUnitType, unitTypes]);
 
   const columns = useMemo(
     () => getCarrierQuotesColumns(routeTarget, selectedUnitLabel),
@@ -227,21 +244,33 @@ export function CarrierQuotesTable({
     [quoteRows]
   );
 
-  const selectedRouteKey = selectedRoute
-    ? `${selectedRoute.origin}||${selectedRoute.destination}||${selectedUnitLabel ?? ""}`
+  // Se cotiza el trayecto elegido: si coincide con una ruta registrada se usan
+  // sus datos; si no, los del catálogo de ciudades.
+  const quoteOrigin = selectedRoute?.origin ?? originCity;
+  const quoteDestination = selectedRoute?.destination ?? destinationCity;
+  const quoteDestinationState = selectedRoute?.destinationState ?? destinationState;
+
+  const selectedRouteKey = hasCityPair
+    ? `${quoteOrigin}||${quoteDestination}||${selectedUnitLabel ?? ""}`
     : null;
 
-function addCurrentRouteToQuote() {
-    if (!selectedRoute || !selectedRouteKey) return;
-    if (usedRouteKeys.has(selectedRouteKey)) return;
-    const label = selectedUnitLabel ?? selectedRoute.unitType;
+  // Sin ruta registrada no hay targets de referencia, así que el precio debe
+  // capturarse a mano antes de poder agregar el trayecto.
+  const canAddToQuote =
+    hasCityPair &&
+    selectedRouteKey != null &&
+    !usedRouteKeys.has(selectedRouteKey) &&
+    (finalPrice != null || stats.venta != null);
+
+  function addCurrentRouteToQuote() {
+    if (!canAddToQuote || !selectedRouteKey) return;
     const cost = finalPrice ?? stats.venta ?? 0;
     setQuoteRows((prev) => [...prev, {
-      origin: selectedRoute.origin,
-      destination: selectedRoute.destination,
-      destinationState: selectedRoute.destinationState,
+      origin: quoteOrigin,
+      destination: quoteDestination,
+      destinationState: quoteDestinationState,
       cost,
-      unitLabel: label,
+      unitLabel: selectedUnitLabel ?? "",
     }]);
     setQuoteError(null);
     builderRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -328,14 +357,18 @@ function addCurrentRouteToQuote() {
     <div className="space-y-8">
       {/* ─── SECCIÓN 1: FILTROS ─────────────────────────────────────────────── */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_auto]">
-        <div className="space-y-2">
-          <Label className="text-xs font-medium">Origen</Label>
-          <AppSelect value={selectedOrigin} onValueChange={handleOriginChange} options={origins.map((o) => ({value: o, label: o}))} className="w-full" />
-        </div>
-        <div className="space-y-2">
-          <Label className="text-xs font-medium">Destino</Label>
-          <AppSelect value={selectedDestination} onValueChange={setSelectedDestination} options={destinations.map((d) => ({value: d, label: d}))} disabled={!selectedOrigin} className="w-full" />
-        </div>
+        <CityCombobox
+          id="qb-origin"
+          label="Origen"
+          value={selectedOrigin}
+          onValueChange={handleOriginChange}
+        />
+        <CityCombobox
+          id="qb-destination"
+          label="Destino"
+          value={selectedDestination}
+          onValueChange={setSelectedDestination}
+        />
         <div className="space-y-2">
           <Label className="text-xs font-medium">Tipo de unidad</Label>
           <AppSelect
@@ -370,59 +403,83 @@ function addCurrentRouteToQuote() {
         </p>
       )}
 
-      {/* ─── SECCIÓN 2: TRANSPORTISTAS ──────────────────────────────────────── */}
-      {!selectedRouteId ? (
+      {/* ─── SECCIÓN 2: TRANSPORTISTAS Y PRECIO ─────────────────────────────── */}
+      {!hasCityPair ? (
         <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
-          Selecciona una ruta para ver los transportistas disponibles.
-        </p>
-      ) : isLoadingCarriers ? (
-        <p className="text-muted-foreground">Cargando transportistas…</p>
-      ) : carriers.length === 0 ? (
-        <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
-          Ningún transportista ha seleccionado esta ruta todavía.
+          Elige origen y destino para continuar.
         </p>
       ) : (
         <div className="space-y-4">
-          <DataTable<CarrierQuote, unknown> columns={columns} data={filteredCarriers} getRowId={(row) => row.id} filterColumn="" />
-
-          {stats.avg != null && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                  Resumen de targets
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <div className="rounded-lg bg-muted/50 p-4">
-                    <p className="text-muted-foreground text-xs font-medium">Promedio</p>
-                    <p className="text-lg font-semibold">${formatMxn(stats.avg)}</p>
-                  </div>
-                  <div className="rounded-lg bg-muted/50 p-4">
-                    <p className="text-muted-foreground text-xs font-medium">Precio sugerido</p>
-                    <p className="text-lg font-semibold">${formatMxn(stats.venta)}</p>
-                  </div>
-                  <div className="rounded-lg bg-muted/50 p-4 space-y-1">
-                    <p className="text-muted-foreground text-xs font-medium">Precio final</p>
-                    <Input
-                      type="number" min="0" step="100"
-                      value={finalPrice ?? ""}
-                      onChange={(e) => setFinalPrice(e.target.value ? parseFloat(e.target.value) : null)}
-                      className="h-8 text-sm font-semibold"
-                    />
-                  </div>
-                </div>
-                {selectedRouteKey && !usedRouteKeys.has(selectedRouteKey) && (
-                  <div className="mt-3 flex justify-end">
-                    <Button variant="default" size="sm" onClick={addCurrentRouteToQuote}>
-                      <Plus className="size-3.5" />
-                      Agregar ruta a cotización
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+          {selectedRouteId ? (
+            isLoadingCarriers ? (
+              <p className="text-muted-foreground">Cargando transportistas…</p>
+            ) : carriers.length === 0 ? (
+              <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
+                Ningún transportista ha seleccionado esta ruta todavía.
+              </p>
+            ) : (
+              <DataTable<CarrierQuote, unknown> columns={columns} data={filteredCarriers} getRowId={(row) => row.id} filterColumn="" />
+            )
+          ) : (
+            <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+              Este trayecto no corresponde a una ruta registrada, así que no hay
+              targets de transportistas como referencia. Captura el precio para
+              agregarlo a la cotización.
+            </p>
           )}
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                {stats.avg != null ? "Resumen de targets" : "Precio"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-3">
+                {stats.avg != null && (
+                  <>
+                    <div className="rounded-lg bg-muted/50 p-4">
+                      <p className="text-muted-foreground text-xs font-medium">Promedio</p>
+                      <p className="text-lg font-semibold">${formatMxn(stats.avg)}</p>
+                    </div>
+                    <div className="rounded-lg bg-muted/50 p-4">
+                      <p className="text-muted-foreground text-xs font-medium">Precio sugerido</p>
+                      <p className="text-lg font-semibold">${formatMxn(stats.venta)}</p>
+                    </div>
+                  </>
+                )}
+                <div className="rounded-lg bg-muted/50 p-4 space-y-1">
+                  <p className="text-muted-foreground text-xs font-medium">Precio final</p>
+                  <Input
+                    type="number" min="0" step="100"
+                    value={finalPrice ?? ""}
+                    onChange={(e) => setFinalPrice(e.target.value ? parseFloat(e.target.value) : null)}
+                    className="h-8 text-sm font-semibold"
+                  />
+                </div>
+              </div>
+              <div className="mt-3 flex items-center justify-end gap-3">
+                {selectedRouteKey && usedRouteKeys.has(selectedRouteKey) ? (
+                  <span className="text-xs text-muted-foreground">
+                    Este trayecto ya está en la cotización.
+                  </span>
+                ) : !canAddToQuote ? (
+                  <span className="text-xs text-muted-foreground">
+                    Captura el precio final para agregarlo.
+                  </span>
+                ) : null}
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={addCurrentRouteToQuote}
+                  disabled={!canAddToQuote}
+                >
+                  <Plus className="size-3.5" />
+                  Agregar ruta a cotización
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
 
