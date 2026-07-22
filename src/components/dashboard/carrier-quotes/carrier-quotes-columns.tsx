@@ -40,9 +40,22 @@ function TargetIndicator({
 }
 
 export function getCarrierQuotesColumns(
-  routeTarget: number | null
+  routeTarget: number | null,
+  /** Tipo de unidad de la ruta seleccionada; se muestra como columna. */
+  unitLabel?: string | null
 ): ColumnDef<CarrierQuote>[] {
   return [
+    {
+      id: "unitType",
+      header: "Tipo de unidad",
+      cell: () =>
+        unitLabel ? (
+          <span className="whitespace-nowrap font-medium">{unitLabel}</span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        ),
+      enableSorting: false,
+    },
     {
       accessorKey: "company",
       header: ({ column }) => <SortableColumnHeader column={column} title="Empresa" />,

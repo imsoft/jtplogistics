@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
     // Se listan TODAS las rutas (activas, pendientes e inactivas).
     const routes = await prisma.route.findMany({
-      select: { id: true, origin: true, destination: true, target: true, status: true },
+      select: { id: true, origin: true, destination: true, target: true, status: true, unitType: true },
       orderBy: [{ origin: "asc" }, { destination: "asc" }],
     });
 

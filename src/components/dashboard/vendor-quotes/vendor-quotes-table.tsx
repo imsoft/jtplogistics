@@ -6,7 +6,13 @@ import { Label } from "@/components/ui/label";
 import { AppSelect } from "@/components/ui/app-select";
 import { formatMxn } from "@/lib/utils";
 
-type ActiveRoute = { id: string; origin: string; destination: string; target: number | null };
+type ActiveRoute = {
+  id: string;
+  origin: string;
+  destination: string;
+  target: number | null;
+  unitType: string;
+};
 
 async function fetchRoutes(): Promise<{ routes: ActiveRoute[] }> {
   const res = await fetch("/api/vendor/carrier-quotes");
@@ -31,16 +37,22 @@ function computeStats(targets: number[]) {
 
 export function VendorQuotesTable() {
   const [routes, setRoutes] = useState<ActiveRoute[]>([]);
+  const [unitTypes, setUnitTypes] = useState<{ value: string; label: string }[]>([]);
   const [targets, setTargets] = useState<number[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoadingTargets, setIsLoadingTargets] = useState(false);
 
+  const [selectedUnitType, setSelectedUnitType] = useState<string>("");
   const [selectedOrigin, setSelectedOrigin] = useState<string>("");
   const [selectedDestination, setSelectedDestination] = useState<string>("");
 
   const loadRoutes = useCallback(async () => {
-    const data = await fetchRoutes();
+    const [data, utRes] = await Promise.all([
+      fetchRoutes(),
+      fetch("/api/unit-types").then((r) => (r.ok ? r.json() : [])),
+    ]);
     setRoutes(data.routes);
+    setUnitTypes(utRes);
     setIsLoaded(true);
   }, []);
 
@@ -48,27 +60,51 @@ export function VendorQuotesTable() {
     loadRoutes();
   }, [loadRoutes]);
 
+  // Tipos de unidad disponibles según las rutas cargadas.
+  const availableUnitTypes = useMemo(() => {
+    const vals = Array.from(new Set(routes.map((r) => r.unitType)));
+    return vals.map((v) => ({
+      value: v,
+      label: unitTypes.find((u) => u.value === v)?.label ?? v,
+    }));
+  }, [routes, unitTypes]);
+
+  // Las rutas se filtran por el tipo de unidad que se va a cotizar.
+  const filteredByUnit = useMemo(
+    () => (selectedUnitType ? routes.filter((r) => r.unitType === selectedUnitType) : routes),
+    [routes, selectedUnitType]
+  );
+
   const origins = useMemo(
-    () => Array.from(new Set(routes.map((r) => r.origin))).sort(),
-    [routes]
+    () => Array.from(new Set(filteredByUnit.map((r) => r.origin))).sort(),
+    [filteredByUnit]
   );
 
   const destinations = useMemo(
     () =>
-      routes
+      filteredByUnit
         .filter((r) => r.origin === selectedOrigin)
         .map((r) => r.destination)
         .sort(),
-    [routes, selectedOrigin]
+    [filteredByUnit, selectedOrigin]
   );
 
-  const selectedRouteId = useMemo(
+  const selectedRoute = useMemo(
     () =>
-      routes.find(
+      filteredByUnit.find(
         (r) => r.origin === selectedOrigin && r.destination === selectedDestination
-      )?.id ?? null,
-    [routes, selectedOrigin, selectedDestination]
+      ) ?? null,
+    [filteredByUnit, selectedOrigin, selectedDestination]
   );
+  const selectedRouteId = selectedRoute?.id ?? null;
+
+  const selectedUnitLabel = useMemo(() => {
+    if (!selectedRoute) return null;
+    return (
+      unitTypes.find((u) => u.value === selectedRoute.unitType)?.label ??
+      selectedRoute.unitType
+    );
+  }, [selectedRoute, unitTypes]);
 
   useEffect(() => {
     if (!selectedRouteId) {
@@ -81,6 +117,13 @@ export function VendorQuotesTable() {
       setIsLoadingTargets(false);
     });
   }, [selectedRouteId]);
+
+  function handleUnitTypeChange(value: string) {
+    setSelectedUnitType(value);
+    setSelectedOrigin("");
+    setSelectedDestination("");
+    setTargets([]);
+  }
 
   function handleOriginChange(value: string) {
     setSelectedOrigin(value);
@@ -97,7 +140,17 @@ export function VendorQuotesTable() {
   return (
     <div className="space-y-6">
       {/* Filtros */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-2">
+          <Label className="text-xs font-medium">Tipo de unidad</Label>
+          <AppSelect
+            value={selectedUnitType}
+            onValueChange={handleUnitTypeChange}
+            options={availableUnitTypes}
+            className="w-full"
+          />
+        </div>
+
         <div className="space-y-2">
           <Label className="text-xs font-medium">Origen</Label>
           <AppSelect
@@ -139,6 +192,12 @@ export function VendorQuotesTable() {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {selectedUnitLabel && (
+              <p className="mb-4 text-xs text-muted-foreground">
+                Tipo de unidad:{" "}
+                <span className="font-medium text-foreground">{selectedUnitLabel}</span>
+              </p>
+            )}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <div className="rounded-lg bg-muted/50 p-4">
                 <p className="text-muted-foreground text-xs font-medium">Venta</p>

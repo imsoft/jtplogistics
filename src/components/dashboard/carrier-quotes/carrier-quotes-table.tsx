@@ -170,7 +170,19 @@ export function CarrierQuotesTable({
     setSelectedUnitType(""); setSelectedOrigin(""); setSelectedDestination(""); setCarriers([]); setSearch(""); setFilterPrice("all");
   }
 
-  const columns = useMemo(() => getCarrierQuotesColumns(routeTarget), [routeTarget]);
+  // Etiqueta legible del tipo de unidad de la ruta seleccionada.
+  const selectedUnitLabel = useMemo(() => {
+    if (!selectedRoute) return null;
+    return (
+      unitTypes.find((u) => u.value === selectedRoute.unitType)?.label ??
+      selectedRoute.unitType
+    );
+  }, [selectedRoute, unitTypes]);
+
+  const columns = useMemo(
+    () => getCarrierQuotesColumns(routeTarget, selectedUnitLabel),
+    [routeTarget, selectedUnitLabel]
+  );
   const stats = useMemo(() => computeStats(carriers), [carriers]);
 
   const filteredCarriers = useMemo(() => {
@@ -187,15 +199,21 @@ export function CarrierQuotesTable({
   }, [carriers, search, filterPrice, routeTarget]);
 
   // ── Quote builder helpers ──
+  // La clave incluye el tipo de unidad: una misma ruta se puede cotizar en
+  // varios tipos de unidad (p. ej. caja seca y refrigerado por separado).
   const usedRouteKeys = useMemo(
-    () => new Set(quoteRows.map((r) => `${r.origin}||${r.destination}`)),
+    () => new Set(quoteRows.map((r) => `${r.origin}||${r.destination}||${r.unitLabel}`)),
     [quoteRows]
   );
+
+  const selectedRouteKey = selectedRoute
+    ? `${selectedRoute.origin}||${selectedRoute.destination}||${selectedUnitLabel ?? ""}`
+    : null;
+
 function addCurrentRouteToQuote() {
-    if (!selectedRoute) return;
-    const key = `${selectedRoute.origin}||${selectedRoute.destination}`;
-    if (usedRouteKeys.has(key)) return;
-    const label = unitTypes.find((u) => u.value === selectedRoute.unitType)?.label ?? selectedRoute.unitType;
+    if (!selectedRoute || !selectedRouteKey) return;
+    if (usedRouteKeys.has(selectedRouteKey)) return;
+    const label = selectedUnitLabel ?? selectedRoute.unitType;
     const cost = finalPrice ?? stats.venta ?? 0;
     setQuoteRows((prev) => [...prev, {
       origin: selectedRoute.origin,
@@ -291,12 +309,15 @@ function addCurrentRouteToQuote() {
           <Label className="text-xs font-medium">Destino</Label>
           <AppSelect value={selectedDestination} onValueChange={setSelectedDestination} options={destinations.map((d) => ({value: d, label: d}))} disabled={!selectedOrigin} className="w-full" />
         </div>
-        {availableUnitTypes.length > 1 && (
-          <div className="space-y-2">
-            <Label className="text-xs font-medium">Tipo de unidad</Label>
-            <AppSelect value={selectedUnitType} onValueChange={handleUnitTypeChange} options={availableUnitTypes} className="w-full" />
-          </div>
-        )}
+        <div className="space-y-2">
+          <Label className="text-xs font-medium">Tipo de unidad</Label>
+          <AppSelect
+            value={selectedUnitType}
+            onValueChange={handleUnitTypeChange}
+            options={availableUnitTypes}
+            className="w-full"
+          />
+        </div>
         <div className="space-y-2">
           <Label className="text-xs font-medium">Buscar</Label>
           <Input value={search} onChange={(e) => setSearch(e.target.value)} disabled={!selectedRouteId} />
@@ -364,7 +385,7 @@ function addCurrentRouteToQuote() {
                     />
                   </div>
                 </div>
-                {selectedRoute && !usedRouteKeys.has(`${selectedRoute.origin}||${selectedRoute.destination}`) && (
+                {selectedRouteKey && !usedRouteKeys.has(selectedRouteKey) && (
                   <div className="mt-3 flex justify-end">
                     <Button variant="default" size="sm" onClick={addCurrentRouteToQuote}>
                       <Plus className="size-3.5" />
@@ -428,7 +449,7 @@ function addCurrentRouteToQuote() {
                     <th className="text-left px-3 py-2 font-medium text-xs">Destino</th>
                     <th className="text-left px-3 py-2 font-medium text-xs hidden sm:table-cell">Estado</th>
                     <th className="text-left px-3 py-2 font-medium text-xs">Costo ($)</th>
-                    <th className="text-left px-3 py-2 font-medium text-xs hidden md:table-cell">Unidad</th>
+                    <th className="text-left px-3 py-2 font-medium text-xs">Unidad</th>
                     <th className="px-2 py-2 w-8" />
                   </tr>
                 </thead>
@@ -446,7 +467,7 @@ function addCurrentRouteToQuote() {
                           className="w-28 h-8"
                         />
                       </td>
-                      <td className="px-3 py-2 text-xs text-muted-foreground hidden md:table-cell">{row.unitLabel}</td>
+                      <td className="px-3 py-2 text-xs font-medium">{row.unitLabel}</td>
                       <td className="px-2 py-2">
                         <Button variant="ghost" size="icon" className="size-7" onClick={() => removeRow(i)} aria-label="Eliminar fila">
                           <Trash2 className="size-3.5 text-destructive" />
