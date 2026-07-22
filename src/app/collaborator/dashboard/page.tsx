@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { requireSession } from "@/lib/auth-server";
 import { prisma } from "@/lib/db";
-import { BarChart3, FileText, Truck, Users } from "lucide-react";
+import { BarChart3, Clock, FileText, PauseCircle, Truck, Users } from "lucide-react";
 
 export const metadata = {
   title: "Dashboard | JTP Logistics",
@@ -35,10 +35,12 @@ export default async function CollaboratorDashboard() {
   // Obtener clientes
   const clientsCount = await prisma.client.count();
 
-  // Obtener rutas disponibles
-  const routesCount = await prisma.route.count({
-    where: { status: "active" },
-  });
+  // Rutas por estado, para el resumen y los accesos con filtro aplicado.
+  const [routesCount, routesPending, routesInactive] = await Promise.all([
+    prisma.route.count({ where: { status: "active" } }),
+    prisma.route.count({ where: { status: "pending" } }),
+    prisma.route.count({ where: { status: "inactive" } }),
+  ]);
 
   // Obtener proveedores (carriers)
   const providersCount = await prisma.user.count({
@@ -70,7 +72,13 @@ export default async function CollaboratorDashboard() {
                 {quotesCount === 0 ? "Sin cotizaciones aún" : "Cotizaciones creadas"}
               </p>
               <Button asChild variant="link" className="mt-3 h-auto p-0">
-                <Link href="/collaborator/dashboard/quotes/{quotesCount === 0 ? 'new' : ''}">
+                <Link
+                  href={
+                    quotesCount === 0
+                      ? "/collaborator/dashboard/quotes/new"
+                      : "/collaborator/dashboard/quotes"
+                  }
+                >
                   {quotesCount === 0 ? "Crear primera cotización" : "Ver todas"}
                 </Link>
               </Button>
@@ -110,7 +118,49 @@ export default async function CollaboratorDashboard() {
                 Rutas activas
               </p>
               <Button asChild variant="link" className="mt-3 h-auto p-0">
-                <Link href="/collaborator/dashboard/routes">Ver todas</Link>
+                <Link href="/collaborator/dashboard/routes?status=active">Ver todas</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Rutas pendientes */}
+        {user?.canViewRoutes && (
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Rutas pendientes</CardTitle>
+              <Clock className="size-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{routesPending}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Esperando activación
+              </p>
+              <Button asChild variant="link" className="mt-3 h-auto p-0">
+                <Link href="/collaborator/dashboard/routes?status=pending">
+                  Ver pendientes
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Rutas inactivas */}
+        {user?.canViewRoutes && (
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Rutas inactivas</CardTitle>
+              <PauseCircle className="size-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{routesInactive}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Fuera de operación
+              </p>
+              <Button asChild variant="link" className="mt-3 h-auto p-0">
+                <Link href="/collaborator/dashboard/routes?status=inactive">
+                  Ver inactivas
+                </Link>
               </Button>
             </CardContent>
           </Card>

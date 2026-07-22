@@ -140,7 +140,8 @@ export function CollaboratorAppSidebar() {
     <DashboardSidebar
       navGroups={navGroups}
       label="Mi panel"
-      homeHref={`${BASE}/profile`}
+      homeHref={BASE}
+      homeLabel="Inicio"
       profileHref={`${BASE}/profile`}
     />
   );
