@@ -89,15 +89,33 @@ function PageFooter() {
   );
 }
 
-function Signatures({ date, creatorName }: { date: string; creatorName?: string }) {
+/**
+ * Zona de firmas. El nombre y el puesto son SIEMPRE los de quien creó la
+ * cotización: nunca se rellenan con los de otra persona.
+ */
+function Signatures({
+  date,
+  creatorName,
+  creatorPosition,
+}: {
+  date: string;
+  creatorName?: string;
+  creatorPosition?: string;
+}) {
   return (
     <View>
       <View style={s.sigBlock}>
         <View style={s.sigColumn}>
           <Text style={s.sigLabel}>ATENTAMENTE</Text>
           <View style={s.sigLine} />
-          <Text style={s.sigName}>{creatorName ?? "LCI. José Octavio Tirado Peña"}</Text>
-          <Text style={{ fontSize: 8, color: MUTED, textAlign: "center" }}>Director General</Text>
+          {creatorName ? (
+            <Text style={s.sigName}>{creatorName}</Text>
+          ) : null}
+          {creatorPosition ? (
+            <Text style={{ fontSize: 8, color: MUTED, textAlign: "center" }}>
+              {creatorPosition}
+            </Text>
+          ) : null}
         </View>
         <View style={s.sigColumn}>
           <Text style={s.sigLabel}>ACEPTAMOS COTIZACION</Text>
@@ -120,10 +138,13 @@ interface Props {
   data: QuoteData;
   logoUrl: string;
   termsJson: QuoteTermsJson;
+  /** Nombre de quien creó la cotización (aparece en la zona de firmas). */
   creatorName?: string;
+  /** Puesto de quien creó la cotización (aparece bajo su nombre). */
+  creatorPosition?: string;
 }
 
-export function QuotePdf({ data, logoUrl, termsJson, creatorName }: Props) {
+export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPosition }: Props) {
   const today = new Date();
   const dateStr = formatDateEs(today);
   const rowBg = (i: number) => (i % 2 === 0 ? BRAND_LIGHT : WHITE);
@@ -177,7 +198,7 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName }: Props) {
         <Text style={s.termsTitle}>TERMINOS Y CONDICIONES</Text>
         {renderLexicalContent(termsJson.bulletsJson, lexStyles)}
         <Text style={s.validity}>{formatValidUntilEs(data.validUntil)}</Text>
-        <Signatures date={dateStr} creatorName={creatorName} />
+        <Signatures date={dateStr} creatorName={creatorName} creatorPosition={creatorPosition} />
       </Page>
 
       {/* ── Página 2: Términos del contrato ── */}
@@ -186,7 +207,7 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName }: Props) {
         <PageFooter />
         <Text style={s.pageTitle}>TERMINOS INSERTOS EN EL CONTRATO</Text>
         {renderLexicalContent(termsJson.contractJson, lexStyles)}
-        <Signatures date={dateStr} creatorName={creatorName} />
+        <Signatures date={dateStr} creatorName={creatorName} creatorPosition={creatorPosition} />
       </Page>
 
       {/* ── Página 3: Aviso de privacidad ── */}
@@ -195,7 +216,7 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName }: Props) {
         <PageFooter />
         <Text style={s.pageTitle}>AVISO DE PRIVACIDAD</Text>
         {renderLexicalContent(termsJson.privacyJson, lexStyles)}
-        <Signatures date={dateStr} creatorName={creatorName} />
+        <Signatures date={dateStr} creatorName={creatorName} creatorPosition={creatorPosition} />
       </Page>
 
       {/* ── Página 4: Límites de responsabilidad ── */}
@@ -203,7 +224,7 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName }: Props) {
         <PageHeader logoUrl={logoUrl} date={dateStr} />
         <PageFooter />
         {renderLexicalContent(termsJson.limitsJson, lexStyles)}
-        <Signatures date={dateStr} creatorName={creatorName} />
+        <Signatures date={dateStr} creatorName={creatorName} creatorPosition={creatorPosition} />
       </Page>
     </Document>
   );

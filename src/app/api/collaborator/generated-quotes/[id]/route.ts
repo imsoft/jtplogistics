@@ -15,7 +15,15 @@ export async function GET(
 
     const quote = await prisma.generatedQuote.findUnique({
       where: { id },
-      include: { createdBy: { select: { name: true } } },
+      include: {
+        createdBy: {
+          select: {
+            name: true,
+            position: true,
+            employeeProfile: { select: { position: true } },
+          },
+        },
+      },
     });
 
     if (!quote) {
@@ -30,7 +38,11 @@ export async function GET(
       ...quote,
       validUntil: quote.validUntil.toISOString().split("T")[0],
       createdAt: quote.createdAt.toISOString(),
+      // Nombre y puesto de quien creó la cotización: se usan en la zona de
+      // firmas del PDF y nunca deben sustituirse por los de otra persona.
       creatorName: quote.createdBy.name,
+      creatorPosition:
+        quote.createdBy.employeeProfile?.position ?? quote.createdBy.position ?? null,
     });
   } catch (e) {
     if (e instanceof Response) return e;

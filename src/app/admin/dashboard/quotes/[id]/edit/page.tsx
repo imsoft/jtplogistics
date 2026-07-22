@@ -39,6 +39,7 @@ export default function EditQuotePage() {
       validUntil: data.validUntil,
       rows: data.rows ?? [],
       creatorName: data.creatorName,
+      creatorPosition: data.creatorPosition ?? undefined,
     });
     setIsLoaded(true);
   }, [id]);

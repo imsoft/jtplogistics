@@ -33,7 +33,9 @@ export interface EditQuote {
   phone: string;
   validUntil: string;
   rows: QuoteRow[];
+  /** Quien creó la cotización originalmente (para la zona de firmas). */
   creatorName?: string;
+  creatorPosition?: string;
 }
 
 interface CarrierQuotesTableProps {
@@ -85,6 +87,7 @@ export function CarrierQuotesTable({
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoadingCarriers, setIsLoadingCarriers] = useState(false);
   const [unitTypes, setUnitTypes] = useState<UnitTypeOption[]>([]);
+  const [currentUser, setCurrentUser] = useState<{ name: string; position: string | null } | null>(null);
   const [selectedUnitType, setSelectedUnitType] = useState("");
   const [selectedOrigin, setSelectedOrigin] = useState("");
   const [selectedDestination, setSelectedDestination] = useState("");
@@ -107,14 +110,22 @@ export function CarrierQuotesTable({
 
   // ── Load data ──
   const loadRoutes = useCallback(async () => {
-    const [data, utRes, numRes] = await Promise.all([
+    const [data, utRes, numRes, profileRes] = await Promise.all([
       fetchQuotes(apiEndpoint),
       fetch("/api/unit-types").then((r) => r.ok ? r.json() : []),
       // En modo edición se conserva el número existente.
       isEditing ? Promise.resolve(null) : fetch("/api/generated-quotes/next-number").then((r) => r.ok ? r.json() : null),
+      // Datos del usuario actual: al crear una cotización, él es quien firma.
+      fetch("/api/profile").then((r) => (r.ok ? r.json() : null)),
     ]);
     setRoutes(data.routes);
     setUnitTypes(utRes);
+    if (profileRes) {
+      setCurrentUser({
+        name: profileRes.name ?? "",
+        position: profileRes.position ?? null,
+      });
+    }
     if (!isEditing && numRes?.quoteNumber) setQuoteNumber(numRes.quoteNumber);
     setIsLoaded(true);
   }, [apiEndpoint, isEditing]);
@@ -169,6 +180,16 @@ export function CarrierQuotesTable({
   function handleClear() {
     setSelectedUnitType(""); setSelectedOrigin(""); setSelectedDestination(""); setCarriers([]); setSearch(""); setFilterPrice("all");
   }
+
+  // Quien firma la cotización: al editar es su creador original; al crear una
+  // nueva, el usuario en sesión. Nunca se usa el nombre de otra persona.
+  const signer = useMemo(
+    () =>
+      isEditing
+        ? { name: editQuote?.creatorName, position: editQuote?.creatorPosition }
+        : { name: currentUser?.name, position: currentUser?.position ?? undefined },
+    [isEditing, editQuote, currentUser]
+  );
 
   // Etiqueta legible del tipo de unidad de la ruta seleccionada.
   const selectedUnitLabel = useMemo(() => {
@@ -269,7 +290,13 @@ function addCurrentRouteToQuote() {
       const termsJson: QuoteTermsJson = termsRes.ok ? await termsRes.json() : { bulletsJson: "", contractJson: "", privacyJson: "", limitsJson: "" };
       const logoUrl = window.location.origin + "/images/logo/jtp-logistics.png";
       const blob = await pdf(
-        <QuotePdf data={{ quoteNumber, company, contact, phone, validUntil, rows: quoteRows }} logoUrl={logoUrl} termsJson={termsJson} />
+        <QuotePdf
+          data={{ quoteNumber, company, contact, phone, validUntil, rows: quoteRows }}
+          logoUrl={logoUrl}
+          termsJson={termsJson}
+          creatorName={signer.name}
+          creatorPosition={signer.position}
+        />
       ).toBlob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");

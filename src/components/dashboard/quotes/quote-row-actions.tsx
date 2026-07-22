@@ -65,6 +65,7 @@ export function QuoteRowActions({
         validUntil: string;
         rows: QuoteRow[];
         creatorName: string;
+        creatorPosition: string | null;
       };
       const termsJson = termsRes.ok
         ? await termsRes.json()
@@ -88,6 +89,7 @@ export function QuoteRowActions({
           logoUrl={logoUrl}
           termsJson={termsJson}
           creatorName={quote.creatorName}
+          creatorPosition={quote.creatorPosition ?? undefined}
         />
       ).toBlob();
       const url = URL.createObjectURL(blob);
