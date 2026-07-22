@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { AppSelect } from "@/components/ui/app-select";
 import { getCarrierQuotesColumns } from "./carrier-quotes-columns";
 import { QuotePdf } from "./quote-pdf";
+import { ROUTE_STATUS_LABELS } from "@/lib/constants/route-status";
 import type { ActiveRoute, CarrierQuote, CarrierQuotesResponse, QuoteRow } from "@/types/carrier-quote.types";
 import type { QuoteTermsJson } from "./quote-pdf";
 import { formatMxn } from "@/lib/utils";
@@ -309,6 +310,17 @@ function addCurrentRouteToQuote() {
           <Button type="button" variant="outline" onClick={handleClear} className="w-full">Limpiar</Button>
         </div>
       </div>
+
+      {/* Aviso: la ruta se puede cotizar aunque no esté activa. */}
+      {selectedRoute?.status && selectedRoute.status !== "active" && (
+        <p className="rounded-lg border border-dashed px-3 py-2 text-xs text-muted-foreground">
+          Esta ruta está marcada como{" "}
+          <span className="font-medium">
+            {ROUTE_STATUS_LABELS[selectedRoute.status]}
+          </span>
+          . Puedes cotizarla igualmente.
+        </p>
+      )}
 
       {/* ─── SECCIÓN 2: TRANSPORTISTAS ──────────────────────────────────────── */}
       {!selectedRouteId ? (

@@ -9,9 +9,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const routeId = searchParams.get("routeId");
 
+    // Se listan TODAS las rutas (activas, pendientes e inactivas).
     const routes = await prisma.route.findMany({
-      where: { status: "active" },
-      select: { id: true, origin: true, destination: true, target: true },
+      select: { id: true, origin: true, destination: true, target: true, status: true },
       orderBy: [{ origin: "asc" }, { destination: "asc" }],
     });
 

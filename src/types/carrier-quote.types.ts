@@ -1,3 +1,10 @@
+import type { RouteStatus } from "@/types/route.types";
+
+/**
+ * Ruta disponible en el cotizador. Se incluyen todas las rutas registradas
+ * (activas, pendientes e inactivas); `status` permite avisar en la interfaz
+ * cuando la ruta elegida no está activa.
+ */
 export interface ActiveRoute {
   id: string;
   origin: string;
@@ -5,6 +12,7 @@ export interface ActiveRoute {
   destinationState: string | null;
   unitType: string;
   target: number | null;
+  status?: RouteStatus;
 }
 
 export interface CarrierQuote {
