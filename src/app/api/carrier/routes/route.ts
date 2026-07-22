@@ -13,9 +13,12 @@ export async function GET() {
     const session = await requireCarrier();
 
     const [routes, carrierRoutes, userRecord] = await Promise.all([
-      // Incluye también pendientes/inactivas: el transportista las ve con
-      // comportamiento distinto (escribe su volumen y contacta a compras).
+      // El transportista solo ve rutas ACTIVAS: las pendientes e inactivas no
+      // se le muestran ni en su panel principal ni al elegir rutas.
+      // Sus selecciones sobre rutas no activas se conservan en la base de datos
+      // (el admin las sigue viendo); simplemente quedan ocultas para él.
       prisma.route.findMany({
+        where: { status: "active" },
         orderBy: { createdAt: "desc" },
         include: { unitTargets: true },
       }),
@@ -117,6 +120,7 @@ export async function PUT(request: NextRequest) {
 
     const existingRoutes = await prisma.carrierRoute.findMany({
       where: { carrierId: session.user.id, unitType: pageUnitType },
+      include: { route: { select: { status: true } } },
     });
     const existingMap = new Map(existingRoutes.map((r) => [`${r.routeId}:${r.unitType}`, r]));
     const incomingKeys = new Set(body.map((r) => `${r.routeId}:${r.unitType}`));
@@ -124,7 +128,12 @@ export async function PUT(request: NextRequest) {
 
     // Categorize routes
     const toCreate = body.filter((item) => !existingMap.has(`${item.routeId}:${item.unitType}`));
-    const toDelete = existingRoutes.filter((item) => !incomingKeys.has(`${item.routeId}:${item.unitType}`));
+    // Solo se consideran para borrar las selecciones de rutas ACTIVAS: el
+    // transportista ya no ve las pendientes/inactivas, así que nunca vienen en
+    // el cuerpo de la petición y borrarlas sería una pérdida de datos.
+    const toDelete = existingRoutes.filter(
+      (item) => item.route.status === "active" && !incomingKeys.has(`${item.routeId}:${item.unitType}`)
+    );
     const toUpdate = body.filter((item) => existingMap.has(`${item.routeId}:${item.unitType}`));
 
     // Check permissions for deletions
