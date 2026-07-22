@@ -31,6 +31,7 @@ export async function GET(
             rfc: true,
             address: true,
             contacts: {
+              orderBy: { createdAt: "asc" },
               select: {
                 id: true,
                 type: true,
@@ -41,6 +42,10 @@ export async function GET(
               },
             },
           },
+        },
+        carrierRoutes: {
+          include: { route: true },
+          orderBy: { createdAt: "asc" },
         },
       },
     });
@@ -65,8 +70,22 @@ export async function GET(
           }
         : null,
       role: user.role,
+      carrierNotes: user.carrierNotes,
+      carrierRoutes: user.carrierRoutes.map((cr) => ({
+        id: cr.id,
+        unitType: cr.unitType,
+        carrierTarget: cr.carrierTarget,
+        editUnlockRequested: cr.editUnlockRequested,
+        editUnlockApproved: cr.editUnlockApproved,
+        route: {
+          origin: cr.route.origin,
+          destination: cr.route.destination,
+          description: cr.route.description,
+          target: cr.route.target,
+        },
+      })),
       createdAt: user.createdAt.toISOString(),
-      updatedAt: new Date().toISOString(),
+      updatedAt: user.updatedAt.toISOString(),
     });
   } catch (e) {
     if (e instanceof Response) return e;

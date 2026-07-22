@@ -33,11 +33,17 @@ interface CarrierRouteListItem {
 interface CarrierRoutesManagerProps {
   routes: CarrierRouteListItem[];
   onRouteDeleted?: (routeId: string) => void;
+  /** Vista de solo lectura: oculta la columna de acción y el botón de desvincular. */
+  readOnly?: boolean;
 }
 
-export function CarrierRoutesManager({ routes, onRouteDeleted }: CarrierRoutesManagerProps) {
+export function CarrierRoutesManager({ routes, onRouteDeleted, readOnly = false }: CarrierRoutesManagerProps) {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [routesToShow, setRoutesToShow] = useState(routes);
+
+  const gridCols = readOnly
+    ? "grid-cols-[1fr_120px_120px_72px]"
+    : "grid-cols-[1fr_120px_120px_72px_48px]";
 
   async function handleDelete(carrierRouteId: string, routeLabel: string) {
     setDeleting(carrierRouteId);
@@ -74,17 +80,17 @@ export function CarrierRoutesManager({ routes, onRouteDeleted }: CarrierRoutesMa
   return (
     <div className="overflow-x-auto">
       <div className="min-w-[520px]">
-        <div className="grid grid-cols-[1fr_120px_120px_72px_48px] gap-3 border-b bg-muted/40 px-4 py-2 text-xs font-medium text-muted-foreground">
+        <div className={`grid ${gridCols} gap-3 border-b bg-muted/40 px-4 py-2 text-xs font-medium text-muted-foreground`}>
           <span>Ruta</span>
           <span>Target JTP</span>
           <span>Target carrier</span>
           <span>Dif.</span>
-          <span className="text-center">Acción</span>
+          {!readOnly && <span className="text-center">Acción</span>}
         </div>
         {routesToShow.map((cr) => (
           <div
             key={cr.id}
-            className="grid grid-cols-[1fr_120px_120px_72px_48px] gap-3 items-center border-b px-4 py-3 last:border-0"
+            className={`grid ${gridCols} gap-3 items-center border-b px-4 py-3 last:border-0`}
           >
             <div className="min-w-0">
               <p className="truncate text-sm font-medium">
@@ -109,6 +115,7 @@ export function CarrierRoutesManager({ routes, onRouteDeleted }: CarrierRoutesMa
                   : `-$${Math.abs(cr.carrierTarget - cr.route.target).toLocaleString("es-MX")}`
                 : "—"}
             </span>
+            {!readOnly && (
             <div className="flex justify-center">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -143,6 +150,7 @@ export function CarrierRoutesManager({ routes, onRouteDeleted }: CarrierRoutesMa
                 </AlertDialogContent>
               </AlertDialog>
             </div>
+            )}
           </div>
         ))}
       </div>

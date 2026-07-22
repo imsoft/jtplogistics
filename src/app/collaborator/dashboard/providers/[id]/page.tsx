@@ -1,16 +1,18 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { InfoRow } from "@/components/dashboard/users/info-row";
+import { ContactPersonsCards } from "@/components/dashboard/users/contact-persons-cards";
+import { CarrierRoutesManager } from "@/components/dashboard/users/carrier-routes-manager";
+import { groupContactsByPerson } from "@/lib/contacts";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 import { DataTableSkeleton } from "@/components/ui/skeletons";
-import { formatPhone } from "@/lib/utils";
 import { USER_ROLE_LABELS } from "@/lib/constants/user-role";
 import type { UserRole } from "@/types/user.types";
 
@@ -18,18 +20,60 @@ function initials(name: string) {
   return name.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase();
 }
 
-import type { User } from "@/types/user.types";
+interface ProviderContact {
+  id: string;
+  type: "phone" | "email";
+  value: string;
+  label: string | null;
+  personName: string | null;
+  position: string | null;
+}
 
-type ProviderData = User;
+interface CarrierRouteItem {
+  id: string;
+  unitType: string;
+  carrierTarget: number | null;
+  editUnlockRequested: boolean;
+  editUnlockApproved: boolean;
+  route: {
+    origin: string;
+    destination: string;
+    description: string | null;
+    target: number | null;
+  };
+}
+
+interface ProviderData {
+  id: string;
+  name: string;
+  email: string;
+  image: string | null;
+  role: string;
+  carrierNotes: string | null;
+  carrierRoutes: CarrierRouteItem[];
+  profile: {
+    commercialName: string | null;
+    legalName: string | null;
+    rfc: string | null;
+    address: string | null;
+    contacts: ProviderContact[];
+  } | null;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export default function ProviderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { permissions, isLoaded: permissionsLoaded } = useCollaboratorPermissions();
   const [provider, setProvider] = useState<ProviderData | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const hasRedirected = useRef(false);
+
+  const from = searchParams.get("from");
+  const backHref = from ? decodeURIComponent(from) : "/collaborator/dashboard/providers";
 
   useEffect(() => {
     if (permissionsLoaded && !permissions?.canViewProviders && !hasRedirected.current) {
@@ -74,39 +118,28 @@ export default function ProviderDetailPage() {
   if (!permissions?.canViewProviders || error || !provider) {
     return (
       <div className="rounded-lg border border-dashed p-8 text-center">
-        <p className="text-destructive text-sm">
-          {error ?? "No autorizado"}
-        </p>
+        <p className="text-destructive text-sm">{error ?? "No autorizado"}</p>
       </div>
     );
   }
 
+  const contacts = provider.profile?.contacts ?? [];
+  const contactPersons = groupContactsByPerson(contacts);
+
   return (
     <div className="min-w-0 space-y-6">
-      {/* Header con botón atrás */}
+      {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <Button variant="ghost" size="icon" asChild className="shrink-0">
-            <Link
-              href="/collaborator/dashboard/providers"
-              aria-label="Volver a proveedores"
-            >
+            <Link href={backHref} aria-label="Volver">
               <ChevronLeft className="size-4" />
             </Link>
           </Button>
           <div className="flex min-w-0 items-center gap-3">
-            {provider.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={provider.image}
-                alt={provider.name}
-                className="size-10 shrink-0 rounded-full object-cover"
-              />
-            ) : (
-              <div className="bg-primary text-primary-foreground flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold">
-                {initials(provider.name)}
-              </div>
-            )}
+            <div className="bg-primary text-primary-foreground flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold">
+              {initials(provider.name)}
+            </div>
             <div className="min-w-0">
               <h1 className="page-heading truncate">
                 {provider.profile?.commercialName ?? provider.name}
@@ -128,9 +161,8 @@ export default function ProviderDetailPage() {
         </Badge>
       </div>
 
-      {/* Grid de tarjetas: Cuenta y Perfil */}
       <div className="grid gap-4 sm:grid-cols-2">
-        {/* Tarjeta de Cuenta */}
+        {/* Cuenta */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
@@ -142,15 +174,19 @@ export default function ProviderDetailPage() {
             <InfoRow
               label="Registro"
               value={new Date(provider.createdAt).toLocaleDateString("es-MX", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
+                year: "numeric", month: "long", day: "numeric",
+              })}
+            />
+            <InfoRow
+              label="Última actualización"
+              value={new Date(provider.updatedAt).toLocaleDateString("es-MX", {
+                year: "numeric", month: "long", day: "numeric",
               })}
             />
           </CardContent>
         </Card>
 
-        {/* Tarjeta de Perfil */}
+        {/* Perfil */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
@@ -161,8 +197,9 @@ export default function ProviderDetailPage() {
             {provider.profile ? (
               <>
                 <InfoRow label="Nombre comercial" value={provider.profile.commercialName} />
-                <InfoRow label="Razón social" value={provider.profile.legalName} />
-                <InfoRow label="RFC" value={provider.profile.rfc} />
+                <InfoRow label="Razón social"     value={provider.profile.legalName} />
+                <InfoRow label="RFC"              value={provider.profile.rfc} />
+                <InfoRow label="Dirección"        value={provider.profile.address} />
               </>
             ) : (
               <p className="text-muted-foreground rounded-lg border border-dashed p-4 text-center text-sm">
@@ -173,62 +210,34 @@ export default function ProviderDetailPage() {
         </Card>
       </div>
 
-      {provider.profile?.address && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Dirección
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 pb-4">
-            <p className="text-sm whitespace-pre-wrap">{provider.profile.address}</p>
-          </CardContent>
-        </Card>
-      )}
+      {/* Contactos agrupados por persona */}
+      {provider.profile && <ContactPersonsCards persons={contactPersons} />}
 
-      {provider.profile?.contacts && provider.profile.contacts.length > 0 && (
-        <Card>
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-base sm:text-lg">
-              Contactos ({provider.profile.contacts.length})
-            </CardTitle>
-            <CardDescription className="text-xs sm:text-sm">
-              Personas de contacto asociadas a este proveedor.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="divide-y">
-              {provider.profile.contacts.map((contact, index) => (
-                <div
-                  key={contact.id}
-                  className="px-4 py-3 hover:bg-muted/50 transition-colors"
-                >
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <p className="font-medium text-sm">
-                        {contact.personName || (contact.type === "phone" ? "Teléfono" : "Correo")}
-                      </p>
-                      {contact.label && (
-                        <Badge variant="secondary" className="text-xs">
-                          {contact.label}
-                        </Badge>
-                      )}
-                    </div>
-                    {contact.position && (
-                      <p className="text-xs text-muted-foreground">{contact.position}</p>
-                    )}
-                    <p className="text-sm font-mono text-muted-foreground">
-                      {contact.type === "phone"
-                        ? formatPhone(contact.value)
-                        : contact.value}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Notas del transportista */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            Notas del transportista
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-4 pb-4">
+          <pre className="whitespace-pre-wrap font-sans text-sm text-foreground">
+            {provider.carrierNotes ?? "- Estadías\n- Reparto"}
+          </pre>
+        </CardContent>
+      </Card>
+
+      {/* Rutas seleccionadas (solo lectura) */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            Rutas seleccionadas ({provider.carrierRoutes.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-0 pb-0">
+          <CarrierRoutesManager routes={provider.carrierRoutes} readOnly />
+        </CardContent>
+      </Card>
     </div>
   );
 }
