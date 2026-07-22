@@ -77,15 +77,20 @@ export async function GET(
         carrierWeeklyVolume: cr.carrierWeeklyVolume,
         createdAt: cr.createdAt.toISOString(),
       })),
-      clients: route.clientRoutes.map((clr) => ({
-        id: clr.id,
-        clientId: clr.client.id,
-        name: clr.client.name,
-        email: clr.client.email,
-        target: clr.target,
-        weeklyVolume: clr.weeklyVolume,
-        createdAt: clr.createdAt.toISOString(),
-      })),
+      // Los clientes de una ruta (con su tarifa de venta) son información
+      // comercial reservada al admin: no se envía a los colaboradores.
+      clients:
+        user.role === "admin"
+          ? route.clientRoutes.map((clr) => ({
+              id: clr.id,
+              clientId: clr.client.id,
+              name: clr.client.name,
+              email: clr.client.email,
+              target: clr.target,
+              weeklyVolume: clr.weeklyVolume,
+              createdAt: clr.createdAt.toISOString(),
+            }))
+          : [],
     });
   } catch (e) {
     if (e instanceof Response) return e;

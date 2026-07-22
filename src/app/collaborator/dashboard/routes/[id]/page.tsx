@@ -8,7 +8,6 @@ import {
   MoveRight,
   Pencil,
   Truck,
-  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,16 +37,6 @@ interface CarrierInfo {
   createdAt: string;
 }
 
-interface ClientInfo {
-  id: string;
-  clientId: string;
-  name: string;
-  email: string | null;
-  target: number | null;
-  weeklyVolume: number | null;
-  createdAt: string;
-}
-
 interface RouteDetail {
   id: string;
   origin: string;
@@ -63,7 +52,8 @@ interface RouteDetail {
   createdAt: string;
   updatedAt: string;
   carriers: CarrierInfo[];
-  clients: ClientInfo[];
+  // Los clientes de la ruta son información comercial del admin: el endpoint
+  // no los envía a los colaboradores y esta vista no los muestra.
 }
 
 function initials(name: string) {
@@ -296,67 +286,6 @@ export default function CollaboratorRouteDetailPage() {
                     </span>
                     <span className="text-xs text-muted-foreground">
                       {formatDate(carrier.createdAt)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Clientes */}
-      <Card>
-        <CardHeader className="pb-3 flex flex-row items-center justify-between">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Clientes ({route.clients.length})
-          </CardTitle>
-          <Users className="size-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent className="px-0 pb-0">
-          {route.clients.length === 0 ? (
-            <p className="text-muted-foreground rounded-lg border border-dashed mx-4 mb-4 p-4 text-center text-sm">
-              No hay clientes asignados a esta ruta.
-            </p>
-          ) : (
-            <div className="overflow-x-auto">
-              <div className="min-w-120">
-                <div className="grid grid-cols-[1fr_minmax(100px,1fr)_minmax(100px,1fr)_minmax(100px,1fr)] gap-x-6 border-b bg-muted/20 px-4 py-1.5 text-xs font-medium text-muted-foreground">
-                  <span>Cliente</span>
-                  <span>Tarifa</span>
-                  <span>Volumen</span>
-                  <span>Desde</span>
-                </div>
-                {route.clients.map((client) => (
-                  <div
-                    key={client.id}
-                    className="grid grid-cols-[1fr_minmax(100px,1fr)_minmax(100px,1fr)_minmax(100px,1fr)] gap-x-6 items-center border-b px-4 py-3 last:border-0"
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="bg-primary text-primary-foreground flex size-7 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold">
-                        {initials(client.name)}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">
-                          {client.name}
-                        </p>
-                        {client.email && (
-                          <p className="text-muted-foreground text-xs truncate text-email">
-                            {client.email}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {client.target != null
-                        ? `$${formatMxn(client.target)}`
-                        : "—"}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {client.weeklyVolume ?? "—"}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatDate(client.createdAt)}
                     </span>
                   </div>
                 ))}

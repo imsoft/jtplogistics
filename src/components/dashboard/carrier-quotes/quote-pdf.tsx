@@ -113,7 +113,9 @@ function Signatures({
           ) : null}
           {creatorPosition ? (
             <Text style={{ fontSize: 8, color: MUTED, textAlign: "center" }}>
-              {creatorPosition}
+              {/* El puesto se guarda en mayúsculas; en la firma va en minúsculas.
+                  Se transforma en JS porque react-pdf no aplica text-transform. */}
+              {creatorPosition.toLowerCase()}
             </Text>
           ) : null}
         </View>
