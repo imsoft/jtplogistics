@@ -25,6 +25,7 @@ export function EmailAccountSelect({
       value={value}
       onValueChange={onValueChange}
       noneLabel={placeholder}
+      optionsNormalCase
     />
   );
 }

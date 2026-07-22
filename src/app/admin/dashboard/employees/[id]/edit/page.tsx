@@ -212,7 +212,7 @@ export default function EditEmployeePage() {
                       <div className="space-y-1">
                         {emailAccounts.map((ea) => (
                           <LinkedResource key={ea.id} href={`/admin/dashboard/emails/${ea.id}`}>
-                            <span>{ea.email}</span>
+                            <span className="normal-case">{ea.email}</span>
                             <span className="text-muted-foreground text-xs">{ea.type}</span>
                           </LinkedResource>
                         ))}

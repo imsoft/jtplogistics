@@ -69,7 +69,10 @@ function getColumns(): ColumnDef<Client>[] {
     {
       accessorKey: "email",
       header: ({ column }) => <SortableColumnHeader column={column} title="Correo" />,
-      cell: ({ row }) => row.getValue("email") ?? <span className="text-muted-foreground">—</span>,
+      cell: ({ row }) => {
+        const v = row.getValue<string | null>("email");
+        return v ? <span className="normal-case">{v}</span> : <span className="text-muted-foreground">—</span>;
+      },
     },
     {
       accessorKey: "phone",

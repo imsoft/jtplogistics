@@ -127,5 +127,22 @@
     @apply bg-background text-foreground min-h-screen overflow-x-hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Toda la interfaz se muestra en mayúsculas. Es solo presentación:
+       los valores guardados en la base de datos no cambian. Las excepciones
+       (correos y contraseñas) se marcan con la utilidad `normal-case`. */
+    text-transform: uppercase;
+  }
+
+  /* Correos y contraseñas nunca se transforman: el usuario debe leerlos y
+     escribirlos tal cual. Cubre los campos de formulario automáticamente. */
+  input[type="email"],
+  input[type="password"] {
+    text-transform: none;
+  }
+
+  /* Los placeholders de esos campos también quedan sin transformar. */
+  input[type="email"]::placeholder,
+  input[type="password"]::placeholder {
+    text-transform: none;
   }
 }

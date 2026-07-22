@@ -19,6 +19,7 @@ export default function EditEmailPage() {
     <div className="min-w-0 space-y-4 sm:space-y-6">
       <ResourceEditHeader
         title={account?.email ?? "Cuenta de correo"}
+        titleNormalCase
         description="Editar información de la cuenta de correo."
         backHref="/admin/dashboard/emails"
         backLabel="Volver a correos"

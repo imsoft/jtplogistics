@@ -75,7 +75,7 @@ function getColumns(): ColumnDef<PhoneDevice>[] {
       accessorFn: (row) => row.emailAccount?.email ?? "",
       cell: ({ row }) => {
         const email = row.original.emailAccount?.email;
-        return email ? <span className="text-xs">{email}</span> : <span className="text-muted-foreground">—</span>;
+        return email ? <span className="text-xs normal-case">{email}</span> : <span className="text-muted-foreground">—</span>;
       },
     },
   ];

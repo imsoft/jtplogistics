@@ -23,6 +23,7 @@ export default function EditCollaboratorEmailPage() {
     <div className="min-w-0 space-y-4 sm:space-y-6">
       <ResourceEditHeader
         title={account?.email ?? "Cuenta de correo"}
+        titleNormalCase
         description="Editar información de la cuenta de correo."
         backHref={`/collaborator/dashboard/emails/${id}`}
         backLabel="Volver a la cuenta"
