@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth-server";
+import { gateProviders } from "@/lib/provider-auth";
 import { logAudit } from "@/lib/audit-log";
 
 // PATCH /api/admin/carrier-routes/[id]
@@ -10,7 +10,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await requireAdmin();
+    const { session } = await gateProviders("canUpdateProviders");
     const { id } = await params;
     const body = await request.json();
     const approved = Boolean(body?.approved);

@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth-server";
+import { gateProviders } from "@/lib/provider-auth";
 import { logAudit } from "@/lib/audit-log";
 
 const DELETABLE_ROLES = ["carrier", "collaborator"] as const;
@@ -11,7 +11,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await requireAdmin();
+    const { session, isCollaborator } = await gateProviders("canDeleteProviders");
     const { id } = await params;
 
     const user = await prisma.user.findUnique({
@@ -21,6 +21,14 @@ export async function DELETE(
 
     if (!user) {
       return Response.json({ error: "Usuario no encontrado." }, { status: 404 });
+    }
+
+    // Un colaborador con permiso solo puede eliminar proveedores (carriers).
+    if (isCollaborator && user.role !== "carrier") {
+      return Response.json(
+        { error: "Solo se pueden eliminar proveedores." },
+        { status: 403 }
+      );
     }
 
     if (!DELETABLE_ROLES.includes(user.role as DeletableRole)) {

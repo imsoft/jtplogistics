@@ -1,11 +1,11 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth-server";
+import { gateProviders } from "@/lib/provider-auth";
 import { logAudit } from "@/lib/audit-log";
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await requireAdmin();
+    const { session } = await gateProviders("canUpdateProviders");
     const { carrierRouteId } = await request.json();
 
     if (!carrierRouteId) {

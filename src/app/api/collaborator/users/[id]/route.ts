@@ -71,6 +71,9 @@ export async function GET(
         : null,
       role: user.role,
       carrierNotes: user.carrierNotes,
+      canEditRoutes: user.canEditRoutes,
+      canEditTarget: user.canEditTarget,
+      canAddRoutes: user.canAddRoutes,
       carrierRoutes: user.carrierRoutes.map((cr) => ({
         id: cr.id,
         unitType: cr.unitType,

@@ -10,6 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import { InfoRow } from "@/components/dashboard/users/info-row";
 import { ContactPersonsCards } from "@/components/dashboard/users/contact-persons-cards";
 import { CarrierRoutesManager } from "@/components/dashboard/users/carrier-routes-manager";
+import { ToggleCarrierPermissions } from "@/components/dashboard/users/toggle-carrier-permissions";
+import { CarrierRouteUnlockRequests } from "@/components/dashboard/users/carrier-route-unlock-requests";
+import { DeleteUserButton } from "@/components/dashboard/users/delete-user-button";
 import { groupContactsByPerson } from "@/lib/contacts";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 import { DataTableSkeleton } from "@/components/ui/skeletons";
@@ -50,6 +53,9 @@ interface ProviderData {
   image: string | null;
   role: string;
   carrierNotes: string | null;
+  canEditRoutes: boolean;
+  canEditTarget: boolean;
+  canAddRoutes: boolean;
   carrierRoutes: CarrierRouteItem[];
   profile: {
     commercialName: string | null;
@@ -125,6 +131,16 @@ export default function ProviderDetailPage() {
 
   const contacts = provider.profile?.contacts ?? [];
   const contactPersons = groupContactsByPerson(contacts);
+  const canManage = !!permissions?.canUpdateProviders;
+  const canDelete = !!permissions?.canDeleteProviders;
+  const pendingUnlockRequests = provider.carrierRoutes
+    .filter((cr) => cr.editUnlockRequested && !cr.editUnlockApproved)
+    .map((cr) => ({
+      id: cr.id,
+      origin: cr.route.origin,
+      destination: cr.route.destination,
+      unitType: cr.unitType,
+    }));
 
   return (
     <div className="min-w-0 space-y-6">
@@ -155,10 +171,18 @@ export default function ProviderDetailPage() {
             </div>
           </div>
         </div>
-        <Badge variant="outline" className="shrink-0">
-          <Lock className="size-3 mr-1" />
-          Solo lectura
-        </Badge>
+        {canDelete ? (
+          <DeleteUserButton
+            userId={provider.id}
+            userName={provider.profile?.commercialName ?? provider.name}
+            redirectTo={backHref}
+          />
+        ) : !canManage ? (
+          <Badge variant="outline" className="shrink-0">
+            <Lock className="size-3 mr-1" />
+            Solo lectura
+          </Badge>
+        ) : null}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -227,15 +251,29 @@ export default function ProviderDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Rutas seleccionadas (solo lectura) */}
+      {/* Rutas seleccionadas */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             Rutas seleccionadas ({provider.carrierRoutes.length})
           </CardTitle>
         </CardHeader>
+        {canManage && (
+          <CardContent className="px-4 pb-4 pt-0 space-y-3">
+            <CarrierRouteUnlockRequests
+              carrierId={provider.id}
+              initialRequests={pendingUnlockRequests}
+            />
+            <ToggleCarrierPermissions
+              userId={provider.id}
+              initialCanEditRoutes={provider.canEditRoutes}
+              initialCanEditTarget={provider.canEditTarget}
+              initialCanAddRoutes={provider.canAddRoutes}
+            />
+          </CardContent>
+        )}
         <CardContent className="px-0 pb-0">
-          <CarrierRoutesManager routes={provider.carrierRoutes} readOnly />
+          <CarrierRoutesManager routes={provider.carrierRoutes} readOnly={!canManage} />
         </CardContent>
       </Card>
     </div>

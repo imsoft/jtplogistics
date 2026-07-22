@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth-server";
+import { gateProviders } from "@/lib/provider-auth";
 import { logAudit } from "@/lib/audit-log";
 
 // PATCH — activa o desactiva el permiso de agregar rutas nuevas para un carrier
@@ -10,10 +10,17 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await requireAdmin();
+    const { session, isCollaborator } = await gateProviders("canUpdateProviders");
 
     const { id } = await params;
     const { canAddRoutes }: { canAddRoutes: boolean } = await request.json();
+
+    if (isCollaborator) {
+      const target = await prisma.user.findUnique({ where: { id }, select: { role: true } });
+      if (target?.role !== "carrier") {
+        return Response.json({ error: "Solo aplicable a proveedores." }, { status: 403 });
+      }
+    }
 
     await prisma.user.update({
       where: { id },
