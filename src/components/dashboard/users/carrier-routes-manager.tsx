@@ -126,12 +126,13 @@ export function CarrierRoutesManager({ routes, onRouteDeleted, readOnly = false 
                     ? "text-green-600"
                     : "text-muted-foreground";
               return (
-                <span className={`text-xs ${color}`}>
-                  <span className="block font-medium tabular-nums">
-                    {sign}${formatMxn(Math.abs(diff))}
-                  </span>
-                  <span className="block tabular-nums opacity-80">
+                <span className={color}>
+                  {/* El porcentaje es el dato principal; el importe lo acompaña. */}
+                  <span className="block text-sm font-semibold tabular-nums leading-tight">
                     {pct != null ? `${sign}${pct.toFixed(1)}%` : "—"}
+                  </span>
+                  <span className="block text-xs tabular-nums opacity-70">
+                    {sign}${formatMxn(Math.abs(diff))}
                   </span>
                 </span>
               );
