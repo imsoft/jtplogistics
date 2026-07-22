@@ -48,11 +48,16 @@ function StatusBadge({ status }: { status: QuoteStatusDisplay }) {
 function StatusCell({
   quote,
   onChange,
+  editable = true,
 }: {
   quote: CrmQuote;
   onChange: (id: string, status: QuoteStatus) => void;
+  editable?: boolean;
 }) {
   const display = getQuoteDisplayStatus(quote.status, quote.validUntil);
+  if (!editable) {
+    return <StatusBadge status={display} />;
+  }
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="inline-flex items-center gap-1 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring">
@@ -80,7 +85,21 @@ function StatusCell({
   );
 }
 
-export function QuotesCrmTable({ initialQuotes }: { initialQuotes: CrmQuote[] }) {
+export function QuotesCrmTable({
+  initialQuotes,
+  apiEndpoint = "/api/admin/generated-quotes",
+  editBase = "/admin/dashboard/quotes",
+  canUpdateStatus = true,
+  canEdit = true,
+  canDelete = true,
+}: {
+  initialQuotes: CrmQuote[];
+  apiEndpoint?: string;
+  editBase?: string;
+  canUpdateStatus?: boolean;
+  canEdit?: boolean;
+  canDelete?: boolean;
+}) {
   const [quotes, setQuotes] = useState<CrmQuote[]>(initialQuotes);
   const [filter, setFilter] = useState<FilterValue>(FILTER_ALL);
 
@@ -105,7 +124,7 @@ export function QuotesCrmTable({ initialQuotes }: { initialQuotes: CrmQuote[] })
     const prev = quotes;
     setQuotes((qs) => qs.map((q) => (q.id === id ? { ...q, status } : q)));
     try {
-      const res = await fetch(`/api/admin/generated-quotes/${id}`, {
+      const res = await fetch(`${apiEndpoint}/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
@@ -185,7 +204,7 @@ export function QuotesCrmTable({ initialQuotes }: { initialQuotes: CrmQuote[] })
                     <td className="px-4 py-3 font-mono text-xs font-medium">{q.quoteNumber}</td>
                     <td className="px-4 py-3">{q.company}</td>
                     <td className="px-4 py-3">
-                      <StatusCell quote={q} onChange={changeStatus} />
+                      <StatusCell quote={q} onChange={changeStatus} editable={canUpdateStatus} />
                     </td>
                     <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{q.contact}</td>
                     <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
@@ -203,7 +222,14 @@ export function QuotesCrmTable({ initialQuotes }: { initialQuotes: CrmQuote[] })
                       })}
                     </td>
                     <td className="px-2 py-2">
-                      <QuoteRowActions id={q.id} quoteNumber={q.quoteNumber} />
+                      <QuoteRowActions
+                        id={q.id}
+                        quoteNumber={q.quoteNumber}
+                        apiEndpoint={apiEndpoint}
+                        editBase={editBase}
+                        canEdit={canEdit}
+                        canDelete={canDelete}
+                      />
                     </td>
                   </tr>
                 ))}

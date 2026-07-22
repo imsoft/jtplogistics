@@ -4,7 +4,10 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
+import { DataTableSkeleton } from "@/components/ui/skeletons";
 
 export default function CollaboratorProfilePage() {
   const [name, setName] = useState("");
@@ -59,87 +62,101 @@ export default function CollaboratorProfilePage() {
 
   if (!isLoaded) {
     return (
-      <div className="min-w-0 space-y-4">
-        <h1 className="page-heading">Mi perfil</h1>
-        <p className="text-muted-foreground text-sm">Cargando…</p>
+      <div className="min-w-0 space-y-4 sm:space-y-6">
+        <div>
+          <h1 className="page-heading">Mi perfil</h1>
+          <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
+            Información de tu cuenta.
+          </p>
+        </div>
+        <Separator />
+        <DataTableSkeleton />
       </div>
     );
   }
 
   return (
-    <div className="min-w-0 space-y-6">
+    <div className="min-w-0 space-y-4 sm:space-y-6">
       <div>
         <h1 className="page-heading">Mi perfil</h1>
         <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
           Actualiza tu nombre, fecha de nacimiento y foto de perfil.
         </p>
       </div>
-
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      {success && <p className="text-sm text-green-600">Perfil guardado correctamente.</p>}
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <section className="flex items-center gap-4">
-          <AvatarUpload
-            currentImage={image}
-            name={name}
-            endpoint="/api/profile/avatar"
-            size={72}
-          />
-          <p className="text-muted-foreground text-xs">Haz clic en la foto para cambiarla</p>
-        </section>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="name">Nombre completo</Label>
-            <Input
-              id="name"
-              required
-              disabled={isLoading}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+      <Separator />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Datos personales</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-6 flex items-center gap-4">
+            <AvatarUpload
+              currentImage={image}
+              name={name}
+              endpoint="/api/profile/avatar"
+              size={80}
             />
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-wide">{name}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Haz clic en la foto para cambiarla
+              </p>
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Correo</Label>
-            <Input id="email" type="email" disabled value={email} className="bg-muted" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="birthDate">Fecha de nacimiento</Label>
-            <Input
-              id="birthDate"
-              type="date"
-              disabled={isLoading}
-              value={birthDate}
-              onChange={(e) => setBirthDate(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="department">Área</Label>
-            <Input
-              id="department"
-              disabled
-              value={department ?? ""}
-              className="bg-muted"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="position">Puesto</Label>
-            <Input
-              id="position"
-              disabled
-              value={position ?? ""}
-              className="bg-muted"
-            />
-          </div>
-        </div>
 
-        <div className="flex justify-end">
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Guardando…" : "Guardar cambios"}
-          </Button>
-        </div>
-      </form>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="name">Nombre completo</Label>
+                <Input
+                  id="name"
+                  required
+                  disabled={isLoading}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Correo electrónico</Label>
+                <Input id="email" type="email" disabled value={email} className="bg-muted" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="birthDate">Fecha de nacimiento</Label>
+                <Input
+                  id="birthDate"
+                  type="date"
+                  disabled={isLoading}
+                  value={birthDate}
+                  onChange={(e) => setBirthDate(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="department">Área</Label>
+                <Input id="department" disabled value={department ?? ""} className="bg-muted" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="position">Puesto</Label>
+                <Input id="position" disabled value={position ?? ""} className="bg-muted" />
+              </div>
+            </div>
+
+            {error && (
+              <p className="text-xs font-semibold uppercase tracking-wide text-destructive">{error}</p>
+            )}
+            {success && (
+              <p className="text-xs font-semibold uppercase tracking-wide text-green-600">
+                Perfil actualizado correctamente.
+              </p>
+            )}
+
+            <div className="flex justify-end">
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? "Guardando…" : "Guardar cambios"}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

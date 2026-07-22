@@ -23,10 +23,16 @@ export function QuoteRowActions({
   id,
   quoteNumber,
   apiEndpoint = "/api/admin/generated-quotes",
+  editBase = "/admin/dashboard/quotes",
+  canEdit = true,
+  canDelete = true,
 }: {
   id: string;
   quoteNumber: string;
   apiEndpoint?: string;
+  editBase?: string;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -111,35 +117,39 @@ export function QuoteRowActions({
       >
         {isDownloading ? <Loader2 className="size-3.5 animate-spin" /> : <FileText className="size-3.5" />}
       </Button>
-      <Button variant="ghost" size="icon" className="size-7" asChild>
-        <Link href={`/admin/dashboard/quotes/${id}/edit`} aria-label="Editar cotización">
-          <Pencil className="size-3.5" />
-        </Link>
-      </Button>
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-destructive" disabled={isDeleting} aria-label="Eliminar cotización">
-            <Trash2 className="size-3.5" />
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar cotización?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Se eliminará {quoteNumber} del historial. Esta acción no se puede deshacer.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              onClick={handleDelete}
-            >
-              Eliminar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {canEdit && (
+        <Button variant="ghost" size="icon" className="size-7" asChild>
+          <Link href={`${editBase}/${id}/edit`} aria-label="Editar cotización">
+            <Pencil className="size-3.5" />
+          </Link>
+        </Button>
+      )}
+      {canDelete && (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-destructive" disabled={isDeleting} aria-label="Eliminar cotización">
+              <Trash2 className="size-3.5" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Eliminar cotización?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Se eliminará {quoteNumber} del historial. Esta acción no se puede deshacer.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                variant="destructive"
+                onClick={handleDelete}
+              >
+                Eliminar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }

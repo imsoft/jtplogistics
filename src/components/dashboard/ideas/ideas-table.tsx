@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { type ColumnDef } from "@tanstack/react-table";
 import { useAdminFetch } from "@/hooks/use-admin-fetch";
 import { DataTable } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/skeletons";
 import { IDEA_CATEGORY_COLORS, IDEA_STATUS_COLORS, IDEA_STATUS_LABELS } from "@/lib/constants/idea-category";
 import type { Idea } from "@/types/idea.types";
 
@@ -15,7 +16,7 @@ interface IdeasTableProps {
 
 export function IdeasTable({
   apiEndpoint = "/api/ideas",
-  detailBasePath = "/admin/dashboard/ideas",
+  detailBasePath,
 }: IdeasTableProps = {}) {
   const router = useRouter();
   const { data: ideas, isLoaded, error } = useAdminFetch<Idea>(
@@ -81,7 +82,7 @@ export function IdeasTable({
   ], []);
 
   if (!isLoaded) {
-    return <p className="text-muted-foreground text-sm">Cargando…</p>;
+    return <DataTableSkeleton />;
   }
 
   if (error) {
@@ -97,7 +98,11 @@ export function IdeasTable({
       columns={columns}
       data={ideas}
       filterColumn="title"
-      onRowClick={(idea) => router.push(`${detailBasePath}/${idea.id}`)}
+      onRowClick={
+        detailBasePath
+          ? (idea) => router.push(`${detailBasePath}/${idea.id}`)
+          : undefined
+      }
     />
   );
 }

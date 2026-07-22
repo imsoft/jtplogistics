@@ -1,17 +1,27 @@
-import { ResourceListPage } from "@/components/dashboard/resources/resource-list-page";
+"use client";
 
-export const metadata = {
-  title: "Mensajes | JTP Logistics",
-  description: "Gestionar mensajes",
-};
+import { Suspense, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { StaffMessagesView } from "@/components/dashboard/messages/staff-messages-view";
+import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 
 export default function CollaboratorMessagesPage() {
+  const router = useRouter();
+  const { permissions, isLoaded } = useCollaboratorPermissions();
+  const hasRedirected = useRef(false);
+
+  useEffect(() => {
+    if (isLoaded && !permissions?.canViewMessages && !hasRedirected.current) {
+      hasRedirected.current = true;
+      router.push("/collaborator/dashboard/profile");
+    }
+  }, [isLoaded, permissions, router]);
+
+  if (!isLoaded || !permissions?.canViewMessages) return null;
+
   return (
-    <ResourceListPage
-      title="Mensajes"
-      description="Mensajes internos y comunicación."
-    >
-      <p className="text-muted-foreground">Sección de mensajes.</p>
-    </ResourceListPage>
+    <Suspense>
+      <StaffMessagesView />
+    </Suspense>
   );
 }

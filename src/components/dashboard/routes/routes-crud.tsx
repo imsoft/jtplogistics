@@ -25,7 +25,17 @@ import { ROUTE_STATUS_OPTIONS } from "@/lib/constants/route-status";
 const STATUS_FILTER_ALL = "all";
 const UNIT_FILTER_ALL = "all";
 
-export function RoutesCrud() {
+interface RoutesCrudProps {
+  basePath?: string;
+  canEdit?: boolean;
+  canDelete?: boolean;
+}
+
+export function RoutesCrud({
+  basePath = "/admin/dashboard/routes",
+  canEdit = true,
+  canDelete = true,
+}: RoutesCrudProps = {}) {
   const { routes, deleteRoute: removeRoute, isLoaded, error } = useRoutesStore();
   const unitTypes = useUnitTypes();
   const unitTypeLabel = useMemo(
@@ -186,7 +196,7 @@ export function RoutesCrud() {
                           >
                             <td className="px-4 py-3">
                               <Link
-                                href={`/admin/dashboard/routes/${route.id}`}
+                                href={`${basePath}/${route.id}`}
                                 className="flex items-center gap-1 font-medium hover:text-primary transition-colors uppercase"
                               >
                                 <span className="truncate">{route.origin}</span>
@@ -255,20 +265,24 @@ export function RoutesCrud() {
                             </td>
                             <td className="px-4 py-3">
                               <div className="flex justify-end gap-2">
-                                <Button variant="ghost" size="icon" asChild aria-label="Editar ruta">
-                                  <Link href={`/admin/dashboard/routes/${route.id}/edit`}>
-                                    <Pencil className="size-4" />
-                                  </Link>
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => openDelete(route)}
-                                  aria-label="Eliminar ruta"
-                                  className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                >
-                                  <Trash2 className="size-4" />
-                                </Button>
+                                {canEdit && (
+                                  <Button variant="ghost" size="icon" asChild aria-label="Editar ruta">
+                                    <Link href={`${basePath}/${route.id}/edit`}>
+                                      <Pencil className="size-4" />
+                                    </Link>
+                                  </Button>
+                                )}
+                                {canDelete && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => openDelete(route)}
+                                    aria-label="Eliminar ruta"
+                                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                  >
+                                    <Trash2 className="size-4" />
+                                  </Button>
+                                )}
                               </div>
                             </td>
                           </tr>

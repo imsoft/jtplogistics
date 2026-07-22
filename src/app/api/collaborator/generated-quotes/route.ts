@@ -15,6 +15,7 @@ export async function GET() {
         contact: true,
         phone: true,
         validUntil: true,
+        status: true,
         createdAt: true,
         createdBy: { select: { id: true, name: true } },
       },
@@ -25,6 +26,7 @@ export async function GET() {
         ...q,
         validUntil: q.validUntil.toISOString().split("T")[0],
         createdAt: q.createdAt.toISOString(),
+        createdByName: q.createdBy.name,
       }))
     );
   } catch (e) {

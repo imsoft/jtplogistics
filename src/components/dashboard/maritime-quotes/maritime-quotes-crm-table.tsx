@@ -51,11 +51,17 @@ export function MaritimeQuotesCrmTable({
   initialQuotes,
   editBase,
   canEditAccepted = false,
+  canUpdate = true,
+  canDelete = true,
 }: {
   initialQuotes: CrmMaritimeQuote[];
   editBase: string;
   /** Permite editar/eliminar cotizaciones ya aceptadas (admin o permiso otorgado por el admin). */
   canEditAccepted?: boolean;
+  /** Permite cambiar estado y editar (oculta controles si es false). */
+  canUpdate?: boolean;
+  /** Permite eliminar (oculta el botón si es false). */
+  canDelete?: boolean;
 }) {
   const [quotes, setQuotes] = useState<CrmMaritimeQuote[]>(initialQuotes);
   const [filter, setFilter] = useState<FilterValue>(FILTER_ALL);
@@ -157,12 +163,16 @@ export function MaritimeQuotesCrmTable({
                 {filtered.map((q) => {
                   const display = getQuoteDisplayStatus(q.status, q.validUntil);
                   const isLocked = q.status === "aceptada" && !canEditAccepted;
+                  const statusEditable = canUpdate && !isLocked;
+                  const showEdit = canUpdate && !isLocked;
+                  const showDelete = canDelete && !isLocked;
+                  const showActions = showEdit || showDelete;
                   return (
                     <tr key={q.id} className="border-b last:border-0">
                       <td className="px-4 py-3 font-mono text-xs font-medium">{q.reference}</td>
                       <td className="px-4 py-3">{q.client}</td>
                       <td className="px-4 py-3">
-                        {isLocked ? (
+                        {!statusEditable ? (
                           <Badge variant="outline" className={cn("border-0", QUOTE_STATUS_CONFIG[display].badgeClass)}>
                             {QUOTE_STATUS_CONFIG[display].label}
                           </Badge>
@@ -205,13 +215,16 @@ export function MaritimeQuotesCrmTable({
                           >
                             <Lock className="size-3.5" aria-label="Bloqueada" />
                           </div>
-                        ) : (
+                        ) : showActions ? (
                         <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="icon" className="size-7" asChild>
-                            <Link href={`${editBase}/${q.id}/edit`} aria-label="Editar">
-                              <Pencil className="size-3.5" />
-                            </Link>
-                          </Button>
+                          {showEdit && (
+                            <Button variant="ghost" size="icon" className="size-7" asChild>
+                              <Link href={`${editBase}/${q.id}/edit`} aria-label="Editar">
+                                <Pencil className="size-3.5" />
+                              </Link>
+                            </Button>
+                          )}
+                          {showDelete && (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-destructive" aria-label="Eliminar">
@@ -236,8 +249,9 @@ export function MaritimeQuotesCrmTable({
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
+                          )}
                         </div>
-                        )}
+                        ) : null}
                       </td>
                     </tr>
                   );
