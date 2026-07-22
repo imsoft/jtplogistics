@@ -41,9 +41,10 @@ export function CarrierRoutesManager({ routes, onRouteDeleted, readOnly = false 
   const [deleting, setDeleting] = useState<string | null>(null);
   const [routesToShow, setRoutesToShow] = useState(routes);
 
+  // La columna de diferencia muestra importe y porcentaje, por eso es más ancha.
   const gridCols = readOnly
-    ? "grid-cols-[1fr_120px_120px_72px]"
-    : "grid-cols-[1fr_120px_120px_72px_48px]";
+    ? "grid-cols-[1fr_120px_120px_110px]"
+    : "grid-cols-[1fr_120px_120px_110px_48px]";
 
   async function handleDelete(carrierRouteId: string, routeLabel: string) {
     setDeleting(carrierRouteId);
@@ -79,7 +80,7 @@ export function CarrierRoutesManager({ routes, onRouteDeleted, readOnly = false 
 
   return (
     <div className="overflow-x-auto">
-      <div className="min-w-[520px]">
+      <div className="min-w-[560px]">
         <div className={`grid ${gridCols} gap-3 border-b bg-muted/40 px-4 py-2 text-xs font-medium text-muted-foreground`}>
           <span>Ruta</span>
           <span>Target JTP</span>
@@ -108,13 +109,33 @@ export function CarrierRoutesManager({ routes, onRouteDeleted, readOnly = false 
             <span className="font-mono text-sm font-medium">
               {cr.carrierTarget != null ? `$${formatMxn(cr.carrierTarget)}` : "—"}
             </span>
-            <span className="text-xs text-muted-foreground">
-              {cr.route.target != null && cr.carrierTarget != null
-                ? cr.carrierTarget - cr.route.target > 0
-                  ? `+$${(cr.carrierTarget - cr.route.target).toLocaleString("es-MX")}`
-                  : `-$${Math.abs(cr.carrierTarget - cr.route.target).toLocaleString("es-MX")}`
-                : "—"}
-            </span>
+            {(() => {
+              const jtp = cr.route.target;
+              const carrier = cr.carrierTarget;
+              if (jtp == null || carrier == null) {
+                return <span className="text-xs text-muted-foreground">—</span>;
+              }
+              const diff = carrier - jtp;
+              const sign = diff > 0 ? "+" : diff < 0 ? "-" : "";
+              // Sin target de JTP (o en cero) no hay base para el porcentaje.
+              const pct = jtp !== 0 ? Math.abs((diff / jtp) * 100) : null;
+              const color =
+                diff > 0
+                  ? "text-destructive"
+                  : diff < 0
+                    ? "text-green-600"
+                    : "text-muted-foreground";
+              return (
+                <span className={`text-xs ${color}`}>
+                  <span className="block font-medium tabular-nums">
+                    {sign}${formatMxn(Math.abs(diff))}
+                  </span>
+                  <span className="block tabular-nums opacity-80">
+                    {pct != null ? `${sign}${pct.toFixed(1)}%` : "—"}
+                  </span>
+                </span>
+              );
+            })()}
             {!readOnly && (
             <div className="flex justify-center">
               <AlertDialog>
