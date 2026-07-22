@@ -39,7 +39,7 @@ function getColumns(): ColumnDef<EmailAccount>[] {
     {
       accessorKey: "email",
       header: ({ column }) => <SortableColumnHeader column={column} title="Correo" />,
-      cell: ({ row }) => <span className="font-medium normal-case">{row.getValue("email")}</span>,
+      cell: ({ row }) => <span className="font-medium text-email">{row.getValue("email")}</span>,
     },
     {
       accessorKey: "type",

@@ -71,7 +71,7 @@ function getColumns(): ColumnDef<Client>[] {
       header: ({ column }) => <SortableColumnHeader column={column} title="Correo" />,
       cell: ({ row }) => {
         const v = row.getValue<string | null>("email");
-        return v ? <span className="normal-case">{v}</span> : <span className="text-muted-foreground">—</span>;
+        return v ? <span className="text-email">{v}</span> : <span className="text-muted-foreground">—</span>;
       },
     },
     {

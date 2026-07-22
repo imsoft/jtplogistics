@@ -88,7 +88,7 @@ export default function CollaboratorLaptopProfilePage() {
             <InfoRow label="Accesorios" value={laptop.accessories} />
             <InfoRow label="Software" value={laptop.software} />
             <InfoRow label="Asignado a" value={laptop.assignedTo?.name ?? null} />
-            <InfoRow label="Cuenta de correo" value={laptop.emailAccount?.email ?? null} normalCase />
+            <InfoRow label="Cuenta de correo" value={laptop.emailAccount?.email ?? null} isEmail />
             <InfoRow
               label="Registro"
               value={new Date(laptop.createdAt).toLocaleDateString("es-MX", {

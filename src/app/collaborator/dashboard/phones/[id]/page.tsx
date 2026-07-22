@@ -86,7 +86,7 @@ export default function CollaboratorPhoneProfilePage() {
             <InfoRow label="Contraseña" value={phone.password} />
             <InfoRow label="IMEI" value={phone.imei ? formatIMEI(phone.imei) : null} />
             <InfoRow label="Asignado a" value={phone.assignedTo?.name ?? null} />
-            <InfoRow label="Cuenta de correo" value={phone.emailAccount?.email ?? null} normalCase />
+            <InfoRow label="Cuenta de correo" value={phone.emailAccount?.email ?? null} isEmail />
             <InfoRow
               label="Registro"
               value={new Date(phone.createdAt).toLocaleDateString("es-MX", {

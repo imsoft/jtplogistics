@@ -77,7 +77,7 @@ export function ContactPersonsCards({ persons }: { persons: ContactPerson[] }) {
                       {c.type === "phone" ? <Phone className="size-3.5" /> : <Mail className="size-3.5" />}
                       {c.label ?? (c.type === "phone" ? "Teléfono" : "Correo")}
                     </span>
-                    <span className={`text-sm font-medium break-all${c.type === "email" ? " normal-case" : ""}`}>
+                    <span className={`text-sm font-medium break-all${c.type === "email" ? " text-email" : ""}`}>
                       {c.type === "phone" ? formatPhone(c.value) : c.value}
                     </span>
                   </div>

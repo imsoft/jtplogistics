@@ -125,7 +125,7 @@ export default async function UserProfilePage({
                 {user.name}
               </p>
             )}
-            <p className="text-muted-foreground truncate text-xs sm:text-sm normal-case">
+            <p className="text-muted-foreground truncate text-xs sm:text-sm text-email">
               {user.email}
             </p>
           </div>

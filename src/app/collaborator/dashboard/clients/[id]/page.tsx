@@ -65,7 +65,7 @@ export default function CollaboratorClientProfilePage() {
             <InfoRow label="Nombre de contacto" value={client.contactName} />
             <InfoRow label="Puesto" value={client.position} />
             <InfoRow label="RFC" value={client.rfc} />
-            <InfoRow label="Correo" value={client.email} normalCase />
+            <InfoRow label="Correo" value={client.email} isEmail />
             <InfoRow label="Teléfono" value={formatPhone(client.phone)} />
             <InfoRow label="Dirección" value={client.address} />
             <InfoRow

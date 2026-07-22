@@ -32,8 +32,8 @@ interface ResourceSelectProps {
   onValueChange: (value: string) => void;
   placeholder?: string;
   noneLabel?: string;
-  /** Para opciones que son correos electrónicos: se muestran sin mayúsculas. */
-  optionsNormalCase?: boolean;
+  /** Las opciones son correos electrónicos: se muestran en minúsculas. */
+  optionsAreEmails?: boolean;
 }
 
 const NONE = "__none__";
@@ -45,7 +45,7 @@ export function ResourceSelect({
   value,
   onValueChange,
   noneLabel = "Sin asignar",
-  optionsNormalCase = false,
+  optionsAreEmails = false,
 }: ResourceSelectProps) {
   const [options, setOptions] = useState<Option[]>([]);
   const [fetchError, setFetchError] = useState(false);
@@ -86,7 +86,7 @@ export function ResourceSelect({
             aria-expanded={open}
             className="w-full justify-between font-normal"
           >
-            <span className={cn("truncate", optionsNormalCase && "normal-case")}>{selectedLabel}</span>
+            <span className={cn("truncate", optionsAreEmails && "text-email")}>{selectedLabel}</span>
             <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -121,7 +121,7 @@ export function ResourceSelect({
                     }}
                   >
                     <Check className={cn("size-4", value === opt.id ? "opacity-100" : "opacity-0")} />
-                    <span className={cn(optionsNormalCase && "normal-case")}>{opt.label}</span>
+                    <span className={cn(optionsAreEmails && "text-email")}>{opt.label}</span>
                   </CommandItem>
                 ))}
               </CommandGroup>

@@ -50,7 +50,7 @@ export default function VendorProfilePage() {
             )}
             <div className="min-w-0">
               <h1 className="page-heading truncate">{vendor.name}</h1>
-              <p className="text-muted-foreground text-xs sm:text-sm truncate normal-case">{vendor.email}</p>
+              <p className="text-muted-foreground text-xs sm:text-sm truncate text-email">{vendor.email}</p>
             </div>
           </div>
         </div>
@@ -71,7 +71,7 @@ export default function VendorProfilePage() {
           </CardHeader>
           <CardContent className="px-4 pb-4">
             <InfoRow label="Puesto" value={vendor.position} />
-            <InfoRow label="Correo" value={vendor.email} normalCase />
+            <InfoRow label="Correo" value={vendor.email} isEmail />
             <InfoRow
               label="Fecha de nacimiento"
               value={
@@ -124,7 +124,7 @@ export default function VendorProfilePage() {
                   href={`/admin/dashboard/emails/${ea.id}`}
                   className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
                 >
-                  <span className="font-medium normal-case">{ea.email}</span>
+                  <span className="font-medium text-email">{ea.email}</span>
                   <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                 </Link>
               ))}

@@ -47,7 +47,7 @@ export default function CollaboratorVendorProfilePage() {
             )}
             <div className="min-w-0">
               <h1 className="page-heading truncate">{vendor.name}</h1>
-              <p className="text-muted-foreground text-xs sm:text-sm truncate normal-case">{vendor.email}</p>
+              <p className="text-muted-foreground text-xs sm:text-sm truncate text-email">{vendor.email}</p>
             </div>
           </div>
         </div>
@@ -68,7 +68,7 @@ export default function CollaboratorVendorProfilePage() {
           </CardHeader>
           <CardContent className="px-4 pb-4">
             <InfoRow label="Puesto" value={vendor.position} />
-            <InfoRow label="Correo" value={vendor.email} normalCase />
+            <InfoRow label="Correo" value={vendor.email} isEmail />
             <InfoRow
               label="Fecha de nacimiento"
               value={

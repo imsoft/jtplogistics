@@ -165,7 +165,7 @@ export default function ProviderDetailPage() {
                   {provider.name}
                 </p>
               )}
-              <p className="text-muted-foreground truncate text-xs sm:text-sm normal-case">
+              <p className="text-muted-foreground truncate text-xs sm:text-sm text-email">
                 {provider.email}
               </p>
             </div>

@@ -113,6 +113,20 @@
   .page-heading {
     @apply text-xl font-bold uppercase tracking-wide text-primary sm:text-2xl;
   }
+
+  /* Reglas de capitalización de la aplicación.
+     Por defecto todo se muestra en MAYÚSCULAS (ver `body` en @layer base).
+     Estas dos clases son las únicas excepciones: */
+
+  /* Correos electrónicos: siempre en minúsculas. */
+  .text-email {
+    @apply lowercase tracking-normal;
+  }
+
+  /* Contraseñas: exactamente como las escribió el usuario. */
+  .text-password {
+    @apply normal-case tracking-normal;
+  }
 }
 
 @layer base {
@@ -127,21 +141,21 @@
     @apply bg-background text-foreground min-h-screen overflow-x-hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* Toda la interfaz se muestra en mayúsculas. Es solo presentación:
-       los valores guardados en la base de datos no cambian. Las excepciones
-       (correos y contraseñas) se marcan con la utilidad `normal-case`. */
+    /* Regla general: toda la interfaz se muestra en MAYÚSCULAS. Es solo
+       presentación — los valores guardados en la base de datos no cambian.
+       Las dos excepciones se marcan con `.text-email` y `.text-password`. */
     text-transform: uppercase;
   }
 
-  /* Correos y contraseñas nunca se transforman: el usuario debe leerlos y
-     escribirlos tal cual. Cubre los campos de formulario automáticamente. */
+  /* Excepción 1 — Correos: siempre en minúsculas, se escriban como se escriban.
+     Cubre automáticamente todos los campos de correo del formulario. */
   input[type="email"],
-  input[type="password"] {
-    text-transform: none;
+  input[type="email"]::placeholder {
+    text-transform: lowercase;
   }
 
-  /* Los placeholders de esos campos también quedan sin transformar. */
-  input[type="email"]::placeholder,
+  /* Excepción 2 — Contraseñas: tal cual las escribió el usuario. */
+  input[type="password"],
   input[type="password"]::placeholder {
     text-transform: none;
   }

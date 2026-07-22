@@ -3,10 +3,14 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 function Input({ className, type, onChange, ...props }: React.ComponentProps<"input">) {
+  // Reglas de capitalización: correo siempre en minúsculas, contraseña tal
+  // cual la escribió el usuario, todo lo demás en mayúsculas.
   const casingClass =
-    type === "password" || type === "email"
-      ? "normal-case tracking-normal"
-      : "uppercase tracking-wide"
+    type === "email"
+      ? "text-email"
+      : type === "password"
+        ? "text-password"
+        : "uppercase tracking-wide"
 
   const handleChange = React.useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {

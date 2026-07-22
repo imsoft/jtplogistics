@@ -51,7 +51,7 @@ export default async function CollaboratorDashboard() {
       <div className="min-w-0">
         <h1 className="page-heading">Bienvenido, {user?.name}</h1>
         <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
-          Panel de control • <span className="normal-case">{user?.email}</span>
+          Panel de control • <span className="text-email">{user?.email}</span>
         </p>
       </div>
 

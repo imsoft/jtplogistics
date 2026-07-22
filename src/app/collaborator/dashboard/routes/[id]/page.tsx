@@ -278,7 +278,7 @@ export default function CollaboratorRouteDetailPage() {
                         <p className="truncate text-sm font-medium">
                           {carrier.name}
                         </p>
-                        <p className="text-muted-foreground text-xs truncate normal-case">
+                        <p className="text-muted-foreground text-xs truncate text-email">
                           {carrier.email}
                         </p>
                       </div>
@@ -341,7 +341,7 @@ export default function CollaboratorRouteDetailPage() {
                           {client.name}
                         </p>
                         {client.email && (
-                          <p className="text-muted-foreground text-xs truncate normal-case">
+                          <p className="text-muted-foreground text-xs truncate text-email">
                             {client.email}
                           </p>
                         )}

@@ -148,7 +148,7 @@ export default function ClientProfilePage() {
             <div className="sm:pl-6">
               <InfoRow label="Nombre de contacto" value={client.contactName} />
               <InfoRow label="Puesto" value={client.position} />
-              <InfoRow label="Correo" value={client.email} normalCase />
+              <InfoRow label="Correo" value={client.email} isEmail />
               <InfoRow label="Teléfono" value={formatPhone(client.phone)} />
             </div>
           </div>

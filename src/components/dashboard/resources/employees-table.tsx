@@ -108,7 +108,7 @@ function getColumns(): ColumnDef<Employee>[] {
     {
       accessorKey: "email",
       header: ({ column }) => <SortableColumnHeader column={column} title="Correo" />,
-      cell: ({ row }) => <span className="text-muted-foreground normal-case">{row.getValue("email")}</span>,
+      cell: ({ row }) => <span className="text-muted-foreground text-email">{row.getValue("email")}</span>,
     },
     {
       accessorKey: "position",

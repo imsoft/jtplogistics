@@ -36,13 +36,13 @@ function ResourceCardHeader({
   name,
   imageUrl,
   href,
-  normalCase = false,
+  isEmail = false,
 }: {
   name: string;
   imageUrl: string | null;
   href: string;
-  /** Para nombres que son correos electrónicos: se muestran sin mayúsculas. */
-  normalCase?: boolean;
+  /** El nombre es un correo electrónico: se muestra en minúsculas. */
+  isEmail?: boolean;
 }) {
   return (
     <Link
@@ -58,7 +58,7 @@ function ResourceCardHeader({
             className="size-8 shrink-0 rounded-md border object-cover"
           />
         )}
-        <span className={`truncate text-sm font-medium${normalCase ? " normal-case" : ""}`}>{name}</span>
+        <span className={`truncate text-sm font-medium${isEmail ? " text-email" : ""}`}>{name}</span>
       </span>
       <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
         Ver ficha
@@ -132,7 +132,7 @@ export default function EmployeeProfilePage() {
         </CardHeader>
         <CardContent className="px-4 pb-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
-            <InfoRow label="Correo" value={employee.email} normalCase />
+            <InfoRow label="Correo" value={employee.email} isEmail />
             <InfoRow label="Teléfono" value={formatPhone(employee.phone)} />
             <InfoRow
               label="Fecha de nacimiento"
@@ -196,7 +196,7 @@ export default function EmployeeProfilePage() {
                             l.emailAccount ? (
                               <Link
                                 href={`/admin/dashboard/emails/${l.emailAccount.id}`}
-                                className="text-primary underline underline-offset-2 normal-case"
+                                className="text-primary underline underline-offset-2 text-email"
                               >
                                 {l.emailAccount.email}
                               </Link>
@@ -239,7 +239,7 @@ export default function EmployeeProfilePage() {
                             p.emailAccount ? (
                               <Link
                                 href={`/admin/dashboard/emails/${p.emailAccount.id}`}
-                                className="text-primary underline underline-offset-2 normal-case"
+                                className="text-primary underline underline-offset-2 text-email"
                               >
                                 {p.emailAccount.email}
                               </Link>
@@ -263,7 +263,7 @@ export default function EmployeeProfilePage() {
                     <div key={ea.id} className="rounded-lg border">
                       <ResourceCardHeader
                         name={ea.email}
-                        normalCase
+                        isEmail
                         imageUrl={null}
                         href={`/admin/dashboard/emails/${ea.id}`}
                       />

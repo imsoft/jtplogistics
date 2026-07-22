@@ -67,7 +67,7 @@ export default function CollaboratorEmailProfilePage() {
             </Link>
           </Button>
           <div className="min-w-0">
-            <h1 className="page-heading truncate normal-case">{account.email}</h1>
+            <h1 className="page-heading truncate text-email">{account.email}</h1>
             <p className="text-muted-foreground text-xs sm:text-sm truncate">{emailTypeLabel(account.type)}</p>
           </div>
         </div>
@@ -81,7 +81,7 @@ export default function CollaboratorEmailProfilePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4">
-            <InfoRow label="Correo" value={account.email} normalCase />
+            <InfoRow label="Correo" value={account.email} isEmail />
             <InfoRow label="Tipo" value={emailTypeLabel(account.type)} />
             <InfoRow
               label="Asignados"

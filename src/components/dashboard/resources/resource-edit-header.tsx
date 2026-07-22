@@ -22,8 +22,8 @@ interface ResourceEditHeaderProps {
   deleteDescription?: string;
   onDelete: () => void;
   showDelete?: boolean;
-  /** Para títulos que son correos electrónicos: se muestran sin mayúsculas. */
-  titleNormalCase?: boolean;
+  /** El título es un correo electrónico: se muestra en minúsculas. */
+  titleIsEmail?: boolean;
   children?: React.ReactNode;
 }
 
@@ -36,7 +36,7 @@ export function ResourceEditHeader({
   deleteDescription,
   onDelete,
   showDelete = true,
-  titleNormalCase = false,
+  titleIsEmail = false,
   children,
 }: ResourceEditHeaderProps) {
   const [deleteOpen, setDeleteOpen] = React.useState(false);
@@ -51,7 +51,7 @@ export function ResourceEditHeader({
             </Link>
           </Button>
           <div className="min-w-0">
-            <h1 className={`page-heading truncate${titleNormalCase ? " normal-case" : ""}`}>{title}</h1>
+            <h1 className={`page-heading truncate${titleIsEmail ? " text-email" : ""}`}>{title}</h1>
             <p className="truncate text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-xs">
               {description}
             </p>
