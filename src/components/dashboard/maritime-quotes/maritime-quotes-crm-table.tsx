@@ -199,7 +199,7 @@ export function MaritimeQuotesCrmTable({
                         </DropdownMenu>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right font-medium">{formatMxn(q.total)}</td>
+                      <td className="px-4 py-3 text-right font-medium">${formatMxn(q.total)}</td>
                       <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
                         {new Date(q.validUntil).toLocaleDateString("es-MX", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" })}
                       </td>

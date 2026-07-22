@@ -103,10 +103,10 @@ export function CarrierRoutesManager({ routes, onRouteDeleted, readOnly = false 
               )}
             </div>
             <span className="font-mono text-sm text-muted-foreground">
-              {cr.route.target != null ? formatMxn(cr.route.target) : "—"}
+              {cr.route.target != null ? `$${formatMxn(cr.route.target)}` : "—"}
             </span>
             <span className="font-mono text-sm font-medium">
-              {cr.carrierTarget != null ? formatMxn(cr.carrierTarget) : "—"}
+              {cr.carrierTarget != null ? `$${formatMxn(cr.carrierTarget)}` : "—"}
             </span>
             <span className="text-xs text-muted-foreground">
               {cr.route.target != null && cr.carrierTarget != null

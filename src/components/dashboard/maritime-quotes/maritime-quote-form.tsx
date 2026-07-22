@@ -234,7 +234,7 @@ export function MaritimeQuoteForm({ mode, quoteId, backHref, initialInput }: Pro
           <Money label="Otros" value={input.othersUsd} onChange={(v) => setField("othersUsd", v)} />
           <Money label="Tipo de Cambio" value={input.exchangeRate} onChange={(v) => setField("exchangeRate", v)} step="0.0001" />
           <Field label="Total Incrementables (auto)">
-            <Input readOnly disabled value={formatMxn(computed.totalIncrementables)} className="bg-muted" />
+            <Input readOnly disabled value={`$${formatMxn(computed.totalIncrementables)}`} className="bg-muted" />
           </Field>
         </CardContent>
       </Card>
@@ -264,8 +264,8 @@ export function MaritimeQuoteForm({ mode, quoteId, backHref, initialInput }: Pro
                   value={input.brackets[b.key] === 0 ? "" : input.brackets[b.key]}
                   onChange={(e) => setBracket(b.key, Number(e.target.value) || 0)}
                 />
-                <span className="hidden text-right text-sm text-muted-foreground sm:block">{formatMxn(cb.valuePesos)}</span>
-                <span className="hidden text-right text-sm text-muted-foreground sm:block">{formatMxn(cb.igi)}</span>
+                <span className="hidden text-right text-sm text-muted-foreground sm:block">${formatMxn(cb.valuePesos)}</span>
+                <span className="hidden text-right text-sm text-muted-foreground sm:block">${formatMxn(cb.igi)}</span>
               </div>
             );
           })}
@@ -332,10 +332,10 @@ export function MaritimeQuoteForm({ mode, quoteId, backHref, initialInput }: Pro
       <Card className="border-primary/40">
         <CardContent className="space-y-3 py-4">
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 text-sm">
-            <Summary label="Total valor en aduana (MXN)" value={formatMxn(computed.totalPesos)} />
-            <Summary label="Total IGI" value={formatMxn(computed.totalIgi)} />
-            <Summary label="IVA" value={formatMxn(computed.iva)} />
-            <Summary label="TOTAL A DEPOSITAR" value={formatMxn(computed.totalADepositar)} highlight />
+            <Summary label="Total valor en aduana (MXN)" value={`$${formatMxn(computed.totalPesos)}`} />
+            <Summary label="Total IGI" value={`$${formatMxn(computed.totalIgi)}`} />
+            <Summary label="IVA" value={`$${formatMxn(computed.iva)}`} />
+            <Summary label="TOTAL A DEPOSITAR" value={`$${formatMxn(computed.totalADepositar)}`} highlight />
           </div>
           <Separator />
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
