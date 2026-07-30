@@ -782,3 +782,14 @@ model MuralPost {
   @@index([published, publishedAt])
   @@map("mural_posts")
 }
+
+/// Contadores de rate limiting de Better Auth. Viven en la BD (no en memoria)
+/// para que el límite sea el mismo en todas las instancias serverless.
+model RateLimit {
+  id          String @id @default(cuid()) @map("id")
+  key         String @unique @map("key")
+  count       Int    @map("count")
+  lastRequest BigInt @map("last_request")
+
+  @@map("rate_limits")
+}

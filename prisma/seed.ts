@@ -4,15 +4,53 @@
  */
 
 import "dotenv/config";
+import { randomBytes } from "node:crypto";
 import { auth } from "../src/lib/auth";
 import prisma from "../src/lib/db";
+
+/**
+ * Contraseña aleatoria por ejecución.
+ *
+ * Antes el seed traía contraseñas fijas ("Admin123!") escritas en el repo, lo
+ * que dejaba cuentas reales con credenciales conocidas por cualquiera que
+ * pudiera leer el código. Ahora se generan al vuelo y se imprimen una sola vez
+ * al final; si se pierden, se restablecen desde la pantalla de login.
+ */
+function generatePassword(): string {
+  return `${randomBytes(12).toString("base64url")}Aa1!`;
+}
+
+/** Credenciales generadas en esta corrida, para imprimirlas al terminar. */
+const CREDENTIALS: Array<{ email: string; password: string; role: string }> = [];
+
+/**
+ * El seed BORRA y recrea usuarios (ver createUser), así que correrlo contra la
+ * base de producción destruiría cuentas reales. Se exige una confirmación
+ * explícita para no hacerlo por accidente.
+ */
+function assertSeedAllowed() {
+  if (process.env.CONFIRM_SEED !== "yes") {
+    console.error(
+      [
+        "",
+        "⛔ El seed borra y recrea usuarios, rutas y activos de prueba.",
+        "   Si lo corres contra la base de producción, pierdes datos reales.",
+        "",
+        "   Para continuar:  CONFIRM_SEED=yes pnpm db:seed",
+        "",
+      ].join("\n")
+    );
+    process.exit(1);
+  }
+}
 
 async function createUser(
   name: string,
   email: string,
-  password: string,
   role: "admin" | "carrier" | "collaborator"
 ) {
+  const password = generatePassword();
+  CREDENTIALS.push({ email, password, role });
   await prisma.user.deleteMany({ where: { email } });
 
   const res = await auth.api.signUpEmail({
@@ -32,6 +70,7 @@ async function createUser(
 }
 
 async function main() {
+  assertSeedAllowed();
   console.log("🌱 Iniciando seed...\n");
 
   // ── Tipos de incidencia (ejemplos; no borra los que ya existan) ───────────
@@ -59,25 +98,25 @@ async function main() {
 
   // ── Usuarios ──────────────────────────────────────────────────────────────
 
-  const adminId = await createUser("Administrador JTP", "admin@jtplogistics.com", "Admin123!", "admin");
+  const adminId = await createUser("Administrador JTP", "admin@jtplogistics.com", "admin");
   console.log("✅ Admin creado:", adminId);
 
-  const carrier1Id = await createUser("Carlos Mendoza", "carlos@transportesmexico.com", "Carrier123!", "carrier");
+  const carrier1Id = await createUser("Carlos Mendoza", "carlos@transportesmexico.com", "carrier");
   console.log("✅ Carrier 1 creado:", carrier1Id);
 
-  const carrier2Id = await createUser("María Torres", "maria@fletesnorte.com", "Carrier123!", "carrier");
+  const carrier2Id = await createUser("María Torres", "maria@fletesnorte.com", "carrier");
   console.log("✅ Carrier 2 creado:", carrier2Id);
 
-  const carrier3Id = await createUser("Roberto Juárez", "roberto@logisticasur.com", "Carrier123!", "carrier");
+  const carrier3Id = await createUser("Roberto Juárez", "roberto@logisticasur.com", "carrier");
   console.log("✅ Carrier 3 creado:", carrier3Id);
 
-  const demoCarrierId = await createUser("Demo Transportista", "demo@jtp.com.mx", "Demo2026", "carrier");
+  const demoCarrierId = await createUser("Demo Transportista", "demo@jtp.com.mx", "carrier");
   console.log("✅ Cuenta demo transportista creada:", demoCarrierId);
 
-  const collabId  = await createUser("Ana García",      "ana@jtplogistics.com",     "Collab123!", "collaborator");
-  const collab2Id = await createUser("Luis Ramírez",    "luis@jtplogistics.com",    "Collab123!", "collaborator");
-  const collab3Id = await createUser("Sofía Herrera",   "sofia@jtplogistics.com",   "Collab123!", "collaborator");
-  const collab4Id = await createUser("Diego Morales",   "diego@jtplogistics.com",   "Collab123!", "collaborator");
+  const collabId  = await createUser("Ana García", "ana@jtplogistics.com", "collaborator");
+  const collab2Id = await createUser("Luis Ramírez", "luis@jtplogistics.com", "collaborator");
+  const collab3Id = await createUser("Sofía Herrera", "sofia@jtplogistics.com", "collaborator");
+  const collab4Id = await createUser("Diego Morales", "diego@jtplogistics.com", "collaborator");
   console.log("✅ Collaborators creados:", collabId, collab2Id, collab3Id, collab4Id);
 
   // ── Fechas de nacimiento ───────────────────────────────────────────────────
@@ -280,20 +319,18 @@ async function main() {
   });
   console.log("✅ Phones creados");
 
+  const credentialLines = CREDENTIALS.map(
+    (c) => `  ${c.email.padEnd(30)} / ${c.password}   (${c.role})`
+  ).join("\n");
+
   console.log(`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✅ Seed completado
 
-Usuarios:
-  admin@jtplogistics.com        / Admin123!
-  demo@jtp.com.mx               / Demo2026 (cuenta genérica transportistas)
-  carlos@transportesmexico.com  / Carrier123!
-  maria@fletesnorte.com         / Carrier123!
-  roberto@logisticasur.com      / Carrier123!
-  ana@jtplogistics.com          / Collab123!
-  luis@jtplogistics.com         / Collab123!
-  sofia@jtplogistics.com        / Collab123!
-  diego@jtplogistics.com        / Collab123!
+Usuarios y contraseñas generadas para esta corrida.
+⚠️  Se muestran UNA sola vez: cópialas ahora si las necesitas.
+
+${credentialLines}
 
 Rutas: 4 activas · 3 pendientes · 3 inactivas
 Selecciones: Carlos (3) · María (2) · Roberto (4)

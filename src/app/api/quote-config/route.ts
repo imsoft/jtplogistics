@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { requireSession } from "@/lib/auth-server";
 import { TERMS_BULLETS, TERMS_CONTRACT, TERMS_PRIVACY, TERMS_LIMITS } from "@/lib/constants/quote-terms";
 import { bulletsToLexicalJson, textToLexicalJson } from "@/lib/utils/text-to-lexical";
 
@@ -11,8 +12,14 @@ function defaults() {
   };
 }
 
+/**
+ * Términos y textos legales que se imprimen en las cotizaciones.
+ * Requiere sesión: los consumen las pantallas del cotizador (admin,
+ * colaborador y transportista), nunca visitantes anónimos.
+ */
 export async function GET() {
   try {
+    await requireSession();
     const cfg = await prisma.quoteConfig.findUnique({ where: { id: "default" } });
     const d = defaults();
     return Response.json({
@@ -22,6 +29,9 @@ export async function GET() {
       limitsJson: cfg?.limitsJson || d.limitsJson,
     });
   } catch (e) {
+    // El 401 de requireSession viaja como Response: hay que devolverlo tal cual,
+    // si no el respaldo de abajo lo convertiría en un 200 con la configuración.
+    if (e instanceof Response) return e;
     console.error("Error al obtener configuración de cotización:", e);
     const d = defaults();
     return Response.json({

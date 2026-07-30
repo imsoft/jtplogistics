@@ -40,7 +40,31 @@ export const auth = betterAuth({
     },
   },
   session: {
-    cookieCache: { enabled: true },
+    cookieCache: { enabled: true, maxAge: 5 * 60 },
+    // Sin esto se queda con el default de la librería. Explícito: la sesión
+    // caduca a los 7 días y se renueva si hay actividad después de 1 día.
+    expiresIn: 60 * 60 * 24 * 7,
+    updateAge: 60 * 60 * 24,
+  },
+  /**
+   * Rate limiting con respaldo en la base de datos.
+   *
+   * El limitador en memoria (middleware.ts) no basta en Vercel: cada instancia
+   * serverless tiene su propio contador, así que el límite real se multiplica
+   * por el número de instancias y se reinicia en cada arranque en frío.
+   * Guardarlo en la BD hace que el conteo sea el mismo para todas.
+   */
+  rateLimit: {
+    enabled: true,
+    storage: "database",
+    window: 60,
+    max: 100,
+    customRules: {
+      "/sign-in/email": { window: 60, max: 10 },
+      "/sign-up/email": { window: 60, max: 5 },
+      "/forget-password": { window: 60, max: 5 },
+      "/reset-password": { window: 60, max: 5 },
+    },
   },
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: getAuthBaseUrl(),

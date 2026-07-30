@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { gateMural } from "@/lib/mural-auth";
 import { uploadToCloudinary } from "@/lib/cloudinary";
+import { validateImageUpload } from "@/lib/upload-validation";
 
 /** Subida de portadas e imágenes del mural (RH). */
 export async function POST(request: NextRequest) {
@@ -9,15 +10,12 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const file = formData.get("file");
-
-    if (!file || !(file instanceof File) || file.size === 0) {
-      return Response.json({ error: "Se requiere un archivo de imagen." }, { status: 400 });
+    const validation = await validateImageUpload(file);
+    if (!validation.ok) {
+      return Response.json({ error: validation.error }, { status: validation.status });
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const base64 = `data:${file.type};base64,${buffer.toString("base64")}`;
-
-    const upload = await uploadToCloudinary(base64, { folder: "Mural", resource_type: "image" });
+    const upload = await uploadToCloudinary(validation.dataUri, { folder: "Mural", resource_type: "image" });
 
     return Response.json({ url: upload.secure_url, publicId: upload.public_id });
   } catch (e) {
