@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { hasSecret } from "@/lib/secret-vault";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 import { logAudit } from "@/lib/audit-log";
 
@@ -39,6 +40,7 @@ export async function GET(
       name: laptop.name,
       equipmentCode: laptop.equipmentCode,
       serialNumber: laptop.serialNumber,
+      hasPassword: hasSecret(laptop.password),
       equipmentType: laptop.equipmentType,
       brand: laptop.brand,
       model: laptop.model,

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { hasSecret } from "@/lib/secret-vault";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 import { logAudit } from "@/lib/audit-log";
 
@@ -62,6 +63,7 @@ export async function GET(
       id: account.id,
       type: account.type,
       email: account.email,
+      hasPassword: hasSecret(account.password),
       department: account.assignees[0]?.user?.employeeProfile?.department ?? null,
       assignees: account.assignees.map((a) => ({ id: a.user.id, name: a.user.name })),
       createdAt: account.createdAt.toISOString(),

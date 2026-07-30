@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { hasSecret } from "@/lib/secret-vault";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 import { logAudit } from "@/lib/audit-log";
 
@@ -48,6 +49,7 @@ export async function GET(
       phoneNumber: phone.phoneNumber,
       imei: phone.imei,
       serialNumber: phone.serialNumber,
+      hasPassword: hasSecret(phone.password),
       brand: phone.brand,
       model: phone.model,
       color: phone.color,
