@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { encryptSecret, hasSecret } from "@/lib/secret-vault";
 import { adminHandler } from "@/lib/api-handler";
 import { logAudit } from "@/lib/audit-log";
 
@@ -25,7 +26,7 @@ export function GET() {
         id: e.id,
         type: e.type,
         email: e.email,
-        password: e.password,
+        hasPassword: hasSecret(e.password),
         department: e.assignees[0]?.user?.employeeProfile?.department ?? null,
         assignees: e.assignees.map((a) => ({ id: a.user.id, name: a.user.name })),
         createdAt: e.createdAt.toISOString(),
@@ -52,7 +53,7 @@ export function POST(request: Request) {
       data: {
         type,
         email,
-        password: password || null,
+        password: encryptSecret(password),
         assignees: assigneeIds?.length
           ? { create: assigneeIds.map((userId) => ({ userId })) }
           : undefined,

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { encryptSecret } from "@/lib/secret-vault";
 import { requireCarrierOrVendor } from "@/lib/auth-server";
 import { logAudit, diffObjects } from "@/lib/audit-log";
 
@@ -106,7 +107,7 @@ export async function PATCH(
         department: department?.trim() ?? undefined,
         phone: phone?.trim() ?? undefined,
         ...(parsedHireDate !== undefined && { hireDate: parsedHireDate }),
-        ...(password !== undefined && { password: password || null }),
+        ...(password !== undefined && { password: encryptSecret(password) }),
       },
       create: {
         userId: id,
@@ -115,7 +116,7 @@ export async function PATCH(
         department: department?.trim() || null,
         phone: phone?.trim() || null,
         hireDate: parsedHireDate ?? null,
-        password: password || null,
+        password: encryptSecret(password),
       },
     });
 

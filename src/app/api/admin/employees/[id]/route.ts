@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { encryptSecret, hasSecret } from "@/lib/secret-vault";
 import { adminHandler } from "@/lib/api-handler";
 import { logAudit, diffObjects } from "@/lib/audit-log";
 
@@ -96,7 +97,7 @@ export function GET(
         model: l.model,
         color: l.color,
         serialNumber: l.serialNumber,
-        password: l.password,
+        hasPassword: hasSecret(l.password),
         accessories: l.accessories,
         generalState: l.generalState,
         software: l.software,
@@ -115,7 +116,7 @@ export function GET(
         brand: p.brand,
         model: p.model,
         color: p.color,
-        password: p.password,
+        hasPassword: hasSecret(p.password),
         observations: p.observations,
         maintenanceProvider: p.maintenanceProvider,
         imageUrl: p.imageUrl,
@@ -125,7 +126,7 @@ export function GET(
         id: ea.emailAccount.id,
         type: ea.emailAccount.type,
         email: ea.emailAccount.email,
-        password: ea.emailAccount.password,
+        hasPassword: hasSecret(ea.emailAccount.password),
       })),
     });
   });
@@ -201,7 +202,7 @@ export function PATCH(
         department: department?.trim() ?? undefined,
         phone: phone?.trim() ?? undefined,
         ...(parsedHireDate !== undefined && { hireDate: parsedHireDate }),
-        ...(password !== undefined && { password: password || null }),
+        ...(password !== undefined && { password: encryptSecret(password) }),
         ...(nss !== undefined && { nss: nss.trim() || null }),
         ...(rfc !== undefined && { rfc: rfc.trim() || null }),
         ...(curp !== undefined && { curp: curp.trim() || null }),
@@ -213,7 +214,7 @@ export function PATCH(
         department: department?.trim() || null,
         phone: phone?.trim() || null,
         hireDate: parsedHireDate ?? null,
-        password: password || null,
+        password: encryptSecret(password),
         nss: nss?.trim() || null,
         rfc: rfc?.trim() || null,
         curp: curp?.trim() || null,

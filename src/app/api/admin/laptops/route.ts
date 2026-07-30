@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { encryptSecret, hasSecret } from "@/lib/secret-vault";
 import { adminHandler } from "@/lib/api-handler";
 import { logAudit } from "@/lib/audit-log";
 
@@ -16,7 +17,7 @@ export function GET() {
         id: l.id,
         name: l.name,
         equipmentCode: l.equipmentCode,
-        password: l.password,
+        hasPassword: hasSecret(l.password),
         serialNumber: l.serialNumber,
         equipmentType: l.equipmentType,
         brand: l.brand,
@@ -70,7 +71,7 @@ export function POST(request: Request) {
       data: {
         name,
         equipmentCode: equipmentCode || null,
-        password: password || null,
+        password: encryptSecret(password),
         serialNumber: serialNumber || null,
         equipmentType: equipmentType || null,
         brand: brand || null,

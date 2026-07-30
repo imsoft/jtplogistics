@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { encryptSecret, hasSecret } from "@/lib/secret-vault";
 import { adminHandler } from "@/lib/api-handler";
 import { logAudit } from "@/lib/audit-log";
 
@@ -27,7 +28,7 @@ export function GET(
       name: phone.name,
       equipmentCode: phone.equipmentCode,
       phoneNumber: phone.phoneNumber,
-      password: phone.password,
+      hasPassword: hasSecret(phone.password),
       imei: phone.imei,
       serialNumber: phone.serialNumber,
       brand: phone.brand,
@@ -83,7 +84,7 @@ export function PATCH(
         ...(name !== undefined && { name }),
         ...(equipmentCode !== undefined && { equipmentCode: equipmentCode || null }),
         ...(phoneNumber !== undefined && { phoneNumber: phoneNumber || null }),
-        ...(password !== undefined && { password: password || null }),
+        ...(password !== undefined && { password: encryptSecret(password) }),
         ...(imei !== undefined && { imei: imei || null }),
         ...(serialNumber !== undefined && { serialNumber: serialNumber || null }),
         ...(brand !== undefined && { brand: brand || null }),

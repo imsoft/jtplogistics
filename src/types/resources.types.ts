@@ -7,7 +7,8 @@ export interface EmployeeLinkedLaptop {
   model: string | null;
   color: string | null;
   serialNumber: string | null;
-  password: string | null;
+  /** Indica si hay contraseña guardada. El valor se pide aparte a /api/credentials. */
+  hasPassword: boolean;
   accessories: string | null;
   generalState: string | null;
   software: string | null;
@@ -27,7 +28,8 @@ export interface EmployeeLinkedPhone {
   brand: string | null;
   model: string | null;
   color: string | null;
-  password: string | null;
+  /** Indica si hay contraseña guardada. El valor se pide aparte a /api/credentials. */
+  hasPassword: boolean;
   observations: string | null;
   maintenanceProvider: string | null;
   imageUrl: string | null;
@@ -38,7 +40,8 @@ export interface EmployeeLinkedEmail {
   id: string;
   type: string;
   email: string;
-  password: string | null;
+  /** Indica si hay contraseña guardada. El valor se pide aparte a /api/credentials. */
+  hasPassword: boolean;
 }
 
 export interface Employee {
@@ -121,7 +124,8 @@ export interface Laptop {
   id: string;
   name: string;
   equipmentCode: string | null;
-  password: string | null;
+  /** Indica si hay contraseña guardada. El valor se pide aparte a /api/credentials. */
+  hasPassword: boolean;
   serialNumber: string | null;
   equipmentType: string | null;
   brand: string | null;
@@ -144,7 +148,8 @@ export interface Laptop {
 export interface LaptopFormData {
   name: string;
   equipmentCode: string;
-  password: string;
+  /** Solo se envía si se reveló o se escribió; si no, se conserva la guardada. */
+  password?: string;
   serialNumber: string;
   equipmentType: string;
   brand: string;
@@ -166,7 +171,8 @@ export interface PhoneDevice {
   name: string;
   equipmentCode: string | null;
   phoneNumber: string | null;
-  password: string | null;
+  /** Indica si hay contraseña guardada. El valor se pide aparte a /api/credentials. */
+  hasPassword: boolean;
   imei: string | null;
   serialNumber: string | null;
   brand: string | null;
@@ -188,7 +194,8 @@ export interface PhoneFormData {
   name: string;
   equipmentCode: string;
   phoneNumber: string;
-  password: string;
+  /** Solo se envía si se reveló o se escribió; si no, se conserva la guardada. */
+  password?: string;
   imei: string;
   serialNumber: string;
   brand: string;
@@ -206,7 +213,8 @@ export interface EmailAccount {
   id: string;
   type: string;
   email: string;
-  password: string | null;
+  /** Indica si hay contraseña guardada. El valor se pide aparte a /api/credentials. */
+  hasPassword: boolean;
   department: string | null;
   assignees: { id: string; name: string }[];
   createdAt: string;
@@ -215,6 +223,7 @@ export interface EmailAccount {
 export interface EmailFormData {
   type: string;
   email: string;
-  password: string;
+  /** Solo se envía si se reveló o se escribió; si no, se conserva la guardada. */
+  password?: string;
   assigneeIds: string[];
 }

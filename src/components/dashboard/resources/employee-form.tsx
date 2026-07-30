@@ -6,6 +6,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { FormActions } from "@/components/ui/form-actions";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
+import { SecretInput } from "@/components/ui/secret-input";
 import { AppSelect } from "@/components/ui/app-select";
 
 const DEPARTMENTS = ["Logística", "Finanzas", "Administración", "Tecnología", "Recursos Humanos"] as const;
@@ -111,12 +112,27 @@ export function EmployeeForm({
           <Label htmlFor="emp-password">
             {isNew ? "Contraseña de acceso" : "Nota de contraseña (opcional)"}
           </Label>
-          <PasswordInput
-            id="emp-password"
-            value={password}
-            onChange={(e) => { setPassword(e.target.value); setFieldErrors((prev) => ({ ...prev, password: undefined })); }}
-            autoComplete={isNew ? "new-password" : "off"}
-          />
+          {isNew ? (
+            /* En el alta esta es la contraseña de acceso: la cifra Better Auth
+               con hash y nunca se puede volver a mostrar. */
+            <PasswordInput
+              id="emp-password"
+              value={password}
+              onChange={(e) => { setPassword(e.target.value); setFieldErrors((prev) => ({ ...prev, password: undefined })); }}
+              autoComplete="new-password"
+            />
+          ) : (
+            /* En la edición es la nota de contraseña guardada en el almacén:
+               se pide descifrada al servidor solo cuando se pulsa el ojo. */
+            <SecretInput
+              id="emp-password"
+              type="employee"
+              resourceId={initialValues.id}
+              hasPassword={initialValues.hasPasswordReference}
+              value={password}
+              onChange={(v) => { setPassword(v); setFieldErrors((prev) => ({ ...prev, password: undefined })); }}
+            />
+          )}
           {fieldErrors.password ? (
             <p className="text-destructive text-xs">{fieldErrors.password}</p>
           ) : isNew ? (

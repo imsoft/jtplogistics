@@ -15,7 +15,7 @@ interface LogAuditParams {
   resource: string;
   resourceId: string;
   resourceLabel: string;
-  action: "created" | "updated" | "deleted";
+  action: "created" | "updated" | "deleted" | "revealed";
   userId: string;
   userName: string;
   changes?: AuditChange[];

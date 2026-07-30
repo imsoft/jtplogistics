@@ -6,6 +6,7 @@ import { ChevronLeft, Pencil, Laptop, Smartphone, Mail, ChevronRight } from "luc
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoRow } from "@/components/dashboard/users/info-row";
+import { SecretRow } from "@/components/dashboard/users/secret-row";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import type { Employee } from "@/types/resources.types";
 import { formatPhone } from "@/lib/utils";
@@ -185,7 +186,7 @@ export default function EmployeeProfilePage() {
                         <InfoRow label="Modelo" value={l.model} />
                         <InfoRow label="Color" value={l.color} />
                         <InfoRow label="Número de serie" value={l.serialNumber} />
-                        <InfoRow label="Contraseña" value={l.password} />
+                        <SecretRow type="laptop" resourceId={l.id} hasPassword={l.hasPassword} />
                         <InfoRow label="Estado general" value={l.generalState} />
                         <InfoRow label="Accesorios" value={l.accessories} />
                         <InfoRow label="Software" value={l.software} />
@@ -231,7 +232,7 @@ export default function EmployeeProfilePage() {
                         <InfoRow label="Marca" value={p.brand} />
                         <InfoRow label="Modelo" value={p.model} />
                         <InfoRow label="Color" value={p.color} />
-                        <InfoRow label="Contraseña" value={p.password} />
+                        <SecretRow type="phone" resourceId={p.id} hasPassword={p.hasPassword} />
                         <InfoRow label="Proveedor de mantenimiento" value={p.maintenanceProvider} />
                         <InfoRow
                           label="Correo vinculado"
@@ -269,7 +270,7 @@ export default function EmployeeProfilePage() {
                       />
                       <div className="grid grid-cols-1 gap-x-8 px-3 pb-3 sm:grid-cols-2 sm:px-4">
                         <InfoRow label="Tipo" value={ea.type} />
-                        <InfoRow label="Contraseña" value={ea.password} />
+                        <SecretRow type="email" resourceId={ea.id} hasPassword={ea.hasPassword} />
                       </div>
                     </div>
                   ))}

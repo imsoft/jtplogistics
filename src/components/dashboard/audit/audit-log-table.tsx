@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { MoveRight, Plus, Pencil, Trash2, ChevronDown, ChevronRight } from "lucide-react";
+import { MoveRight, Plus, Pencil, Trash2, Eye, ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppSelect } from "@/components/ui/app-select";
 
@@ -17,7 +17,7 @@ interface AuditLogEntry {
   resource: string;
   resourceId: string;
   resourceLabel: string;
-  action: "created" | "updated" | "deleted";
+  action: "created" | "updated" | "deleted" | "revealed";
   userId: string;
   userName: string;
   changes: AuditChange[] | null;
@@ -28,6 +28,7 @@ const ACTION_CONFIG = {
   created: { label: "Creado",      icon: Plus,   color: "text-green-600",  bg: "bg-green-50" },
   updated: { label: "Modificado",  icon: Pencil, color: "text-blue-600",    bg: "bg-blue-50" },
   deleted: { label: "Eliminado",   icon: Trash2, color: "text-destructive",                    bg: "bg-red-50" },
+  revealed: { label: "Contraseña vista", icon: Eye, color: "text-amber-600", bg: "bg-amber-50" },
 };
 
 const RESOURCE_LABELS: Record<string, string> = {

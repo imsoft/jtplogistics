@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { encryptSecret } from "@/lib/secret-vault";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 import { logAudit } from "@/lib/audit-log";
 
@@ -78,7 +79,7 @@ export async function POST(request: Request) {
       data: {
         type,
         email,
-        password: password || null,
+        password: encryptSecret(password),
         assignees: assigneeIds?.length
           ? { create: assigneeIds.map((userId) => ({ userId })) }
           : undefined,

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormActions } from "@/components/ui/form-actions";
 import { Label } from "@/components/ui/label";
-import { PasswordInput } from "@/components/ui/password-input";
+import { SecretInput } from "@/components/ui/secret-input";
 import { AppSelect } from "@/components/ui/app-select";
 import { EmployeeSelect } from "./employee-select";
 import { EmailAccountSelect } from "./email-account-select";
@@ -34,7 +34,10 @@ export function LaptopForm({
   const uploadEndpoint = scope === "collaborator" ? "/api/collaborator/uploads" : "/api/admin/uploads";
   const [name, setName] = useState(initialValues.name ?? "");
   const [equipmentCode, setEquipmentCode] = useState(initialValues.equipmentCode ?? "");
-  const [password, setPassword] = useState(initialValues.password ?? "");
+  const [password, setPassword] = useState("");
+  // Solo se manda la contraseña si se reveló o se escribió; si se deja
+  // intacta, se omite del payload para no borrar la que ya estaba.
+  const [passwordTouched, setPasswordTouched] = useState(false);
   const [serialNumber, setSerialNumber] = useState(initialValues.serialNumber ?? "");
   const [brand, setBrand] = useState(initialValues.brand ?? "");
   const [model, setModel] = useState(initialValues.model ?? "");
@@ -51,7 +54,7 @@ export function LaptopForm({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSubmit({ name, equipmentCode, password, serialNumber, equipmentType: "", brand, model, color, accessories, generalState, software, observations, maintenanceProvider, imageUrl, imagePublicId, assignedToId, emailAccountId });
+    onSubmit({ name, equipmentCode, password: passwordTouched ? password : undefined, serialNumber, equipmentType: "", brand, model, color, accessories, generalState, software, observations, maintenanceProvider, imageUrl, imagePublicId, assignedToId, emailAccountId });
   }
 
   return (
@@ -108,10 +111,13 @@ export function LaptopForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="lap-password">Contraseña</Label>
-          <PasswordInput
+          <SecretInput
             id="lap-password"
+            type="laptop"
+            resourceId={initialValues.id}
+            hasPassword={initialValues.hasPassword}
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(v) => { setPasswordTouched(true); setPassword(v); }}
           />
         </div>
         <div className="space-y-2">

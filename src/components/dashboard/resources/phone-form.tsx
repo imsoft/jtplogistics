@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormActions } from "@/components/ui/form-actions";
 import { Label } from "@/components/ui/label";
-import { PasswordInput } from "@/components/ui/password-input";
+import { SecretInput } from "@/components/ui/secret-input";
 import { EmployeeSelect } from "./employee-select";
 import { EmailAccountSelect } from "./email-account-select";
 import { DeviceImageUpload } from "./device-image-upload";
@@ -35,7 +35,10 @@ export function PhoneForm({
   const [name, setName] = useState(initialValues.name ?? "");
   const [equipmentCode, setEquipmentCode] = useState(initialValues.equipmentCode ?? "");
   const [phoneNumber, setPhoneNumber] = useState(initialValues.phoneNumber ?? "");
-  const [password, setPassword] = useState(initialValues.password ?? "");
+  const [password, setPassword] = useState("");
+  // Solo se manda la contraseña si se reveló o se escribió; si se deja
+  // intacta, se omite del payload para no borrar la que ya estaba.
+  const [passwordTouched, setPasswordTouched] = useState(false);
   const [imei, setImei] = useState(formatIMEI(initialValues.imei ?? ""));
   const [serialNumber, setSerialNumber] = useState(initialValues.serialNumber ?? "");
   const [brand, setBrand] = useState(initialValues.brand ?? "");
@@ -51,7 +54,7 @@ export function PhoneForm({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const normalizedImei = imei.replace(/\s/g, "");
-    onSubmit({ name, equipmentCode, phoneNumber, password, imei: normalizedImei, serialNumber, brand, model, color, observations, maintenanceProvider, imageUrl, imagePublicId, assignedToId, emailAccountId });
+    onSubmit({ name, equipmentCode, phoneNumber, password: passwordTouched ? password : undefined, imei: normalizedImei, serialNumber, brand, model, color, observations, maintenanceProvider, imageUrl, imagePublicId, assignedToId, emailAccountId });
   }
 
   return (
@@ -84,10 +87,13 @@ export function PhoneForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="ph-password">Contraseña / PIN</Label>
-          <PasswordInput
+          <SecretInput
             id="ph-password"
+            type="phone"
+            resourceId={initialValues.id}
+            hasPassword={initialValues.hasPassword}
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(v) => { setPasswordTouched(true); setPassword(v); }}
           />
         </div>
         <div className="space-y-2">

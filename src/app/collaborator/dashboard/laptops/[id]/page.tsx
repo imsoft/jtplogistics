@@ -7,6 +7,7 @@ import { ChevronLeft, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoRow } from "@/components/dashboard/users/info-row";
+import { SecretRow } from "@/components/dashboard/users/secret-row";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 import type { Laptop } from "@/types/resources.types";
 
@@ -83,7 +84,7 @@ export default function CollaboratorLaptopProfilePage() {
             <InfoRow label="Marca" value={laptop.brand} />
             <InfoRow label="Modelo" value={laptop.model} />
             <InfoRow label="No. de serie" value={laptop.serialNumber} />
-            <InfoRow label="Contraseña" value={laptop.password} />
+            <SecretRow type="laptop" resourceId={laptop.id} hasPassword={laptop.hasPassword} />
             <InfoRow label="Estado general" value={laptop.generalState} />
             <InfoRow label="Accesorios" value={laptop.accessories} />
             <InfoRow label="Software" value={laptop.software} />

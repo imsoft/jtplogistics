@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { encryptSecret, hasSecret } from "@/lib/secret-vault";
 import { adminHandler } from "@/lib/api-handler";
 import { logAudit } from "@/lib/audit-log";
 
@@ -29,7 +30,7 @@ export function GET(
       id: account.id,
       type: account.type,
       email: account.email,
-      password: account.password,
+      hasPassword: hasSecret(account.password),
       department: account.assignees[0]?.user?.employeeProfile?.department ?? null,
       assignees: account.assignees.map((a) => ({ id: a.user.id, name: a.user.name })),
       createdAt: account.createdAt.toISOString(),
@@ -59,7 +60,7 @@ export function PATCH(
       data: {
         ...(type !== undefined && { type }),
         ...(email !== undefined && { email }),
-        ...(password !== undefined && { password: password || null }),
+        ...(password !== undefined && { password: encryptSecret(password) }),
       },
     });
 
