@@ -139,7 +139,7 @@
     <table>
       <tr><td>Sistema</td><td>Plataforma de gestión logística JTP (web)</td></tr>
       <tr><td>Alcance</td><td>Controles de seguridad completados y verificados</td></tr>
-      <tr><td>Controles activos</td><td>19 controles implementados</td></tr>
+      <tr><td>Controles activos</td><td>20 controles implementados</td></tr>
       <tr><td>Fecha de emisión</td><td>30 de julio de 2026</td></tr>
       <tr><td>Versión anterior</td><td>3 de junio de 2026 (12 controles)</td></tr>
       <tr><td>Clasificación</td><td>Confidencial — uso del cliente</td></tr>
@@ -158,7 +158,7 @@
 
     <h2 class="section">Novedades de esta versión</h2>
     <p class="section-intro">
-      Siete controles nuevos incorporados tras la auditoría del 30 de julio de
+      Ocho controles nuevos incorporados tras la auditoría del 30 de julio de
       2026, más la actualización de dos controles ya existentes.
     </p>
 
@@ -342,6 +342,37 @@
             Cuando se descubre una falla en una librería que usa la plataforma,
             el equipo se entera en semanas y no por casualidad meses después.
             Protege contra los ataques a la cadena de suministro de software.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="control">
+      <header>
+        <span class="num">20</span>
+        <h3>Almacén cifrado de credenciales de activos</h3>
+        <span class="badge new">Nuevo</span>
+      </header>
+      <div class="content">
+        <p class="label">Qué es</p>
+        <p>
+          Las contraseñas de laptops, celulares, cuentas de correo y las notas de
+          contraseña de colaboradores se guardan cifradas con AES-256-GCM. La
+          llave vive fuera de la base de datos, en las variables de entorno. El
+          administrador las sigue consultando igual que antes: al pulsar el ojo,
+          el servidor descifra <em>esa sola</em> contraseña y registra en la
+          bitácora quién la vio. Los listados dejaron de incluirlas: solo
+          informan si existen.
+        </p>
+        <div class="example">
+          <p class="label">Ejemplo — de qué nos protege</p>
+          <p>
+            Si un respaldo de la base de datos se filtrara, quien lo abriera
+            encontraría valores ilegibles en lugar de las contraseñas de los
+            buzones corporativos. Y abrir la pantalla de correos ya no descarga
+            todas las contraseñas al navegador, solo la que se consulta. Protege
+            contra la fuga masiva de credenciales por volcado de base de datos o
+            por inspección del tráfico.
           </p>
         </div>
       </div>
@@ -651,10 +682,10 @@
 
     <h2 class="section">Resumen ejecutivo</h2>
     <p class="section-intro">
-      La plataforma cuenta actualmente con 19 controles de seguridad activos, que
+      La plataforma cuenta actualmente con 20 controles de seguridad activos, que
       cubren acceso e identidad, autorización, integridad de las sesiones,
-      protección de la base de datos, validación de datos, trazabilidad y calidad
-      del código.
+      protección y cifrado de datos, validación, trazabilidad y calidad del
+      código.
     </p>
 
     <table class="summary">
@@ -681,6 +712,7 @@
         <tr><td>17</td><td>Permisos granulares por módulo</td><td>Autorización</td><td class="ok">Activo</td></tr>
         <tr><td>18</td><td>Bitácora de auditoría</td><td>Trazabilidad</td><td class="ok">Activo</td></tr>
         <tr><td>19</td><td>Revisión automática de dependencias</td><td>Cadena de suministro</td><td class="ok">Activo</td></tr>
+        <tr><td>20</td><td>Almacén cifrado de credenciales de activos</td><td>Protección de datos</td><td class="ok">Activo</td></tr>
       </tbody>
     </table>
 

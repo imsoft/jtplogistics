@@ -15,7 +15,7 @@ Aplicación web para la gestión de rutas, flotas, cotizaciones, finanzas y equi
 - **Tablas de datos:** [TanStack Table](https://tanstack.com/table) (DataTable con filtros y ordenación)
 - **Editor de texto enriquecido:** [Lexical](https://lexical.dev) (términos de cotización y blog del mural)
 - **Fechas:** [react-day-picker](https://daypicker.dev) vía el `Calendar` de shadcn
-- **Documentos y datos:** [@react-pdf/renderer](https://react-pdf.org) (cotizaciones), [SheetJS](https://sheetjs.com) (exportar a Excel), [Recharts](https://recharts.org) (gráficas)
+- **Documentos y datos:** [@react-pdf/renderer](https://react-pdf.org) (cotizaciones), [ExcelJS](https://github.com/exceljs/exceljs) (exportar a Excel), [Recharts](https://recharts.org) (gráficas)
 - **Otros:** [Cloudinary](https://cloudinary.com) (imágenes), [Resend](https://resend.com) (correos), [Vitest](https://vitest.dev) (pruebas), [Vercel Analytics / Speed Insights](https://vercel.com/docs/analytics)
 
 ---
@@ -62,6 +62,19 @@ Los mismos módulos que el admin, pero **limitados a los permisos que el admin l
 
 ---
 
+## Almacén de credenciales de activos
+
+Las contraseñas de laptops, celulares, cuentas de correo y las notas de contraseña de colaboradores **no son credenciales de acceso a la plataforma**: son datos que el administrador necesita poder consultar. Por eso se cifran de forma reversible (AES-256-GCM) en vez de guardarse con hash.
+
+- La llave vive en `CREDENTIALS_ENCRYPTION_KEY`, fuera de la base de datos: un volcado de la BD por sí solo no revela nada.
+- Los listados y detalles **no devuelven la contraseña**, solo `hasPassword`. El valor se pide de uno en uno a `/api/credentials/<tipo>/<id>` al pulsar el ojo.
+- Cada revelación queda en la bitácora de auditoría como acción `revealed`.
+- Los permisos son los del módulo: quien puede leer Laptops ve sus contraseñas. El admin siempre puede.
+- El formato guardado es `v1:<iv>:<tag>:<datos>`. Los valores sin ese prefijo se tratan como texto plano heredado y se devuelven tal cual, para que la app funcione durante una migración.
+- Para cifrar credenciales que sigan en claro: `pnpm db:encrypt-credentials` (simulación) y `--apply` para escribir. Es idempotente.
+
+---
+
 ## Mural (RH)
 
 Tablero interno visible solo para el personal de JTP (admin y colaboradores con `canViewMural`). Transportistas y vendedores quedan fuera.
@@ -102,7 +115,8 @@ jtplogistics/
 │   └── types/
 ├── public/
 ├── docs/
-│   └── conventions.md   # Convenciones de BD y datos
+│   ├── conventions.md              # Convenciones de BD y datos
+│   └── reporte-ciberseguridad.html # Controles de seguridad (imprimible a PDF)
 ├── instrumentation.ts   # Normalización de BETTER_AUTH_URL al arranque
 ├── vercel.json          # Cron del resumen diario del mural
 └── next.config.ts
@@ -152,12 +166,18 @@ NEXT_PUBLIC_APP_URL="http://localhost:3000"
 # "Authorization: Bearer <valor>". Si está vacío, el endpoint no exige credencial
 # (cómodo en local, nunca en producción).
 CRON_SECRET=""
+
+# Llave del almacén de credenciales de activos (contraseñas de laptops,
+# celulares, cuentas de correo y notas de colaborador). Generar con:
+#   openssl rand -base64 32
+CREDENTIALS_ENCRYPTION_KEY=""
 ```
 
 Notas:
 
 - En Vercel, `VERCEL_URL` se rellena automáticamente y se usa para `trustedOrigins` si hace falta.
 - `NEXT_PUBLIC_APP_URL` se incrusta en el bundle **durante el build**: al cambiarla hay que redesplegar para que surta efecto.
+- ⚠️ **`CREDENTIALS_ENCRYPTION_KEY` no se puede perder.** Sin ella, las contraseñas de activos guardadas quedan irrecuperables. Debe existir una copia fuera de Vercel (gestor de contraseñas o resguardo físico).
 
 ---
 
@@ -218,6 +238,7 @@ Ojo: `db:migrate:deploy` aplica contra la base de datos de `DATABASE_URL`, que e
 | `pnpm db:seed` | Ejecutar seed |
 | `pnpm db:seed-settings` | Seed de ajustes/configuración |
 | `pnpm db:create-demo-carrier` | Crear cuenta demo transportista |
+| `pnpm db:encrypt-credentials` | Cifrar credenciales de activos que sigan en claro |
 | `pnpm db:assign-route-creator` | Asignar creador a rutas existentes |
 | `pnpm db:sync-route-destination-states` | Sincronizar estados destino de rutas |
 | `pnpm db:studio` | Abrir Prisma Studio |
