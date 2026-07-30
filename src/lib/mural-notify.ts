@@ -6,6 +6,7 @@
 import { prisma } from "@/lib/db";
 import { notify } from "@/lib/notify";
 import { sendEmail } from "@/lib/email";
+import { brandedEmail, escapeHtml, appUrl } from "@/lib/email-layout";
 
 export interface MuralAudienceMember {
   id: string;
@@ -33,14 +34,6 @@ export function dashboardPrefix(role: string): string {
   return role === "admin" ? "/admin" : "/collaborator";
 }
 
-function appUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_APP_URL ??
-    process.env.BETTER_AUTH_URL ??
-    ""
-  ).replace(/\/$/, "");
-}
-
 export interface MuralBroadcast {
   /** Tipo de notificación (p. ej. "mural_post", "mural_event"). */
   type: string;
@@ -62,41 +55,6 @@ export interface MuralBroadcast {
   emailCta?: string;
   /** Usuario que originó el cambio: no se le notifica a sí mismo. */
   excludeUserId?: string;
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-export function muralEmailHtml(options: {
-  name: string;
-  heading: string;
-  paragraphs: string[];
-  ctaLabel: string;
-  ctaHref: string;
-}): string {
-  const { name, heading, paragraphs, ctaLabel, ctaHref } = options;
-  const body = paragraphs
-    .map((p) => `<p style="margin:0 0 12px;color:#374151;font-size:15px;line-height:1.6;">${p}</p>`)
-    .join("\n");
-
-  return `
-<div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;max-width:560px;margin:0 auto;">
-  <p style="color:#6b7280;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin:0 0 8px;">Mural JTP Logistics</p>
-  <h1 style="font-size:20px;font-weight:700;color:#111827;margin:0 0 16px;">${escapeHtml(heading)}</h1>
-  <p style="margin:0 0 12px;color:#374151;font-size:15px;line-height:1.6;">Hola <strong>${escapeHtml(name)}</strong>,</p>
-  ${body}
-  ${
-    ctaHref
-      ? `<p style="margin:24px 0 0;"><a href="${ctaHref}" style="background:#2563eb;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block;font-size:14px;font-weight:600;">${escapeHtml(ctaLabel)}</a></p>`
-      : ""
-  }
-  <p style="color:#6b7280;font-size:12px;margin-top:28px;">JTP Logistics — Este correo es automático, por favor no respondas directamente.</p>
-</div>`.trim();
 }
 
 /**
@@ -134,12 +92,13 @@ export async function broadcastMural(input: MuralBroadcast): Promise<void> {
         return sendEmail({
           to: u.email,
           subject: input.emailSubject ?? input.title,
-          html: muralEmailHtml({
-            name: u.name,
+          html: brandedEmail({
+            preheader: input.body,
+            eyebrow: "Mural JTP Logistics",
             heading,
-            paragraphs,
+            paragraphs: [`Hola <strong>${escapeHtml(u.name)}</strong>,`, ...paragraphs],
             ctaLabel,
-            ctaHref: href,
+            ctaHref: href || undefined,
           }),
           text: [
             `Hola ${u.name},`,

@@ -2,6 +2,7 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import { AppSidebar } from "@/components/dashboard/app-sidebar";
 import { GlobalSearch } from "@/components/global-search";
 import { NotificationBell } from "@/components/notification-bell";
+import { CelebrationGreeting } from "@/components/dashboard/mural/celebration-greeting";
 import { FloatingChat } from "@/components/floating-chat";
 import { OnboardingTour } from "@/components/dashboard/onboarding-tour";
 import { requireAdminPage } from "@/lib/auth-server";
@@ -33,7 +34,8 @@ export default async function DashboardLayout({
             Panel de administración
           </span>
           <div id="tour-header-notifications">
-            <NotificationBell />
+            <CelebrationGreeting />
+          <NotificationBell />
           </div>
           <FloatingChat placement="header" />
           <div id="tour-header-search">

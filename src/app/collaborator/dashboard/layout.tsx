@@ -2,6 +2,7 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import { CollaboratorAppSidebar } from "@/components/dashboard/collaborator-app-sidebar";
 import { GlobalSearch } from "@/components/global-search";
 import { NotificationBell } from "@/components/notification-bell";
+import { CelebrationGreeting } from "@/components/dashboard/mural/celebration-greeting";
 import { FloatingChat } from "@/components/floating-chat";
 import { dashboardMainWithFloatingChatClassName } from "@/lib/dashboard-shell";
 
@@ -22,6 +23,7 @@ export default function CollaboratorDashboardLayout({
           <span className="truncate flex-1 text-xs font-semibold uppercase tracking-wide text-foreground/70 sm:text-sm">
             Mi panel
           </span>
+          <CelebrationGreeting />
           <NotificationBell />
           <FloatingChat placement="header" />
           <GlobalSearch />

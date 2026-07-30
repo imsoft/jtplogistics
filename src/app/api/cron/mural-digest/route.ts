@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { getCelebrations } from "@/lib/mural-celebrations-query";
 import { startOfUtcDay } from "@/lib/mural-celebrations";
 import { broadcastMural } from "@/lib/mural-notify";
+import { sendCelebrationGreetings } from "@/lib/celebration-notify";
 import { formatDateRange, entryKindLabel, parseMuralDate } from "@/lib/mural";
 
 export const dynamic = "force-dynamic";
@@ -33,6 +34,10 @@ export async function GET(request: Request) {
         orderBy: { title: "asc" },
       }),
     ]);
+
+    // Felicitación personal a quien cumple años o aniversario hoy. Va aparte
+    // del resumen: ese lo recibe el equipo, este solo la persona festejada.
+    const greeted = await sendCelebrationGreetings(celebrations);
 
     if (celebrations.length === 0 && entries.length === 0) {
       return Response.json({ sent: false, reason: "sin novedades" });
@@ -84,6 +89,7 @@ export async function GET(request: Request) {
       sent: true,
       celebrations: celebrations.length,
       entries: entries.length,
+      greeted,
     });
   } catch (e) {
     console.error("[cron/mural-digest]", e);
