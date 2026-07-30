@@ -18,7 +18,7 @@ import { ScrollText } from "lucide-react";
 import { Ship } from "lucide-react";
 import { Anchor } from "lucide-react";
 import { DollarSign } from "lucide-react";
-import { AlertTriangle, Inbox, TrendingUp, Network, StarIcon } from "lucide-react";
+import { AlertTriangle, Inbox, TrendingUp, Network, StarIcon, LayoutPanelTop } from "lucide-react";
 
 export interface DashboardNavItem {
   title: string;
@@ -62,6 +62,7 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
   {
     label: "Equipo",
     items: [
+      { title: "Mural", href: "/admin/dashboard/mural", icon: LayoutPanelTop },
       { title: "Vendedores", href: "/admin/dashboard/vendors", icon: ShoppingBag },
       { title: "Colaboradores", href: "/admin/dashboard/employees", icon: UserRound },
       { title: "Organigrama", href: "/admin/dashboard/employees/org-chart", icon: Network },

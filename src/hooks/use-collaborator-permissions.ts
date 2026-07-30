@@ -71,6 +71,10 @@ interface CollaboratorPermissions {
   canCreateMaritimeQuotes: boolean;
   canUpdateMaritimeQuotes: boolean;
   canDeleteMaritimeQuotes: boolean;
+  canViewMural: boolean;
+  canCreateMural: boolean;
+  canUpdateMural: boolean;
+  canDeleteMural: boolean;
   canEditAcceptedQuotes: boolean;
 }
 

@@ -7,7 +7,8 @@ import { Camera, Loader2 } from "lucide-react";
 interface CoverImageUploadProps {
   currentImage: string | null;
   endpoint: string;
-  onSuccess?: (url: string) => void;
+  /** `publicId` llega cuando el endpoint lo devuelve (p. ej. el mural). */
+  onSuccess?: (url: string, publicId?: string) => void;
 }
 
 export function CoverImageUpload({
@@ -28,9 +29,9 @@ export function CoverImageUpload({
       fd.append("file", file);
       const res = await fetch(endpoint, { method: "POST", body: fd });
       if (!res.ok) throw new Error("Error al subir imagen");
-      const { url } = await res.json();
+      const { url, publicId } = await res.json();
       setImage(url);
-      onSuccess?.(url);
+      onSuccess?.(url, publicId);
     } catch {
       // silent
     } finally {

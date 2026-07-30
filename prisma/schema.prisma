@@ -58,6 +58,7 @@ model User {
   canViewShipments  Boolean       @default(false) @map("can_view_shipments")
   canViewFinances   Boolean       @default(false) @map("can_view_finances")
   canViewMaritimeQuotes Boolean   @default(false) @map("can_view_maritime_quotes")
+  canViewMural      Boolean       @default(false) @map("can_view_mural")
   canCreateMessages Boolean       @default(false) @map("can_create_messages")
   canCreateIdeas    Boolean       @default(false) @map("can_create_ideas")
   canCreateRoutes   Boolean       @default(false) @map("can_create_routes")
@@ -75,6 +76,7 @@ model User {
   canCreateShipments Boolean      @default(false) @map("can_create_shipments")
   canCreateFinances Boolean       @default(false) @map("can_create_finances")
   canCreateMaritimeQuotes Boolean @default(false) @map("can_create_maritime_quotes")
+  canCreateMural    Boolean       @default(false) @map("can_create_mural")
   canUpdateMessages Boolean       @default(false) @map("can_update_messages")
   canUpdateIdeas    Boolean       @default(false) @map("can_update_ideas")
   canUpdateRoutes   Boolean       @default(false) @map("can_update_routes")
@@ -92,6 +94,7 @@ model User {
   canUpdateShipments Boolean      @default(false) @map("can_update_shipments")
   canUpdateFinances Boolean       @default(false) @map("can_update_finances")
   canUpdateMaritimeQuotes Boolean @default(false) @map("can_update_maritime_quotes")
+  canUpdateMural    Boolean       @default(false) @map("can_update_mural")
   canDeleteMessages Boolean       @default(false) @map("can_delete_messages")
   canDeleteIdeas    Boolean       @default(false) @map("can_delete_ideas")
   canDeleteRoutes   Boolean       @default(false) @map("can_delete_routes")
@@ -109,6 +112,7 @@ model User {
   canDeleteShipments Boolean      @default(false) @map("can_delete_shipments")
   canDeleteFinances Boolean       @default(false) @map("can_delete_finances")
   canDeleteMaritimeQuotes Boolean @default(false) @map("can_delete_maritime_quotes")
+  canDeleteMural    Boolean       @default(false) @map("can_delete_mural")
   canCreateRecords  Boolean       @default(false) @map("can_create_records")
   canReadRecords    Boolean       @default(false) @map("can_read_records")
   canUpdateRecords  Boolean       @default(false) @map("can_update_records")
@@ -138,6 +142,9 @@ model User {
   carrierMessages  Message[]      @relation("CarrierMessages")
   notifications    Notification[]
   carrierManualRatings CarrierManualRating[] @relation("CarrierRatingRatedBy")
+  muralPosts       MuralPost[]    @relation("MuralPostAuthor")
+  muralEntries     MuralEntry[]   @relation("MuralEntryAuthor")
+  muralMentions    MuralEntry[]   @relation("MuralEntrySubject")
 
   @@map("users")
 }
@@ -721,4 +728,57 @@ model QuoteConfig {
   updatedAt     DateTime @updatedAt @map("updated_at")
 
   @@map("quote_config")
+}
+
+// ---- App: mural interno de RH (eventos y blog para colaboradores) ----
+
+enum MuralEntryType {
+  event
+  vacation
+  training
+}
+
+/// Evento del mural: capacitaciones, eventos internos y vacaciones.
+/// Los cumpleaños y aniversarios NO se guardan aquí: se derivan de
+/// users.birth_date y employee_profiles.hire_date.
+model MuralEntry {
+  id            String         @id @default(cuid()) @map("id")
+  type          MuralEntryType @map("type")
+  title         String         @map("title")
+  description   String?        @map("description")
+  location      String?        @map("location")
+  startDate     DateTime       @map("start_date")
+  endDate       DateTime?      @map("end_date")
+  imageUrl      String?        @map("image_url")
+  imagePublicId String?        @map("image_public_id")
+  /// Colaborador al que se refiere la entrada (p. ej. quién sale de vacaciones).
+  subjectUserId String?        @map("subject_user_id")
+  subject       User?          @relation("MuralEntrySubject", fields: [subjectUserId], references: [id], onDelete: SetNull)
+  authorId      String         @map("author_id")
+  author        User           @relation("MuralEntryAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  @@index([startDate])
+  @@index([type, startDate])
+  @@map("mural_entries")
+}
+
+/// Entrada de blog / noticia del mural. `contentJson` guarda el estado de Lexical.
+model MuralPost {
+  id            String    @id @default(cuid()) @map("id")
+  title         String    @map("title")
+  excerpt       String?   @map("excerpt")
+  contentJson   String    @default("") @map("content_json")
+  coverUrl      String?   @map("cover_url")
+  coverPublicId String?   @map("cover_public_id")
+  published     Boolean   @default(false) @map("published")
+  publishedAt   DateTime? @map("published_at")
+  authorId      String    @map("author_id")
+  author        User      @relation("MuralPostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@index([published, publishedAt])
+  @@map("mural_posts")
 }

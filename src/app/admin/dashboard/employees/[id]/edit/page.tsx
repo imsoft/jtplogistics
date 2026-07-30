@@ -34,6 +34,7 @@ const MODULES = [
   { suffix: "Shipments", label: "Embarques" },
   { suffix: "Finances", label: "Finanzas" },
   { suffix: "MaritimeQuotes", label: "Cotización marítima" },
+  { suffix: "Mural", label: "Mural" },
 ] as const;
 
 const PERMISSION_FIELDS = [

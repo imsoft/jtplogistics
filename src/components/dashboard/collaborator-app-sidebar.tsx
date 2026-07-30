@@ -21,6 +21,7 @@ import {
   Ship,
   DollarSign,
   Anchor,
+  LayoutPanelTop,
 } from "lucide-react";
 import { DashboardSidebar, type NavItem, type NavGroup } from "@/components/dashboard/dashboard-sidebar";
 
@@ -42,6 +43,7 @@ interface Permissions {
   canViewShipments: boolean;
   canViewFinances: boolean;
   canViewMaritimeQuotes: boolean;
+  canViewMural: boolean;
 }
 
 const BASE = "/collaborator/dashboard";
@@ -84,6 +86,7 @@ const allNavGroups: PermNavGroup[] = [
   {
     label: "Equipo",
     items: [
+      { title: "Mural", href: `${BASE}/mural`, icon: LayoutPanelTop, permission: "canViewMural" },
       { title: "Vendedores", href: `${BASE}/vendors`, icon: ShoppingBag, permission: "canViewVendors" },
       { title: "Colaboradores", href: `${BASE}/employees`, icon: UserRound, permission: "canViewEmployees" },
       { title: "Organigrama", href: `${BASE}/employees/org-chart`, icon: Network, permission: "canViewEmployees" },
