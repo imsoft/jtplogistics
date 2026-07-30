@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
@@ -124,12 +125,11 @@ export default function VendorProfilePage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="birthDate">Fecha de nacimiento</Label>
-            <Input
+            <DatePicker
               id="birthDate"
-              type="date"
               disabled={isLoading}
               value={birthDate}
-              onChange={(e) => setBirthDate(e.target.value)}
+              onChange={(value) => setBirthDate(value)}
             />
           </div>
         </div>

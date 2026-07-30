@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { AppSelect } from "@/components/ui/app-select";
@@ -82,7 +83,13 @@ export function MuralEntryForm({
           <Label htmlFor="type">Tipo *</Label>
           <AppSelect
             value={type}
-            onValueChange={(v) => setType(v as typeof type)}
+            onValueChange={(v) => {
+              const next = v as typeof type;
+              setType(next);
+              // Al salir de vacaciones se limpia la persona para no mandar un
+              // colaborador colgado en un evento de todo el equipo.
+              if (next !== "vacation") setSubjectUserId("none");
+            }}
             options={MURAL_ENTRY_TYPES.map((t) => ({ value: t, label: MURAL_KIND_LABELS[t] }))}
             className="w-full"
           />
@@ -95,48 +102,45 @@ export function MuralEntryForm({
 
         <div className="space-y-1.5">
           <Label htmlFor="startDate">Fecha de inicio *</Label>
-          <Input
+          <DatePicker
             id="startDate"
-            type="date"
             value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
+            onChange={(value) => setStartDate(value)}
             required
           />
         </div>
 
         <div className="space-y-1.5">
           <Label htmlFor="endDate">Fecha de fin</Label>
-          <Input
+          <DatePicker
             id="endDate"
-            type="date"
             value={endDate}
             min={startDate || undefined}
-            onChange={(e) => setEndDate(e.target.value)}
+            onChange={(value) => setEndDate(value)}
           />
         </div>
 
         <div className="space-y-1.5">
           <Label htmlFor="location">Lugar</Label>
-          <Input
-            id="location"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder="Oficina CDMX, en línea…"
-          />
+          <Input id="location" value={location} onChange={(e) => setLocation(e.target.value)} />
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="subject">Colaborador</Label>
-          <AppSelect
-            value={subjectUserId}
-            onValueChange={setSubjectUserId}
-            options={[
-              { value: "none", label: "Sin colaborador" },
-              ...people.map((p) => ({ value: p.id, label: p.name })),
-            ]}
-            className="w-full"
-          />
-        </div>
+        {/* Los eventos y las capacitaciones son para todo el equipo; solo las
+            vacaciones necesitan decir de quién son. */}
+        {type === "vacation" && (
+          <div className="space-y-1.5">
+            <Label htmlFor="subject">¿De quién son las vacaciones?</Label>
+            <AppSelect
+              value={subjectUserId}
+              onValueChange={setSubjectUserId}
+              options={[
+                { value: "none", label: "Sin especificar" },
+                ...people.map((p) => ({ value: p.id, label: p.name })),
+              ]}
+              className="w-full"
+            />
+          </div>
+        )}
 
         <div className="space-y-1.5 sm:col-span-2">
           <Label htmlFor="description">Descripción</Label>

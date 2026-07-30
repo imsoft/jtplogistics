@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { FormActions } from "@/components/ui/form-actions";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -77,11 +78,10 @@ export function VendorForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="v-birthDate">Fecha de nacimiento</Label>
-          <Input
+          <DatePicker
             id="v-birthDate"
-            type="date"
             value={birthDate}
-            onChange={(e) => setBirthDate(e.target.value)}
+            onChange={(value) => setBirthDate(value)}
           />
         </div>
       </div>

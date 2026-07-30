@@ -10,6 +10,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { AppSelect } from "@/components/ui/app-select";
 import { getCarrierQuotesColumns } from "./carrier-quotes-columns";
@@ -504,7 +505,11 @@ export function CarrierQuotesTable({
           </div>
           <div className="space-y-2">
             <Label htmlFor="qb-vigencia">Vigencia</Label>
-            <Input id="qb-vigencia" type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} />
+            <DatePicker
+              id="qb-vigencia"
+              value={validUntil}
+              onChange={(value) => setValidUntil(value)}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="qb-company">Compañía</Label>

@@ -6,6 +6,7 @@ import { pdf } from "@react-pdf/renderer";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -189,7 +190,10 @@ export function MaritimeQuoteForm({ mode, quoteId, backHref, initialInput }: Pro
             <Input value={input.client} onChange={(e) => setField("client", e.target.value)} />
           </Field>
           <Field label="Vigencia (hasta)">
-            <Input type="date" value={input.validUntil} onChange={(e) => setField("validUntil", e.target.value)} />
+            <DatePicker
+              value={input.validUntil}
+              onChange={(value) => setField("validUntil", value)}
+            />
           </Field>
           <Field label="Factura(s) No.(s)">
             <Input value={input.invoiceNumbers} onChange={(e) => setField("invoiceNumbers", e.target.value)} />

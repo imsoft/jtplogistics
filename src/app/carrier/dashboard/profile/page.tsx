@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Plus, X, Phone, Mail, User, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AppSelect } from "@/components/ui/app-select";
@@ -331,12 +332,11 @@ export default function CarrierProfilePage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="birthDate">Fecha de nacimiento</Label>
-              <Input
+              <DatePicker
                 id="birthDate"
-                type="date"
                 disabled={isLoading}
                 value={form.birthDate}
-                onChange={field("birthDate")}
+                onChange={(value) => setForm((prev) => ({ ...prev, birthDate: value }))}
               />
             </div>
           </div>

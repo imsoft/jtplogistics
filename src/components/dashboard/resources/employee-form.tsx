@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { FormActions } from "@/components/ui/form-actions";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -128,20 +129,18 @@ export function EmployeeForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="emp-birthDate">Fecha de nacimiento</Label>
-          <Input
+          <DatePicker
             id="emp-birthDate"
-            type="date"
             value={birthDate}
-            onChange={(e) => setBirthDate(e.target.value)}
+            onChange={(value) => setBirthDate(value)}
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="emp-hireDate">Fecha de ingreso</Label>
-          <Input
+          <DatePicker
             id="emp-hireDate"
-            type="date"
             value={hireDate}
-            onChange={(e) => setHireDate(e.target.value)}
+            onChange={(value) => setHireDate(value)}
           />
         </div>
         <div className="space-y-2">

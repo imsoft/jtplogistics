@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { FormActions } from "@/components/ui/form-actions";
 import { Label } from "@/components/ui/label";
@@ -257,22 +258,20 @@ export function ShipmentForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-pickupDate">Recolección</Label>
-          <Input
+          <DatePicker
             id="shipment-pickupDate"
-            type="date"
             value={pickupDate}
             disabled={isClosed}
-            onChange={(e) => setPickupDate(e.target.value)}
+            onChange={(value) => setPickupDate(value)}
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-deliveryDate">Entrega</Label>
-          <Input
+          <DatePicker
             id="shipment-deliveryDate"
-            type="date"
             value={deliveryDate}
             disabled={isClosed}
-            onChange={(e) => setDeliveryDate(e.target.value)}
+            onChange={(value) => setDeliveryDate(value)}
           />
         </div>
         <div className="space-y-2">

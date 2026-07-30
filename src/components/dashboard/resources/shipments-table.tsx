@@ -10,6 +10,7 @@ import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { AppSelect } from "@/components/ui/app-select";
 import {
@@ -393,11 +394,10 @@ export function ShipmentsTable({
               <Label htmlFor="shipment-filter-pickup-from" className="text-xs text-muted-foreground">
                 Recolección desde
               </Label>
-              <Input
+              <DatePicker
                 id="shipment-filter-pickup-from"
-                type="date"
                 value={pickupFrom}
-                onChange={(e) => setPickupFrom(e.target.value)}
+                onChange={(value) => setPickupFrom(value)}
                 className="w-full"
               />
             </div>
@@ -405,11 +405,10 @@ export function ShipmentsTable({
               <Label htmlFor="shipment-filter-pickup-to" className="text-xs text-muted-foreground">
                 Recolección hasta
               </Label>
-              <Input
+              <DatePicker
                 id="shipment-filter-pickup-to"
-                type="date"
                 value={pickupTo}
-                onChange={(e) => setPickupTo(e.target.value)}
+                onChange={(value) => setPickupTo(value)}
                 className="w-full"
               />
             </div>
@@ -417,11 +416,10 @@ export function ShipmentsTable({
               <Label htmlFor="shipment-filter-delivery-from" className="text-xs text-muted-foreground">
                 Entrega desde
               </Label>
-              <Input
+              <DatePicker
                 id="shipment-filter-delivery-from"
-                type="date"
                 value={deliveryFrom}
-                onChange={(e) => setDeliveryFrom(e.target.value)}
+                onChange={(value) => setDeliveryFrom(value)}
                 className="w-full"
               />
             </div>
@@ -429,11 +427,10 @@ export function ShipmentsTable({
               <Label htmlFor="shipment-filter-delivery-to" className="text-xs text-muted-foreground">
                 Entrega hasta
               </Label>
-              <Input
+              <DatePicker
                 id="shipment-filter-delivery-to"
-                type="date"
                 value={deliveryTo}
-                onChange={(e) => setDeliveryTo(e.target.value)}
+                onChange={(value) => setDeliveryTo(value)}
                 className="w-full"
               />
             </div>

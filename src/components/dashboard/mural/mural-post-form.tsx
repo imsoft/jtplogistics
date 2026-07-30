@@ -63,8 +63,10 @@ export function MuralPostForm({
             value={excerpt}
             onChange={(e) => setExcerpt(e.target.value)}
             rows={2}
-            placeholder="Una o dos líneas que se muestran en el mural y en el correo."
           />
+          <p className="text-xs text-muted-foreground">
+            Una o dos líneas que se muestran en el mural y en el correo.
+          </p>
         </div>
 
         <div className="space-y-1.5">

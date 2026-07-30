@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -104,11 +105,10 @@ export default function AdminProfilePage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="birthDate">Fecha de nacimiento</Label>
-              <Input
+              <DatePicker
                 id="birthDate"
-                type="date"
                 value={birthDate}
-                onChange={(e) => setBirthDate(e.target.value)}
+                onChange={(value) => setBirthDate(value)}
               />
             </div>
 

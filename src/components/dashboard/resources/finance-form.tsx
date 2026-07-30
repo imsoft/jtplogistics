@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { FormActions } from "@/components/ui/form-actions";
 import { Label } from "@/components/ui/label";
@@ -157,11 +158,19 @@ export function FinanceForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="finance-pickupDate">Recolección</Label>
-          <Input id="finance-pickupDate" type="date" value={pickupDate} onChange={(e) => setPickupDate(e.target.value)} />
+          <DatePicker
+            id="finance-pickupDate"
+            value={pickupDate}
+            onChange={(value) => setPickupDate(value)}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="finance-deliveryDate">Entrega</Label>
-          <Input id="finance-deliveryDate" type="date" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)} />
+          <DatePicker
+            id="finance-deliveryDate"
+            value={deliveryDate}
+            onChange={(value) => setDeliveryDate(value)}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="finance-operatorName">Nombre operador</Label>
