@@ -6,3 +6,11 @@ allowBuilds:
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
+
+# Fuerza versiones parcheadas de dependencias transitivas con avisos de
+# seguridad. El override de brace-expansion va ACOTADO a la rama de archiver:
+# forzarlo de forma global rompe minimatch@3 (que usa la API v1) y con ello
+# ESLint.
+overrides:
+  archiver>brace-expansion: '^5.0.8'
+  uuid: '^11.1.1'

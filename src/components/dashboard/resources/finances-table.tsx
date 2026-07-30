@@ -157,10 +157,14 @@ export function FinancesTable({
     "Error al cargar finanzas"
   );
 
-  const exportToExcel = useCallback(() => {
-    const aoa = financesToExcelAoa(rows);
-    downloadXlsxFromAoa(excelExportFilename("finanzas"), "Finanzas", aoa);
-    toast.success("Archivo Excel descargado.");
+  const exportToExcel = useCallback(async () => {
+    try {
+      const aoa = financesToExcelAoa(rows);
+      await downloadXlsxFromAoa(excelExportFilename("finanzas"), "Finanzas", aoa);
+      toast.success("Archivo Excel descargado.");
+    } catch {
+      toast.error("No se pudo exportar el archivo.");
+    }
   }, [rows]);
 
   if (!isLoaded) return <DataTableSkeleton />;

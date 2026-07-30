@@ -1,4 +1,3 @@
-import * as XLSX from "xlsx";
 import { FINANCE_TARIFF_COST_LABEL, FINANCE_TARIFF_SALE_LABEL } from "@/lib/constants/finance-tariff-labels";
 import { formatIncidentYesNo } from "@/lib/incident-yes-no";
 import { getIncidentTypeLabel } from "@/lib/incident-type-label";
@@ -14,12 +13,18 @@ const SHIPMENT_STATUS_LABEL: Record<ShipmentStatus, string> = {
   returned: "Cerrado",
 };
 
+/**
+ * Las fechas se guardan a medianoche UTC, así que hay que formatearlas en UTC.
+ * Sin `timeZone` el navegador las pasa a la hora local (México, UTC-6) y el día
+ * se recorre: "2026-07-01" se exportaba como "30 jun 2026".
+ */
 function fmtDateEs(iso: string | null): string {
   if (!iso) return "";
   return new Date(iso).toLocaleDateString("es-MX", {
     year: "numeric",
     month: "short",
     day: "numeric",
+    timeZone: "UTC",
   });
 }
 
@@ -32,18 +37,58 @@ export function excelExportFilename(prefix: string): string {
   return `${prefix}-${y}-${m}-${day}.xlsx`;
 }
 
-export function downloadXlsxFromAoa(
+export type ExcelCell = string | number | null | undefined;
+
+/** Ancho de columna calculado a partir del contenido, con topes razonables. */
+function columnWidth(aoa: ExcelCell[][], index: number): number {
+  const longest = aoa.reduce(
+    (max, row) => Math.max(max, String(row[index] ?? "").length),
+    0
+  );
+  return Math.min(Math.max(longest + 2, 10), 60);
+}
+
+/**
+ * Genera un .xlsx y lo descarga en el navegador.
+ *
+ * Usa exceljs y lo carga de forma diferida: la librería pesa bastante y solo
+ * hace falta cuando alguien exporta, no en cada carga de la tabla.
+ */
+export async function downloadXlsxFromAoa(
   filename: string,
   sheetName: string,
-  aoa: (string | number | null | undefined)[][]
-): void {
+  aoa: ExcelCell[][]
+): Promise<void> {
   if (aoa.length === 0) return;
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
-  const wb = XLSX.utils.book_new();
-  const safeName = (sheetName || "Datos").slice(0, 31);
-  XLSX.utils.book_append_sheet(wb, ws, safeName);
+
+  const ExcelJS = (await import("exceljs")).default;
+
+  const workbook = new ExcelJS.Workbook();
+  workbook.created = new Date();
+  // Excel no admite más de 31 caracteres ni ciertos símbolos en el nombre de hoja.
+  const safeName = (sheetName || "Datos").replace(/[\\/*?:[\]]/g, "").slice(0, 31);
+  const sheet = workbook.addWorksheet(safeName || "Datos");
+
+  sheet.addRows(aoa.map((row) => row.map((cell) => cell ?? "")));
+
+  const [headers = []] = aoa;
+  sheet.columns = headers.map((_, i) => ({ width: columnWidth(aoa, i) }));
+  sheet.getRow(1).font = { bold: true };
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+
   const name = filename.endsWith(".xlsx") ? filename : `${filename}.xlsx`;
-  XLSX.writeFile(wb, name);
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 export function shipmentsToExcelAoa(

@@ -325,7 +325,7 @@ export function ShipmentsTable({
       if (!res.ok) throw new Error();
       const json = (await res.json()) as { data: Shipment[] };
       const aoa = shipmentsToExcelAoa(json.data, incidentTypes);
-      downloadXlsxFromAoa(excelExportFilename("embarques"), "Embarques", aoa);
+      await downloadXlsxFromAoa(excelExportFilename("embarques"), "Embarques", aoa);
       toast.success("Archivo Excel descargado.");
     } catch {
       toast.error("No se pudo exportar el archivo.");

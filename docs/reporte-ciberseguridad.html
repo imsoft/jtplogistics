@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Reporte de Ciberseguridad — JTP Logistics</title>
+<style>
+  :root {
+    --blue: #1e3a8a;
+    --blue-deep: #17307a;
+    --ink: #1f2937;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --soft: #f8fafc;
+    --green-bg: #dcfce7;
+    --green-fg: #166534;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background: #fff;
+    line-height: 1.55;
+  }
+  .page { max-width: 830px; margin: 0 auto; }
+
+  /* ── Portada ─────────────────────────────────────────────── */
+  .cover { background: var(--blue); color: #fff; padding: 64px 64px 72px; }
+  .cover .mark {
+    width: 168px; height: 168px; background: #fff; border-radius: 18px;
+    display: flex; align-items: center; justify-content: center; margin-bottom: 44px;
+  }
+  .cover .mark img { width: 132px; height: 132px; object-fit: contain; }
+  .eyebrow {
+    font-size: 12px; letter-spacing: .22em; text-transform: uppercase;
+    opacity: .82; margin: 0 0 14px;
+  }
+  .cover h1 { font-size: 40px; line-height: 1.15; margin: 0 0 18px; font-weight: 400; }
+  .cover p.lead { font-size: 15px; opacity: .9; margin: 0; max-width: 46ch; }
+
+  .meta { padding: 40px 64px 8px; }
+  .meta table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .meta td { padding: 12px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .meta td:first-child { color: var(--muted); width: 190px; }
+
+  .note {
+    margin: 26px 64px 64px; padding: 16px 20px; background: var(--soft);
+    border-left: 4px solid var(--blue); font-size: 13.5px; color: #374151;
+  }
+
+  /* ── Cuerpo ──────────────────────────────────────────────── */
+  .body { padding: 0 64px 64px; }
+  h2.section {
+    color: var(--blue); font-size: 25px; font-weight: 400;
+    margin: 48px 0 6px; padding-top: 22px; border-top: 1px solid var(--line);
+  }
+  .section-intro { font-size: 14px; color: #374151; margin: 0 0 26px; }
+
+  .control { border: 1px solid var(--line); border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
+  .control > header {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 18px; background: var(--soft); border-bottom: 1px solid var(--line);
+  }
+  .num {
+    flex: none; width: 27px; height: 27px; border-radius: 50%;
+    background: var(--blue); color: #fff; font-size: 12.5px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .control h3 { font-size: 16px; font-weight: 500; margin: 0; flex: 1; }
+  .badge {
+    flex: none; font-size: 10px; letter-spacing: .09em; text-transform: uppercase;
+    font-weight: 700; padding: 5px 11px; border-radius: 999px;
+    background: var(--green-bg); color: var(--green-fg);
+  }
+  .badge.new { background: #dbeafe; color: #1e40af; }
+  .control .content { padding: 18px; }
+  .label {
+    font-size: 10.5px; letter-spacing: .11em; text-transform: uppercase;
+    color: var(--blue); font-weight: 700; margin: 0 0 7px;
+  }
+  .control p { margin: 0 0 4px; font-size: 14px; }
+  .example {
+    margin-top: 16px; padding: 14px 16px; background: #eff6ff;
+    border-left: 3px solid #93c5fd; border-radius: 0 6px 6px 0;
+  }
+  .example .label { color: #1d4ed8; }
+  .example p { font-size: 13.5px; margin: 0; }
+
+  /* ── Resumen ─────────────────────────────────────────────── */
+  table.summary { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-top: 8px; }
+  table.summary thead th {
+    background: var(--blue); color: #fff; text-align: left; font-weight: 500;
+    padding: 12px 14px;
+  }
+  table.summary thead th:last-child, table.summary tbody td:last-child { text-align: right; }
+  table.summary tbody td { padding: 11px 14px; border-bottom: 1px solid var(--line); }
+  table.summary tbody tr:nth-child(even) { background: #fafafa; }
+  .ok { color: #15803d; font-weight: 600; }
+
+  .closing {
+    margin-top: 30px; padding: 18px 22px; background: var(--soft);
+    border-left: 4px solid var(--blue); font-size: 13.5px;
+  }
+  .closing strong { color: var(--blue); }
+
+  footer.doc {
+    padding: 26px 64px 54px; color: var(--muted); font-size: 12px;
+    border-top: 1px solid var(--line); margin-top: 40px;
+  }
+
+  @media print {
+    .cover { padding: 48px; }
+    .control { break-inside: avoid; }
+    h2.section { break-after: avoid; }
+    footer.doc { break-before: avoid; }
+  }
+  @media (max-width: 640px) {
+    .cover, .meta, .body, .note, footer.doc { padding-left: 22px; padding-right: 22px; }
+    .note { margin-left: 22px; margin-right: 22px; }
+    .cover h1 { font-size: 30px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <section class="cover">
+    <div class="mark"><img src="../public/images/logo/jtp-logistics.png" alt="JTP Logistics" /></div>
+    <p class="eyebrow">Reporte de ciberseguridad</p>
+    <h1>Controles de seguridad<br />implementados en la plataforma</h1>
+    <p class="lead">
+      Resumen de las protecciones que ya están activas en la aplicación web de
+      JTP Logistics, qué hace cada una y de qué amenaza nos protege.
+    </p>
+  </section>
+
+  <section class="meta">
+    <table>
+      <tr><td>Sistema</td><td>Plataforma de gestión logística JTP (web)</td></tr>
+      <tr><td>Alcance</td><td>Controles de seguridad completados y verificados</td></tr>
+      <tr><td>Controles activos</td><td>19 controles implementados</td></tr>
+      <tr><td>Fecha de emisión</td><td>30 de julio de 2026</td></tr>
+      <tr><td>Versión anterior</td><td>3 de junio de 2026 (12 controles)</td></tr>
+      <tr><td>Clasificación</td><td>Confidencial — uso del cliente</td></tr>
+    </table>
+  </section>
+
+  <div class="note">
+    Este documento describe únicamente los controles de seguridad que ya están
+    implementados, probados y activos. No es una evaluación de riesgos ni
+    sustituye a una prueba de penetración: el trabajo pendiente se lleva por
+    separado. La tecnología base (Next.js, Better Auth, Prisma sobre PostgreSQL)
+    sigue prácticas de seguridad estándar de la industria.
+  </div>
+
+  <div class="body">
+
+    <h2 class="section">Novedades de esta versión</h2>
+    <p class="section-intro">
+      Siete controles nuevos incorporados tras la auditoría del 30 de julio de
+      2026, más la actualización de dos controles ya existentes.
+    </p>
+
+    <div class="control">
+      <header>
+        <span class="num">13</span>
+        <h3>Política de contenido (CSP) y cabeceras de seguridad</h3>
+        <span class="badge new">Nuevo</span>
+      </header>
+      <div class="content">
+        <p class="label">Qué es</p>
+        <p>
+          Cada respuesta del servidor declara al navegador qué recursos puede
+          ejecutar y desde dónde. Los scripts se firman con un código de un solo
+          uso (<em>nonce</em>) distinto en cada visita. Se añaden además las
+          cabeceras que impiden incrustar la aplicación en otro sitio, adivinar
+          tipos de archivo y filtrar la dirección visitada a terceros.
+        </p>
+        <div class="example">
+          <p class="label">Ejemplo — de qué nos protege</p>
+          <p>
+            Si un atacante lograra inyectar un script en una pantalla, el
+            navegador se negaría a ejecutarlo por no llevar la firma del día. Y
+            un sitio fraudulento no puede cargar el panel de JTP dentro de un
+            marco invisible para engañar a un colaborador y robarle clics.
+            Protege contra Cross-Site Scripting (XSS) y clickjacking.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="control">
+      <header>
+        <span class="num">14</span>
+        <h3>Límite de intentos persistente en base de datos</h3>
+        <span class="badge new">Actualizado</span>
+      </header>
+      <div class="content">
+        <p class="label">Qué es</p>
+        <p>
+          El conteo de intentos dejó de guardarse en la memoria del servidor y
+          ahora vive en la base de datos. Antes, cada copia del servidor llevaba
+          su propia cuenta, de modo que el límite real era mucho mayor al
+          previsto y se reiniciaba solo. Además, el límite dejó de aplicarse
+          únicamente al inicio de sesión y ahora cubre toda la API.
+        </p>
+        <div class="example">
+          <p class="label">Ejemplo — de qué nos protege</p>
+          <p>
+            Un atacante que reparta sus intentos de adivinar una contraseña entre
+            muchas conexiones simultáneas ya no evade el límite: el conteo es uno
+            solo y compartido. Protege contra la fuerza bruta distribuida.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="control">
+      <header>
+        <span class="num">15</span>
+        <h3>Validación de los archivos que se suben</h3>
+        <span class="badge new">Nuevo</span>
+      </header>
+      <div class="content">
+        <p class="label">Qué es</p>
+        <p>
+          Toda imagen que entra a la plataforma se revisa antes de guardarse:
+          tamaño máximo de 8 MB, formatos permitidos (JPG, PNG, WEBP, GIF, AVIF)
+          y comprobación de los primeros bytes del archivo, porque el tipo que
+          declara el navegador se puede falsificar. Los archivos SVG se rechazan
+          a propósito.
+        </p>
+        <div class="example">
+          <p class="label">Ejemplo — de qué nos protege</p>
+          <p>
+            Un archivo SVG parece una imagen inofensiva, pero el navegador lo
+            abre como documento y puede llevar código dentro. Antes se aceptaba;
+            ahora se rechaza. Y un archivo enorme ya no puede tumbar el servidor
+            al cargarse en memoria. Protege contra la subida de contenido
+            malicioso y la denegación de servicio.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="control">
+      <header>
+        <span class="num">16</span>
+        <h3>Caducidad definida de las sesiones</h3>
+        <span class="badge new">Nuevo</span>
+      </header>
+      <div class="content">
+        <p class="label">Qué es</p>
+        <p>
+          Las sesiones caducan a los 7 días y se renuevan solas mientras haya
+          actividad. Antes se heredaba el valor por defecto de la librería, sin
+          una decisión explícita.
+        </p>
+        <div class="example">
+          <p class="label">Ejemplo — de qué nos protege</p>
+          <p>
+            Si alguien deja la sesión abierta en una computadora compartida y la
+            olvida, el acceso se cierra solo en vez de quedar vigente de forma
+            indefinida. Protege contra el uso de sesiones abandonadas.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="control">
+      <header>
+        <span class="num">17</span>
+        <h3>Permisos granulares por módulo</h3>
+        <span class="badge">Implementado</span>
+      </header>
+      <div class="content">
+        <p class="label">Qué es</p>
+        <p>
+          Además del rol, cada colaborador tiene permisos independientes por
+          módulo y por operación: leer, crear, editar y eliminar. Un colaborador
+          nuevo no ve nada hasta que el administrador le habilita explícitamente
+          lo que necesita. Los permisos se comprueban dos veces: al abrir la
+          pantalla y otra vez en el servidor al pedir los datos.
+        </p>
+        <div class="example">
+          <p class="label">Ejemplo — de qué nos protege</p>
+          <p>
+            Alguien de operaciones puede consultar rutas sin ver finanzas ni
+            datos personales de sus compañeros. Y aunque copie la dirección de
+            una pantalla a la que no tiene acceso, el servidor rechaza la
+            petición. Protege contra el acceso excesivo y limita el daño si una
+            cuenta se ve comprometida.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="control">
+      <header>
+        <span class="num">18</span>
+        <h3>Bitácora de auditoría</h3>
+        <span class="badge">Implementado</span>
+      </header>
+      <div class="content">
+        <p class="label">Qué es</p>
+        <p>
+          Las altas, cambios y bajas de los registros importantes quedan
+          guardadas con quién las hizo, cuándo y qué campos cambiaron, con el
+          valor anterior y el nuevo. La bitácora es consultable desde el panel de
+          administración.
+        </p>
+        <div class="example">
+          <p class="label">Ejemplo — de qué nos protege</p>
+          <p>
+            Si una tarifa aparece modificada o un registro desaparece, se puede
+            reconstruir quién lo hizo y cuándo. Protege contra el repudio y da
+            trazabilidad ante una investigación interna.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="control">
+      <header>
+        <span class="num">19</span>
+        <h3>Revisión automática de dependencias</h3>
+        <span class="badge new">Nuevo</span>
+      </header>
+      <div class="content">
+        <p class="label">Qué es</p>
+        <p>
+          El día 1 de cada mes se ejecuta sola una revisión de las librerías de
+          terceros contra las bases públicas de vulnerabilidades, y avisa cuando
+          aparece alguna de severidad alta. Se complementa con la actualización
+          de las librerías base realizada en julio de 2026, que redujo los avisos
+          conocidos de 38 a 26.
+        </p>
+        <div class="example">
+          <p class="label">Ejemplo — de qué nos protege</p>
+          <p>
+            Cuando se descubre una falla en una librería que usa la plataforma,
+            el equipo se entera en semanas y no por casualidad meses después.
+            Protege contra los ataques a la cadena de suministro de software.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="section">Controles vigentes desde junio de 2026</h2>
+    <p class="section-intro">
+      Los doce controles del reporte anterior siguen activos y verificados.
+    </p>
+
+    <div class="control">
+      <header>
+        <span class="num">1</span>
+        <h3>Autenticación con contraseñas cifradas</h3>
+        <span class="badge">Implementado</span>
+      </header>
+      <div class="content">
+        <p class="label">Qué es</p>
+        <p>
+          El acceso se realiza con correo y contraseña gestionados por Better
+          Auth. Las contraseñas de inicio de sesión nunca se guardan como texto:
+          se almacenan con un algoritmo de derivación criptográfica (hashing con
+          sal) que no se puede revertir. Se exige una longitud mínima de 8
+          caracteres.
+        </p>
+        <div class="example">
+          <p class="label">Ejemplo — de qué nos protege</p>
+          <p>
+            Si un atacante lograra ver la base de datos, no encontraría las
+            contraseñas de acceso de los usuarios, solo valores imposibles de
+            revertir. Protege contra el robo de credenciales en caso de fuga de
+            datos.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="control">
+      <header>
+        <span class="num">2</span>
+        <h3>Control de acceso por roles (RBAC)</h3>
+        <span class="badge">Implementado</span>
+      </header>
+      <div class="content">
+        <p class="label">Qué es</p>
+        <p>
+          Cada usuario tiene un rol (administrador, transportista, colaborador,
+          vendedor, desarrollador) y cada pantalla y operación del servidor
+          verifica el rol antes de responder, devolviendo 'No autorizado' (401) o
+          'Prohibido' (403) cuando no corresponde. El rol no se puede establecer
+          desde el formulario de registro.
+        </p>
+        <div class="example">
+          <p class="label">Ejemplo — de qué nos protege</p>
+          <p>
+            Un transportista que intente abrir una pantalla de administrador
+            recibe un rechazo del servidor, y nadie puede darse de alta como
+            administrador manipulando el registro. Protege contra la escalada de
+            privilegios.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="control">
+      <header>
+        <span class="num">3</span>
+        <h3>Endpoints del servidor protegidos por defecto</h3>
+        <span class="badge">Implementado</span>
+      </header>
+      <div class="content">
+        <p class="label">Qué es</p>
+        <p>
+          Las rutas de la API se envuelven en validadores de sesión y rol
+          centralizados. Una petición sin sesión válida se rechaza antes de tocar
+          la base de datos.
+        </p>
+        <div class="example">
+          <p class="label">Ejemplo — de qué nos protege</p>
+          <p>
+            Si alguien copia la dirección de una API e intenta consumirla sin
+            haber iniciado sesión, no obtiene datos ni un error que revele
+            detalles internos. Protege contra el acceso no autenticado y la fuga
+            de información por mensajes de error.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="control">
+      <header>
+        <span class="num">4</span>
+        <h3>Protección contra CSRF y orígenes no confiables</h3>
+        <span class="badge">Implementado</span>
+      </header>
+      <div class="content">
+        <p class="label">Qué es</p>
+        <p>
+          La autenticación solo acepta peticiones provenientes de orígenes
+          explícitamente confiables. Las peticiones desde sitios desconocidos se
+          rechazan.
+        </p>
+        <div class="example">
+          <p class="label">Ejemplo — de qué nos protege</p>
+          <p>
+            Si un sitio malicioso intenta enviar una petición en nombre de un
+            usuario con sesión abierta en JTP, el servidor la descarta. Protege
+            contra Cross-Site Request Forgery (CSRF).
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="control">
+      <header>
+        <span class="num">5</span>
+        <h3>Cookies de sesión seguras (HttpOnly)</h3>
+        <span class="badge">Implementado</span>
+      </header>
+      <div class="content">
+        <p class="label">Qué es</p>
+        <p>
+          La sesión se mantiene en cookies gestionadas por el servidor, no
+          accesibles desde el JavaScript de la página.
+        </p>
+        <div class="example">
+          <p class="label">Ejemplo — de qué nos protege</p>
+          <p>
+            Aunque se colara un script malicioso en el navegador, no podría leer
+            ni robar la cookie de sesión para suplantar al usuario. Protege
+            contra el secuestro de sesión.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="control">
+      <header>
+        <span class="num">6</span>
+        <h3>Restablecimiento de contraseña seguro</h3>
+        <span class="badge">Implementado</span>
+      </header>
+      <div class="content">
+        <p class="label">Qué es</p>
+        <p>
+          El restablecimiento se hace por un enlace enviado al correo del
+          usuario, con un token que expira en 1 hora. Al cambiar la contraseña,
+          todas las sesiones activas se revocan automáticamente.
+        </p>
+        <div class="example">
+          <p class="label">Ejemplo — de qué nos protege</p>
+          <p>
+            Si alguien obtuvo acceso indebido a una cuenta, en cuanto el dueño
+            legítimo restablece su contraseña, la sesión del intruso queda
+            invalidada de inmediato. Protege contra el acceso persistente tras un
+            compromiso de cuenta.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="control">
+      <header>
+        <span class="num">7</span>
+        <h3>Prevención de inyección SQL</h3>
+        <span class="badge">Implementado</span>
+      </header>
+      <div class="content">
+        <p class="label">Qué es</p>
+        <p>
+          Todo el acceso a datos se hace mediante el ORM Prisma con consultas
+          parametrizadas; no se construyen consultas concatenando texto del
+          usuario. La conexión a la base de datos exige cifrado TLS.
+        </p>
+        <div class="example">
+          <p class="label">Ejemplo — de qué nos protege</p>
+          <p>
+            Si un usuario escribe código SQL dentro de un campo de búsqueda, se
+            trata como texto literal y nunca se ejecuta como comando. Protege
+            contra la inyección SQL, una de las vulnerabilidades más explotadas a
+            nivel mundial.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="control">
+      <header>
+        <span class="num">8</span>
+        <h3>Validación de entrada y anti-abuso en registro</h3>
+        <span class="badge">Implementado</span>
+      </header>
+      <div class="content">
+        <p class="label">Qué es</p>
+        <p>
+          Los formularios validan los datos en el cliente y en el servidor. El
+          registro aplica además heurísticas que rechazan nombres y correos con
+          patrones automatizados.
+        </p>
+        <div class="example">
+          <p class="label">Ejemplo — de qué nos protege</p>
+          <p>
+            Un bot que intente crear cuentas masivas con nombres aleatorios es
+            rechazado en el alta. Protege contra el registro automatizado abusivo
+            y los datos malformados.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="control">
+      <header>
+        <span class="num">9</span>
+        <h3>Protección contra duplicados por condición de carrera</h3>
+        <span class="badge">Implementado</span>
+      </header>
+      <div class="content">
+        <p class="label">Qué es</p>
+        <p>
+          El número de cotización tiene una restricción de unicidad en la base de
+          datos, lo que impide que dos procesos simultáneos generen el mismo
+          folio.
+        </p>
+        <div class="example">
+          <p class="label">Ejemplo — de qué nos protege</p>
+          <p>
+            Si dos usuarios generan una cotización en el mismo instante, la base
+            de datos garantiza que no se asigne el mismo número. Protege contra
+            la corrupción de datos por accesos concurrentes.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="control">
+      <header>
+        <span class="num">10</span>
+        <h3>Gestión segura de secretos y credenciales</h3>
+        <span class="badge">Implementado</span>
+      </header>
+      <div class="content">
+        <p class="label">Qué es</p>
+        <p>
+          Las claves sensibles (secreto de autenticación, cadena de conexión a la
+          base de datos, credenciales de Cloudinary y de correo) viven en
+          variables de entorno fuera del repositorio. Se verificó el historial
+          completo de versiones: ninguna credencial fue publicada jamás.
+        </p>
+        <div class="example">
+          <p class="label">Ejemplo — de qué nos protege</p>
+          <p>
+            Las claves de servicios nunca quedan expuestas en el código que se
+            sube al repositorio, ni siquiera en versiones antiguas. Protege
+            contra la fuga de credenciales por exposición del repositorio.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="control">
+      <header>
+        <span class="num">11</span>
+        <h3>Protección de tareas automáticas</h3>
+        <span class="badge">Implementado</span>
+      </header>
+      <div class="content">
+        <p class="label">Qué es</p>
+        <p>
+          Los procesos programados —como el resumen diario del mural— exigen una
+          credencial secreta. Una petición sin ella se rechaza.
+        </p>
+        <div class="example">
+          <p class="label">Ejemplo — de qué nos protege</p>
+          <p>
+            Nadie de fuera puede disparar el envío masivo de correos al equipo
+            llamando a la dirección del proceso. Protege contra el abuso de
+            procesos internos y el uso de la plataforma para enviar correo no
+            deseado.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="control">
+      <header>
+        <span class="num">12</span>
+        <h3>Integración continua con verificaciones automáticas</h3>
+        <span class="badge">Implementado</span>
+      </header>
+      <div class="content">
+        <p class="label">Qué es</p>
+        <p>
+          Cada cambio de código pasa por un proceso automático que ejecuta
+          verificación de tipos, análisis estático, pruebas automatizadas y
+          compilación antes de poder integrarse.
+        </p>
+        <div class="example">
+          <p class="label">Ejemplo — de qué nos protege</p>
+          <p>
+            Un cambio que rompa una regla de cálculo de cotizaciones se detecta y
+            bloquea antes de llegar a producción. Reduce los errores de seguridad
+            introducidos por código defectuoso.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="section">Resumen ejecutivo</h2>
+    <p class="section-intro">
+      La plataforma cuenta actualmente con 19 controles de seguridad activos, que
+      cubren acceso e identidad, autorización, integridad de las sesiones,
+      protección de la base de datos, validación de datos, trazabilidad y calidad
+      del código.
+    </p>
+
+    <table class="summary">
+      <thead>
+        <tr><th>#</th><th>Control</th><th>Área</th><th>Estado</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>Autenticación con contraseñas cifradas</td><td>Acceso / Identidad</td><td class="ok">Activo</td></tr>
+        <tr><td>2</td><td>Control de acceso por roles (RBAC)</td><td>Autorización</td><td class="ok">Activo</td></tr>
+        <tr><td>3</td><td>Endpoints protegidos por defecto</td><td>Autorización</td><td class="ok">Activo</td></tr>
+        <tr><td>4</td><td>Protección contra CSRF</td><td>Integridad de sesión</td><td class="ok">Activo</td></tr>
+        <tr><td>5</td><td>Cookies de sesión seguras (HttpOnly)</td><td>Integridad de sesión</td><td class="ok">Activo</td></tr>
+        <tr><td>6</td><td>Restablecimiento de contraseña seguro</td><td>Acceso / Identidad</td><td class="ok">Activo</td></tr>
+        <tr><td>7</td><td>Prevención de inyección SQL</td><td>Base de datos</td><td class="ok">Activo</td></tr>
+        <tr><td>8</td><td>Validación de entrada y anti-abuso</td><td>Validación de datos</td><td class="ok">Activo</td></tr>
+        <tr><td>9</td><td>Protección contra condiciones de carrera</td><td>Integridad de datos</td><td class="ok">Activo</td></tr>
+        <tr><td>10</td><td>Gestión segura de secretos</td><td>Configuración</td><td class="ok">Activo</td></tr>
+        <tr><td>11</td><td>Protección de tareas automáticas</td><td>Defensa anti-abuso</td><td class="ok">Activo</td></tr>
+        <tr><td>12</td><td>Integración continua con verificaciones</td><td>Calidad / Cadena de suministro</td><td class="ok">Activo</td></tr>
+        <tr><td>13</td><td>Política de contenido (CSP) y cabeceras</td><td>Protección del navegador</td><td class="ok">Activo</td></tr>
+        <tr><td>14</td><td>Límite de intentos persistente</td><td>Defensa anti-abuso</td><td class="ok">Activo</td></tr>
+        <tr><td>15</td><td>Validación de archivos subidos</td><td>Validación de datos</td><td class="ok">Activo</td></tr>
+        <tr><td>16</td><td>Caducidad definida de las sesiones</td><td>Integridad de sesión</td><td class="ok">Activo</td></tr>
+        <tr><td>17</td><td>Permisos granulares por módulo</td><td>Autorización</td><td class="ok">Activo</td></tr>
+        <tr><td>18</td><td>Bitácora de auditoría</td><td>Trazabilidad</td><td class="ok">Activo</td></tr>
+        <tr><td>19</td><td>Revisión automática de dependencias</td><td>Cadena de suministro</td><td class="ok">Activo</td></tr>
+      </tbody>
+    </table>
+
+    <div class="closing">
+      <strong>Conclusión.</strong> Las protecciones fundamentales de una
+      aplicación web de gestión —autenticación, control de acceso, defensa contra
+      fuerza bruta, inyección SQL, CSRF, XSS y manejo seguro de secretos— están
+      implementadas y operativas. La auditoría de julio de 2026 amplió la
+      cobertura del navegador y de la cadena de suministro, que eran las dos
+      áreas con menor profundidad. La seguridad no es un estado final sino un
+      proceso: el endurecimiento continúa conforme crece la operación.
+    </div>
+
+  </div>
+
+  <footer class="doc">
+    JTP Logistics · Reporte de ciberseguridad · Confidencial<br />
+    Emitido el 30 de julio de 2026. Sustituye a la versión del 3 de junio de 2026.
+  </footer>
+
+</div>
+</body>
+</html>

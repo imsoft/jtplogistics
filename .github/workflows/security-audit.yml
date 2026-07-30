@@ -1,0 +1,65 @@
+name: Auditoría de dependencias
+
+# Revisa las vulnerabilidades conocidas de las dependencias de producción.
+# Corre el día 1 de cada mes y también a mano desde la pestaña Actions.
+# Muchos avisos vienen de dependencias transitivas sin parche disponible: el
+# objetivo es enterarse cuando salga la corrección, no bloquear el desarrollo.
+on:
+  schedule:
+    - cron: "0 13 1 * *" # día 1 de cada mes, 13:00 UTC (7:00 en CDMX)
+  workflow_dispatch:
+
+jobs:
+  audit:
+    name: pnpm audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Auditar dependencias de producción
+        id: audit
+        continue-on-error: true
+        run: |
+          pnpm audit --prod 2>&1 | tee audit.txt
+          echo "exit=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Resumen
+        run: |
+          {
+            echo "## Auditoría de dependencias"
+            echo
+            if grep -q "No known vulnerabilities found" audit.txt; then
+              echo "✅ Sin vulnerabilidades conocidas."
+            else
+              echo "### Conteo"
+              echo '```'
+              grep -E "vulnerabilities found|Severity:" audit.txt || true
+              echo '```'
+              echo
+              echo "<details><summary>Reporte completo</summary>"
+              echo
+              echo '```'
+              cat audit.txt
+              echo '```'
+              echo
+              echo "</details>"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Avisar si hay vulnerabilidades altas o críticas
+        run: |
+          if grep -qE "^│ (high|critical)" audit.txt; then
+            echo "::warning::Hay vulnerabilidades altas o críticas. Revisa el resumen del job."
+          fi

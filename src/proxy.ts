@@ -5,6 +5,9 @@ import { isRateLimited } from "@/lib/rate-limit";
 // Nota: este limitador vive en memoria y en Vercel cada instancia tiene el
 // suyo, así que es solo una primera barrera. El conteo real y persistente de
 // /api/auth lo hace Better Auth contra la BD (ver `rateLimit` en lib/auth.ts).
+//
+// Este archivo se llamaba middleware.ts; Next 16 renombró la convención a
+// proxy.ts y marcó la anterior como obsoleta.
 const RATE_LIMIT_RULES: [string, number, number][] = [
   ["/api/auth/sign-in",         10, 60_000],  // 10 intentos/min
   ["/api/auth/sign-up",          5, 60_000],  // 5 registros/min
@@ -68,7 +71,7 @@ function applySecurityHeaders(headers: Headers, nonce: string) {
   );
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith("/api/")) {

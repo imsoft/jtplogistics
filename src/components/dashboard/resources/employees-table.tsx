@@ -18,6 +18,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { downloadXlsxFromAoa } from "@/lib/excel-export";
 import { Label } from "@/components/ui/label";
 import { FileDown } from "lucide-react";
 import type { Employee } from "@/types/resources.types";
@@ -57,8 +58,6 @@ function calcAge(iso: string): string {
 }
 
 async function exportToExcel(employees: Employee[], selectedKeys: Set<string>) {
-  const { utils, writeFile } = await import("xlsx");
-
   const headers = ALL_COLUMNS
     .filter((c) => selectedKeys.has(c.key))
     .map((c) => c.label);
@@ -74,17 +73,8 @@ async function exportToExcel(employees: Employee[], selectedKeys: Set<string>) {
       })
   );
 
-  const ws = utils.aoa_to_sheet([headers, ...rows]);
-  const wb = utils.book_new();
-  utils.book_append_sheet(wb, ws, "Colaboradores");
-
-  // Auto column width
-  const colWidths = headers.map((h, i) => ({
-    wch: Math.max(h.length, ...rows.map((r) => String(r[i] ?? "").length)) + 2,
-  }));
-  ws["!cols"] = colWidths;
-
-  writeFile(wb, "colaboradores.xlsx");
+  // El ancho de columna lo calcula downloadXlsxFromAoa a partir del contenido.
+  await downloadXlsxFromAoa("colaboradores.xlsx", "Colaboradores", [headers, ...rows]);
 }
 
 // ── Table columns ─────────────────────────────────────────────────────────────
