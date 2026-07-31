@@ -633,6 +633,7 @@ export const MEXICO_STATES_CITIES: StateCitiesGroup[] = [
       "Chimaltitán",
       "Chiquilistlán",
       "Cihuatlán",
+      "Ciudad Guzmán",
       "Cocula",
       "Colotlán",
       "Concepción de Buenos Aires",
