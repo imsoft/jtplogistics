@@ -4,6 +4,9 @@ import { useState, useCallback, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { AppSelect } from "@/components/ui/app-select";
+import { DataTableSkeleton } from "@/components/ui/skeletons";
+import { CityCombobox } from "@/components/dashboard/routes/city-combobox";
+import { parseCityValue } from "@/lib/data/mexico-cities";
 import { formatMxn } from "@/lib/utils";
 
 type ActiveRoute = {
@@ -43,8 +46,8 @@ export function VendorQuotesTable() {
   const [isLoadingTargets, setIsLoadingTargets] = useState(false);
 
   const [selectedUnitType, setSelectedUnitType] = useState<string>("");
-  const [selectedOrigin, setSelectedOrigin] = useState<string>("");
-  const [selectedDestination, setSelectedDestination] = useState<string>("");
+  const [selectedOrigin, setSelectedOrigin] = useState<string | null>(null);
+  const [selectedDestination, setSelectedDestination] = useState<string | null>(null);
 
   const loadRoutes = useCallback(async () => {
     const [data, utRes] = await Promise.all([
@@ -75,26 +78,27 @@ export function VendorQuotesTable() {
     [routes, selectedUnitType]
   );
 
-  const origins = useMemo(
-    () => Array.from(new Set(filteredByUnit.map((r) => r.origin))).sort(),
-    [filteredByUnit]
+  // Origen y destino se eligen del catálogo completo de ciudades ("Estado|Ciudad"),
+  // no solo de las rutas registradas: se puede consultar cualquier trayecto.
+  const originCity = useMemo(() => parseCityValue(selectedOrigin).city, [selectedOrigin]);
+  const destinationCity = useMemo(
+    () => parseCityValue(selectedDestination).city,
+    [selectedDestination]
   );
+  const hasCityPair = Boolean(originCity && destinationCity);
 
-  const destinations = useMemo(
-    () =>
-      filteredByUnit
-        .filter((r) => r.origin === selectedOrigin)
-        .map((r) => r.destination)
-        .sort(),
-    [filteredByUnit, selectedOrigin]
-  );
+  const sameCity = (a: string, b: string) =>
+    a.trim().toLowerCase() === b.trim().toLowerCase();
 
+  // Solo hay resumen de targets si el trayecto coincide con una ruta registrada.
   const selectedRoute = useMemo(
     () =>
-      filteredByUnit.find(
-        (r) => r.origin === selectedOrigin && r.destination === selectedDestination
-      ) ?? null,
-    [filteredByUnit, selectedOrigin, selectedDestination]
+      hasCityPair
+        ? filteredByUnit.find(
+            (r) => sameCity(r.origin, originCity) && sameCity(r.destination, destinationCity)
+          ) ?? null
+        : null,
+    [filteredByUnit, originCity, destinationCity, hasCityPair]
   );
   const selectedRouteId = selectedRoute?.id ?? null;
 
@@ -120,21 +124,18 @@ export function VendorQuotesTable() {
 
   function handleUnitTypeChange(value: string) {
     setSelectedUnitType(value);
-    setSelectedOrigin("");
-    setSelectedDestination("");
     setTargets([]);
   }
 
-  function handleOriginChange(value: string) {
+  function handleOriginChange(value: string | null) {
     setSelectedOrigin(value);
-    setSelectedDestination("");
     setTargets([]);
   }
 
   const stats = useMemo(() => computeStats(targets), [targets]);
 
   if (!isLoaded) {
-    return <p className="text-muted-foreground">Cargando…</p>;
+    return <DataTableSkeleton />;
   }
 
   return (
@@ -151,35 +152,33 @@ export function VendorQuotesTable() {
           />
         </div>
 
-        <div className="space-y-2">
-          <Label className="text-xs font-medium">Origen</Label>
-          <AppSelect
-            value={selectedOrigin}
-            onValueChange={handleOriginChange}
-            options={origins.map((o) => ({value: o, label: o}))}
-            className="w-full"
-          />
-        </div>
+        <CityCombobox
+          id="vq-origin"
+          label="Origen"
+          value={selectedOrigin}
+          onValueChange={handleOriginChange}
+        />
 
-        <div className="space-y-2">
-          <Label className="text-xs font-medium">Destino</Label>
-          <AppSelect
-            value={selectedDestination}
-            onValueChange={setSelectedDestination}
-            options={destinations.map((d) => ({value: d, label: d}))}
-            disabled={!selectedOrigin}
-            className="w-full"
-          />
-        </div>
+        <CityCombobox
+          id="vq-destination"
+          label="Destino"
+          value={selectedDestination}
+          onValueChange={setSelectedDestination}
+        />
       </div>
 
       {/* Resultados */}
-      {!selectedRouteId ? (
+      {!hasCityPair ? (
         <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
-          Selecciona una ruta para ver el resumen.
+          Selecciona origen y destino para ver el resumen.
+        </p>
+      ) : !selectedRouteId ? (
+        <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
+          Este trayecto todavía no está dado de alta como ruta, por lo que no hay
+          targets para calcular el resumen.
         </p>
       ) : isLoadingTargets ? (
-        <p className="text-muted-foreground">Cargando…</p>
+        <DataTableSkeleton />
       ) : stats === null ? (
         <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
           No hay datos disponibles para esta ruta.
