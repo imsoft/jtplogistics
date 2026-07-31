@@ -28,7 +28,7 @@ export const MEXICO_STATES_CITIES: StateCitiesGroup[] = [
   },
   {
     value: "Baja California",
-    items: ["Ensenada", "Mexicali", "Playas de Rosarito", "Tecate", "Tijuana"],
+    items: ["Ensenada", "Mexicali", "Playas de Rosarito", "San Quintín", "Tecate", "Tijuana"],
   },
   {
     value: "Baja California Sur",
