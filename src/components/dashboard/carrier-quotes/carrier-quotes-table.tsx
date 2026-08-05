@@ -59,6 +59,16 @@ async function fetchQuotes(endpoint: string, routeId?: string): Promise<CarrierQ
   return res.json();
 }
 
+/**
+ * Texto del error para la UI. Se muestra la causa real (y no un mensaje
+ * genérico) porque sin ella es imposible diagnosticar por qué falló la descarga
+ * en la máquina de quien cotiza.
+ */
+function errorText(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  return typeof e === "string" ? e : "error desconocido";
+}
+
 function computeStats(quotes: CarrierQuote[]) {
   const targets = quotes.map((q) => q.carrierTarget).filter((t): t is number => t != null && !Number.isNaN(t));
   if (targets.length === 0) return { avg: null, venta: null };
@@ -316,37 +326,74 @@ export function CarrierQuotesTable({
     if (quoteRows.length === 0) { setQuoteError("Agrega al menos una ruta."); return; }
     setIsGenerating(true);
     try {
-      const termsRes = await fetch("/api/quote-config");
-      const termsJson: QuoteTermsJson = termsRes.ok ? await termsRes.json() : { bulletsJson: "", contractJson: "", privacyJson: "", limitsJson: "" };
-      const logoUrl = window.location.origin + "/images/logo/jtp-logistics.png";
-      const blob = await pdf(
-        <QuotePdf
-          data={{ quoteNumber, company, contact, phone, validUntil, rows: quoteRows }}
-          logoUrl={logoUrl}
-          termsJson={termsJson}
-          creatorName={signer.name}
-          creatorPosition={signer.position}
-        />
-      ).toBlob();
+      // Los textos legales son opcionales: si no se pueden traer, la cotización
+      // se genera igual en vez de dejar al usuario sin PDF.
+      const emptyTerms: QuoteTermsJson = { bulletsJson: "", contractJson: "", privacyJson: "", limitsJson: "" };
+      let termsJson = emptyTerms;
+      try {
+        const termsRes = await fetch("/api/quote-config");
+        if (termsRes.ok) termsJson = await termsRes.json();
+      } catch (e) {
+        console.error("No se pudieron cargar los textos legales:", e);
+      }
+
+      // ── Generar y descargar el PDF ──
+      let blob: Blob;
+      try {
+        const logoUrl = window.location.origin + "/images/logo/jtp-logistics.png";
+        blob = await pdf(
+          <QuotePdf
+            data={{ quoteNumber, company, contact, phone, validUntil, rows: quoteRows }}
+            logoUrl={logoUrl}
+            termsJson={termsJson}
+            creatorName={signer.name}
+            creatorPosition={signer.position}
+          />
+        ).toBlob();
+      } catch (e) {
+        console.error("Error al generar el PDF:", e);
+        setQuoteError(`No se pudo generar el PDF: ${errorText(e)}`);
+        return;
+      }
+
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url; a.download = `Cotizacion-${quoteNumber}.pdf`; a.click();
-      URL.revokeObjectURL(url);
+      a.href = url;
+      a.download = `Cotizacion-${quoteNumber}.pdf`;
+      // El enlace va al DOM y la URL se libera después: revocarla en el mismo
+      // tick cancela la descarga en algunos navegadores.
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
 
-      await fetch("/api/generated-quotes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ quoteNumber, company, contact, phone, validUntil, rows: quoteRows }),
-      });
+      // ── Guardar en el historial ──
+      // El PDF ya está en manos del usuario: si el guardado falla hay que
+      // decirlo con claridad, no reportarlo como un error de generación.
+      try {
+        const saveRes = await fetch("/api/generated-quotes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ quoteNumber, company, contact, phone, validUntil, rows: quoteRows }),
+        });
+        if (!saveRes.ok) {
+          const err = await saveRes.json().catch(() => ({})) as { error?: string };
+          throw new Error(err.error ?? `Error ${saveRes.status}`);
+        }
+      } catch (e) {
+        console.error("Error al guardar la cotización:", e);
+        setQuoteError(`El PDF se descargó, pero la cotización no se guardó en el historial: ${errorText(e)}`);
+        return;
+      }
 
-      const nextRes = await fetch("/api/generated-quotes/next-number");
-      if (nextRes.ok) {
+      const nextRes = await fetch("/api/generated-quotes/next-number").catch(() => null);
+      if (nextRes?.ok) {
         const { quoteNumber: next } = await nextRes.json() as { quoteNumber: string };
         setQuoteNumber(next);
       }
     } catch (e) {
       console.error(e);
-      setQuoteError("Error al generar el PDF.");
+      setQuoteError(`Error al generar la cotización: ${errorText(e)}`);
     } finally {
       setIsGenerating(false);
     }
