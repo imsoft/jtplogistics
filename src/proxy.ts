@@ -48,7 +48,10 @@ function applySecurityHeaders(headers: Headers, nonce: string) {
     // los suyos (los chunks de Next, Vercel Analytics) sin listarlos uno a uno.
     // El 'unsafe-inline' y el https: son el respaldo para navegadores que no
     // entienden 'strict-dynamic'; los que sí lo entienden los ignoran.
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https: 'unsafe-inline'${evalDirective}`,
+    // 'wasm-unsafe-eval' es imprescindible para el cotizador: @react-pdf arma
+    // el PDF en el navegador con Yoga, que es WebAssembly. Solo habilita WASM,
+    // no el eval() de JavaScript.
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https: 'unsafe-inline' 'wasm-unsafe-eval'${evalDirective}`,
     // Tailwind y Next inyectan estilos en línea; no hay manera de evitarlo.
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https://res.cloudinary.com",
