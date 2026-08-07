@@ -19,7 +19,8 @@
     "db:sync-route-destination-states": "tsx scripts/sync-route-destination-states.ts",
     "db:seed-settings": "tsx scripts/seed-settings.ts",
     "db:create-demo-carrier": "tsx scripts/create-demo-carrier.ts",
-    "db:encrypt-credentials": "tsx scripts/encrypt-credentials.ts"
+    "db:encrypt-credentials": "tsx scripts/encrypt-credentials.ts",
+    "signatures": "tsx scripts/generate-signatures.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
