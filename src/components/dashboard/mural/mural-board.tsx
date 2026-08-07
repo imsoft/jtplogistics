@@ -13,14 +13,18 @@ import {
   Pencil,
   MapPin,
   Newspaper,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { MURAL_KIND_COLORS, MURAL_KIND_LABELS } from "@/lib/constants/mural";
+import {
+  MURAL_KIND_ACCENTS,
+  MURAL_KIND_COLORS,
+  MURAL_KIND_LABELS,
+} from "@/lib/constants/mural";
 import type {
   MuralCelebration,
   MuralEntry,
@@ -40,8 +44,16 @@ const KIND_ICONS: Record<MuralItemKind, React.ElementType> = {
 /** Días hacia adelante que muestra la agenda del mural. */
 const AGENDA_DAYS = 60;
 
+/**
+ * "YYYY-MM-DD" del día en la zona horaria de quien mira, no en UTC: en México
+ * toISOString() ya adelanta el día a partir de las 18:00 y las celebraciones de
+ * hoy se perderían justo la tarde en que hay que felicitar.
+ */
 function isoDay(date: Date): string {
-  return date.toISOString().slice(0, 10);
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 function formatDay(iso: string): string {
@@ -61,6 +73,22 @@ function formatRange(start: string, end: string | null): string {
   });
   if (!end || end.slice(0, 10) === start.slice(0, 10)) return fmt.format(new Date(start));
   return `${fmt.format(new Date(start))} – ${fmt.format(new Date(end))}`;
+}
+
+/** Días completos entre hoy y un día "YYYY-MM-DD". */
+function daysFromToday(iso: string, today: string): number {
+  const a = Date.parse(`${today}T00:00:00Z`);
+  const b = Date.parse(`${iso}T00:00:00Z`);
+  return Math.round((b - a) / 86_400_000);
+}
+
+/** "Hoy", "Mañana" o "En 5 días": ubica el día sin tener que contar del calendario. */
+function relativeDayLabel(iso: string, today: string): string | null {
+  const diff = daysFromToday(iso, today);
+  if (diff === 0) return "Hoy";
+  if (diff === 1) return "Mañana";
+  if (diff > 1 && diff <= 7) return `En ${diff} días`;
+  return null;
 }
 
 interface AgendaItem {
@@ -85,15 +113,133 @@ function KindBadge({ kind }: { kind: MuralItemKind }) {
   );
 }
 
+/** Foto de la persona; si no tiene, el icono de su tipo sobre un fondo del color. */
+function ItemAvatar({
+  item,
+  size = "md",
+}: {
+  item: AgendaItem;
+  size?: "md" | "lg";
+}) {
+  const accent = MURAL_KIND_ACCENTS[item.kind];
+  const Icon = KIND_ICONS[item.kind];
+  const px = size === "lg" ? 64 : 44;
+  const box = size === "lg" ? "size-16" : "size-11";
+  const icon = size === "lg" ? "size-7" : "size-5";
+
+  if (item.image) {
+    return (
+      <Image
+        src={item.image}
+        alt=""
+        width={px}
+        height={px}
+        className={`${box} shrink-0 rounded-full object-cover ring-2 ring-offset-2 ring-offset-background ${accent.ring}`}
+      />
+    );
+  }
+  return (
+    <div
+      className={`${box} flex shrink-0 items-center justify-center rounded-full ring-2 ring-offset-2 ring-offset-background ${accent.soft} ${accent.ring}`}
+    >
+      <Icon className={icon} />
+    </div>
+  );
+}
+
+interface EntryActionsProps {
+  basePath: string;
+  canUpdate: boolean;
+  canDelete: boolean;
+  onDelete: (id: string) => void;
+}
+
+/** Acciones de una entrada (las celebraciones se editan desde la ficha de la persona). */
+function EntryActions({
+  entry,
+  basePath,
+  canUpdate,
+  canDelete,
+  onDelete,
+}: EntryActionsProps & { entry: MuralEntry }) {
+  if (!canUpdate && !canDelete) return null;
+  return (
+    <div className="flex shrink-0 items-center gap-1">
+      {canUpdate && (
+        <Button variant="ghost" size="icon" asChild>
+          <Link href={`${basePath}/entries/${entry.id}`} aria-label={`Editar ${entry.title}`}>
+            <Pencil className="size-4" />
+          </Link>
+        </Button>
+      )}
+      {canDelete && (
+        <DeleteConfirmDialog
+          title="Eliminar entrada"
+          description={`Se eliminará "${entry.title}" del mural.`}
+          onConfirm={() => onDelete(entry.id)}
+        />
+      )}
+    </div>
+  );
+}
+
+/** Tarjeta de la línea de tiempo: filo de color del tipo, foto, datos y acciones. */
+function AgendaCard({ item, actions }: { item: AgendaItem; actions: EntryActionsProps }) {
+  const accent = MURAL_KIND_ACCENTS[item.kind];
+  return (
+    <div
+      className={`flex items-start gap-4 rounded-xl border border-l-4 bg-card p-4 shadow-xs transition hover:-translate-y-0.5 hover:shadow-md ${accent.edge}`}
+    >
+      <ItemAvatar item={item} />
+
+      <div className="min-w-0 flex-1 space-y-1.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="truncate text-sm font-semibold">{item.title}</p>
+          <KindBadge kind={item.kind} />
+        </div>
+        {item.subtitle && (
+          <p className="text-xs font-medium text-muted-foreground">{item.subtitle}</p>
+        )}
+        {item.entry && (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1">
+              <CalendarDays className="size-3" />
+              {formatRange(item.entry.startDate, item.entry.endDate)}
+            </span>
+            {item.entry.location && (
+              <span className="inline-flex items-center gap-1">
+                <MapPin className="size-3" />
+                {item.entry.location}
+              </span>
+            )}
+          </div>
+        )}
+        {item.entry?.description && (
+          <p className="text-sm text-muted-foreground">{item.entry.description}</p>
+        )}
+      </div>
+
+      {item.entry && <EntryActions entry={item.entry} {...actions} />}
+    </div>
+  );
+}
+
 function AgendaSkeleton() {
   return (
-    <div className="space-y-3">
-      {[0, 1, 2].map((i) => (
-        <div key={i} className="flex items-center gap-3 rounded-lg border p-4">
-          <Skeleton className="size-10 rounded-full" />
-          <div className="flex-1 space-y-2">
-            <Skeleton className="h-4 w-1/3" />
-            <Skeleton className="h-3 w-1/4" />
+    <div className="space-y-6">
+      {[0, 1].map((group) => (
+        <div key={group} className="space-y-3">
+          <Skeleton className="h-3 w-40" />
+          <div className="space-y-3 pl-6">
+            {[0, 1].map((i) => (
+              <div key={i} className="flex items-center gap-4 rounded-xl border p-4">
+                <Skeleton className="size-11 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-3 w-1/4" />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       ))}
@@ -103,10 +249,10 @@ function AgendaSkeleton() {
 
 function PostsSkeleton() {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {[0, 1, 2].map((i) => (
-        <div key={i} className="space-y-3 rounded-lg border p-4">
-          <Skeleton className="aspect-[3/2] w-full rounded-md" />
+        <div key={i} className="space-y-3 rounded-2xl border p-4">
+          <Skeleton className="aspect-3/2 w-full rounded-xl" />
           <Skeleton className="h-4 w-2/3" />
           <Skeleton className="h-3 w-full" />
         </div>
@@ -127,10 +273,13 @@ export function MuralBoard({ basePath }: MuralBoardProps) {
   const [posts, setPosts] = useState<MuralPost[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Se fija al montar para que "Hoy" no cambie si la pestaña queda abierta.
+  const [today] = useState(() => isoDay(new Date()));
+
   const loadEntries = useCallback(() => {
-    const today = new Date();
-    const until = new Date(today.getTime() + AGENDA_DAYS * 86_400_000);
-    const query = `?from=${isoDay(today)}&to=${isoDay(until)}`;
+    const now = new Date();
+    const until = new Date(now.getTime() + AGENDA_DAYS * 86_400_000);
+    const query = `?from=${isoDay(now)}&to=${isoDay(until)}`;
 
     fetch(`/api/mural/entries${query}`)
       .then((r) => (r.ok ? r.json() : []))
@@ -199,35 +348,79 @@ export function MuralBoard({ basePath }: MuralBoardProps) {
     return items.sort((a, b) => a.date.localeCompare(b.date));
   }, [celebrations, entries]);
 
+  /** Lo de hoy sale destacado arriba; el resto baja a la línea de tiempo. */
+  const todayItems = useMemo(
+    () => agenda?.filter((i) => i.date.slice(0, 10) === today) ?? null,
+    [agenda, today]
+  );
+
   const groupedAgenda = useMemo(() => {
     if (!agenda) return null;
     const groups = new Map<string, AgendaItem[]>();
     for (const item of agenda) {
       const day = item.date.slice(0, 10);
+      if (day === today) continue;
       const bucket = groups.get(day);
       if (bucket) bucket.push(item);
       else groups.set(day, [item]);
     }
     return [...groups.entries()];
-  }, [agenda]);
+  }, [agenda, today]);
 
   const canCreate = permissions?.canCreate ?? false;
   const canUpdate = permissions?.canUpdate ?? false;
   const canDelete = permissions?.canDelete ?? false;
 
+  const actions: EntryActionsProps = {
+    basePath,
+    canUpdate,
+    canDelete,
+    onDelete: handleDeleteEntry,
+  };
+
   return (
-    <div className="min-w-0 space-y-8">
+    <div className="min-w-0 space-y-10">
       {error && (
         <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3">
           <p className="text-sm font-medium text-destructive">{error}</p>
         </div>
       )}
 
+      {/* ── Lo de hoy: lo primero que se ve al entrar ── */}
+      {todayItems && todayItems.length > 0 && (
+        <section className="overflow-hidden rounded-2xl border border-amber-200/80 bg-linear-to-br from-amber-50 via-rose-50/70 to-background p-5 sm:p-6">
+          <div className="flex items-center gap-2">
+            <Sparkles className="size-5 text-amber-500" />
+            <h2 className="text-base font-bold tracking-wide text-amber-900 sm:text-lg">
+              Hoy en JTP
+            </h2>
+          </div>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            {todayItems.map((item) => (
+              <div
+                key={item.key}
+                className="flex items-center gap-4 rounded-xl bg-background/70 p-4 shadow-xs backdrop-blur-sm"
+              >
+                <ItemAvatar item={item} size="lg" />
+                <div className="min-w-0 flex-1 space-y-1">
+                  <p className="truncate text-base font-bold">{item.title}</p>
+                  {item.subtitle && (
+                    <p className="text-sm font-medium text-muted-foreground">{item.subtitle}</p>
+                  )}
+                  <KindBadge kind={item.kind} />
+                </div>
+                {item.entry && <EntryActions entry={item.entry} {...actions} />}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* ── Agenda: celebraciones, eventos, capacitaciones y vacaciones ── */}
-      <section className="space-y-4">
+      <section className="space-y-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-lg font-semibold">Próximos {AGENDA_DAYS} días</h2>
+            <h2 className="text-lg font-bold">Próximos {AGENDA_DAYS} días</h2>
             <p className="text-muted-foreground mt-0.5 text-[10px] font-semibold uppercase tracking-wide sm:text-xs">
               Cumpleaños, aniversarios, eventos, capacitaciones y vacaciones
             </p>
@@ -245,102 +438,56 @@ export function MuralBoard({ basePath }: MuralBoardProps) {
         {!groupedAgenda ? (
           <AgendaSkeleton />
         ) : groupedAgenda.length === 0 ? (
-          <Card>
-            <CardContent className="py-10 text-center text-sm text-muted-foreground">
-              No hay nada agendado en los próximos {AGENDA_DAYS} días.
+          <Card className="border-dashed">
+            <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
+              <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+                <CalendarDays className="size-6 text-muted-foreground" />
+              </div>
+              <p className="text-sm font-medium text-muted-foreground">
+                {todayItems && todayItems.length > 0
+                  ? "No hay nada más agendado en los próximos días."
+                  : `No hay nada agendado en los próximos ${AGENDA_DAYS} días.`}
+              </p>
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-6">
-            {groupedAgenda.map(([day, items]) => (
-              <div key={day} className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {formatDay(day)}
-                </p>
-                <div className="space-y-2">
-                  {items.map((item) => (
-                    <div
-                      key={item.key}
-                      className="flex items-start gap-3 rounded-lg border p-4 transition-colors hover:bg-muted/40"
-                    >
-                      {item.image ? (
-                        <Image
-                          src={item.image}
-                          alt=""
-                          width={40}
-                          height={40}
-                          className="size-10 shrink-0 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted">
-                          {(() => {
-                            const Icon = KIND_ICONS[item.kind];
-                            return <Icon className="size-4 text-muted-foreground" />;
-                          })()}
-                        </div>
-                      )}
-
-                      <div className="min-w-0 flex-1 space-y-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="truncate text-sm font-medium">{item.title}</p>
-                          <KindBadge kind={item.kind} />
-                        </div>
-                        {item.subtitle && (
-                          <p className="text-xs text-muted-foreground">{item.subtitle}</p>
-                        )}
-                        {item.entry && (
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                            <span>{formatRange(item.entry.startDate, item.entry.endDate)}</span>
-                            {item.entry.location && (
-                              <span className="inline-flex items-center gap-1">
-                                <MapPin className="size-3" />
-                                {item.entry.location}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                        {item.entry?.description && (
-                          <p className="text-sm text-muted-foreground">{item.entry.description}</p>
-                        )}
-                      </div>
-
-                      {item.entry && (canUpdate || canDelete) && (
-                        <div className="flex shrink-0 items-center gap-1">
-                          {canUpdate && (
-                            <Button variant="ghost" size="icon" asChild>
-                              <Link
-                                href={`${basePath}/entries/${item.entry.id}`}
-                                aria-label={`Editar ${item.entry.title}`}
-                              >
-                                <Pencil className="size-4" />
-                              </Link>
-                            </Button>
-                          )}
-                          {canDelete && (
-                            <DeleteConfirmDialog
-                              title="Eliminar entrada"
-                              description={`Se eliminará "${item.entry.title}" del mural.`}
-                              onConfirm={() => handleDeleteEntry(item.entry!.id)}
-                            />
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+          // Línea de tiempo: el hilo vertical enlaza los días y cada punto toma
+          // el color del primer tipo de ese día.
+          <ol className="relative space-y-8 border-l border-dashed border-border pl-6 sm:pl-8">
+            {groupedAgenda.map(([day, items]) => {
+              const relative = relativeDayLabel(day, today);
+              return (
+                <li key={day} className="relative space-y-3">
+                  <span
+                    className={`absolute -left-6.5 top-1.5 size-2.5 rounded-full ring-4 ring-background sm:-left-8.5 ${
+                      MURAL_KIND_ACCENTS[items[0].kind].dot
+                    }`}
+                  />
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-xs font-bold uppercase tracking-wide">{formatDay(day)}</p>
+                    {relative && (
+                      <Badge variant="secondary" className="text-[10px]">
+                        {relative}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="space-y-3">
+                    {items.map((item) => (
+                      <AgendaCard key={item.key} item={item} actions={actions} />
+                    ))}
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
         )}
       </section>
 
-      <Separator />
-
       {/* ── Blog / noticias ── */}
-      <section className="space-y-4">
+      <section className="space-y-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-lg font-semibold">Noticias</h2>
+            <h2 className="text-lg font-bold">Noticias</h2>
             <p className="text-muted-foreground mt-0.5 text-[10px] font-semibold uppercase tracking-wide sm:text-xs">
               Comunicados y novedades de JTP Logistics
             </p>
@@ -358,42 +505,47 @@ export function MuralBoard({ basePath }: MuralBoardProps) {
         {!posts ? (
           <PostsSkeleton />
         ) : posts.length === 0 ? (
-          <Card>
-            <CardContent className="py-10 text-center text-sm text-muted-foreground">
-              Todavía no hay publicaciones.
+          <Card className="border-dashed">
+            <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
+              <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+                <Newspaper className="size-6 text-muted-foreground" />
+              </div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Todavía no hay publicaciones.
+              </p>
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {posts.map((post) => (
               <Link
                 key={post.id}
                 href={`${basePath}/posts/${post.id}`}
-                className="group flex flex-col overflow-hidden rounded-lg border transition-colors hover:bg-muted/40"
+                className="group flex flex-col overflow-hidden rounded-2xl border bg-card shadow-xs transition hover:-translate-y-0.5 hover:shadow-md"
               >
                 {post.coverUrl ? (
-                  <div className="relative aspect-[3/2] w-full overflow-hidden bg-muted">
+                  <div className="relative aspect-3/2 w-full overflow-hidden bg-muted">
                     <Image
                       src={post.coverUrl}
                       alt=""
                       fill
-                      className="object-cover transition-transform group-hover:scale-[1.02]"
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   </div>
                 ) : (
-                  <div className="flex aspect-[3/2] w-full items-center justify-center bg-muted">
+                  <div className="flex aspect-3/2 w-full items-center justify-center bg-linear-to-br from-secondary to-muted">
                     <Newspaper className="size-8 text-muted-foreground" />
                   </div>
                 )}
-                <div className="flex-1 space-y-2 p-4">
+                <div className="flex flex-1 flex-col gap-2 p-5">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-semibold">{post.title}</p>
+                    <p className="text-sm font-bold group-hover:text-primary">{post.title}</p>
                     {!post.published && <Badge variant="outline">Borrador</Badge>}
                   </div>
                   {post.excerpt && (
                     <p className="line-clamp-3 text-sm text-muted-foreground">{post.excerpt}</p>
                   )}
-                  <p className="text-xs text-muted-foreground">
+                  <p className="mt-auto pt-2 text-xs font-medium text-muted-foreground">
                     {post.authorName} ·{" "}
                     {new Intl.DateTimeFormat("es-MX", {
                       day: "numeric",
