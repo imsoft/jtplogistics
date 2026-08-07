@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
-import { TERMS_BULLETS, TERMS_CONTRACT, TERMS_PRIVACY, TERMS_LIMITS } from "@/lib/constants/quote-terms";
+import { TERMS_BULLETS, TERMS_CONTRACT, TERMS_PRIVACY, TERMS_LIMITS, TARIFF_TERMS } from "@/lib/constants/quote-terms";
 import { bulletsToLexicalJson, textToLexicalJson } from "@/lib/utils/text-to-lexical";
 import { logAudit } from "@/lib/audit-log";
 
@@ -9,6 +9,7 @@ const QUOTE_CONFIG_LABELS: Record<string, string> = {
   contractJson: "Términos del contrato",
   privacyJson: "Aviso de privacidad",
   limitsJson: "Límites de responsabilidad",
+  tariffTermsJson: "Cláusulas del tarifario de proveedores",
 };
 
 function defaults() {
@@ -17,6 +18,7 @@ function defaults() {
     contractJson: textToLexicalJson(TERMS_CONTRACT),
     privacyJson: textToLexicalJson(TERMS_PRIVACY),
     limitsJson: textToLexicalJson(TERMS_LIMITS),
+    tariffTermsJson: bulletsToLexicalJson(TARIFF_TERMS),
   };
 }
 
@@ -29,6 +31,7 @@ export function GET() {
       contractJson: cfg?.contractJson || d.contractJson,
       privacyJson: cfg?.privacyJson || d.privacyJson,
       limitsJson: cfg?.limitsJson || d.limitsJson,
+      tariffTermsJson: cfg?.tariffTermsJson || d.tariffTermsJson,
     });
   });
 }
@@ -40,9 +43,10 @@ export function PATCH(request: Request) {
       contractJson?: string;
       privacyJson?: string;
       limitsJson?: string;
+      tariffTermsJson?: string;
     };
 
-    const fields = ["bulletsJson", "contractJson", "privacyJson", "limitsJson"] as const;
+    const fields = ["bulletsJson", "contractJson", "privacyJson", "limitsJson", "tariffTermsJson"] as const;
     for (const field of fields) {
       const val = body[field];
       if (val !== undefined) {

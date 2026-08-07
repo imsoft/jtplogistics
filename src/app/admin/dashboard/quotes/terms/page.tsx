@@ -11,6 +11,7 @@ interface QuoteConfig {
   contractJson: string;
   privacyJson: string;
   limitsJson: string;
+  tariffTermsJson: string;
 }
 
 type Section = keyof QuoteConfig;
@@ -20,6 +21,7 @@ const SECTIONS: { key: Section; label: string; description: string }[] = [
   { key: "contractJson", label: "Contrato",           description: "Términos insertos en el contrato (página 2)" },
   { key: "privacyJson",  label: "Aviso de privacidad", description: "Aviso de privacidad (página 3)" },
   { key: "limitsJson",   label: "Responsabilidad",    description: "Límites de responsabilidad y restricción (página 4)" },
+  { key: "tariffTermsJson", label: "Tarifario proveedores", description: "Cláusulas del tarifario que se descarga por proveedor" },
 ];
 
 export default function QuoteTermsPage() {

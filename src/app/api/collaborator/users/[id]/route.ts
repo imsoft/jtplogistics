@@ -78,6 +78,7 @@ export async function GET(
         id: cr.id,
         unitType: cr.unitType,
         carrierTarget: cr.carrierTarget,
+        terms: cr.terms,
         editUnlockRequested: cr.editUnlockRequested,
         editUnlockApproved: cr.editUnlockApproved,
         route: {

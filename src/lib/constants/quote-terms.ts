@@ -84,3 +84,18 @@ export const TERMS_LIMITS = `Límites de Responsabilidad.- Bajo ninguna circunst
 19.- En caso de que "La Empresa" no sea de su deseo contratar y pagar el servicio de seguro de la mercancía, será "La Empresa" el único responsable de dicha mercancía por lo que "El Transportista" no tendrá responsabilidad alguna sobre la carga.
 
 Restricción.- "El Cliente" no podrá mientras esté vigente el presente contrato o los 12 meses posteriores después de la terminación o recisión del presente contrato, contratar de manera directa o indirecta a las empresas de transporte contratadas por el "Transportista" para cumplir con los viajes contratados por "El Cliente" y en caso de no cumplir con dicha cláusula "El Cliente" pagará una multa por la cantidad de $900,000.00 (novecientos mil pesos M.N. 00/100).`;
+
+/**
+ * Cláusulas del tarifario de proveedores. Son las del machote autorizado por
+ * dirección y no tienen nada que ver con las de la cotización a cliente: aquí
+ * JTP es quien contrata, así que hablan de crédito, estadías y flete en falso.
+ */
+export const TARIFF_TERMS = [
+  { text: "**TARIFAS MÁS IVA.", bold: true },
+  { text: "Cuando existan maniobras en carga o descarga, se solicita apoyo por parte del proveedor para liquidar el monto y posterior agregarse al valor del flete." },
+  { text: "En caso de que el tiempo en carga o descarga exceda las 24 hrs se contempla una estadía con un valor de $1500 M.N. Se otorgan 24 horas libres para carga y 24 horas libres para descarga." },
+  { text: "Repartos: se cobra sobre la misma ruta (cuando la ruta lo demande y por un excedente significativo en los kilómetros de desvío se podrá ingresar solicitud de renegociación)." },
+  { text: "En caso de incurrir en flete en falso el apoyo será proporcional al 25% sobre la tarifa pactada para la ruta en cuestión en fletes foráneos y fletes locales." },
+  { text: "El primer viaje de prueba se pagará de contado, una vez se encuentre la unidad en rampa y con puertas abiertas en punto de descarga, sujeto al proceso de facturación al día de pago viernes de la semana en curso.", bold: true },
+  { text: "Los días de crédito otorgados son 15 días hábiles sujetos al proceso de pago y facturación interno, este pago se programa a partir de la recepción de evidencias en físico (para más información consultar con el departamento de finanzas).", bold: true },
+];

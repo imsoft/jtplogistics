@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { InfoRow } from "@/components/dashboard/users/info-row";
 import { ContactPersonsCards } from "@/components/dashboard/users/contact-persons-cards";
 import { CarrierRoutesManager } from "@/components/dashboard/users/carrier-routes-manager";
+import { ProviderTariffButton } from "@/components/dashboard/providers/provider-tariff-button";
 import { ToggleCarrierPermissions } from "@/components/dashboard/users/toggle-carrier-permissions";
 import { CarrierRouteUnlockRequests } from "@/components/dashboard/users/carrier-route-unlock-requests";
 import { DeleteUserButton } from "@/components/dashboard/users/delete-user-button";
@@ -36,6 +37,8 @@ interface CarrierRouteItem {
   id: string;
   unitType: string;
   carrierTarget: number | null;
+  /** Condición pactada para esta ruta; sale en la quinta columna del tarifario. */
+  terms: string | null;
   editUnlockRequested: boolean;
   editUnlockApproved: boolean;
   route: {
@@ -76,6 +79,7 @@ export default function ProviderDetailPage() {
   const [provider, setProvider] = useState<ProviderData | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [unitTypes, setUnitTypes] = useState<{ value: string; label: string }[]>([]);
   const hasRedirected = useRef(false);
 
   const from = searchParams.get("from");
@@ -104,6 +108,11 @@ export default function ProviderDetailPage() {
         setError("Error al cargar");
         setIsLoaded(true);
       });
+
+    fetch("/api/unit-types")
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setUnitTypes)
+      .catch(() => setUnitTypes([]));
   }, [permissionsLoaded, permissions, id]);
 
   if (!permissionsLoaded || !isLoaded) {
@@ -131,6 +140,9 @@ export default function ProviderDetailPage() {
 
   const contacts = provider.profile?.contacts ?? [];
   const contactPersons = groupContactsByPerson(contacts);
+  // Quien firma el tarifario por parte del proveedor: su primer contacto con
+  // nombre. Si no hay ninguno, se deja el nombre del proveedor.
+  const tariffContact = contactPersons.find((p) => p.name)?.name || provider.name;
   const canManage = !!permissions?.canUpdateProviders;
   const canDelete = !!permissions?.canDeleteProviders;
   const pendingUnlockRequests = provider.carrierRoutes
@@ -253,10 +265,18 @@ export default function ProviderDetailPage() {
 
       {/* Rutas seleccionadas */}
       <Card>
-        <CardHeader className="pb-2">
+        <CardHeader className="flex flex-col gap-3 pb-2 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             Rutas seleccionadas ({provider.carrierRoutes.length})
           </CardTitle>
+          {provider.carrierRoutes.length > 0 && (
+            <ProviderTariffButton
+              legalName={provider.profile?.legalName || provider.name}
+              contact={tariffContact}
+              routes={provider.carrierRoutes}
+              unitTypes={unitTypes}
+            />
+          )}
         </CardHeader>
         {canManage && (
           <CardContent className="px-4 pb-4 pt-0 space-y-3">

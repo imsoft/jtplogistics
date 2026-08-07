@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/auth-server";
-import { TERMS_BULLETS, TERMS_CONTRACT, TERMS_PRIVACY, TERMS_LIMITS } from "@/lib/constants/quote-terms";
+import { TERMS_BULLETS, TERMS_CONTRACT, TERMS_PRIVACY, TERMS_LIMITS, TARIFF_TERMS } from "@/lib/constants/quote-terms";
 import { bulletsToLexicalJson, textToLexicalJson } from "@/lib/utils/text-to-lexical";
 
 function defaults() {
@@ -9,6 +9,7 @@ function defaults() {
     contractJson: textToLexicalJson(TERMS_CONTRACT),
     privacyJson: textToLexicalJson(TERMS_PRIVACY),
     limitsJson: textToLexicalJson(TERMS_LIMITS),
+    tariffTermsJson: bulletsToLexicalJson(TARIFF_TERMS),
   };
 }
 
@@ -27,6 +28,7 @@ export async function GET() {
       contractJson: cfg?.contractJson || d.contractJson,
       privacyJson: cfg?.privacyJson || d.privacyJson,
       limitsJson: cfg?.limitsJson || d.limitsJson,
+      tariffTermsJson: cfg?.tariffTermsJson || d.tariffTermsJson,
     });
   } catch (e) {
     // El 401 de requireSession viaja como Response: hay que devolverlo tal cual,
@@ -39,6 +41,7 @@ export async function GET() {
       contractJson: d.contractJson,
       privacyJson: d.privacyJson,
       limitsJson: d.limitsJson,
+      tariffTermsJson: d.tariffTermsJson,
     });
   }
 }

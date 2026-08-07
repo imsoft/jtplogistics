@@ -261,6 +261,8 @@ model CarrierRoute {
   routeId              String   @map("route_id")
   unitType             String   @default("") @map("unit_type")
   carrierTarget        Float?   @map("carrier_target")
+  /// Condición pactada con este proveedor para esta ruta; sale en el tarifario.
+  terms                String?  @map("terms")
   carrierWeeklyVolume  Int?     @map("carrier_weekly_volume")
   editUnlockRequested  Boolean  @default(false) @map("edit_unlock_requested")
   editUnlockApproved   Boolean  @default(false) @map("edit_unlock_approved")
@@ -725,6 +727,8 @@ model QuoteConfig {
   contractJson  String   @default("") @map("contract_json")
   privacyJson   String   @default("") @map("privacy_json")
   limitsJson    String   @default("") @map("limits_json")
+  /// Cláusulas del tarifario de proveedores (documento distinto al de cliente).
+  tariffTermsJson String @default("") @map("tariff_terms_json")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
   @@map("quote_config")

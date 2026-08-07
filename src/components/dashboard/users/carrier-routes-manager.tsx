@@ -13,6 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { formatMxn } from "@/lib/utils";
 
@@ -20,6 +21,8 @@ interface CarrierRouteListItem {
   id: string;
   unitType: string;
   carrierTarget: number | null;
+  /** Condición pactada para el tarifario ("grado alimenticio", "caja limpia"…). */
+  terms?: string | null;
   editUnlockRequested: boolean;
   editUnlockApproved: boolean;
   route: {
@@ -40,11 +43,44 @@ interface CarrierRoutesManagerProps {
 export function CarrierRoutesManager({ routes, onRouteDeleted, readOnly = false }: CarrierRoutesManagerProps) {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [routesToShow, setRoutesToShow] = useState(routes);
+  const [savingTerms, setSavingTerms] = useState<string | null>(null);
 
   // La columna de diferencia muestra importe y porcentaje, por eso es más ancha.
   const gridCols = readOnly
-    ? "grid-cols-[1fr_120px_120px_110px]"
-    : "grid-cols-[1fr_120px_120px_110px_48px]";
+    ? "grid-cols-[1fr_120px_120px_110px_200px]"
+    : "grid-cols-[1fr_120px_120px_110px_200px_48px]";
+
+  /**
+   * Guarda la condición al salir del campo. Solo se llama al cambiar el texto,
+   * para no escribir en la base cada vez que se pasa por el campo.
+   */
+  async function handleTermsBlur(carrierRouteId: string, value: string) {
+    const current = routesToShow.find((r) => r.id === carrierRouteId);
+    const next = value.trim();
+    if ((current?.terms ?? "") === next) return;
+
+    setSavingTerms(carrierRouteId);
+    try {
+      const res = await fetch(`/api/admin/carrier-routes/${carrierRouteId}/terms`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ terms: next || null }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({})) as { error?: string };
+        throw new Error(err.error ?? "No se pudo guardar la condición");
+      }
+      const { terms } = await res.json() as { terms: string | null };
+      setRoutesToShow((prev) =>
+        prev.map((r) => (r.id === carrierRouteId ? { ...r, terms } : r))
+      );
+      toast.success("Condición guardada");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo guardar la condición");
+    } finally {
+      setSavingTerms(null);
+    }
+  }
 
   async function handleDelete(carrierRouteId: string, routeLabel: string) {
     setDeleting(carrierRouteId);
@@ -80,12 +116,13 @@ export function CarrierRoutesManager({ routes, onRouteDeleted, readOnly = false 
 
   return (
     <div className="overflow-x-auto">
-      <div className="min-w-140">
+      <div className="min-w-180">
         <div className={`grid ${gridCols} gap-3 border-b bg-muted/40 px-4 py-2 text-xs font-medium text-muted-foreground`}>
           <span>Ruta</span>
           <span>Target JTP</span>
           <span>Target carrier</span>
           <span>Dif.</span>
+          <span>Término y condición</span>
           {!readOnly && <span className="text-center">Acción</span>}
         </div>
         {routesToShow.map((cr) => (
@@ -137,6 +174,21 @@ export function CarrierRoutesManager({ routes, onRouteDeleted, readOnly = false 
                 </span>
               );
             })()}
+            {/* Condición del tarifario: la captura JTP, no el transportista. */}
+            {readOnly ? (
+              <span className="truncate text-xs text-muted-foreground">
+                {cr.terms || "—"}
+              </span>
+            ) : (
+              <Input
+                defaultValue={cr.terms ?? ""}
+                onBlur={(e) => handleTermsBlur(cr.id, e.target.value)}
+                disabled={savingTerms === cr.id}
+                maxLength={300}
+                aria-label={`Término y condición de ${cr.route.origin} → ${cr.route.destination}`}
+                className="h-8 text-xs"
+              />
+            )}
             {!readOnly && (
             <div className="flex justify-center">
               <AlertDialog>

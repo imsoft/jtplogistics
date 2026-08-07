@@ -12,6 +12,7 @@ import { ContactPersonsCards } from "@/components/dashboard/users/contact-person
 import { groupContactsByPerson } from "@/lib/contacts";
 import { CarrierRouteUnlockRequests } from "@/components/dashboard/users/carrier-route-unlock-requests";
 import { CarrierRoutesManager } from "@/components/dashboard/users/carrier-routes-manager";
+import { ProviderTariffButton } from "@/components/dashboard/providers/provider-tariff-button";
 import { DeleteUserButton } from "@/components/dashboard/users/delete-user-button";
 import type { UserRole } from "@/types/user.types";
 
@@ -31,6 +32,8 @@ type CarrierRouteListItem = {
   id: string;
   unitType: string;
   carrierTarget: number | null;
+  /** Condición pactada para esta ruta; sale en la quinta columna del tarifario. */
+  terms: string | null;
   editUnlockRequested: boolean;
   editUnlockApproved: boolean;
   route: {
@@ -79,6 +82,13 @@ export default async function UserProfilePage({
   });
 
   if (!user) notFound();
+
+  // Etiquetas de los tipos de unidad: el tarifario imprime "Caja seca", no "caja_seca".
+  const unitTypeDefs = await prisma.unitTypeDef.findMany({
+    orderBy: { sortOrder: "asc" },
+    select: { value: true, name: true },
+  });
+  const unitTypes = unitTypeDefs.map((u) => ({ value: u.value, label: u.name }));
 
   const initials = user.name
     .split(" ")
@@ -211,10 +221,18 @@ export default async function UserProfilePage({
       {/* Rutas seleccionadas — solo para carriers */}
       {isCarrier && (
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="flex flex-col gap-3 pb-2 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               Rutas seleccionadas ({carrierRoutes.length})
             </CardTitle>
+            {carrierRoutes.length > 0 && (
+              <ProviderTariffButton
+                legalName={user.profile?.legalName || user.name}
+                contact={contactPersons.find((p) => p.name)?.name || user.name}
+                routes={carrierRoutes}
+                unitTypes={unitTypes}
+              />
+            )}
           </CardHeader>
           <CardContent className="px-4 pb-4 pt-0 space-y-3">
             <CarrierRouteUnlockRequests
