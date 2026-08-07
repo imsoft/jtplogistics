@@ -82,9 +82,9 @@ Tablero interno visible solo para el personal de JTP (admin y colaboradores con 
 - **Agenda a 60 días:** cumpleaños, aniversarios, vacaciones, eventos y capacitaciones.
 - **Cumpleaños y aniversarios no se capturan a mano:** se derivan de `users.birth_date` y `employee_profiles.hire_date`. Si esas fechas están vacías, la persona no aparece.
 - **Blog:** noticias con texto enriquecido (Lexical), portada y estado borrador/publicado.
-- **Avisos:** al publicar se crea la notificación en el dashboard de cada persona y se manda un correo con la identidad de JTP. Quien publica puede apagar el envío de correo.
+- **Avisos:** al publicar, al cambiar la fecha o el lugar y al cancelar una entrada se crea la notificación en el dashboard de cada persona y se manda un correo con la identidad de JTP. Quien publica o edita puede apagar el envío de correo.
 - **Felicitación personal:** el día de su cumpleaños o aniversario, la persona ve confeti y un mensaje al entrar al dashboard, con un botón para repetirlo. Si no es su día, el botón ni aparece.
-- **Resumen diario:** un cron de Vercel (`vercel.json`) dispara `/api/cron/mural-digest` todos los días a las 14:00 UTC (8:00 en CDMX) con las novedades del día. Protegido con `CRON_SECRET`.
+- **Celebraciones del día:** un cron de Vercel (`vercel.json`) dispara `/api/cron/mural-greetings` todos los días a las 14:00 UTC (8:00 en Guadalajara). Felicita a quien cumple años o aniversario y avisa al equipo ese mismo día. No hay resumen diario ni semanal: cada entrada avisa sola al crearse, editarse o cancelarse. Protegido con `CRON_SECRET`.
 
 Para que RH administre el mural, el admin le enciende los cuatro permisos de *Mural*; al resto del equipo le basta con *leer*.
 

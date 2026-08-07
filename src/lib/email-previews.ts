@@ -144,19 +144,19 @@ export const EMAIL_PREVIEWS: EmailPreview[] = [
       }),
   },
   {
-    id: "mural_digest",
-    label: "Resumen diario",
-    description: "Cron de las 8:00 a. m. Junta las celebraciones del día y lo que arranca hoy.",
+    id: "mural_celebrations",
+    label: "Celebraciones de hoy",
+    description: "Cada mañana, si alguien cumple años o aniversario. Avisa al equipo el día exacto.",
     group: "Mural",
     build: () =>
       muralDemo({
-        subject: "Mural JTP · Novedades de hoy",
-        heading: "Novedades del mural de hoy",
-        body: "2 celebración(es) · 1 evento(s)",
+        subject: "Mural JTP · Hoy celebramos en el equipo",
+        heading: "Hoy celebramos",
+        body: "Mario Ruiz Salazar, Lizeth Murrieta Hernández",
         paragraphs: [
           "🎂 <strong>Mario Ruiz Salazar</strong> cumple años hoy (34).",
           "🎉 <strong>Lizeth Murrieta Hernández</strong> cumple 3 años en JTP Logistics.",
-          "📌 <strong>Capacitación de seguridad vial</strong> — capacitación (7 de agosto de 2026) · Sala 1",
+          "No dejes pasar el día sin felicitarles.",
         ],
       }),
   },

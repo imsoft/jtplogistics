@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
     {
-      "path": "/api/cron/mural-digest",
+      "path": "/api/cron/mural-greetings",
       "schedule": "0 14 * * *"
     }
   ]
