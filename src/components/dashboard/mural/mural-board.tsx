@@ -56,23 +56,25 @@ function isoDay(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
-function formatDay(iso: string): string {
+/** "24 de septiembre", como en el boceto de Recursos Humanos. */
+function formatShortDay(iso: string): string {
   return new Intl.DateTimeFormat("es-MX", {
-    weekday: "long",
     day: "numeric",
     month: "long",
     timeZone: "UTC",
   }).format(new Date(iso));
 }
 
-function formatRange(start: string, end: string | null): string {
+/** "Lunes 18 al martes 24": el rango de vacaciones se lee como lo escribe RH. */
+function formatVacationRange(start: string, end: string | null): string {
   const fmt = new Intl.DateTimeFormat("es-MX", {
+    weekday: "long",
     day: "numeric",
-    month: "short",
     timeZone: "UTC",
   });
-  if (!end || end.slice(0, 10) === start.slice(0, 10)) return fmt.format(new Date(start));
-  return `${fmt.format(new Date(start))} – ${fmt.format(new Date(end))}`;
+  const from = fmt.format(new Date(start));
+  if (!end || end.slice(0, 10) === start.slice(0, 10)) return from;
+  return `${from} al ${fmt.format(new Date(end))}`;
 }
 
 /** Días completos entre hoy y un día "YYYY-MM-DD". */
@@ -119,13 +121,13 @@ function ItemAvatar({
   size = "md",
 }: {
   item: AgendaItem;
-  size?: "md" | "lg";
+  size?: "sm" | "md" | "lg";
 }) {
   const accent = MURAL_KIND_ACCENTS[item.kind];
   const Icon = KIND_ICONS[item.kind];
-  const px = size === "lg" ? 64 : 44;
-  const box = size === "lg" ? "size-16" : "size-11";
-  const icon = size === "lg" ? "size-7" : "size-5";
+  const px = size === "lg" ? 64 : size === "sm" ? 36 : 44;
+  const box = size === "lg" ? "size-16" : size === "sm" ? "size-9" : "size-11";
+  const icon = size === "lg" ? "size-7" : size === "sm" ? "size-4" : "size-5";
 
   if (item.image) {
     return (
@@ -183,39 +185,54 @@ function EntryActions({
   );
 }
 
-/** Tarjeta de la línea de tiempo: filo de color del tipo, foto, datos y acciones. */
-function AgendaCard({ item, actions }: { item: AgendaItem; actions: EntryActionsProps }) {
-  const accent = MURAL_KIND_ACCENTS[item.kind];
-  return (
-    <div
-      className={`flex items-start gap-4 rounded-xl border border-l-4 bg-card p-4 shadow-xs transition hover:-translate-y-0.5 hover:shadow-md ${accent.edge}`}
-    >
-      <ItemAvatar item={item} />
+/** Una fila del bloque: foto, nombre y el dato que toca según el tipo. */
+function KindRow({
+  item,
+  today,
+  actions,
+}: {
+  item: AgendaItem;
+  today: string;
+  actions: EntryActionsProps;
+}) {
+  const relative = relativeDayLabel(item.date.slice(0, 10), today);
+  const isVacation = item.kind === "vacation";
 
-      <div className="min-w-0 flex-1 space-y-1.5">
-        <div className="flex flex-wrap items-center gap-2">
+  return (
+    <div className="flex items-center gap-3 rounded-xl bg-background/70 px-3 py-2.5">
+      <ItemAvatar item={item} size="sm" />
+
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <p className="truncate text-sm font-semibold">{item.title}</p>
-          <KindBadge kind={item.kind} />
+          {relative && (
+            <Badge variant="secondary" className="text-[10px]">
+              {relative}
+            </Badge>
+          )}
         </div>
-        {item.subtitle && (
-          <p className="text-xs font-medium text-muted-foreground">{item.subtitle}</p>
-        )}
-        {item.entry && (
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1">
-              <CalendarDays className="size-3" />
-              {formatRange(item.entry.startDate, item.entry.endDate)}
-            </span>
-            {item.entry.location && (
+
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+          {item.subtitle && <span className="font-medium">{item.subtitle}</span>}
+          {item.subtitle && <span aria-hidden>·</span>}
+          <span>
+            {isVacation && item.entry
+              ? formatVacationRange(item.entry.startDate, item.entry.endDate)
+              : formatShortDay(item.date.slice(0, 10))}
+          </span>
+          {item.entry?.location && (
+            <>
+              <span aria-hidden>·</span>
               <span className="inline-flex items-center gap-1">
                 <MapPin className="size-3" />
                 {item.entry.location}
               </span>
-            )}
-          </div>
-        )}
+            </>
+          )}
+        </div>
+
         {item.entry?.description && (
-          <p className="text-sm text-muted-foreground">{item.entry.description}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{item.entry.description}</p>
         )}
       </div>
 
@@ -224,19 +241,67 @@ function AgendaCard({ item, actions }: { item: AgendaItem; actions: EntryActions
   );
 }
 
+/**
+ * Bloque de un tipo, al estilo del boceto de Recursos Humanos: encabezado de
+ * color con el nombre de la categoría y debajo las filas. Si no hay nada, el
+ * bloque se dibuja igual para que la retícula no baile de un día a otro.
+ */
+function KindSection({
+  kind,
+  items,
+  today,
+  actions,
+}: {
+  kind: MuralItemKind;
+  items: AgendaItem[];
+  today: string;
+  actions: EntryActionsProps;
+}) {
+  const accent = MURAL_KIND_ACCENTS[kind];
+  const Icon = KIND_ICONS[kind];
+
+  return (
+    <section className={`overflow-hidden rounded-2xl border shadow-xs ${accent.panel}`}>
+      <header className={`flex items-center justify-center gap-2 px-4 py-3 ${accent.header}`}>
+        <Icon className="size-4" />
+        <h3 className="text-sm font-bold uppercase tracking-wide">
+          {MURAL_KIND_LABELS[kind]}
+        </h3>
+        {items.length > 0 && (
+          <span className="text-sm font-semibold opacity-70">({items.length})</span>
+        )}
+      </header>
+
+      {items.length === 0 ? (
+        <p className="px-4 py-6 text-center text-xs font-medium text-muted-foreground">
+          Nada en los próximos {AGENDA_DAYS} días.
+        </p>
+      ) : (
+        <div className="space-y-2 p-3">
+          {items.map((item) => (
+            <KindRow key={item.key} item={item} today={today} actions={actions} />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function AgendaSkeleton() {
   return (
-    <div className="space-y-6">
-      {[0, 1].map((group) => (
-        <div key={group} className="space-y-3">
-          <Skeleton className="h-3 w-40" />
-          <div className="space-y-3 pl-6">
+    <div className="grid gap-5 lg:grid-cols-2">
+      {[0, 1, 2, 3].map((block) => (
+        <div key={block} className="overflow-hidden rounded-2xl border">
+          <div className="bg-muted/60 px-4 py-3">
+            <Skeleton className="mx-auto h-4 w-32" />
+          </div>
+          <div className="space-y-2 p-3">
             {[0, 1].map((i) => (
-              <div key={i} className="flex items-center gap-4 rounded-xl border p-4">
-                <Skeleton className="size-11 rounded-full" />
+              <div key={i} className="flex items-center gap-3 px-3 py-2.5">
+                <Skeleton className="size-9 rounded-full" />
                 <div className="flex-1 space-y-2">
                   <Skeleton className="h-4 w-1/3" />
-                  <Skeleton className="h-3 w-1/4" />
+                  <Skeleton className="h-3 w-1/2" />
                 </div>
               </div>
             ))}
@@ -354,18 +419,23 @@ export function MuralBoard({ basePath }: MuralBoardProps) {
     [agenda, today]
   );
 
-  const groupedAgenda = useMemo(() => {
+  /**
+   * La agenda se reparte en bloques por tipo, no en una lista cronológica:
+   * es como lo pidió Recursos Humanos y así cada quien encuentra de un vistazo
+   * lo que le interesa.
+   */
+  const byKind = useMemo(() => {
     if (!agenda) return null;
-    const groups = new Map<string, AgendaItem[]>();
+    const groups = new Map<MuralItemKind, AgendaItem[]>();
     for (const item of agenda) {
-      const day = item.date.slice(0, 10);
-      if (day === today) continue;
-      const bucket = groups.get(day);
+      const bucket = groups.get(item.kind);
       if (bucket) bucket.push(item);
-      else groups.set(day, [item]);
+      else groups.set(item.kind, [item]);
     }
-    return [...groups.entries()];
-  }, [agenda, today]);
+    return groups;
+  }, [agenda]);
+
+  const hasAgenda = agenda != null && agenda.length > 0;
 
   const canCreate = permissions?.canCreate ?? false;
   const canUpdate = permissions?.canUpdate ?? false;
@@ -416,7 +486,7 @@ export function MuralBoard({ basePath }: MuralBoardProps) {
         </section>
       )}
 
-      {/* ── Agenda: celebraciones, eventos, capacitaciones y vacaciones ── */}
+      {/* ── Agenda en bloques por tipo ── */}
       <section className="space-y-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -435,51 +505,58 @@ export function MuralBoard({ basePath }: MuralBoardProps) {
           )}
         </div>
 
-        {!groupedAgenda ? (
+        {!byKind ? (
           <AgendaSkeleton />
-        ) : groupedAgenda.length === 0 ? (
+        ) : !hasAgenda ? (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
               <div className="flex size-12 items-center justify-center rounded-full bg-muted">
                 <CalendarDays className="size-6 text-muted-foreground" />
               </div>
               <p className="text-sm font-medium text-muted-foreground">
-                {todayItems && todayItems.length > 0
-                  ? "No hay nada más agendado en los próximos días."
-                  : `No hay nada agendado en los próximos ${AGENDA_DAYS} días.`}
+                No hay nada agendado en los próximos {AGENDA_DAYS} días.
               </p>
             </CardContent>
           </Card>
         ) : (
-          // Línea de tiempo: el hilo vertical enlaza los días y cada punto toma
-          // el color del primer tipo de ese día.
-          <ol className="relative space-y-8 border-l border-dashed border-border pl-6 sm:pl-8">
-            {groupedAgenda.map(([day, items]) => {
-              const relative = relativeDayLabel(day, today);
-              return (
-                <li key={day} className="relative space-y-3">
-                  <span
-                    className={`absolute -left-6.5 top-1.5 size-2.5 rounded-full ring-4 ring-background sm:-left-8.5 ${
-                      MURAL_KIND_ACCENTS[items[0].kind].dot
-                    }`}
-                  />
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-xs font-bold uppercase tracking-wide">{formatDay(day)}</p>
-                    {relative && (
-                      <Badge variant="secondary" className="text-[10px]">
-                        {relative}
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="space-y-3">
-                    {items.map((item) => (
-                      <AgendaCard key={item.key} item={item} actions={actions} />
-                    ))}
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
+          <div className="space-y-5">
+            {/* Aniversarios y cumpleaños comparten fila: son las dos listas
+                cortas que Recursos Humanos revisa a diario. */}
+            <div className="grid gap-5 lg:grid-cols-2">
+              <KindSection
+                kind="anniversary"
+                items={byKind.get("anniversary") ?? []}
+                today={today}
+                actions={actions}
+              />
+              <KindSection
+                kind="birthday"
+                items={byKind.get("birthday") ?? []}
+                today={today}
+                actions={actions}
+              />
+            </div>
+            <div className="grid gap-5 lg:grid-cols-2">
+              <KindSection
+                kind="event"
+                items={byKind.get("event") ?? []}
+                today={today}
+                actions={actions}
+              />
+              <KindSection
+                kind="training"
+                items={byKind.get("training") ?? []}
+                today={today}
+                actions={actions}
+              />
+            </div>
+            <KindSection
+              kind="vacation"
+              items={byKind.get("vacation") ?? []}
+              today={today}
+              actions={actions}
+            />
+          </div>
         )}
       </section>
 

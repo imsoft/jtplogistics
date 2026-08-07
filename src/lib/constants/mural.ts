@@ -32,6 +32,10 @@ export interface MuralKindAccent {
   dot: string;
   /** Anillo alrededor de la foto. */
   ring: string;
+  /** Fondo y borde del bloque de la categoría. */
+  panel: string;
+  /** Franja del encabezado del bloque. */
+  header: string;
 }
 
 export const MURAL_KIND_ACCENTS: Record<MuralItemKind, MuralKindAccent> = {
@@ -40,30 +44,40 @@ export const MURAL_KIND_ACCENTS: Record<MuralItemKind, MuralKindAccent> = {
     soft: "bg-blue-50 text-blue-600",
     dot: "bg-blue-400",
     ring: "ring-blue-200",
+    panel: "border-blue-200 bg-blue-50/60",
+    header: "bg-blue-100 text-blue-800",
   },
   training: {
     edge: "border-l-violet-400",
     soft: "bg-violet-50 text-violet-600",
     dot: "bg-violet-400",
     ring: "ring-violet-200",
+    panel: "border-violet-200 bg-violet-50/60",
+    header: "bg-violet-100 text-violet-800",
   },
   vacation: {
     edge: "border-l-amber-400",
     soft: "bg-amber-50 text-amber-600",
     dot: "bg-amber-400",
     ring: "ring-amber-200",
+    panel: "border-amber-200 bg-amber-50/60",
+    header: "bg-amber-100 text-amber-800",
   },
   birthday: {
     edge: "border-l-pink-400",
     soft: "bg-pink-50 text-pink-600",
     dot: "bg-pink-400",
     ring: "ring-pink-200",
+    panel: "border-pink-200 bg-pink-50/60",
+    header: "bg-pink-100 text-pink-800",
   },
   anniversary: {
     edge: "border-l-emerald-400",
     soft: "bg-emerald-50 text-emerald-600",
     dot: "bg-emerald-400",
     ring: "ring-emerald-200",
+    panel: "border-emerald-200 bg-emerald-50/60",
+    header: "bg-emerald-100 text-emerald-800",
   },
 };
 
