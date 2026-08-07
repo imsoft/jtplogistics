@@ -170,7 +170,9 @@ export function MuralEntryForm({
           <div className="space-y-0.5">
             <Label htmlFor="notify">Notificar por correo</Label>
             <p className="text-xs text-muted-foreground">
-              Manda un correo a los colaboradores además de la notificación del dashboard.
+              Manda un correo a los colaboradores además de la notificación del
+              dashboard. Al editar, solo se avisa si cambia la fecha, el lugar, el
+              tipo o el título.
             </p>
           </div>
           <Switch id="notify" checked={notifyByEmail} onCheckedChange={setNotifyByEmail} />

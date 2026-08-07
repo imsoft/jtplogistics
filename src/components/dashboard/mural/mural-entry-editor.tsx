@@ -111,7 +111,6 @@ export function MuralEntryEdit({ id, basePath }: { id: string; basePath: string 
           cancelHref={basePath}
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
-          showNotifyToggle={false}
         />
       ) : null}
     </ResourceNewPage>

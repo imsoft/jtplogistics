@@ -80,3 +80,18 @@ export function formatDateRange(start: Date, end: Date | null): string {
 export function entryKindLabel(type: MuralEntryModel["type"]): string {
   return MURAL_KIND_LABELS[type];
 }
+
+/**
+ * Un día suelto de una entrada ("18 de agosto de 2026"), para el registro de
+ * auditoría y los correos de cambio. Devuelve null si no hay fecha, que es como
+ * el diff representa "sin valor".
+ */
+export function formatMuralDay(value: unknown): string | null {
+  if (!(value instanceof Date)) return null;
+  return new Intl.DateTimeFormat("es-MX", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(value);
+}
