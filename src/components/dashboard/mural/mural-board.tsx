@@ -14,6 +14,8 @@ import {
   MapPin,
   Newspaper,
   Sparkles,
+  PlaneTakeoff,
+  PlaneLanding,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -65,16 +67,28 @@ function formatShortDay(iso: string): string {
   }).format(new Date(iso));
 }
 
-/** "Lunes 18 al martes 24": el rango de vacaciones se lee como lo escribe RH. */
-function formatVacationRange(start: string, end: string | null): string {
-  const fmt = new Intl.DateTimeFormat("es-MX", {
+/** "Lunes 18 de agosto": día con su nombre, para leerlo sin ir al calendario. */
+function formatWeekdayLong(iso: string): string {
+  return new Intl.DateTimeFormat("es-MX", {
     weekday: "long",
     day: "numeric",
+    month: "long",
     timeZone: "UTC",
-  });
-  const from = fmt.format(new Date(start));
-  if (!end || end.slice(0, 10) === start.slice(0, 10)) return from;
-  return `${from} al ${fmt.format(new Date(end))}`;
+  }).format(new Date(iso));
+}
+
+/**
+ * Cuándo se va y cuándo vuelve a estar en la oficina. La fecha final que se
+ * captura es el último día de vacaciones, así que el regreso es el día
+ * siguiente: es el dato que a los demás les sirve para saber desde cuándo
+ * pueden volver a buscar a esa persona.
+ */
+function vacationDates(start: string, end: string | null): { leaves: string; returns: string } {
+  const leaves = formatWeekdayLong(start);
+  const lastDay = end ?? start;
+  const back = new Date(`${lastDay.slice(0, 10)}T00:00:00Z`);
+  back.setUTCDate(back.getUTCDate() + 1);
+  return { leaves, returns: formatWeekdayLong(back.toISOString().slice(0, 10)) };
 }
 
 /** Días completos entre hoy y un día "YYYY-MM-DD". */
@@ -199,7 +213,7 @@ function KindRow({
   const isVacation = item.kind === "vacation";
 
   return (
-    <div className="flex items-center gap-3 rounded-xl bg-background/70 px-3 py-2.5">
+    <div className="flex items-center gap-3 rounded-xl bg-background/70 px-3 py-2.5 transition duration-200 hover:-translate-y-1 hover:bg-background hover:shadow-md">
       <ItemAvatar item={item} size="sm" />
 
       <div className="min-w-0 flex-1">
@@ -212,24 +226,54 @@ function KindRow({
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
-          {item.subtitle && <span className="font-medium">{item.subtitle}</span>}
-          {item.subtitle && <span aria-hidden>·</span>}
-          <span>
-            {isVacation && item.entry
-              ? formatVacationRange(item.entry.startDate, item.entry.endDate)
-              : formatShortDay(item.date.slice(0, 10))}
-          </span>
-          {item.entry?.location && (
-            <>
-              <span aria-hidden>·</span>
-              <span className="inline-flex items-center gap-1">
-                <MapPin className="size-3" />
-                {item.entry.location}
-              </span>
-            </>
-          )}
-        </div>
+        {/* En vacaciones lo que importa es desde cuándo falta y desde cuándo
+            se le puede volver a buscar, así que van con su propia etiqueta. */}
+        {isVacation && item.entry ? (
+          <div className="mt-1 flex flex-wrap gap-x-6 gap-y-1 text-xs">
+            {(() => {
+              const { leaves, returns } = vacationDates(
+                item.entry.startDate,
+                item.entry.endDate
+              );
+              return (
+                <>
+                  <span className="flex items-center gap-1.5">
+                    <PlaneTakeoff className="size-3.5 shrink-0 text-amber-600" />
+                    <span className="text-muted-foreground">Se va</span>
+                    <span className="font-semibold">{leaves}</span>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <PlaneLanding className="size-3.5 shrink-0 text-emerald-600" />
+                    <span className="text-muted-foreground">Regresa</span>
+                    <span className="font-semibold">{returns}</span>
+                  </span>
+                </>
+              );
+            })()}
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+            {item.subtitle && <span className="font-medium">{item.subtitle}</span>}
+            {item.subtitle && <span aria-hidden>·</span>}
+            <span>{formatShortDay(item.date.slice(0, 10))}</span>
+            {item.entry?.location && (
+              <>
+                <span aria-hidden>·</span>
+                <span className="inline-flex items-center gap-1">
+                  <MapPin className="size-3" />
+                  {item.entry.location}
+                </span>
+              </>
+            )}
+          </div>
+        )}
+
+        {isVacation && item.entry?.location && (
+          <p className="mt-0.5 inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <MapPin className="size-3" />
+            {item.entry.location}
+          </p>
+        )}
 
         {item.entry?.description && (
           <p className="mt-0.5 text-xs text-muted-foreground">{item.entry.description}</p>
@@ -261,7 +305,9 @@ function KindSection({
   const Icon = KIND_ICONS[kind];
 
   return (
-    <section className={`overflow-hidden rounded-2xl border shadow-xs ${accent.panel}`}>
+    <section
+      className={`overflow-hidden rounded-2xl border shadow-xs transition duration-200 hover:-translate-y-0.5 hover:shadow-md ${accent.panel}`}
+    >
       <header className={`flex items-center justify-center gap-2 px-4 py-3 ${accent.header}`}>
         <Icon className="size-4" />
         <h3 className="text-sm font-bold uppercase tracking-wide">
@@ -469,7 +515,7 @@ export function MuralBoard({ basePath }: MuralBoardProps) {
             {todayItems.map((item) => (
               <div
                 key={item.key}
-                className="flex items-center gap-4 rounded-xl bg-background/70 p-4 shadow-xs backdrop-blur-sm"
+                className="flex items-center gap-4 rounded-xl bg-background/70 p-4 shadow-xs backdrop-blur-sm transition duration-200 hover:-translate-y-1 hover:bg-background hover:shadow-lg"
               >
                 <ItemAvatar item={item} size="lg" />
                 <div className="min-w-0 flex-1 space-y-1">
@@ -598,7 +644,7 @@ export function MuralBoard({ basePath }: MuralBoardProps) {
               <Link
                 key={post.id}
                 href={`${basePath}/posts/${post.id}`}
-                className="group flex flex-col overflow-hidden rounded-2xl border bg-card shadow-xs transition hover:-translate-y-0.5 hover:shadow-md"
+                className="group flex flex-col overflow-hidden rounded-2xl border bg-card shadow-xs transition duration-200 hover:-translate-y-1 hover:shadow-lg"
               >
                 {post.coverUrl ? (
                   <div className="relative aspect-3/2 w-full overflow-hidden bg-muted">
