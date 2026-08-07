@@ -35,7 +35,9 @@ export async function sendEmail({
     });
     if (error) {
       console.error("[email] Resend error:", error);
-      throw new Error("No se pudo enviar el correo.");
+      // El motivo viaja en el error: sin él, un dominio sin verificar en Resend
+      // es indistinguible de una caída y no hay forma de saber qué arreglar.
+      throw new Error(`No se pudo enviar el correo: ${error.message ?? error.name}`);
     }
     return;
   }
