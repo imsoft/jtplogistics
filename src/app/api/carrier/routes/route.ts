@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireCarrier } from "@/lib/auth-server";
 import { sendEmail } from "@/lib/email";
+import { buildCarrierBidEmail, type BidRouteLine } from "@/lib/carrier-email";
 import { logAudit } from "@/lib/audit-log";
 import { computeTargetStatus, type TargetStatus } from "@/lib/target-status";
 
@@ -267,23 +268,18 @@ async function notifyPricing(
           ? `$${item.carrierTarget.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`
           : "Sin target";
         const vol = item.carrierWeeklyVolume != null ? `${item.carrierWeeklyVolume} unid./mes` : "—";
-        return `• ${r.origin} → ${r.destination} | Target: ${target} | Volumen: ${vol}`;
+        return { origin: r.origin, destination: r.destination, target, volume: vol };
       })
-      .filter(Boolean)
-      .join("\n");
+      .filter((l): l is BidRouteLine => l !== null);
 
-    const text = [
-      `El proveedor ${carrier?.name ?? "desconocido"} (${carrier?.email ?? ""}) guardó o actualizó su licitación el ${now}.`,
-      "",
-      `Rutas (${items.length}):`,
-      lineas,
-    ].join("\n");
-
-    await sendEmail({
-      to: PRICING_EMAIL,
-      subject: `Licitación actualizada — ${carrier?.name ?? carrierId}`,
-      text,
+    const { subject, html, text } = buildCarrierBidEmail({
+      carrierName: carrier?.name ?? "desconocido",
+      carrierEmail: carrier?.email ?? "",
+      when: now,
+      routes: lineas,
     });
+
+    await sendEmail({ to: PRICING_EMAIL, subject, html, text });
   } catch (e) {
     console.error("[carrier/routes] Error al enviar notificación:", e);
   }

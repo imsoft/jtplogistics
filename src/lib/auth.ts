@@ -10,6 +10,7 @@ import { nextCookies } from "better-auth/next-js";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
+import { buildPasswordResetEmail } from "@/lib/account-email";
 import { getAuthBaseUrl, getTrustedOrigins } from "@/lib/auth-utils";
 import { validateSignUpEmailPayload } from "@/lib/validators/registration-abuse";
 
@@ -32,11 +33,11 @@ export const auth = betterAuth({
     enabled: true,
     revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
-      void sendEmail({
-        to: user.email,
-        subject: "Restablecer contraseña - JTP Logistics",
-        text: `Hola ${user.name},\n\nPara restablecer tu contraseña, haz clic en el siguiente enlace:\n\n${url}\n\nEste enlace expira en 1 hora. Si no solicitaste este cambio, ignora este correo.\n\n— JTP Logistics`,
+      const { subject, html, text } = buildPasswordResetEmail({
+        name: user.name,
+        url,
       });
+      void sendEmail({ to: user.email, subject, html, text });
     },
   },
   session: {

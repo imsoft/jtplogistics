@@ -2,17 +2,34 @@
  * Plantilla base de los correos de JTP Logistics.
  *
  * Se arma con tablas y estilos en línea porque Gmail y Outlook ignoran las
- * hojas de estilo y buena parte de flexbox. El azul es el del logo (#02309b).
+ * hojas de estilo y buena parte de flexbox. Los colores, el radio y las
+ * mayúsculas de los títulos son los mismos de la aplicación.
  */
 
+/**
+ * Los mismos colores que la interfaz, convertidos de los tokens `oklch` de
+ * globals.css a hexadecimal: ningún cliente de correo entiende oklch.
+ *
+ *   --primary            → blue
+ *   --foreground         → text
+ *   --muted-foreground   → muted
+ *   --border             → border
+ *   --muted              → background
+ *   --accent             → surface
+ */
 export const BRAND = {
-  blue: "#02309b",
-  blueDark: "#001e70",
-  text: "#1f2937",
-  muted: "#6b7280",
-  border: "#e5e7eb",
-  background: "#f3f4f6",
+  blue: "#1447E6",
+  blueDark: "#193CB8",
+  text: "#09090B",
+  muted: "#57637D",
+  border: "#D7DFEE",
+  background: "#EAF1FF",
+  surface: "#E3EEFF",
+  onBlue: "#EFF6FF",
 } as const;
+
+/** El radio de la app (--radius: 0.625rem). */
+const RADIUS = "10px";
 
 export function escapeHtml(value: string): string {
   return value
@@ -86,7 +103,7 @@ export function brandedEmail(options: BrandedEmailOptions): string {
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${BRAND.background};padding:24px 12px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid ${BRAND.border};border-radius:12px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid ${BRAND.border};border-radius:${RADIUS};overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
           <tr>
             <td style="height:5px;background:${BRAND.blue};font-size:0;line-height:0;">&nbsp;</td>
           </tr>
@@ -105,16 +122,16 @@ export function brandedEmail(options: BrandedEmailOptions): string {
                   ? `<p style="margin:0 0 8px;color:${BRAND.muted};font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;">${escapeHtml(eyebrow)}</p>`
                   : ""
               }
-              <h1 style="margin:0 0 16px;color:${BRAND.blue};font-size:23px;line-height:1.3;font-weight:700;">${escapeHtml(heading)}</h1>
+              <h1 style="margin:0 0 16px;color:${BRAND.blue};font-size:22px;line-height:1.3;font-weight:700;text-transform:uppercase;letter-spacing:.03em;">${escapeHtml(heading)}</h1>
               <div style="text-align:left;">${body}</div>
               ${
                 highlight
-                  ? `<div style="margin:18px 0 0;padding:14px 16px;background:#f8fafc;border-left:3px solid ${BRAND.blue};border-radius:6px;text-align:left;color:${BRAND.text};font-size:14px;line-height:1.6;">${highlight}</div>`
+                  ? `<div style="margin:18px 0 0;padding:14px 16px;background:${BRAND.surface};border-left:3px solid ${BRAND.blue};border-radius:${RADIUS};text-align:left;color:${BRAND.text};font-size:14px;line-height:1.6;">${highlight}</div>`
                   : ""
               }
               ${
                 ctaLabel && ctaHref
-                  ? `<p style="margin:26px 0 0;"><a href="${ctaHref}" style="background:${BRAND.blue};color:#ffffff;padding:12px 26px;border-radius:8px;text-decoration:none;display:inline-block;font-size:14px;font-weight:600;">${escapeHtml(ctaLabel)}</a></p>`
+                  ? `<p style="margin:26px 0 0;"><a href="${ctaHref}" style="background:${BRAND.blue};color:${BRAND.onBlue};padding:12px 26px;border-radius:${RADIUS};text-decoration:none;display:inline-block;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">${escapeHtml(ctaLabel)}</a></p>`
                   : ""
               }
             </td>

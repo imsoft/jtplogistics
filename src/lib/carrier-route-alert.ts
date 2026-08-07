@@ -6,6 +6,7 @@
  */
 import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
+import { buildNewRouteEmail } from "@/lib/carrier-email";
 import { notify } from "@/lib/notify";
 
 interface NewRouteInfo {
@@ -76,23 +77,17 @@ export async function alertMatchingCarriers(route: NewRouteInfo): Promise<void> 
       href: routeHref,
     }));
 
-    const emailPromises = matched.map((c) =>
-      sendEmail({
-        to: c.email,
-        subject: `Nueva ruta disponible: ${routeLabel}`,
-        html: `
-<p>Hola <strong>${c.name}</strong>,</p>
-<p>Se publicó una nueva ruta que coincide con tu perfil operativo:</p>
-<p style="font-size:18px;font-weight:bold;">${routeLabel}${stateSuffix}</p>
-<p>Ingresa a la plataforma para conocer todos los detalles y ponerte en contacto con el equipo de JTP.</p>
-${routeHref ? `<p><a href="${routeHref}" style="background:#2563eb;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block;">Ver rutas disponibles</a></p>` : ""}
-<p style="color:#6b7280;font-size:12px;margin-top:24px;">JTP Logistics — Este correo es automático, por favor no respondas directamente.</p>
-        `.trim(),
-        text: `Hola ${c.name},\n\nSe publicó una nueva ruta que coincide con tu perfil operativo:\n\n${routeLabel}${stateSuffix}\n\nIngresa a la plataforma para conocer más detalles.\n${routeHref}\n\nJTP Logistics`,
-      }).catch((e) => {
+    const emailPromises = matched.map((c) => {
+      const { subject, html, text } = buildNewRouteEmail({
+        name: c.name,
+        routeLabel,
+        state: route.destinationState,
+        href: routeHref,
+      });
+      return sendEmail({ to: c.email, subject, html, text }).catch((e) => {
         console.error(`[carrier-route-alert] Error sending email to ${c.email}:`, e);
-      })
-    );
+      });
+    });
 
     await Promise.all([notify(notifyInputs), ...emailPromises]);
   } catch (e) {
