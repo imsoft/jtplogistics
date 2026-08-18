@@ -678,6 +678,8 @@ model GeneratedQuote {
   company     String         @map("company")
   contact     String         @map("contact")
   phone       String?        @map("phone")
+  /// Correo del contacto; sale en el PDF junto al teléfono.
+  email       String?        @map("email")
   validUntil  DateTime       @map("valid_until")
   rows        Json           @map("rows")
   status      QuoteStatus    @default(enviada) @map("status")

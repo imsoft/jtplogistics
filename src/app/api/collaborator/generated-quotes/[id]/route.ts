@@ -86,6 +86,7 @@ export async function PATCH(
       company?: string;
       contact?: string;
       phone?: string | null;
+      email?: string | null;
       validUntil?: string;
       rows?: Prisma.InputJsonValue[];
       status?: string;
@@ -101,6 +102,7 @@ export async function PATCH(
         ...(body.company && { company: body.company.trim() }),
         ...(body.contact && { contact: body.contact.trim() }),
         ...(body.phone !== undefined && { phone: body.phone?.trim() || null }),
+        ...(body.email !== undefined && { email: body.email?.trim() || null }),
         ...(body.validUntil && { validUntil: new Date(body.validUntil) }),
         ...(body.rows && { rows: body.rows }),
         ...(body.status && { status: body.status as QuoteStatus }),

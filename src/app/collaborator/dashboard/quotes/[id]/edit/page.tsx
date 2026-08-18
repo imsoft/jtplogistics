@@ -36,6 +36,7 @@ export default function EditQuotePage() {
       company: data.company,
       contact: data.contact,
       phone: data.phone ?? "",
+      email: data.email ?? null,
       validUntil: data.validUntil,
       rows: data.rows ?? [],
       creatorName: data.creatorName,

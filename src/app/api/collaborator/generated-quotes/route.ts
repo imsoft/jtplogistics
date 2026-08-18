@@ -14,6 +14,7 @@ export async function GET() {
         company: true,
         contact: true,
         phone: true,
+        email: true,
         validUntil: true,
         status: true,
         createdAt: true,

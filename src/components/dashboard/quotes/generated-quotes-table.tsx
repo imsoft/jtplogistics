@@ -14,6 +14,7 @@ interface GeneratedQuote {
   company: string;
   contact: string;
   phone: string | null;
+  email: string | null;
   validUntil: string;
   createdAt: string;
   createdBy: { id: string; name: string };
@@ -24,7 +25,7 @@ function getColumns(): ColumnDef<GeneratedQuote>[] {
     {
       id: "search",
       accessorFn: (row) =>
-        `${row.quoteNumber} ${row.company} ${row.contact} ${row.phone ?? ""}`,
+        `${row.quoteNumber} ${row.company} ${row.contact} ${row.phone ?? ""} ${row.email ?? ""}`,
       filterFn: "fuzzy",
       header: () => null,
       cell: () => null,

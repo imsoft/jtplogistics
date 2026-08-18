@@ -43,6 +43,8 @@ export interface QuoteData {
   company: string;
   contact: string;
   phone: string;
+  /** Correo del contacto. Opcional: las cotizaciones viejas no lo tienen. */
+  email?: string;
   validUntil: string;
   rows: QuoteRow[];
 }

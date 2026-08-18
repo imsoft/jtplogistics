@@ -9,6 +9,7 @@ const FIELD_LABELS: Record<string, string> = {
   company: "Compañía",
   contact: "Contacto",
   phone: "Teléfono",
+  email: "Correo",
   validUntil: "Vigencia",
   status: "Estado",
 };
@@ -62,6 +63,7 @@ export function PATCH(
       company?: string;
       contact?: string;
       phone?: string | null;
+      email?: string | null;
       validUntil?: string;
       rows?: Prisma.InputJsonValue[];
       status?: string;
@@ -80,6 +82,7 @@ export function PATCH(
         ...(body.company && { company: body.company.trim() }),
         ...(body.contact && { contact: body.contact.trim() }),
         ...(body.phone !== undefined && { phone: body.phone?.trim() || null }),
+        ...(body.email !== undefined && { email: body.email?.trim() || null }),
         ...(body.validUntil && { validUntil: new Date(body.validUntil) }),
         ...(body.rows && { rows: body.rows }),
         ...(body.status && { status: body.status as QuoteStatus }),
@@ -91,6 +94,7 @@ export function PATCH(
         company: quote.company,
         contact: quote.contact,
         phone: quote.phone,
+        email: quote.email,
         validUntil: quote.validUntil.toISOString().split("T")[0],
         status: quote.status,
       },
@@ -98,6 +102,7 @@ export function PATCH(
         company: updated.company,
         contact: updated.contact,
         phone: updated.phone,
+        email: updated.email,
         validUntil: updated.validUntil.toISOString().split("T")[0],
         status: updated.status,
       },

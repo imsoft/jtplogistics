@@ -11,6 +11,7 @@ export function GET() {
         company: true,
         contact: true,
         phone: true,
+        email: true,
         validUntil: true,
         rows: true,
         createdAt: true,

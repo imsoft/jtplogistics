@@ -27,6 +27,7 @@ export interface CrmQuote {
   company: string;
   contact: string;
   phone: string | null;
+  email: string | null;
   validUntil: string;
   createdAt: string;
   createdByName: string;
