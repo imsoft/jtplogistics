@@ -62,6 +62,7 @@ export function QuoteRowActions({
         company: string;
         contact: string;
         phone: string | null;
+        email: string | null;
         validUntil: string;
         rows: QuoteRow[];
         creatorName: string;
@@ -83,6 +84,7 @@ export function QuoteRowActions({
             company: quote.company,
             contact: quote.contact,
             phone: quote.phone ?? "",
+            email: quote.email ?? "",
             validUntil: quote.validUntil,
             rows: quote.rows,
           }}

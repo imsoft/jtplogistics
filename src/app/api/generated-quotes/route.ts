@@ -1,14 +1,14 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
+import { requireQuoteAuthor } from "@/lib/auth-server";
 import { logAudit } from "@/lib/audit-log";
 import type { Prisma } from "@prisma/client";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireCollaboratorOrAdmin();
+    const session = await requireQuoteAuthor();
 
-    // Collaborators need canCreateQuotes; admins bypass
+    // El colaborador necesita el permiso; admin y vendedor entran por su rol.
     if (session.user.role === "collaborator") {
       const me = await prisma.user.findUnique({
         where: { id: session.user.id },
@@ -24,11 +24,12 @@ export async function POST(request: NextRequest) {
       company: string;
       contact: string;
       phone?: string;
+      email?: string;
       validUntil: string;
       rows: Prisma.InputJsonValue[];
     };
 
-    const { quoteNumber, company, contact, phone, validUntil, rows } = body;
+    const { quoteNumber, company, contact, phone, email, validUntil, rows } = body;
 
     if (!quoteNumber || !company || !contact || !validUntil || !rows?.length) {
       return Response.json({ error: "Datos incompletos" }, { status: 400 });
@@ -40,6 +41,7 @@ export async function POST(request: NextRequest) {
         company,
         contact,
         phone: phone?.trim() || null,
+        email: email?.trim() || null,
         validUntil: new Date(validUntil),
         rows,
         createdById: session.user.id,

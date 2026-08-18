@@ -5,11 +5,20 @@ import { useRouter } from "next/navigation";
 import { DataTableSkeleton } from "@/components/ui/skeletons";
 import Link from "next/link";
 import { pdf } from "@react-pdf/renderer";
-import { Plus, Trash2, FileText, Loader2, Settings } from "lucide-react";
+import { Plus, Trash2, FileText, Loader2, Settings, Send } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { AppSelect } from "@/components/ui/app-select";
@@ -34,6 +43,7 @@ export interface EditQuote {
   company: string;
   contact: string;
   phone: string;
+  email: string | null;
   validUntil: string;
   rows: QuoteRow[];
   /** Quien creó la cotización originalmente (para la zona de firmas). */
@@ -114,9 +124,17 @@ export function CarrierQuotesTable({
   const [company, setCompany] = useState(editQuote?.company ?? "");
   const [contact, setContact] = useState(editQuote?.contact ?? "");
   const [phone, setPhone] = useState(editQuote?.phone ?? "");
+  const [email, setEmail] = useState(editQuote?.email ?? "");
   const [validUntil, setValidUntil] = useState(editQuote?.validUntil ?? defaultValidUntil());
   const [quoteRows, setQuoteRows] = useState<QuoteRow[]>(editQuote?.rows ?? []);
   const [isGenerating, setIsGenerating] = useState(false);
+  // ── Envío por correo ──
+  const [sendOpen, setSendOpen] = useState(false);
+  const [sendTo, setSendTo] = useState("");
+  const [sendMessage, setSendMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const [sendResult, setSendResult] = useState<{ to: string; fellBack: boolean; replyTo: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [quoteError, setQuoteError] = useState<string | null>(null);
 
@@ -304,7 +322,7 @@ export function CarrierQuotesTable({
       const res = await fetch(`${updateEndpoint}/${editQuote.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ company, contact, phone: phone || null, validUntil, rows: quoteRows }),
+        body: JSON.stringify({ company, contact, phone: phone || null, email: email || null, validUntil, rows: quoteRows }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({})) as { error?: string };
@@ -319,6 +337,84 @@ export function CarrierQuotesTable({
     }
   }
 
+  /** Arma el PDF de la cotización tal como está en pantalla. */
+  async function buildQuoteBlob(): Promise<Blob> {
+    // Los textos legales son opcionales: si no se pueden traer, la cotización
+    // se genera igual en vez de dejar al usuario sin PDF.
+    let termsJson: QuoteTermsJson = { bulletsJson: "", contractJson: "", privacyJson: "", limitsJson: "" };
+    try {
+      const termsRes = await fetch("/api/quote-config");
+      if (termsRes.ok) termsJson = await termsRes.json();
+    } catch (e) {
+      console.error("No se pudieron cargar los textos legales:", e);
+    }
+
+    return pdf(
+      <QuotePdf
+        data={{ quoteNumber, company, contact, phone, email, validUntil, rows: quoteRows }}
+        logoUrl={window.location.origin + "/images/logo/jtp-logistics.png"}
+        termsJson={termsJson}
+        creatorName={signer.name}
+        creatorPosition={signer.position}
+      />
+    ).toBlob();
+  }
+
+  /** Abre el diálogo con el correo del contacto ya puesto. */
+  function openSendDialog() {
+    setQuoteError(null);
+    if (!company.trim()) { setQuoteError("Ingresa el nombre de la compañía."); return; }
+    if (!contact.trim()) { setQuoteError("Ingresa el nombre del contacto."); return; }
+    if (quoteRows.length === 0) { setQuoteError("Agrega al menos una ruta."); return; }
+    setSendError(null);
+    setSendResult(null);
+    setSendTo(email);
+    setSendOpen(true);
+  }
+
+  async function handleSend() {
+    setSendError(null);
+    if (!sendTo.trim()) {
+      setSendError("Escribe el correo de quien va a recibir la cotización.");
+      return;
+    }
+    setIsSending(true);
+    try {
+      const blob = await buildQuoteBlob();
+      // Solo la parte de datos: el prefijo "data:application/pdf;base64," no
+      // forma parte del contenido del archivo.
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result).split(",")[1] ?? "");
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(blob);
+      });
+
+      const res = await fetch("/api/generated-quotes/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          quoteNumber, company, contact, validUntil,
+          to: sendTo.trim(),
+          message: sendMessage.trim() || null,
+          pdfBase64: base64,
+        }),
+      });
+      const data = await res.json() as { error?: string; to?: string; fellBack?: boolean; replyTo?: string };
+      if (!res.ok) {
+        setSendError(data.error ?? "No se pudo enviar la cotización.");
+        return;
+      }
+      setSendResult({ to: data.to ?? sendTo, fellBack: !!data.fellBack, replyTo: data.replyTo ?? "" });
+      setSendMessage("");
+    } catch (e) {
+      console.error("Error al enviar la cotización:", e);
+      setSendError(`No se pudo enviar la cotización: ${errorText(e)}`);
+    } finally {
+      setIsSending(false);
+    }
+  }
+
   async function handleDownloadPdf() {
     setQuoteError(null);
     if (!company.trim()) { setQuoteError("Ingresa el nombre de la compañía."); return; }
@@ -326,30 +422,9 @@ export function CarrierQuotesTable({
     if (quoteRows.length === 0) { setQuoteError("Agrega al menos una ruta."); return; }
     setIsGenerating(true);
     try {
-      // Los textos legales son opcionales: si no se pueden traer, la cotización
-      // se genera igual en vez de dejar al usuario sin PDF.
-      const emptyTerms: QuoteTermsJson = { bulletsJson: "", contractJson: "", privacyJson: "", limitsJson: "" };
-      let termsJson = emptyTerms;
-      try {
-        const termsRes = await fetch("/api/quote-config");
-        if (termsRes.ok) termsJson = await termsRes.json();
-      } catch (e) {
-        console.error("No se pudieron cargar los textos legales:", e);
-      }
-
-      // ── Generar y descargar el PDF ──
       let blob: Blob;
       try {
-        const logoUrl = window.location.origin + "/images/logo/jtp-logistics.png";
-        blob = await pdf(
-          <QuotePdf
-            data={{ quoteNumber, company, contact, phone, validUntil, rows: quoteRows }}
-            logoUrl={logoUrl}
-            termsJson={termsJson}
-            creatorName={signer.name}
-            creatorPosition={signer.position}
-          />
-        ).toBlob();
+        blob = await buildQuoteBlob();
       } catch (e) {
         console.error("Error al generar el PDF:", e);
         setQuoteError(`No se pudo generar el PDF: ${errorText(e)}`);
@@ -374,7 +449,7 @@ export function CarrierQuotesTable({
         const saveRes = await fetch("/api/generated-quotes", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ quoteNumber, company, contact, phone, validUntil, rows: quoteRows }),
+          body: JSON.stringify({ quoteNumber, company, contact, phone, email: email || null, validUntil, rows: quoteRows }),
         });
         if (!saveRes.ok) {
           const err = await saveRes.json().catch(() => ({})) as { error?: string };
@@ -570,6 +645,20 @@ export function CarrierQuotesTable({
             <Label htmlFor="qb-phone">Teléfono</Label>
             <Input id="qb-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="qb-email">Correo</Label>
+            {/* type="email" ya fuerza minúsculas por la regla de globals.css. */}
+            <Input
+              id="qb-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="text-email"
+            />
+            <p className="text-xs text-muted-foreground">
+              Aparece en el PDF debajo del teléfono. Puede quedarse vacío.
+            </p>
+          </div>
         </div>
 
         {/* Rutas de la cotización */}
@@ -628,13 +717,21 @@ export function CarrierQuotesTable({
             <Button type="button" variant="outline" asChild>
               <Link href="/admin/dashboard/quotes">Cancelar</Link>
             </Button>
+            <Button type="button" variant="outline" onClick={openSendDialog} size="lg">
+              <Send className="size-4" />
+              Enviar por correo
+            </Button>
             <Button onClick={handleSaveEdit} disabled={isSaving} size="lg">
               {isSaving ? <Loader2 className="size-4 animate-spin" /> : null}
               {isSaving ? "Guardando…" : "Guardar cambios"}
             </Button>
           </div>
         ) : (
-          <div className="flex justify-end pb-4">
+          <div className="flex flex-col justify-end gap-3 pb-4 sm:flex-row">
+            <Button type="button" variant="outline" onClick={openSendDialog} size="lg">
+              <Send className="size-4" />
+              Enviar por correo
+            </Button>
             <Button onClick={handleDownloadPdf} disabled={isGenerating} size="lg">
               {isGenerating ? <Loader2 className="size-4 animate-spin" /> : <FileText className="size-4" />}
               {isGenerating ? "Generando PDF…" : "Descargar cotización PDF"}
@@ -642,6 +739,76 @@ export function CarrierQuotesTable({
           </div>
         )}
       </div>
+
+      {/* ── Enviar la cotización al cliente ── */}
+      <Dialog open={sendOpen} onOpenChange={setSendOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Enviar cotización {quoteNumber}</DialogTitle>
+            <DialogDescription>
+              Sale con el PDF adjunto desde tu correo, así el cliente te responde
+              directamente a ti.
+            </DialogDescription>
+          </DialogHeader>
+
+          {sendResult ? (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-green-600">
+                Cotización enviada a {sendResult.to}.
+              </p>
+              {sendResult.fellBack && (
+                <p className="text-xs text-muted-foreground">
+                  Salió desde el correo de la plataforma porque el dominio jtp.com.mx
+                  todavía no está dado de alta en Resend. Las respuestas te llegan a{" "}
+                  <span className="text-email">{sendResult.replyTo}</span>.
+                </p>
+              )}
+            </div>
+          ) : (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="send-to">Para</Label>
+                <Input
+                  id="send-to"
+                  type="email"
+                  value={sendTo}
+                  onChange={(e) => setSendTo(e.target.value)}
+                  className="text-email"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Se precarga con el correo del contacto de la cotización.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="send-message">Mensaje</Label>
+                <Textarea
+                  id="send-message"
+                  value={sendMessage}
+                  onChange={(e) => setSendMessage(e.target.value)}
+                  rows={3}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Opcional. Se agrega al cuerpo del correo, antes de tu firma.
+                </p>
+              </div>
+
+              {sendError && <p className="text-sm font-medium text-destructive">{sendError}</p>}
+            </>
+          )}
+
+          <DialogFooter>
+            {sendResult ? (
+              <Button onClick={() => setSendOpen(false)}>Cerrar</Button>
+            ) : (
+              <Button onClick={handleSend} disabled={isSending}>
+                {isSending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+                {isSending ? "Enviando…" : "Enviar"}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

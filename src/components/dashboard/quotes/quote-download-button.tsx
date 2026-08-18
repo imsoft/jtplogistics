@@ -30,6 +30,7 @@ export function QuoteDownloadButton({
         company: string;
         contact: string;
         phone: string | null;
+        email: string | null;
         validUntil: string;
         rows: QuoteRow[];
         creatorName: string;
@@ -50,6 +51,7 @@ export function QuoteDownloadButton({
             company: quote.company,
             contact: quote.contact,
             phone: quote.phone ?? "",
+            email: quote.email ?? "",
             validUntil: quote.validUntil,
             rows: quote.rows,
           }}
