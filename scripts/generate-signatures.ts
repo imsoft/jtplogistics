@@ -13,7 +13,8 @@
 import "dotenv/config";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { prisma } from "../src/lib/db";
-import { buildSignature, titleCase } from "../src/lib/signature";
+import { buildSignature } from "../src/lib/signature";
+import { titleCase } from "../src/lib/utils";
 import { BRAND } from "../src/lib/email-layout";
 
 /** El logo tiene que venir de una URL pública: en el correo no hay archivos locales. */

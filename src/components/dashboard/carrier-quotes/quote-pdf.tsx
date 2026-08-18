@@ -3,6 +3,7 @@
 import { Document, Page, Text, View, Image, StyleSheet } from "@react-pdf/renderer";
 import type { QuoteData } from "@/types/carrier-quote.types";
 import { renderLexicalContent } from "@/lib/utils/lexical-to-pdf";
+import { titleCase } from "@/lib/utils";
 
 const BRAND = "#2D4EAA";       // oklch(0.488 0.243 264) → JTP primary blue
 const BRAND_LIGHT = "#EBF0FB"; // very light tint for alternating rows
@@ -12,36 +13,36 @@ const MUTED = "#6B7280";
 const LINE = "#C8D5EE";        // subtle blue-gray for dividers
 
 const s = StyleSheet.create({
-  page: { fontFamily: "Helvetica", fontSize: 8, color: TEXT, paddingTop: 28, paddingBottom: 56, paddingHorizontal: 36 },
+  page: { fontFamily: "Helvetica", fontSize: 8, color: TEXT, paddingTop: 20, paddingBottom: 34, paddingHorizontal: 36 },
   // ── Header ──
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 18, paddingBottom: 10 },
-  logo: { width: 280, height: 112, objectFit: "contain" },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8, paddingBottom: 4 },
+  logo: { width: 168, height: 67, objectFit: "contain" },
   headerDate: { fontSize: 8, color: MUTED, fontFamily: "Helvetica", textAlign: "right", maxWidth: 200 },
   // ── Page 1 title ──
-  titleWrapper: { borderBottomWidth: 1, borderColor: BRAND, paddingVertical: 7, marginBottom: 12 },
+  titleWrapper: { borderBottomWidth: 1, borderColor: BRAND, paddingVertical: 5, marginBottom: 8 },
   titleText: { color: BRAND, fontSize: 12, fontFamily: "Helvetica-Bold", textAlign: "center" },
   // ── Company info ──
   companyRow: { flexDirection: "row", marginBottom: 4 },
   companyLabel: { fontFamily: "Helvetica-Bold", fontSize: 9, width: 60 },
   companyValue: { fontSize: 9 },
   // ── Quote number ──
-  quoteNumWrapper: { borderBottomWidth: 0.8, borderColor: BRAND, paddingVertical: 6, marginBottom: 0 },
+  quoteNumWrapper: { borderBottomWidth: 0.8, borderColor: BRAND, paddingVertical: 5, marginBottom: 0 },
   quoteNumText: { color: BRAND, fontSize: 10, fontFamily: "Helvetica-Bold", letterSpacing: 2, textAlign: "center" },
   // ── Table ──
-  table: { marginBottom: 14 },
+  table: { marginBottom: 10 },
   tableHead: { flexDirection: "row", borderBottomWidth: 1.2, borderBottomColor: BRAND },
-  tableHeadCell: { color: BRAND, fontFamily: "Helvetica-Bold", fontSize: 8, paddingVertical: 7, paddingHorizontal: 10, flex: 1, letterSpacing: 0.4 },
-  tableHeadCellLast: { color: BRAND, fontFamily: "Helvetica-Bold", fontSize: 8, paddingVertical: 7, paddingHorizontal: 10, flex: 1.5, letterSpacing: 0.4 },
+  tableHeadCell: { color: BRAND, fontFamily: "Helvetica-Bold", fontSize: 8, paddingVertical: 5, paddingHorizontal: 10, flex: 1, letterSpacing: 0.4 },
+  tableHeadCellLast: { color: BRAND, fontFamily: "Helvetica-Bold", fontSize: 8, paddingVertical: 5, paddingHorizontal: 10, flex: 1.5, letterSpacing: 0.4 },
   tableRow: { flexDirection: "row", borderBottomWidth: 0.5, borderBottomColor: LINE },
-  tableCell: { fontSize: 8.5, paddingVertical: 7, paddingHorizontal: 10, flex: 1, color: TEXT },
-  tableCellLast: { fontSize: 8.5, paddingVertical: 7, paddingHorizontal: 10, flex: 1.5, color: TEXT },
+  tableCell: { fontSize: 8.5, paddingVertical: 4, paddingHorizontal: 10, flex: 1, color: TEXT },
+  tableCellLast: { fontSize: 8.5, paddingVertical: 4, paddingHorizontal: 10, flex: 1.5, color: TEXT },
   // ── Terms / misc ──
-  termsTitle: { fontFamily: "Helvetica-Bold", fontSize: 10, textAlign: "center", textDecoration: "underline", marginBottom: 8, marginTop: 10 },
-  validity: { fontFamily: "Helvetica-Bold", fontSize: 8, textAlign: "center", textDecoration: "underline", marginTop: 10, marginBottom: 10 },
+  termsTitle: { fontFamily: "Helvetica-Bold", fontSize: 10, textAlign: "center", textDecoration: "underline", marginBottom: 5, marginTop: 6 },
+  validity: { fontFamily: "Helvetica-Bold", fontSize: 8, textAlign: "center", textDecoration: "underline", marginTop: 6, marginBottom: 6 },
   // ── Signatures ──
-  sigBlock: { flexDirection: "row", justifyContent: "space-between", marginTop: 16, paddingTop: 8 },
+  sigBlock: { flexDirection: "row", justifyContent: "space-between", marginTop: 10, paddingTop: 4 },
   sigColumn: { width: "45%" },
-  sigLabel: { fontFamily: "Helvetica-Bold", fontSize: 9, marginBottom: 20, textAlign: "center" },
+  sigLabel: { fontFamily: "Helvetica-Bold", fontSize: 9, marginBottom: 14, textAlign: "center" },
   sigLine: { borderBottomWidth: 0.8, borderBottomColor: TEXT, marginBottom: 4 },
   sigName: { fontFamily: "Helvetica-Bold", fontSize: 8, textAlign: "center" },
   // ── Page title (pages 2-4) ──
@@ -52,12 +53,12 @@ const s = StyleSheet.create({
 });
 
 const lexStyles = {
-  body: { fontSize: 7.5, color: TEXT, fontFamily: "Helvetica" },
+  body: { fontSize: 7, color: TEXT, fontFamily: "Helvetica" },
   bold: { fontFamily: "Helvetica-Bold" },
   italic: { fontFamily: "Helvetica-Oblique" },
   heading: { fontSize: 9 },
-  bulletRow: { flexDirection: "row" as const, marginBottom: 3 },
-  bulletDot: { fontSize: 7.5, marginRight: 4, width: 12, fontFamily: "Helvetica" },
+  bulletRow: { flexDirection: "row" as const, marginBottom: 1.5 },
+  bulletDot: { fontSize: 7, marginRight: 4, width: 10, fontFamily: "Helvetica" },
 };
 
 function formatDateEs(date: Date): string {
@@ -90,20 +91,25 @@ function PageFooter() {
 }
 
 /**
- * Zona de firmas. El nombre y el puesto son SIEMPRE los de quien creó la
- * cotización: nunca se rellenan con los de otra persona.
+ * Zona de firmas. A la izquierda firma JTP: el nombre y el puesto son SIEMPRE
+ * los de quien creó la cotización, nunca se rellenan con los de otra persona.
+ * A la derecha firma el cliente, con el nombre del contacto de la cotización.
  */
 function Signatures({
   date,
   creatorName,
   creatorPosition,
+  contactName,
 }: {
   date: string;
   creatorName?: string;
   creatorPosition?: string;
+  contactName?: string;
 }) {
   return (
-    <View>
+    // Las firmas viajan juntas: sin esto las líneas se quedan en una página
+    // y los nombres saltan a la siguiente.
+    <View wrap={false}>
       <View style={s.sigBlock}>
         <View style={s.sigColumn}>
           <Text style={s.sigLabel}>ATENTAMENTE</Text>
@@ -122,6 +128,7 @@ function Signatures({
         <View style={s.sigColumn}>
           <Text style={s.sigLabel}>ACEPTAMOS COTIZACION</Text>
           <View style={s.sigLine} />
+          {contactName ? <Text style={s.sigName}>{titleCase(contactName)}</Text> : null}
         </View>
       </View>
       <Text style={{ fontSize: 7.5, color: MUTED, marginTop: 8, textAlign: "center" }}>{date}</Text>
@@ -166,12 +173,20 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
         </View>
         <View style={[s.companyRow, { marginBottom: 2 }]}>
           <Text style={s.companyLabel}>Contacto:</Text>
-          <Text style={s.companyValue}>{data.contact}</Text>
+          {/* El contacto sale con la inicial de cada palabra en mayúscula,
+              se haya capturado como se haya capturado. */}
+          <Text style={s.companyValue}>{titleCase(data.contact)}</Text>
         </View>
         {data.phone ? (
-          <View style={[s.companyRow, { marginBottom: 10 }]}>
+          <View style={[s.companyRow, { marginBottom: 2 }]}>
             <Text style={s.companyLabel}>Teléfono:</Text>
             <Text style={s.companyValue}>{data.phone}</Text>
+          </View>
+        ) : null}
+        {data.email ? (
+          <View style={[s.companyRow, { marginBottom: 10 }]}>
+            <Text style={s.companyLabel}>Correo:</Text>
+            <Text style={s.companyValue}>{data.email}</Text>
           </View>
         ) : (
           <View style={{ marginBottom: 10 }} />
@@ -188,7 +203,7 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
             <Text style={s.tableHeadCellLast}>UNIDAD</Text>
           </View>
           {data.rows.map((row, i) => (
-            <View key={i} style={[s.tableRow, { backgroundColor: rowBg(i) }]}>
+            <View key={i} wrap={false} style={[s.tableRow, { backgroundColor: rowBg(i) }]}>
               <Text style={s.tableCell}>{row.origin}</Text>
               <Text style={s.tableCell}>{row.destination}</Text>
               <Text style={s.tableCell}>{row.destinationState ?? ""}</Text>
@@ -200,7 +215,12 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
         <Text style={s.termsTitle}>TERMINOS Y CONDICIONES</Text>
         {renderLexicalContent(termsJson.bulletsJson, lexStyles)}
         <Text style={s.validity}>{formatValidUntilEs(data.validUntil)}</Text>
-        <Signatures date={dateStr} creatorName={creatorName} creatorPosition={creatorPosition} />
+        <Signatures
+          date={dateStr}
+          creatorName={creatorName}
+          creatorPosition={creatorPosition}
+          contactName={data.contact}
+        />
       </Page>
 
       {/* ── Página 2: Términos del contrato ── */}
@@ -209,7 +229,12 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
         <PageFooter />
         <Text style={s.pageTitle}>TERMINOS INSERTOS EN EL CONTRATO</Text>
         {renderLexicalContent(termsJson.contractJson, lexStyles)}
-        <Signatures date={dateStr} creatorName={creatorName} creatorPosition={creatorPosition} />
+        <Signatures
+          date={dateStr}
+          creatorName={creatorName}
+          creatorPosition={creatorPosition}
+          contactName={data.contact}
+        />
       </Page>
 
       {/* ── Página 3: Aviso de privacidad ── */}
@@ -218,7 +243,12 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
         <PageFooter />
         <Text style={s.pageTitle}>AVISO DE PRIVACIDAD</Text>
         {renderLexicalContent(termsJson.privacyJson, lexStyles)}
-        <Signatures date={dateStr} creatorName={creatorName} creatorPosition={creatorPosition} />
+        <Signatures
+          date={dateStr}
+          creatorName={creatorName}
+          creatorPosition={creatorPosition}
+          contactName={data.contact}
+        />
       </Page>
 
       {/* ── Página 4: Límites de responsabilidad ── */}
@@ -226,7 +256,12 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
         <PageHeader logoUrl={logoUrl} date={dateStr} />
         <PageFooter />
         {renderLexicalContent(termsJson.limitsJson, lexStyles)}
-        <Signatures date={dateStr} creatorName={creatorName} creatorPosition={creatorPosition} />
+        <Signatures
+          date={dateStr}
+          creatorName={creatorName}
+          creatorPosition={creatorPosition}
+          contactName={data.contact}
+        />
       </Page>
     </Document>
   );

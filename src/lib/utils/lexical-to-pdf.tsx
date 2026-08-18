@@ -46,7 +46,8 @@ function renderBlock(node: LexNode, styles: LexPdfStyles, key: number): React.Re
   switch (node.type) {
     case "paragraph":
       return (
-        <Text key={key} style={{ ...styles.body, marginBottom: 5, lineHeight: 1.5 }}>
+        // wrap={false} evita que el bloque se corte entre dos páginas.
+        <Text key={key} wrap={false} style={{ ...styles.body, marginBottom: 5, lineHeight: 1.5 }}>
           {(node.children ?? []).map((c, i) => renderInline(c, styles, i))}
         </Text>
       );
@@ -63,7 +64,7 @@ function renderBlock(node: LexNode, styles: LexPdfStyles, key: number): React.Re
       return (
         <View key={key} style={{ marginBottom: 6 }}>
           {(node.children ?? []).map((item, i) => (
-            <View key={i} style={styles.bulletRow}>
+            <View key={i} wrap={false} style={styles.bulletRow}>
               <Text style={styles.bulletDot}>{isBullet ? "•" : `${item.value ?? i + 1}.`}</Text>
               <Text style={{ ...styles.body, flex: 1, lineHeight: 1.4 }}>
                 {(item.children ?? []).map((c, j) => renderInline(c, styles, j))}

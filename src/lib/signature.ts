@@ -7,6 +7,7 @@
  */
 
 import { BRAND, escapeHtml } from "@/lib/email-layout";
+import { formatPhone, titleCase } from "@/lib/utils";
 
 /** Oficinas de JTP, en el orden en que van en la firma. */
 export const OFFICES = ["Guadalajara", "Querétaro", "Mérida", "Laredo", "Shanghái"];
@@ -22,37 +23,6 @@ const CONFIDENTIALITY =
   "recipient please contact the sender and delete this message and any attachment from your system. " +
   "Unauthorized publication, use, dissemination, forwarding, printing or copying of this E-Mail and its " +
   "attachments is strictly prohibited.";
-
-/** Partículas que no se capitalizan en medio de un nombre. */
-const LOWER_WORDS = new Set(["de", "del", "la", "las", "los", "y", "e"]);
-
-/**
- * "MARIO BRIAN RUIZ SALAZAR" y "victor de la cruz barrios" llegan como se
- * capturaron. En la firma van parejos: cada palabra en mayúscula inicial,
- * respetando las partículas.
- */
-export function titleCase(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .split(/\s+/)
-    .map((word, i) =>
-      i > 0 && LOWER_WORDS.has(word) ? word : word.charAt(0).toUpperCase() + word.slice(1)
-    )
-    .join(" ");
-}
-
-/**
- * Teléfonos capturados como "3327408947" o "33 1584 1738" salen todos como
- * "33 2740 8947". Si no son 10 dígitos se deja tal cual: mejor mostrarlo raro
- * que romperlo.
- */
-export function formatPhone(value: string | null | undefined): string | null {
-  if (!value) return null;
-  const digits = value.replace(/\D/g, "");
-  if (digits.length !== 10) return value.trim();
-  return `${digits.slice(0, 2)} ${digits.slice(2, 6)} ${digits.slice(6)}`;
-}
 
 export interface SignaturePerson {
   name: string;

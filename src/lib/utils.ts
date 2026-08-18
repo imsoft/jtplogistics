@@ -70,3 +70,23 @@ export function formatMxnLive(value: string): string {
   if (!formattedInt) return hasDecimal ? `0.${decPart}` : (decPart ? `0.${decPart}` : "")
   return hasDecimal ? `${formattedInt}.${decPart}` : formattedInt
 }
+
+/** Partículas que no se capitalizan en medio de un nombre. */
+const LOWER_WORDS = new Set(["de", "del", "la", "las", "los", "y", "e"]);
+
+/**
+ * Capitaliza la primera letra de cada palabra respetando las partículas:
+ * "PEDRO MORALES" y "victor de la cruz" salen como "Pedro Morales" y
+ * "Victor de la Cruz". Es solo presentación: lo guardado no cambia.
+ */
+export function titleCase(value: string | null | undefined): string {
+  if (!value) return "";
+  return value
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .map((word, i) =>
+      i > 0 && LOWER_WORDS.has(word) ? word : word.charAt(0).toUpperCase() + word.slice(1)
+    )
+    .join(" ");
+}
