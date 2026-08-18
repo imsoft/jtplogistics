@@ -14,27 +14,30 @@ const MUTED = "#6B7280";
 const LINE = "#C8D5EE";
 
 const s = StyleSheet.create({
-  page: { fontFamily: "Helvetica", fontSize: 8, color: TEXT, paddingTop: 24, paddingBottom: 48, paddingHorizontal: 32 },
+  page: { fontFamily: "Helvetica", fontSize: 8, color: TEXT, paddingTop: 18, paddingBottom: 36, paddingHorizontal: 32 },
   // ── Encabezado: logo a la izquierda, fecha y vigencia a la derecha ──
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 },
-  logo: { width: 190, height: 76, objectFit: "contain" },
-  headerRight: { maxWidth: 230, paddingTop: 14 },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 },
+  // El PNG es cuadrado (3200x3200) con aire alrededor del logo: si la caja es
+  // apaisada, `contain` lo encoge a la altura y deja los lados vacíos. Cuadrada,
+  // el logo aprovecha todo el espacio.
+  logo: { width: 132, height: 132, objectFit: "contain" },
+  headerRight: { maxWidth: 230, paddingTop: 30 },
   headerLine: { fontSize: 9, fontFamily: "Helvetica-Bold", color: NAVY, textAlign: "left" },
   // ── Banda del título ──
-  banner: { backgroundColor: NAVY, paddingVertical: 5, marginBottom: 12 },
+  banner: { backgroundColor: NAVY, paddingVertical: 5, marginBottom: 10 },
   bannerText: { color: WHITE, fontSize: 11, fontFamily: "Helvetica-Bold", textAlign: "center" },
   // ── Datos del proveedor ──
   infoRow: { flexDirection: "row", marginBottom: 3 },
   infoLabel: { fontSize: 10, width: 78 },
   infoValue: { fontSize: 10, fontFamily: "Helvetica-Bold" },
   // ── Banda del acuerdo ──
-  agreement: { backgroundColor: NAVY, paddingVertical: 6, marginTop: 12, marginBottom: 10 },
+  agreement: { backgroundColor: NAVY, paddingVertical: 5, marginTop: 8, marginBottom: 8 },
   agreementText: { color: WHITE, fontSize: 10, fontFamily: "Helvetica-Bold", textAlign: "center", letterSpacing: 3 },
   // ── Tabla ──
   tableHead: { flexDirection: "row", backgroundColor: NAVY },
-  th: { color: WHITE, fontFamily: "Helvetica-Bold", fontSize: 8.5, paddingVertical: 10, paddingHorizontal: 6, textAlign: "center", borderRightWidth: 1, borderRightColor: WHITE },
+  th: { color: WHITE, fontFamily: "Helvetica-Bold", fontSize: 8.5, paddingVertical: 7, paddingHorizontal: 6, textAlign: "center", borderRightWidth: 1, borderRightColor: WHITE },
   row: { flexDirection: "row", backgroundColor: ROW_BLUE, borderTopWidth: 1, borderTopColor: WHITE },
-  td: { fontSize: 8.5, paddingVertical: 10, paddingHorizontal: 6, textAlign: "center", borderRightWidth: 1, borderRightColor: WHITE },
+  td: { fontSize: 8.5, paddingVertical: 7, paddingHorizontal: 6, textAlign: "center", borderRightWidth: 1, borderRightColor: WHITE },
   // Anchos de columna, calcados del machote.
   colOrigin: { flex: 1.1 },
   colDestination: { flex: 1.1 },
@@ -42,9 +45,9 @@ const s = StyleSheet.create({
   colUnit: { flex: 1.1 },
   colTerms: { flex: 1.5 },
   // ── Cláusulas ──
-  termsTitle: { fontFamily: "Helvetica-Bold", fontSize: 13, textAlign: "center", textDecoration: "underline", marginTop: 22, marginBottom: 10 },
+  termsTitle: { fontFamily: "Helvetica-Bold", fontSize: 13, textAlign: "center", textDecoration: "underline", marginTop: 14, marginBottom: 8 },
   // ── Firmas ──
-  sigBlock: { flexDirection: "row", justifyContent: "space-between", marginTop: 30 },
+  sigBlock: { flexDirection: "row", justifyContent: "space-between", marginTop: 20 },
   sigColumn: { width: "42%" },
   sigLine: { borderBottomWidth: 0.8, borderBottomColor: TEXT, marginBottom: 5 },
   sigName: { fontFamily: "Helvetica-Bold", fontSize: 9, textAlign: "center" },
@@ -135,6 +138,20 @@ export function ProviderTariffPdf({ data, logoUrl, termsJson, issuerName, issuer
           <Text style={s.infoLabel}>Contacto:</Text>
           <Text style={s.infoValue}>{upper(data.contact)}</Text>
         </View>
+        {data.phone ? (
+          <View style={s.infoRow}>
+            <Text style={s.infoLabel}>Teléfono:</Text>
+            <Text style={s.infoValue}>{data.phone}</Text>
+          </View>
+        ) : null}
+        {data.email ? (
+          <View style={s.infoRow}>
+            <Text style={s.infoLabel}>Correo:</Text>
+            {/* El correo se deja en minúsculas: en mayúsculas se lee peor y no
+                es como se escribe una dirección. */}
+            <Text style={s.infoValue}>{data.email.toLowerCase()}</Text>
+          </View>
+        ) : null}
 
         <View style={s.agreement}>
           <Text style={s.agreementText}>Acuerdo comercial tarifas ruta nacionales</Text>

@@ -35,6 +35,9 @@ interface ProviderTariffButtonProps {
   legalName: string;
   /** Contacto de la ficha: solo precarga el campo, quien cotiza puede cambiarlo. */
   contact: string;
+  /** Correo y teléfono de la ficha; también se pueden ajustar al generar. */
+  email?: string | null;
+  phone?: string | null;
   routes: TariffRouteInput[];
   /** Catálogo de tipos de unidad, para imprimir la etiqueta y no el valor. */
   unitTypes: { value: string; label: string }[];
@@ -43,6 +46,8 @@ interface ProviderTariffButtonProps {
 export function ProviderTariffButton({
   legalName,
   contact,
+  email,
+  phone,
   routes,
   unitTypes,
 }: ProviderTariffButtonProps) {
@@ -50,6 +55,8 @@ export function ProviderTariffButton({
   const [validUntil, setValidUntil] = useState(defaultValidUntil());
   // Quien firma por el proveedor lo anota pricing al generar el documento.
   const [contactName, setContactName] = useState(contact);
+  const [contactEmail, setContactEmail] = useState(email ?? "");
+  const [contactPhone, setContactPhone] = useState(phone ?? "");
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -102,7 +109,14 @@ export function ProviderTariffButton({
 
       const blob = await pdf(
         <ProviderTariffPdf
-          data={{ legalName, contact: contactName.trim(), validUntil, rows }}
+          data={{
+            legalName,
+            contact: contactName.trim(),
+            email: contactEmail.trim() || null,
+            phone: contactPhone.trim() || null,
+            validUntil,
+            rows,
+          }}
           logoUrl={window.location.origin + "/images/logo/jtp-logistics.png"}
           termsJson={termsJson}
           issuerName={issuer.name}
@@ -157,6 +171,31 @@ export function ProviderTariffButton({
             contacto de su ficha.
           </p>
         </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="tariff-phone">Teléfono</Label>
+            <Input
+              id="tariff-phone"
+              type="tel"
+              value={contactPhone}
+              onChange={(e) => setContactPhone(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="tariff-email">Correo</Label>
+            <Input
+              id="tariff-email"
+              type="email"
+              value={contactEmail}
+              onChange={(e) => setContactEmail(e.target.value)}
+              className="text-email"
+            />
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Salen en el encabezado del tarifario. Si se dejan vacíos, no aparecen.
+        </p>
 
         <div className="space-y-2">
           <Label htmlFor="tariff-valid-until">Vigencia</Label>

@@ -103,6 +103,17 @@ export default async function UserProfilePage({
   const contacts = (user.profile?.contacts ?? []) as ProfileContact[];
   const contactPersons = groupContactsByPerson(contacts);
   const carrierRoutes = user.carrierRoutes as CarrierRouteListItem[];
+  // Datos del contacto que firma el tarifario: los de su persona si los tiene,
+  // si no los primeros del proveedor, y el correo de la cuenta como respaldo.
+  const tariffPerson = contactPersons.find((p) => p.name);
+  const tariffEmail =
+    tariffPerson?.contacts.find((c) => c.type === "email")?.value ??
+    contacts.find((c) => c.type === "email")?.value ??
+    user.email;
+  const tariffPhone =
+    tariffPerson?.contacts.find((c) => c.type === "phone")?.value ??
+    contacts.find((c) => c.type === "phone")?.value ??
+    null;
   const pendingUnlockRequests = carrierRoutes
     .filter((cr) => cr.editUnlockRequested && !cr.editUnlockApproved)
     .map((cr) => ({
@@ -228,7 +239,9 @@ export default async function UserProfilePage({
             {carrierRoutes.length > 0 && (
               <ProviderTariffButton
                 legalName={user.profile?.legalName || user.name}
-                contact={contactPersons.find((p) => p.name)?.name || user.name}
+                contact={tariffPerson?.name || user.name}
+                email={tariffEmail}
+                phone={tariffPhone}
                 routes={carrierRoutes}
                 unitTypes={unitTypes}
               />

@@ -14,6 +14,10 @@ export interface ProviderTariffData {
   legalName: string;
   /** Persona de contacto del proveedor. */
   contact: string;
+  /** Correo del contacto. Opcional: no todos los proveedores lo tienen. */
+  email?: string | null;
+  /** Teléfono del contacto. */
+  phone?: string | null;
   /** "YYYY-MM-DD": hasta cuándo se sostienen las tarifas. */
   validUntil: string;
   rows: ProviderTariffRow[];

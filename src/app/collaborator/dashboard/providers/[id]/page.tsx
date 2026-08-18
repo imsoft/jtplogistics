@@ -142,7 +142,18 @@ export default function ProviderDetailPage() {
   const contactPersons = groupContactsByPerson(contacts);
   // Quien firma el tarifario por parte del proveedor: su primer contacto con
   // nombre. Si no hay ninguno, se deja el nombre del proveedor.
-  const tariffContact = contactPersons.find((p) => p.name)?.name || provider.name;
+  const tariffPerson = contactPersons.find((p) => p.name);
+  const tariffContact = tariffPerson?.name || provider.name;
+  // Correo y teléfono de esa misma persona; si no los tiene, los primeros del
+  // proveedor. El correo de la cuenta queda como último recurso.
+  const tariffEmail =
+    tariffPerson?.contacts.find((c) => c.type === "email")?.value ??
+    contacts.find((c) => c.type === "email")?.value ??
+    provider.email;
+  const tariffPhone =
+    tariffPerson?.contacts.find((c) => c.type === "phone")?.value ??
+    contacts.find((c) => c.type === "phone")?.value ??
+    null;
   const canManage = !!permissions?.canUpdateProviders;
   const canDelete = !!permissions?.canDeleteProviders;
   const pendingUnlockRequests = provider.carrierRoutes
@@ -273,6 +284,8 @@ export default function ProviderDetailPage() {
             <ProviderTariffButton
               legalName={provider.profile?.legalName || provider.name}
               contact={tariffContact}
+              email={tariffEmail}
+              phone={tariffPhone}
               routes={provider.carrierRoutes}
               unitTypes={unitTypes}
             />
