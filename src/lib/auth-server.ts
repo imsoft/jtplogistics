@@ -69,6 +69,23 @@ export async function requireCollaboratorOrAdmin() {
   return session;
 }
 
+/**
+ * Quien puede generar cotizaciones: admin, colaborador y vendedor. Los
+ * colaboradores además necesitan el permiso `canCreateQuotes`, que revisa cada
+ * endpoint; el vendedor lo tiene por su rol.
+ */
+export async function requireQuoteAuthor() {
+  const session = await requireSession();
+  const allowed = ["admin", "collaborator", "vendor"];
+  if (!allowed.includes(session.user.role)) {
+    throw new Response(JSON.stringify({ error: "Prohibido" }), {
+      status: 403,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  return session;
+}
+
 export async function requireVendedor() {
   const session = await requireSession();
   if (session.user.role !== "vendor") {
@@ -106,6 +123,12 @@ export async function requireSessionPage() {
 export async function requireAdminPage() {
   const session = await requireSessionPage();
   if (session.user.role !== "admin") redirect("/login");
+  return session;
+}
+
+export async function requireVendedorPage() {
+  const session = await requireSessionPage();
+  if (session.user.role !== "vendor") redirect("/login");
   return session;
 }
 

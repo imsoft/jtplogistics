@@ -1,11 +1,11 @@
 import { prisma } from "@/lib/db";
-import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
+import { requireQuoteAuthor } from "@/lib/auth-server";
 
 export async function GET() {
   try {
-    const session = await requireCollaboratorOrAdmin();
+    const session = await requireQuoteAuthor();
 
-    // Collaborators need canViewQuotes; admins bypass
+    // El colaborador necesita el permiso; admin y vendedor entran por su rol.
     if (session.user.role === "collaborator") {
       const me = await prisma.user.findUnique({
         where: { id: session.user.id },

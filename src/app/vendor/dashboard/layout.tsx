@@ -1,6 +1,6 @@
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { VendorAppSidebar } from "@/components/dashboard/vendor-app-sidebar";
-import { requireVendedor } from "@/lib/auth-server";
+import { requireVendedorPage } from "@/lib/auth-server";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +9,10 @@ export default async function VendorDashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  await requireVendedor();
+  // En un layout hay que usar la guardia que REDIRIGE: requireVendedor lanza
+  // un Response, que Next no maneja aquí y acaba mostrando el error boundary
+  // en lugar de mandar al login.
+  await requireVendedorPage();
 
   return (
     <SidebarProvider>

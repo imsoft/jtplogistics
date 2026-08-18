@@ -9,27 +9,61 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const routeId = searchParams.get("routeId");
 
-    // Se listan TODAS las rutas (activas, pendientes e inactivas).
+    // Se listan TODAS las rutas (activas, pendientes e inactivas): se puede
+    // cotizar cualquier trayecto.
     const routes = await prisma.route.findMany({
-      select: { id: true, origin: true, destination: true, target: true, status: true, unitType: true },
+      select: {
+        id: true,
+        origin: true,
+        destination: true,
+        destinationState: true,
+        target: true,
+        status: true,
+        unitType: true,
+      },
       orderBy: [{ origin: "asc" }, { destination: "asc" }],
     });
 
     if (!routeId) {
-      return Response.json({ routes, carriers: [] });
+      return Response.json({ routes, carriers: [], targets: [] });
     }
 
     const carrierRoutes = await prisma.carrierRoute.findMany({
       where: { routeId },
-      select: { carrierTarget: true },
+      include: {
+        carrier: {
+          select: {
+            name: true,
+            email: true,
+            profile: {
+              select: {
+                commercialName: true,
+                contacts: { select: { type: true, value: true }, where: { type: "phone" } },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { carrierTarget: "asc" },
     });
 
-    // Only return aggregate stats, no carrier details
-    const targets = carrierRoutes
-      .map((cr) => cr.carrierTarget)
+    const carriers = carrierRoutes.map((cr) => ({
+      id: cr.id,
+      carrierId: cr.carrierId,
+      name: cr.carrier.name,
+      email: cr.carrier.email,
+      company: cr.carrier.profile?.commercialName ?? null,
+      phone: cr.carrier.profile?.contacts[0]?.value ?? null,
+      carrierTarget: cr.carrierTarget ?? null,
+    }));
+
+    // `targets` alimenta el resumen de comisión del vendedor, que solo necesita
+    // los importes sueltos.
+    const targets = carriers
+      .map((c) => c.carrierTarget)
       .filter((t): t is number => t != null);
 
-    return Response.json({ routes, targets });
+    return Response.json({ routes, carriers, targets });
   } catch (e) {
     if (e instanceof Response) return e;
     console.error(e);
