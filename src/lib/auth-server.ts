@@ -132,6 +132,25 @@ export async function requireVendedorPage() {
   return session;
 }
 
+/**
+ * Panel del colaborador. Se admite también al admin: usa las mismas pantallas
+ * cuando entra por un enlace directo.
+ */
+export async function requireCollaboratorPage() {
+  const session = await requireSessionPage();
+  const role = session.user.role;
+  if (role !== "collaborator" && role !== "admin") redirect("/login");
+  return session;
+}
+
+/** Panel del transportista. */
+export async function requireCarrierPage() {
+  const session = await requireSessionPage();
+  const role = session.user.role;
+  if (role !== "carrier" && role !== "admin") redirect("/login");
+  return session;
+}
+
 export async function requireDeveloperPage() {
   const session = await requireSessionPage();
   if (session.user.role !== "developer") redirect("/login");

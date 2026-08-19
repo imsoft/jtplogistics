@@ -4,7 +4,7 @@ import { NotificationBell } from "@/components/notification-bell";
 import { FloatingChat } from "@/components/floating-chat";
 import { CarrierOnboardingTour } from "@/components/dashboard/carrier-onboarding-tour";
 import { dashboardMainWithFloatingChatClassName } from "@/lib/dashboard-shell";
-import { getSession } from "@/lib/auth-server";
+import { requireCarrierPage } from "@/lib/auth-server";
 import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -14,13 +14,12 @@ export default async function CarrierDashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getSession();
-  const user = session
-    ? await prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { onboardingTourCompletedAt: true },
-      })
-    : null;
+  // Sin esta guardia, cualquier sesión cargaba el panel del transportista.
+  const session = await requireCarrierPage();
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { onboardingTourCompletedAt: true },
+  });
   const tourCompleted = !user || user.onboardingTourCompletedAt !== null;
 
   return (

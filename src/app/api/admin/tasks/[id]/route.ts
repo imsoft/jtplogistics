@@ -71,7 +71,7 @@ export async function PATCH(
       userId: task.assigneeId,
       type: "task_updated",
       title: `Tarea actualizada: ${task.title.slice(0, 55)}`,
-      href: `/developer/dashboard/tasks/${task.id}`,
+      href: "/developer/dashboard/tasks",
     });
 
     void logAudit({

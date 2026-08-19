@@ -28,7 +28,10 @@ export default async function VendorNewQuotePage() {
       </div>
       {/* El endpoint del vendedor sirve las mismas rutas y transportistas que el
           de admin; las cotizaciones que genere quedan a su nombre. */}
-      <CarrierQuotesTable apiEndpoint="/api/vendor/carrier-quotes" />
+      <CarrierQuotesTable
+        apiEndpoint="/api/vendor/carrier-quotes"
+        listPath="/vendor/dashboard/generated-quotes"
+      />
     </div>
   );
 }

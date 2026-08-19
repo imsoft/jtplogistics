@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { requireSession } from "@/lib/auth-server";
+import { requireSessionPage } from "@/lib/auth-server";
 import { prisma } from "@/lib/db";
 import { BarChart3, Clock, FileText, PauseCircle, Truck, Users } from "lucide-react";
 
@@ -11,7 +11,7 @@ export const metadata = {
 };
 
 export default async function CollaboratorDashboard() {
-  const session = await requireSession();
+  const session = await requireSessionPage();
 
   // Obtener datos del usuario y estadísticas
   const user = await prisma.user.findUnique({

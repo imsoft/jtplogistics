@@ -58,6 +58,10 @@ interface CarrierQuotesTableProps {
   editQuote?: EditQuote;
   /** Base para guardar la edición (PATCH `${updateEndpoint}/${id}`). Admin por defecto. */
   updateEndpoint?: string;
+  /** Listado de cotizaciones del rol: a dónde se vuelve al guardar o cancelar. */
+  listPath?: string;
+  /** Pantalla de textos legales. Sin ella no se muestra el enlace. */
+  termsPath?: string;
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -100,6 +104,8 @@ export function CarrierQuotesTable({
   showTermsLink = false,
   editQuote,
   updateEndpoint = "/api/admin/generated-quotes",
+  listPath = "/admin/dashboard/quotes",
+  termsPath = "/admin/dashboard/quotes/terms",
 }: CarrierQuotesTableProps) {
   const router = useRouter();
   const isEditing = !!editQuote;
@@ -328,7 +334,7 @@ export function CarrierQuotesTable({
         const err = await res.json().catch(() => ({})) as { error?: string };
         throw new Error(err.error ?? "Error al guardar");
       }
-      router.push("/admin/dashboard/quotes");
+      router.push(listPath);
       router.refresh();
     } catch (e) {
       setQuoteError(e instanceof Error ? e.message : "Error al guardar.");
@@ -611,7 +617,7 @@ export function CarrierQuotesTable({
         {showTermsLink && (
           <div className="flex justify-end">
             <Button variant="ghost" size="sm" asChild className="shrink-0 text-muted-foreground">
-              <Link href="/admin/dashboard/quotes/terms">
+              <Link href={termsPath}>
                 <Settings className="size-3.5" />
                 Textos legales
               </Link>
@@ -715,7 +721,7 @@ export function CarrierQuotesTable({
         {isEditing ? (
           <div className="flex justify-end gap-3 pb-4">
             <Button type="button" variant="outline" asChild>
-              <Link href="/admin/dashboard/quotes">Cancelar</Link>
+              <Link href={listPath}>Cancelar</Link>
             </Button>
             <Button type="button" variant="outline" onClick={openSendDialog} size="lg">
               <Send className="size-4" />

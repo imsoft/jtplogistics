@@ -94,9 +94,9 @@ export default function EditQuotePage() {
         <div className="lg:col-span-2">
           <CarrierQuotesTable
             editQuote={quote}
-            showTermsLink
             apiEndpoint="/api/collaborator/carrier-quotes"
             updateEndpoint="/api/collaborator/generated-quotes"
+            listPath="/collaborator/dashboard/quotes"
           />
         </div>
         <div>

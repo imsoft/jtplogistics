@@ -23,7 +23,10 @@ export default function NewQuotePage() {
           </p>
         </div>
       </div>
-      <CarrierQuotesTable showTermsLink apiEndpoint="/api/collaborator/carrier-quotes" />
+      <CarrierQuotesTable
+        apiEndpoint="/api/collaborator/carrier-quotes"
+        listPath="/collaborator/dashboard/quotes"
+      />
     </div>
   );
 }

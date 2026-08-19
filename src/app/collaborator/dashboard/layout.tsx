@@ -5,14 +5,19 @@ import { NotificationBell } from "@/components/notification-bell";
 import { CelebrationGreeting } from "@/components/dashboard/mural/celebration-greeting";
 import { FloatingChat } from "@/components/floating-chat";
 import { dashboardMainWithFloatingChatClassName } from "@/lib/dashboard-shell";
+import { requireCollaboratorPage } from "@/lib/auth-server";
 
 export const dynamic = "force-dynamic";
 
-export default function CollaboratorDashboardLayout({
+export default async function CollaboratorDashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Sin esto, cualquier sesión (por ejemplo un transportista) cargaba el panel
+  // del colaborador: los datos no llegaban, pero la interfaz sí se dibujaba.
+  await requireCollaboratorPage();
+
   return (
     <SidebarProvider>
       <CollaboratorAppSidebar />

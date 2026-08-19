@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
       type: "new_task",
       title: `Nueva tarea: ${task.title.slice(0, 60)}`,
       body: task.description?.slice(0, 80) ?? undefined,
-      href: `/developer/dashboard/tasks/${task.id}`,
+      href: "/developer/dashboard/tasks",
     });
 
     void logAudit({

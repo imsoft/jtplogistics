@@ -182,7 +182,7 @@ export function EmployeesTable({
         filterColumn="search"
         initialColumnVisibility={{ search: false }}
         getRowId={(row) => row.id}
-        onRowClick={(emp) => router.push(`/admin/dashboard/employees/${emp.id}`)}
+        onRowClick={(emp) => router.push(`${detailBasePath}/${emp.id}`)}
         toolbar={
           <>
             <AppSelect
