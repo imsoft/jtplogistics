@@ -66,7 +66,7 @@ function renderBlock(node: LexNode, styles: LexPdfStyles, key: number): React.Re
           {(node.children ?? []).map((item, i) => (
             <View key={i} wrap={false} style={styles.bulletRow}>
               <Text style={styles.bulletDot}>{isBullet ? "•" : `${item.value ?? i + 1}.`}</Text>
-              <Text style={{ ...styles.body, flex: 1, lineHeight: 1.4 }}>
+              <Text style={{ ...styles.body, flex: 1, lineHeight: 1.25 }}>
                 {(item.children ?? []).map((c, j) => renderInline(c, styles, j))}
               </Text>
             </View>

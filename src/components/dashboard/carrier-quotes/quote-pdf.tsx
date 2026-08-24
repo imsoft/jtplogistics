@@ -13,16 +13,18 @@ const MUTED = "#6B7280";
 const LINE = "#C8D5EE";        // subtle blue-gray for dividers
 
 const s = StyleSheet.create({
-  page: { fontFamily: "Helvetica", fontSize: 8, color: TEXT, paddingTop: 20, paddingBottom: 34, paddingHorizontal: 36 },
+  page: { fontFamily: "Helvetica", fontSize: 8, color: TEXT, paddingTop: 18, paddingBottom: 30, paddingHorizontal: 36 },
   // ── Header ──
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8, paddingBottom: 4 },
-  logo: { width: 168, height: 67, objectFit: "contain" },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 2, paddingBottom: 0 },
+  // El PNG del logo es cuadrado (3200x3200): con una caja apaisada, objectFit
+  // "contain" lo encogía a la altura y dejaba el ancho vacío.
+  logo: { width: 106, height: 106, objectFit: "contain" },
   headerDate: { fontSize: 8, color: MUTED, fontFamily: "Helvetica", textAlign: "right", maxWidth: 200 },
   // ── Page 1 title ──
-  titleWrapper: { borderBottomWidth: 1, borderColor: BRAND, paddingVertical: 5, marginBottom: 8 },
+  titleWrapper: { borderBottomWidth: 1, borderColor: BRAND, paddingVertical: 4, marginBottom: 6 },
   titleText: { color: BRAND, fontSize: 12, fontFamily: "Helvetica-Bold", textAlign: "center" },
   // ── Company info ──
-  companyRow: { flexDirection: "row", marginBottom: 4 },
+  companyRow: { flexDirection: "row", marginBottom: 3 },
   companyLabel: { fontFamily: "Helvetica-Bold", fontSize: 9, width: 60 },
   companyValue: { fontSize: 9 },
   // ── Quote number ──
@@ -34,15 +36,15 @@ const s = StyleSheet.create({
   tableHeadCell: { color: BRAND, fontFamily: "Helvetica-Bold", fontSize: 8, paddingVertical: 5, paddingHorizontal: 10, flex: 1, letterSpacing: 0.4 },
   tableHeadCellLast: { color: BRAND, fontFamily: "Helvetica-Bold", fontSize: 8, paddingVertical: 5, paddingHorizontal: 10, flex: 1.5, letterSpacing: 0.4 },
   tableRow: { flexDirection: "row", borderBottomWidth: 0.5, borderBottomColor: LINE },
-  tableCell: { fontSize: 8.5, paddingVertical: 4, paddingHorizontal: 10, flex: 1, color: TEXT },
-  tableCellLast: { fontSize: 8.5, paddingVertical: 4, paddingHorizontal: 10, flex: 1.5, color: TEXT },
+  tableCell: { fontSize: 8.5, paddingVertical: 3, paddingHorizontal: 10, flex: 1, color: TEXT },
+  tableCellLast: { fontSize: 8.5, paddingVertical: 3, paddingHorizontal: 10, flex: 1.5, color: TEXT },
   // ── Terms / misc ──
-  termsTitle: { fontFamily: "Helvetica-Bold", fontSize: 10, textAlign: "center", textDecoration: "underline", marginBottom: 5, marginTop: 6 },
-  validity: { fontFamily: "Helvetica-Bold", fontSize: 8, textAlign: "center", textDecoration: "underline", marginTop: 6, marginBottom: 6 },
+  termsTitle: { fontFamily: "Helvetica-Bold", fontSize: 10, textAlign: "center", textDecoration: "underline", marginBottom: 4, marginTop: 4 },
+  validity: { fontFamily: "Helvetica-Bold", fontSize: 8, textAlign: "center", textDecoration: "underline", marginTop: 5, marginBottom: 4 },
   // ── Signatures ──
-  sigBlock: { flexDirection: "row", justifyContent: "space-between", marginTop: 10, paddingTop: 4 },
+  sigBlock: { flexDirection: "row", justifyContent: "space-between", marginTop: 6, paddingTop: 0 },
   sigColumn: { width: "45%" },
-  sigLabel: { fontFamily: "Helvetica-Bold", fontSize: 9, marginBottom: 14, textAlign: "center" },
+  sigLabel: { fontFamily: "Helvetica-Bold", fontSize: 9, marginBottom: 10, textAlign: "center" },
   sigLine: { borderBottomWidth: 0.8, borderBottomColor: TEXT, marginBottom: 4 },
   sigName: { fontFamily: "Helvetica-Bold", fontSize: 8, textAlign: "center" },
   // ── Page title (pages 2-4) ──
@@ -57,7 +59,7 @@ const lexStyles = {
   bold: { fontFamily: "Helvetica-Bold" },
   italic: { fontFamily: "Helvetica-Oblique" },
   heading: { fontSize: 9 },
-  bulletRow: { flexDirection: "row" as const, marginBottom: 1.5 },
+  bulletRow: { flexDirection: "row" as const, marginBottom: 1 },
   bulletDot: { fontSize: 7, marginRight: 4, width: 10, fontFamily: "Helvetica" },
 };
 
@@ -96,12 +98,10 @@ function PageFooter() {
  * A la derecha firma el cliente, con el nombre del contacto de la cotización.
  */
 function Signatures({
-  date,
   creatorName,
   creatorPosition,
   contactName,
 }: {
-  date: string;
   creatorName?: string;
   creatorPosition?: string;
   contactName?: string;
@@ -131,7 +131,6 @@ function Signatures({
           {contactName ? <Text style={s.sigName}>{titleCase(contactName)}</Text> : null}
         </View>
       </View>
-      <Text style={{ fontSize: 7.5, color: MUTED, marginTop: 8, textAlign: "center" }}>{date}</Text>
     </View>
   );
 }
@@ -213,10 +212,12 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
           ))}
         </View>
         <Text style={s.termsTitle}>TERMINOS Y CONDICIONES</Text>
+        {/* Las viñetas fluyen y se reparten entre páginas si hace falta: si se
+            agrupan con las firmas, una tabla larga manda todo el bloque a la
+            hoja siguiente y deja la primera a medias. */}
         {renderLexicalContent(termsJson.bulletsJson, lexStyles)}
         <Text style={s.validity}>{formatValidUntilEs(data.validUntil)}</Text>
         <Signatures
-          date={dateStr}
           creatorName={creatorName}
           creatorPosition={creatorPosition}
           contactName={data.contact}
@@ -230,7 +231,6 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
         <Text style={s.pageTitle}>TERMINOS INSERTOS EN EL CONTRATO</Text>
         {renderLexicalContent(termsJson.contractJson, lexStyles)}
         <Signatures
-          date={dateStr}
           creatorName={creatorName}
           creatorPosition={creatorPosition}
           contactName={data.contact}
@@ -244,7 +244,6 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
         <Text style={s.pageTitle}>AVISO DE PRIVACIDAD</Text>
         {renderLexicalContent(termsJson.privacyJson, lexStyles)}
         <Signatures
-          date={dateStr}
           creatorName={creatorName}
           creatorPosition={creatorPosition}
           contactName={data.contact}
@@ -257,7 +256,6 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
         <PageFooter />
         {renderLexicalContent(termsJson.limitsJson, lexStyles)}
         <Signatures
-          date={dateStr}
           creatorName={creatorName}
           creatorPosition={creatorPosition}
           contactName={data.contact}
