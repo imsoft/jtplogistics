@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireQuoteAuthor } from "@/lib/auth-server";
 import { logAudit } from "@/lib/audit-log";
+import { nextQuoteNumber } from "@/lib/quote-number";
 import type { Prisma } from "@prisma/client";
 
 export async function POST(request: NextRequest) {
@@ -35,26 +36,50 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "Datos incompletos" }, { status: 400 });
     }
 
-    const quote = await prisma.generatedQuote.create({
-      data: {
-        quoteNumber,
-        company,
-        contact,
-        phone: phone?.trim() || null,
-        email: email?.trim() || null,
-        validUntil: new Date(validUntil),
-        rows,
-        createdById: session.user.id,
-      },
-    });
+    // El número lo confirma el servidor al guardar: el de la pantalla se pidió
+    // al abrirla y para cuando se descarga el PDF puede haberlo tomado otra
+    // persona. Si está ocupado se reintenta con el siguiente libre, así el
+    // consecutivo siempre avanza en lugar de quedarse trabado.
+    let assignedNumber = quoteNumber;
+    let quote: { id: string } | null = null;
+
+    for (let intento = 0; intento < 5 && !quote; intento++) {
+      try {
+        quote = await prisma.generatedQuote.create({
+          data: {
+            quoteNumber: assignedNumber,
+            company,
+            contact,
+            phone: phone?.trim() || null,
+            email: email?.trim() || null,
+            validUntil: new Date(validUntil),
+            rows,
+            createdById: session.user.id,
+          },
+          select: { id: true },
+        });
+      } catch (e) {
+        const code = (e as { code?: string }).code;
+        if (code !== "P2002") throw e;   // solo el choque de número se reintenta
+        assignedNumber = await nextQuoteNumber();
+      }
+    }
+
+    if (!quote) {
+      return Response.json(
+        { error: "No se pudo asignar un número de cotización libre." },
+        { status: 409 }
+      );
+    }
 
     void logAudit({
       resource: "generated_quote", resourceId: quote.id,
-      resourceLabel: `${quoteNumber} — ${company}`,
+      resourceLabel: `${assignedNumber} — ${company}`,
       action: "created", userId: session.user.id, userName: (session.user as { name: string }).name,
     });
 
-    return Response.json({ id: quote.id }, { status: 201 });
+    // Se devuelve el número realmente usado para que la pantalla lo muestre.
+    return Response.json({ id: quote.id, quoteNumber: assignedNumber }, { status: 201 });
   } catch (e) {
     if (e instanceof Response) return e;
     console.error(e);

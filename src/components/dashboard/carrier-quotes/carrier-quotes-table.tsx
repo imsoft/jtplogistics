@@ -475,9 +475,19 @@ export function CarrierQuotesTable({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ quoteNumber, company, contact, phone, email: email || null, validUntil, rows: quoteRows }),
         });
+        const saved = await saveRes.json().catch(() => ({})) as { error?: string; quoteNumber?: string };
         if (!saveRes.ok) {
-          const err = await saveRes.json().catch(() => ({})) as { error?: string };
-          throw new Error(err.error ?? `Error ${saveRes.status}`);
+          throw new Error(saved.error ?? `Error ${saveRes.status}`);
+        }
+        // El servidor puede haber asignado otro número si el previsto ya estaba
+        // tomado; se avisa para que no se mande un PDF con un número distinto
+        // del que quedó guardado.
+        if (saved.quoteNumber && saved.quoteNumber !== quoteNumber) {
+          setQuoteError(
+            `El número ${quoteNumber} ya estaba ocupado: la cotización se guardó como ${saved.quoteNumber}. Vuelve a descargar el PDF para que coincida.`
+          );
+          setQuoteNumber(saved.quoteNumber);
+          return;
         }
       } catch (e) {
         console.error("Error al guardar la cotización:", e);
