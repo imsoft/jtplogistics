@@ -83,11 +83,14 @@ function errorText(e: unknown): string {
   return typeof e === "string" ? e : "error desconocido";
 }
 
+/** Margen de JTP sobre el costo: el precio sugerido es el costo más un 30%. */
+const MARKUP = 1.3;
+
 function computeStats(quotes: CarrierQuote[]) {
   const targets = quotes.map((q) => q.carrierTarget).filter((t): t is number => t != null && !Number.isNaN(t));
   if (targets.length === 0) return { avg: null, venta: null };
   const avg = targets.reduce((a, b) => a + b, 0) / targets.length;
-  return { avg, venta: avg * 1.3 };
+  return { avg, venta: avg * MARKUP };
 }
 
 function defaultValidUntil() {
@@ -124,6 +127,8 @@ export function CarrierQuotesTable({
   const [search, setSearch] = useState("");
   const [filterPrice, setFilterPrice] = useState("all");
   const [finalPrice, setFinalPrice] = useState<number | null>(null);
+  // Costo del flete cuando no hay de dónde sacarlo: trayecto sin ruta registrada.
+  const [manualCost, setManualCost] = useState<number | null>(null);
 
   // ── Quote builder state (precargado en modo edición) ──
   const [quoteNumber, setQuoteNumber] = useState(editQuote?.quoteNumber ?? "");
@@ -215,6 +220,7 @@ export function CarrierQuotesTable({
   // ── Load carriers when route changes ──
   useEffect(() => {
     setFinalPrice(null);
+    setManualCost(null);
     if (!selectedRouteId) { setCarriers([]); return; }
     setIsLoadingCarriers(true);
     fetchQuotes(apiEndpoint, selectedRouteId).then((data) => {
@@ -258,6 +264,18 @@ export function CarrierQuotesTable({
   );
   const stats = useMemo(() => computeStats(carriers), [carriers]);
 
+  /**
+   * De dónde sale el precio sugerido, por orden de fiabilidad:
+   *   1. el promedio de lo que cotizaron los transportistas;
+   *   2. el target de la ruta registrada, si nadie la ha cotizado todavía;
+   *   3. el costo que capture quien cotiza, para trayectos que aún no son ruta.
+   * Sin ninguno de los tres no hay margen que calcular.
+   */
+  const priceBase = stats.avg ?? routeTarget ?? manualCost;
+  const baseSource: "carriers" | "route" | "manual" | null =
+    stats.avg != null ? "carriers" : routeTarget != null ? "route" : manualCost != null ? "manual" : null;
+  const suggestedPrice = priceBase != null ? priceBase * MARKUP : null;
+
   const filteredCarriers = useMemo(() => {
     let r = carriers;
     const q = search.trim();
@@ -295,11 +313,11 @@ export function CarrierQuotesTable({
     hasCityPair &&
     selectedRouteKey != null &&
     !usedRouteKeys.has(selectedRouteKey) &&
-    (finalPrice != null || stats.venta != null);
+    (finalPrice != null || suggestedPrice != null);
 
   function addCurrentRouteToQuote() {
     if (!canAddToQuote || !selectedRouteKey) return;
-    const cost = finalPrice ?? stats.venta ?? 0;
+    const cost = finalPrice ?? suggestedPrice ?? 0;
     setQuoteRows((prev) => [...prev, {
       origin: quoteOrigin,
       destination: quoteDestination,
@@ -560,23 +578,56 @@ export function CarrierQuotesTable({
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                {stats.avg != null ? "Resumen de targets" : "Precio"}
+                {baseSource === "carriers" ? "Resumen de targets" : "Precio"}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 sm:grid-cols-3">
-                {stats.avg != null && (
-                  <>
-                    <div className="rounded-lg bg-muted/50 p-4">
-                      <p className="text-muted-foreground text-xs font-medium">Promedio</p>
-                      <p className="text-lg font-semibold">${formatMxn(stats.avg)}</p>
-                    </div>
-                    <div className="rounded-lg bg-muted/50 p-4">
-                      <p className="text-muted-foreground text-xs font-medium">Precio sugerido</p>
-                      <p className="text-lg font-semibold">${formatMxn(stats.venta)}</p>
-                    </div>
-                  </>
+                {/* Costo: el promedio de los transportistas, el target de la ruta
+                    o, si no hay nada, el que se capture aquí. */}
+                {baseSource === "carriers" ? (
+                  <div className="rounded-lg bg-muted/50 p-4">
+                    <p className="text-muted-foreground text-xs font-medium">Promedio</p>
+                    <p className="text-lg font-semibold">${formatMxn(stats.avg!)}</p>
+                    <p className="text-muted-foreground mt-0.5 text-[10px]">
+                      {carriers.length === 1 ? "1 transportista" : `${carriers.length} transportistas`}
+                    </p>
+                  </div>
+                ) : baseSource === "route" ? (
+                  <div className="rounded-lg bg-muted/50 p-4">
+                    <p className="text-muted-foreground text-xs font-medium">Target de la ruta</p>
+                    <p className="text-lg font-semibold">${formatMxn(routeTarget!)}</p>
+                    <p className="text-muted-foreground mt-0.5 text-[10px]">
+                      Ningún transportista la ha cotizado
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-lg bg-muted/50 p-4 space-y-1">
+                    <p className="text-muted-foreground text-xs font-medium">Costo</p>
+                    <Input
+                      type="number" min="0" step="100"
+                      value={manualCost ?? ""}
+                      onChange={(e) => setManualCost(e.target.value ? parseFloat(e.target.value) : null)}
+                      className="h-8 text-sm font-semibold"
+                    />
+                    <p className="text-muted-foreground text-[10px]">
+                      Lo que cuesta el flete, para calcular tu precio
+                    </p>
+                  </div>
                 )}
+
+                <div className="rounded-lg bg-muted/50 p-4">
+                  <p className="text-muted-foreground text-xs font-medium">Precio sugerido</p>
+                  <p className="text-lg font-semibold">
+                    {suggestedPrice != null ? `$${formatMxn(suggestedPrice)}` : "—"}
+                  </p>
+                  <p className="text-muted-foreground mt-0.5 text-[10px]">
+                    {suggestedPrice != null
+                      ? `Costo + ${Math.round((MARKUP - 1) * 100)}%`
+                      : "Captura el costo"}
+                  </p>
+                </div>
+
                 <div className="rounded-lg bg-muted/50 p-4 space-y-1">
                   <p className="text-muted-foreground text-xs font-medium">Precio final</p>
                   <Input
@@ -585,6 +636,18 @@ export function CarrierQuotesTable({
                     onChange={(e) => setFinalPrice(e.target.value ? parseFloat(e.target.value) : null)}
                     className="h-8 text-sm font-semibold"
                   />
+                  {suggestedPrice != null && finalPrice == null && (
+                    <p className="text-muted-foreground text-[10px]">
+                      Si lo dejas vacío se usa el sugerido
+                    </p>
+                  )}
+                  {/* Utilidad real cuando se pisa el sugerido con otro precio. */}
+                  {finalPrice != null && priceBase != null && (
+                    <p className="text-[10px] font-medium text-muted-foreground">
+                      Utilidad: ${formatMxn(finalPrice - priceBase)} (
+                      {Math.round(((finalPrice - priceBase) / priceBase) * 100)}%)
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="mt-3 flex items-center justify-end gap-3">
@@ -594,7 +657,7 @@ export function CarrierQuotesTable({
                   </span>
                 ) : !canAddToQuote ? (
                   <span className="text-xs text-muted-foreground">
-                    Captura el precio final para agregarlo.
+                    Captura el costo o el precio final para agregarlo.
                   </span>
                 ) : null}
                 <Button
