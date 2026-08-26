@@ -49,10 +49,18 @@ export function LoginForm() {
         return;
       }
       const role = (res.data?.user as SessionUser | undefined)?.role;
+      // Cada rol entra directo a su inicio; "/" solo es la red de seguridad si
+      // llegara un rol desconocido.
       if (role === "admin") {
         router.push("/admin/dashboard");
       } else if (role === "carrier") {
         router.push("/carrier/dashboard");
+      } else if (role === "collaborator") {
+        router.push("/collaborator/dashboard");
+      } else if (role === "vendor") {
+        router.push("/vendor/dashboard");
+      } else if (role === "developer") {
+        router.push("/developer/dashboard");
       } else {
         router.push("/");
       }

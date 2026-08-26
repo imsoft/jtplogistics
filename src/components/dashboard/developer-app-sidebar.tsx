@@ -31,7 +31,8 @@ export function DeveloperAppSidebar() {
     <DashboardSidebar
       navItems={developerNavItems}
       label="Mi cuenta"
-      homeHref="/developer/dashboard/tasks"
+      homeHref="/developer/dashboard"
+      homeLabel="Inicio"
       profileHref="/developer/dashboard/profile"
     />
   );

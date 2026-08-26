@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { prisma } from "@/lib/db";
 import { requireAdminPage } from "@/lib/auth-server";
+import { StatCard, fmtInt, fmtMxn } from "@/components/dashboard/home/stat-card";
 
 export const metadata = {
   title: "Dashboard | JTP Logistics",
@@ -41,70 +42,6 @@ const SHIPMENT_ORDER = [
   "delivered",
   "returned",
 ];
-
-function fmtMxn(value: number) {
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: "MXN",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
-function fmtInt(value: number) {
-  return new Intl.NumberFormat("es-MX").format(value);
-}
-
-interface StatCardProps {
-  label: string;
-  value: string;
-  hint?: string;
-  icon: React.ReactNode;
-  href?: string;
-  accent?: boolean;
-}
-
-function StatCard({ label, value, hint, icon, href, accent }: StatCardProps) {
-  const content = (
-    <Card
-      className={`h-full transition-colors ${
-        href ? "hover:border-primary/40" : ""
-      } ${accent ? "border-destructive/40" : ""}`}
-    >
-      <CardContent className="flex items-start justify-between gap-3 p-4 sm:p-5">
-        <div className="min-w-0">
-          <p className="truncate text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-xs">
-            {label}
-          </p>
-          <p className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
-            {value}
-          </p>
-          {hint && (
-            <p className="mt-0.5 truncate text-xs text-muted-foreground">
-              {hint}
-            </p>
-          )}
-        </div>
-        <span
-          className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${
-            accent
-              ? "bg-destructive/10 text-destructive"
-              : "bg-primary/10 text-primary"
-          }`}
-        >
-          {icon}
-        </span>
-      </CardContent>
-    </Card>
-  );
-
-  return href ? (
-    <Link href={href} className="block">
-      {content}
-    </Link>
-  ) : (
-    content
-  );
-}
 
 export default async function DashboardPage() {
   await requireAdminPage();

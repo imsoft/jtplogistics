@@ -165,7 +165,7 @@ export async function redirectIfAuthenticated() {
   if (role === "admin") redirect("/admin/dashboard");
   else if (role === "carrier") redirect("/carrier/dashboard");
   else if (role === "collaborator") redirect("/collaborator/dashboard");
-  else if (role === "vendor") redirect("/vendor/dashboard/quotes");
+  else if (role === "vendor") redirect("/vendor/dashboard");
   else if (role === "developer") redirect("/developer/dashboard");
   else redirect("/login");
 }

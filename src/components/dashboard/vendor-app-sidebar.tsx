@@ -36,7 +36,8 @@ export function VendorAppSidebar() {
     <DashboardSidebar
       navItems={vendorNavItems}
       label="Mi cuenta"
-      homeHref="/vendor/dashboard/quotes"
+      homeHref="/vendor/dashboard"
+      homeLabel="Inicio"
       profileHref="/vendor/dashboard/profile"
     />
   );
