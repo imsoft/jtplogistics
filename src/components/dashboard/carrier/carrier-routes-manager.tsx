@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Lock, MoveRight } from "lucide-react";
+import { ArrowDown, Lock, MoveRight } from "lucide-react";
 import type { TargetStatus } from "@/lib/target-status";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -118,6 +118,7 @@ export function CarrierRoutesManager({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [originalSelected, setOriginalSelected] = useState<Set<string>>(new Set());
   const [targetByRouteId, setTargetByRouteId] = useState<Record<string, string>>({});
+  const [originalTargetByRouteId, setOriginalTargetByRouteId] = useState<Record<string, string>>({});
   const [weeklyVolumeByRouteId, setWeeklyVolumeByRouteId] = useState<Record<string, string>>({});
   const [originalVolumeByRouteId, setOriginalVolumeByRouteId] = useState<Record<string, string>>({});
   const [statusByRouteId, setStatusByRouteId] = useState<Record<string, TargetStatus | null>>({});
@@ -126,6 +127,10 @@ export function CarrierRoutesManager({
   const [unlockRequestedByRouteId, setUnlockRequestedByRouteId] = useState<Record<string, boolean>>({});
   // Rutas para las que se está enviando la solicitud de desbloqueo en este momento.
   const [requestingUnlock, setRequestingUnlock] = useState<Set<string>>(new Set());
+
+  // Para el botón que baja a guardar y para saber si el pie ya está a la vista.
+  const footerRef = useRef<HTMLDivElement>(null);
+  const [footerVisible, setFooterVisible] = useState(false);
 
   const unitTypes = useUnitTypes();
   const unitTypeLabel = useMemo(() => {
@@ -174,6 +179,7 @@ export function CarrierRoutesManager({
     setSelected(savedSelected);
     setOriginalSelected(savedSelected);
     setTargetByRouteId(savedTargets);
+    setOriginalTargetByRouteId(savedTargets);
     setWeeklyVolumeByRouteId(savedVolumes);
     setOriginalVolumeByRouteId(savedVolumes);
     setStatusByRouteId(savedStatuses);
@@ -192,6 +198,19 @@ export function CarrierRoutesManager({
     setIsLoaded(false);
     loadRoutes();
   }, [loadRoutes]);
+
+  // El botón flotante solo tiene sentido mientras el pie está fuera de la
+  // pantalla: si ya se ve el de "Guardar selección", sobra.
+  useEffect(() => {
+    const node = footerRef.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setFooterVisible(entry.isIntersecting),
+      { rootMargin: "-40px" }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [isLoaded]);
 
   // Rutas que incluyen este tipo de unidad (perfil de la ruta, no filas duplicadas)
   const routes = useMemo(
@@ -365,6 +384,15 @@ export function CarrierRoutesManager({
   );
 
   const canSave = newSelections.size > 0 || canEditRoutes || hasApprovedUnlock || volumesChanged;
+
+  // Cambios sin guardar: marcar o desmarcar una ruta, mover un target o un
+  // volumen. Es lo que enciende el botón que baja al pie.
+  const selectionChanged =
+    selected.size !== originalSelected.size || [...selected].some((id) => !originalSelected.has(id));
+  const targetsChanged = [...selected].some(
+    (id) => (targetByRouteId[id]?.trim() ?? "") !== (originalTargetByRouteId[id] ?? "")
+  );
+  const hasPendingChanges = selectionChanged || volumesChanged || targetsChanged;
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
@@ -631,7 +659,7 @@ export function CarrierRoutesManager({
           )}
 
           {/* Footer */}
-          <div className="flex flex-col gap-2 pt-2 sm:items-end">
+          <div ref={footerRef} className="flex flex-col gap-2 pt-2 sm:items-end">
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:gap-3">
               <span className="text-muted-foreground text-xs text-center sm:text-left">
                 {selectedCount} ruta{selectedCount !== 1 ? "s" : ""} seleccionada
@@ -650,6 +678,23 @@ export function CarrierRoutesManager({
               </Button>
             </div>
           </div>
+
+          {/* Atajo al pie: con la lista larga, guardar quedaba muy abajo. */}
+          {hasPendingChanges && !footerVisible && (
+            <div className="pointer-events-none fixed inset-x-0 bottom-4 z-40 flex justify-center px-4">
+              <Button
+                type="button"
+                onClick={() =>
+                  footerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
+                }
+                className="pointer-events-auto shadow-lg"
+              >
+                <ArrowDown className="size-4" />
+                Ir a guardar
+                {selectionChanged && newSelections.size > 0 && ` (${newSelections.size} nueva${newSelections.size === 1 ? "" : "s"})`}
+              </Button>
+            </div>
+          )}
         </>
       )}
     </div>
