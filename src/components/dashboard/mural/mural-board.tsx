@@ -45,6 +45,12 @@ const KIND_ICONS: Record<MuralItemKind, React.ElementType> = {
 
 /** Días hacia adelante que muestra la agenda del mural. */
 const AGENDA_DAYS = 60;
+/**
+ * Cuánto se mira hacia atrás. Recursos Humanos captura las vacaciones y luego
+ * las busca en el mural: sin esto, en cuanto terminaban desaparecían y parecía
+ * que no se habían guardado.
+ */
+const PAST_DAYS = 90;
 
 /**
  * "YYYY-MM-DD" del día en la zona horaria de quien mira, no en UTC: en México
@@ -400,9 +406,12 @@ export function MuralBoard({ basePath }: MuralBoardProps) {
   const loadEntries = useCallback(() => {
     const now = new Date();
     const until = new Date(now.getTime() + AGENDA_DAYS * 86_400_000);
+    const since = new Date(now.getTime() - PAST_DAYS * 86_400_000);
     const query = `?from=${isoDay(now)}&to=${isoDay(until)}`;
 
-    fetch(`/api/mural/entries${query}`)
+    // Las entradas se piden desde antes de hoy para poder listar las que ya
+    // pasaron; los cumpleaños y aniversarios no, que se repiten cada año.
+    fetch(`/api/mural/entries?from=${isoDay(since)}&to=${isoDay(until)}`)
       .then((r) => (r.ok ? r.json() : []))
       .then(setEntries)
       .catch(() => setEntries([]));
@@ -438,6 +447,24 @@ export function MuralBoard({ basePath }: MuralBoardProps) {
     setEntries((prev) => prev?.filter((e) => e.id !== id) ?? null);
   }
 
+  /** El último día de la entrada: una vacación dura hasta su fecha de fin. */
+  const lastDay = (e: MuralEntry) => (e.endDate ?? e.startDate).slice(0, 10);
+
+  /** Lo que sigue vigente o por venir: es lo que arma la agenda por bloques. */
+  const upcomingEntries = useMemo(
+    () => entries?.filter((e) => lastDay(e) >= today) ?? [],
+    [entries, today]
+  );
+
+  /** Lo que ya terminó, de lo más reciente a lo más viejo. */
+  const pastEntries = useMemo(
+    () =>
+      (entries ?? [])
+        .filter((e) => lastDay(e) < today)
+        .sort((a, b) => lastDay(b).localeCompare(lastDay(a))),
+    [entries, today]
+  );
+
   const agenda: AgendaItem[] | null = useMemo(() => {
     if (!celebrations || !entries) return null;
 
@@ -455,7 +482,7 @@ export function MuralBoard({ basePath }: MuralBoardProps) {
             : `${c.years ?? 1} ${(c.years ?? 1) === 1 ? "año" : "años"} en JTP`,
         image: c.image,
       })),
-      ...entries.map((e) => ({
+      ...upcomingEntries.map((e) => ({
         key: `entry-${e.id}`,
         kind: e.type as MuralItemKind,
         date: e.startDate,
@@ -467,7 +494,7 @@ export function MuralBoard({ basePath }: MuralBoardProps) {
     ];
 
     return items.sort((a, b) => a.date.localeCompare(b.date));
-  }, [celebrations, entries]);
+  }, [celebrations, entries, upcomingEntries]);
 
   /** Lo de hoy sale destacado arriba; el resto baja a la línea de tiempo. */
   const todayItems = useMemo(
@@ -613,6 +640,34 @@ export function MuralBoard({ basePath }: MuralBoardProps) {
               actions={actions}
             />
           </div>
+        )}
+
+        {/* Lo que ya terminó sigue estando: al capturar unas vacaciones y verlas
+            desaparecer el día que acaban, parecía que no se habían guardado. */}
+        {pastEntries.length > 0 && (
+          <details className="rounded-xl border bg-muted/20 px-4 py-3">
+            <summary className="cursor-pointer list-none text-sm font-semibold text-muted-foreground">
+              Ya pasaron ({pastEntries.length}) · últimos {PAST_DAYS} días
+            </summary>
+            <div className="mt-3 space-y-2 opacity-80">
+              {pastEntries.map((entry) => (
+                <KindRow
+                  key={`past-${entry.id}`}
+                  item={{
+                    key: `past-${entry.id}`,
+                    kind: entry.type as MuralItemKind,
+                    date: entry.startDate,
+                    title: entry.title,
+                    subtitle: entry.subjectName,
+                    image: entry.subjectImage ?? entry.imageUrl,
+                    entry,
+                  }}
+                  today={today}
+                  actions={actions}
+                />
+              ))}
+            </div>
+          </details>
         )}
       </section>
 
