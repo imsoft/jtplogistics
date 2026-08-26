@@ -4,6 +4,9 @@ import { useState, useRef } from "react";
 import Image from "next/image";
 import { Camera, Loader2 } from "lucide-react";
 
+/** Aviso de que la foto de perfil cambió, para quien la tenga pintada. */
+export const PROFILE_IMAGE_UPDATED = "jtp:profile-image-updated";
+
 interface AvatarUploadProps {
   currentImage: string | null;
   name: string;
@@ -41,6 +44,9 @@ export function AvatarUpload({
       const { url } = await res.json();
       setImage(url);
       onSuccess?.(url);
+      // El menú lateral (y quien más escuche) actualiza la foto sin recargar:
+      // la sesión guarda una copia vieja y tarda minutos en refrescarse.
+      window.dispatchEvent(new CustomEvent(PROFILE_IMAGE_UPDATED, { detail: url }));
     } catch {
       // silent — no interrumpir al usuario
     } finally {

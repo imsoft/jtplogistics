@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LogOut, LayoutDashboard, type LucideIcon } from "lucide-react";
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useState, useCallback } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/collapsible";
 import { ChevronRight } from "lucide-react";
 import { signOut, useSession } from "@/lib/auth-client";
+import { PROFILE_IMAGE_UPDATED } from "@/components/ui/avatar-upload";
 
 export interface NavItem {
   title: string;
@@ -69,6 +70,9 @@ export function DashboardSidebar({
   const { state } = useSidebar();
   const { data: session } = useSession();
   const [jtpWhatsapp, setJtpWhatsapp] = useState<string | null>(null);
+  // La sesión guarda una copia de los datos del usuario que tarda minutos en
+  // refrescarse: la foto y el nombre se leen del perfil, que es la fuente real.
+  const [profile, setProfile] = useState<{ name?: string; image?: string | null } | null>(null);
 
   useEffect(() => {
     if (!showWhatsAppContact) return;
@@ -78,8 +82,25 @@ export function DashboardSidebar({
       .catch(() => {});
   }, [showWhatsAppContact]);
 
-  const userName = session?.user?.name ?? "Usuario";
-  const userImage = session?.user?.image ?? null;
+  const loadProfile = useCallback(() => {
+    fetch("/api/profile")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { name?: string; image?: string | null } | null) => {
+        if (data) setProfile(data);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    loadProfile();
+    // Al cambiar la foto desde el perfil, se recarga sin esperar a la sesión.
+    const onImageUpdated = () => loadProfile();
+    window.addEventListener(PROFILE_IMAGE_UPDATED, onImageUpdated);
+    return () => window.removeEventListener(PROFILE_IMAGE_UPDATED, onImageUpdated);
+  }, [loadProfile]);
+
+  const userName = profile?.name ?? session?.user?.name ?? "Usuario";
+  const userImage = profile?.image ?? session?.user?.image ?? null;
   const userInitials = useMemo(
     () =>
       userName
