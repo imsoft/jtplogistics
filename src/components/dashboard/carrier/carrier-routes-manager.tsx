@@ -75,11 +75,32 @@ function TargetStatusLight({ status }: { status: TargetStatus | null }) {
   );
 }
 
+/** Una ruta está pactada cuando el transportista ya la tiene guardada en esta unidad. */
+type AgreementFilter = "agreed" | "pending" | "all";
+
+const AGREEMENT_OPTIONS = [
+  { value: "agreed", label: "Pactadas" },
+  { value: "pending", label: "Sin pactar" },
+  { value: "all", label: "Todas" },
+];
+
+interface CarrierRoutesManagerProps {
+  showSemaforo: boolean;
+  /**
+   * Con qué filtro arranca la pantalla. Al entrar por "Gestionar" interesan las
+   * rutas ya pactadas, no el catálogo completo.
+   */
+  defaultAgreement?: AgreementFilter;
+}
+
 /**
  * Gestor de rutas del transportista por tipo de unidad. Se usa en dos páginas
  * idénticas: una sin la columna del semáforo y otra con ella (showSemaforo).
  */
-export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }) {
+export function CarrierRoutesManager({
+  showSemaforo,
+  defaultAgreement = "all",
+}: CarrierRoutesManagerProps) {
   const { unitType } = useParams<{ unitType: string }>();
   const router = useRouter();
   const [allRoutes, setAllRoutes] = useState<CarrierRouteRow[]>([]);
@@ -91,6 +112,7 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
 
   const [filterOrigin, setFilterOrigin] = useState<string | null>(null);
   const [filterDestination, setFilterDestination] = useState<string | null>(null);
+  const [filterAgreement, setFilterAgreement] = useState<AgreementFilter>(defaultAgreement);
 
   // Selection state for THIS unit type page only
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -157,8 +179,14 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
     setStatusByRouteId(savedStatuses);
     setUnlockApprovedByRouteId(savedApproved);
     setUnlockRequestedByRouteId(savedRequested);
+
+    // Abrir en "Pactadas" sin tener ninguna dejaría la pantalla vacía y sin
+    // pistas: en ese caso se muestra el catálogo completo.
+    if (defaultAgreement === "agreed" && savedSelected.size === 0) {
+      setFilterAgreement("all");
+    }
     setIsLoaded(true);
-  }, [unitType]);
+  }, [unitType, defaultAgreement]);
 
   useEffect(() => {
     setIsLoaded(false);
@@ -174,25 +202,42 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
     [allRoutes, unitType]
   );
 
+  // Origen y destino se listan sobre lo que deja ver el filtro de pactadas: no
+  // tiene caso ofrecer un origen que no va a mostrar ninguna ruta.
+  const routesByAgreement = useMemo(() => {
+    if (filterAgreement === "all") return routes;
+    return routes.filter((r) =>
+      filterAgreement === "agreed" ? originalSelected.has(r.id) : !originalSelected.has(r.id)
+    );
+  }, [routes, filterAgreement, originalSelected]);
+
   const origins = useMemo(
-    () => [...new Set(routes.map((r) => r.origin))].sort(),
-    [routes]
+    () => [...new Set(routesByAgreement.map((r) => r.origin))].sort(),
+    [routesByAgreement]
   );
 
   const destinations = useMemo(() => {
     const base = filterOrigin
-      ? routes.filter((r) => r.origin === filterOrigin)
-      : routes;
+      ? routesByAgreement.filter((r) => r.origin === filterOrigin)
+      : routesByAgreement;
     return [...new Set(base.map((r) => r.destination))].sort();
-  }, [routes, filterOrigin]);
+  }, [routesByAgreement, filterOrigin]);
+
+  /** Las que ya tienen selección guardada en este tipo de unidad. */
+  const agreedCount = useMemo(
+    () => routes.filter((r) => originalSelected.has(r.id)).length,
+    [routes, originalSelected]
+  );
 
   const filteredRoutes = useMemo(() => {
     return routes.filter((r) => {
       if (filterOrigin && r.origin !== filterOrigin) return false;
       if (filterDestination && r.destination !== filterDestination) return false;
+      if (filterAgreement === "agreed" && !originalSelected.has(r.id)) return false;
+      if (filterAgreement === "pending" && originalSelected.has(r.id)) return false;
       return true;
     });
-  }, [routes, filterOrigin, filterDestination]);
+  }, [routes, filterOrigin, filterDestination, filterAgreement, originalSelected]);
 
   // Group by origin
   const groupedRoutes = useMemo(() => {
@@ -369,8 +414,26 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
         </p>
       ) : (
         <>
-          {/* Filtros de origen/destino */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Filtros de pactadas y de origen/destino */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="space-y-2">
+              <Label htmlFor="filter-agreement">Rutas</Label>
+              <AppSelect
+                value={filterAgreement}
+                onValueChange={(v) => {
+                  setFilterAgreement(v as AgreementFilter);
+                  setFilterOrigin(null);
+                  setFilterDestination(null);
+                }}
+                options={AGREEMENT_OPTIONS}
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground">
+                {agreedCount === 0
+                  ? "Todavía no tienes rutas pactadas en esta unidad."
+                  : `Tienes ${agreedCount} ruta${agreedCount === 1 ? "" : "s"} pactada${agreedCount === 1 ? "" : "s"} en esta unidad.`}
+              </p>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="filter-origin">Origen</Label>
               <AppSelect
@@ -402,6 +465,7 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
                 onClick={() => {
                   setFilterOrigin(null);
                   setFilterDestination(null);
+                  setFilterAgreement(defaultAgreement);
                 }}
               >
                 Limpiar filtros
@@ -412,7 +476,11 @@ export function CarrierRoutesManager({ showSemaforo }: { showSemaforo: boolean }
           {/* Tabla agrupada por origen */}
           {filteredRoutes.length === 0 ? (
             <p className="text-muted-foreground rounded-lg border border-dashed p-6 text-center text-sm">
-              No hay rutas con esos filtros.
+              {filterAgreement === "agreed"
+                ? "No tienes rutas pactadas con esos filtros. Cambia a “Sin pactar” para elegir nuevas."
+                : filterAgreement === "pending"
+                  ? "No quedan rutas sin pactar con esos filtros."
+                  : "No hay rutas con esos filtros."}
             </p>
           ) : (
             <div className="space-y-4">
