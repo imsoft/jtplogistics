@@ -8,7 +8,7 @@ import type { Prisma } from "@prisma/client";
 
 const INCLUDE = {
   author: { select: { name: true } },
-  subject: { select: { name: true } },
+  subject: { select: { name: true, image: true } },
 } satisfies Prisma.MuralEntryInclude;
 
 export function GET(request: Request) {

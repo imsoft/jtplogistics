@@ -8,7 +8,7 @@ import type { MuralEntry, MuralPost } from "@/types/mural.types";
 
 type EntryWithRelations = MuralEntryModel & {
   author: { name: string };
-  subject: { name: string } | null;
+  subject: { name: string; image?: string | null } | null;
 };
 
 export function serializeEntry(entry: EntryWithRelations): MuralEntry {
@@ -24,6 +24,7 @@ export function serializeEntry(entry: EntryWithRelations): MuralEntry {
     imagePublicId: entry.imagePublicId,
     subjectUserId: entry.subjectUserId,
     subjectName: entry.subject?.name ?? null,
+    subjectImage: entry.subject?.image ?? null,
     authorId: entry.authorId,
     authorName: entry.author.name,
     createdAt: entry.createdAt.toISOString(),

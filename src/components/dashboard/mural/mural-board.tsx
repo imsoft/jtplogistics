@@ -212,19 +212,29 @@ function KindRow({
   const relative = relativeDayLabel(item.date.slice(0, 10), today);
   const isVacation = item.kind === "vacation";
 
+  // En vacaciones manda quién se va: el título de la entrada suele ser genérico
+  // ("VACACIONES / SEPTIEMBRE") y el nombre vive en la persona asignada.
+  const person = isVacation ? item.subtitle : null;
+  const headline = person ?? item.title;
+  const secondary = person ? item.title : null;
+
   return (
     <div className="flex items-center gap-3 rounded-xl bg-background/70 px-3 py-2.5 transition duration-200 hover:-translate-y-1 hover:bg-background hover:shadow-md">
       <ItemAvatar item={item} size="sm" />
 
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <p className="truncate text-sm font-semibold">{item.title}</p>
+          <p className="truncate text-sm font-semibold">{headline}</p>
           {relative && (
             <Badge variant="secondary" className="text-[10px]">
               {relative}
             </Badge>
           )}
         </div>
+
+        {secondary && (
+          <p className="truncate text-xs font-medium text-muted-foreground">{secondary}</p>
+        )}
 
         {/* En vacaciones lo que importa es desde cuándo falta y desde cuándo
             se le puede volver a buscar, así que van con su propia etiqueta. */}
@@ -451,7 +461,7 @@ export function MuralBoard({ basePath }: MuralBoardProps) {
         date: e.startDate,
         title: e.title,
         subtitle: e.subjectName,
-        image: e.imageUrl,
+        image: e.subjectImage ?? e.imageUrl,
         entry: e,
       })),
     ];

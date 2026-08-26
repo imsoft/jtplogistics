@@ -16,7 +16,7 @@ import type { Prisma } from "@prisma/client";
 
 const INCLUDE = {
   author: { select: { name: true } },
-  subject: { select: { name: true } },
+  subject: { select: { name: true, image: true } },
 } satisfies Prisma.MuralEntryInclude;
 
 const FIELD_LABELS: Record<string, string> = {

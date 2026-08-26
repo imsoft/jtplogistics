@@ -15,6 +15,8 @@ export interface MuralEntry {
   imagePublicId: string | null;
   subjectUserId: string | null;
   subjectName: string | null;
+  /** Foto de la persona, para las filas de vacaciones. */
+  subjectImage?: string | null;
   authorId: string;
   authorName: string;
   createdAt: string;
