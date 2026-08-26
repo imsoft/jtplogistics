@@ -32,6 +32,9 @@ const PERMISSION_FIELDS = [
     `canDelete${module.suffix}`,
   ]),
   "canEditAcceptedQuotes",
+  // Permisos sueltos de solo lectura, sin el juego completo de CRUD.
+  "canViewMaintenance",
+  "canViewEmailDemos",
 ];
 
 const PERMISSION_LABELS: Record<string, string> = Object.fromEntries([
@@ -42,6 +45,8 @@ const PERMISSION_LABELS: Record<string, string> = Object.fromEntries([
     [`canDelete${module.suffix}`, `${module.label}: eliminar`],
   ]),
   ["canEditAcceptedQuotes", "Cotizaciones aceptadas: editar y eliminar"],
+  ["canViewMaintenance", "Mantenimientos: leer"],
+  ["canViewEmailDemos", "Correos de prueba: usar"],
 ]);
 
 export function GET(

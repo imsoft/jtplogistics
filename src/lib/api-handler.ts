@@ -1,4 +1,5 @@
 import { requireAdmin, requireCarrier, requireCollaboratorOrAdmin } from "@/lib/auth-server";
+import { prisma } from "@/lib/db";
 
 export type AdminSession = Awaited<ReturnType<typeof requireAdmin>>;
 
@@ -46,6 +47,35 @@ export function carrierHandler(
   return (async () => {
     try {
       const session = await requireCarrier();
+      return await fn(session);
+    } catch (e) {
+      if (e instanceof Response) return e;
+      console.error(e);
+      return Response.json({ error: "Error interno del servidor" }, { status: 500 });
+    }
+  })();
+}
+
+/**
+ * Rutas API que comparten el admin y los colaboradores con cierto permiso de
+ * lectura. El admin pasa siempre; al colaborador se le revisa la columna.
+ */
+export function permissionHandler(
+  field: "canViewEmailDemos",
+  fn: (session: Awaited<ReturnType<typeof requireCollaboratorOrAdmin>>) => Promise<Response>
+): Promise<Response> {
+  return (async () => {
+    try {
+      const session = await requireCollaboratorOrAdmin();
+      if (session.user.role === "collaborator") {
+        const me = await prisma.user.findUnique({
+          where: { id: session.user.id },
+          select: { [field]: true },
+        });
+        if (!me || !(me as Record<string, unknown>)[field]) {
+          return Response.json({ error: "Sin permiso" }, { status: 403 });
+        }
+      }
       return await fn(session);
     } catch (e) {
       if (e instanceof Response) return e;

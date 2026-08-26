@@ -16,6 +16,7 @@ import {
   Laptop,
   Smartphone,
   Mail,
+  MailCheck,
   ClipboardList,
   Network,
   Ship,
@@ -40,6 +41,7 @@ interface Permissions {
   canViewVendors: boolean;
   canViewLaptops: boolean;
   canViewMaintenance: boolean;
+  canViewEmailDemos: boolean;
   canViewPhones: boolean;
   canViewEmails: boolean;
   canViewTasks: boolean;
@@ -107,6 +109,7 @@ const allNavGroups: PermNavGroup[] = [
     label: "Otros",
     items: [
       { title: "Ideas", href: `${BASE}/ideas`, icon: Lightbulb, permission: "canViewIdeas" },
+      { title: "Correos de prueba", href: `${BASE}/email-demos`, icon: MailCheck, permission: "canViewEmailDemos" },
       { title: "Tareas", href: `${BASE}/tasks`, icon: ClipboardList, permission: "canViewTasks" },
       { title: "Historial de cambios", href: `${BASE}/route-logs`, icon: ScrollText, permission: "canViewRouteLogs" },
     ],

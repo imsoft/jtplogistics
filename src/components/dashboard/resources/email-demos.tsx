@@ -42,13 +42,13 @@ export function EmailDemos() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/admin/email-demos")
+    fetch("/api/email-demos")
       .then((r) => (r.ok ? r.json() : []))
       .then(setItems)
       .catch(() => setItems([]));
 
-    // El destinatario arranca en el correo del propio admin: es lo que va a
-    // querer el 90% de las veces.
+    // El destinatario arranca en el correo de quien abre la pantalla: es lo
+    // que va a querer el 90% de las veces.
     fetch("/api/profile")
       .then((r) => (r.ok ? r.json() : null))
       .then((me: { email?: string } | null) => {
@@ -60,7 +60,7 @@ export function EmailDemos() {
   const showPreview = useCallback(async (id: string) => {
     setIsLoadingDetail(true);
     try {
-      const res = await fetch(`/api/admin/email-demos?id=${id}`);
+      const res = await fetch(`/api/email-demos?id=${id}`);
       setDetail(res.ok ? await res.json() : null);
     } catch {
       setDetail(null);
@@ -92,7 +92,7 @@ export function EmailDemos() {
     }
     setIsSending(true);
     try {
-      const res = await fetch("/api/admin/email-demos", {
+      const res = await fetch("/api/email-demos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ to, ids: [...selected] }),

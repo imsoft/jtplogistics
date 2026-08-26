@@ -48,6 +48,7 @@ const PERMISSION_FIELDS = [
   { key: "canEditAcceptedQuotes", label: "Cotizaciones aceptadas: editar y eliminar" },
   // Solo lectura: quien lleva ISO 9001 consulta la bitácora, no la edita.
   { key: "canViewMaintenance", label: "Mantenimientos: leer" },
+  { key: "canViewEmailDemos", label: "Correos de prueba: usar" },
 ];
 
 const PERM_ICONS: Record<string, React.ElementType> = {

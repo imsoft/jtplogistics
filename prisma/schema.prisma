@@ -44,6 +44,9 @@ model User {
   /// Lectura de la bitácora de mantenimientos: la evidencia que revisa calidad
   /// para ISO 9001. Programarlos y cerrarlos sigue siendo cosa de soporte TI.
   canViewMaintenance Boolean    @default(false) @map("can_view_maintenance")
+  /// Acceso a la pantalla de correos de prueba, para revisar cómo llegan las
+  /// plantillas antes de publicar algo.
+  canViewEmailDemos Boolean     @default(false) @map("can_view_email_demos")
   canViewMessages   Boolean       @default(false) @map("can_view_messages")
   canViewIdeas      Boolean       @default(false) @map("can_view_ideas")
   canViewRoutes     Boolean       @default(false) @map("can_view_routes")

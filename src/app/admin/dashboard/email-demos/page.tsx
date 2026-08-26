@@ -1,5 +1,5 @@
 import { Separator } from "@/components/ui/separator";
-import { EmailDemos } from "@/components/dashboard/admin/email-demos";
+import { EmailDemos } from "@/components/dashboard/resources/email-demos";
 import { requireAdminPage } from "@/lib/auth-server";
 
 export const metadata = {

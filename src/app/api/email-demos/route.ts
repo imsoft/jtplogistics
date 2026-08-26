@@ -1,4 +1,4 @@
-import { adminHandler } from "@/lib/api-handler";
+import { permissionHandler } from "@/lib/api-handler";
 import { sendEmail } from "@/lib/email";
 import { logAudit } from "@/lib/audit-log";
 import { EMAIL_PREVIEWS, findEmailPreview } from "@/lib/email-previews";
@@ -9,12 +9,12 @@ const MAX_PER_REQUEST = 12;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 /**
- * GET /api/admin/email-demos
+ * GET /api/email-demos
  * Catálogo de correos con su vista previa, para pintarlos en la pantalla.
  * `?id=` devuelve además el HTML de esa plantilla.
  */
 export function GET(request: Request) {
-  return adminHandler(async () => {
+  return permissionHandler("canViewEmailDemos", async () => {
     const id = new URL(request.url).searchParams.get("id");
 
     if (id) {
@@ -42,14 +42,15 @@ export function GET(request: Request) {
 }
 
 /**
- * POST /api/admin/email-demos
+ * POST /api/email-demos
  * body: { to: string, ids: string[] }
  *
- * Manda los correos de ejemplo a la dirección indicada. Solo admin: es el
- * único rol que necesita revisar cómo se ven los correos de toda la plataforma.
+ * Manda los correos de ejemplo a la dirección indicada. Entra el admin y el
+ * colaborador con permiso de "Correos de prueba" (recursos humanos), que revisa
+ * cómo se ven antes de publicar.
  */
 export function POST(request: Request) {
-  return adminHandler(async (session) => {
+  return permissionHandler("canViewEmailDemos", async (session) => {
     const body = (await request.json()) as { to?: unknown; ids?: unknown };
 
     const to = typeof body.to === "string" ? body.to.trim() : "";
