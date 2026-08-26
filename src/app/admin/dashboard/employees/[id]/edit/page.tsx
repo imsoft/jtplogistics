@@ -46,6 +46,8 @@ const PERMISSION_FIELDS = [
   ]),
   // Desbloqueo especial: permite editar/eliminar cotizaciones ya aceptadas.
   { key: "canEditAcceptedQuotes", label: "Cotizaciones aceptadas: editar y eliminar" },
+  // Solo lectura: quien lleva ISO 9001 consulta la bitácora, no la edita.
+  { key: "canViewMaintenance", label: "Mantenimientos: leer" },
 ];
 
 const PERM_ICONS: Record<string, React.ElementType> = {

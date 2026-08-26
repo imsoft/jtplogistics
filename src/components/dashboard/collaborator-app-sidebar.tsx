@@ -22,6 +22,8 @@ import {
   DollarSign,
   Anchor,
   LayoutPanelTop,
+  LifeBuoy,
+  Wrench,
 } from "lucide-react";
 import { DashboardSidebar, type NavItem, type NavGroup } from "@/components/dashboard/dashboard-sidebar";
 
@@ -37,6 +39,7 @@ interface Permissions {
   canViewEmployees: boolean;
   canViewVendors: boolean;
   canViewLaptops: boolean;
+  canViewMaintenance: boolean;
   canViewPhones: boolean;
   canViewEmails: boolean;
   canViewTasks: boolean;
@@ -111,6 +114,8 @@ const allNavGroups: PermNavGroup[] = [
   {
     label: "Mi cuenta",
     items: [
+      { title: "Mantenimientos", href: `${BASE}/maintenance`, icon: Wrench, permission: "canViewMaintenance" },
+      { title: "Soporte de TI", href: `${BASE}/support`, icon: LifeBuoy },
       { title: "Perfil", href: `${BASE}/profile`, icon: UserIcon },
     ],
   },

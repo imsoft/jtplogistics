@@ -1,6 +1,6 @@
 "use client";
 
-import { User as UserIcon, Calculator, Users, FileText } from "lucide-react";
+import { User as UserIcon, Calculator, Users, FileText, LifeBuoy } from "lucide-react";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 
 const vendorNavItems = [
@@ -13,6 +13,11 @@ const vendorNavItems = [
     title: "Mis cotizaciones",
     href: "/vendor/dashboard/generated-quotes",
     icon: FileText,
+  },
+  {
+    title: "Soporte de TI",
+    href: "/vendor/dashboard/support",
+    icon: LifeBuoy,
   },
   {
     title: "Perfil",

@@ -44,6 +44,7 @@ interface CollaboratorPermissions {
   canUpdateVendors: boolean;
   canDeleteVendors: boolean;
   canViewLaptops: boolean;
+  canViewMaintenance: boolean;
   canCreateLaptops: boolean;
   canUpdateLaptops: boolean;
   canDeleteLaptops: boolean;

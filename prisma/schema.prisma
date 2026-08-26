@@ -41,6 +41,9 @@ model User {
   canEditRoutes  Boolean        @default(false) @map("can_edit_routes")
   canAddRoutes   Boolean        @default(true) @map("can_add_routes")
   canEditAcceptedQuotes Boolean  @default(false) @map("can_edit_accepted_quotes")
+  /// Lectura de la bitácora de mantenimientos: la evidencia que revisa calidad
+  /// para ISO 9001. Programarlos y cerrarlos sigue siendo cosa de soporte TI.
+  canViewMaintenance Boolean    @default(false) @map("can_view_maintenance")
   canViewMessages   Boolean       @default(false) @map("can_view_messages")
   canViewIdeas      Boolean       @default(false) @map("can_view_ideas")
   canViewRoutes     Boolean       @default(false) @map("can_view_routes")
@@ -131,6 +134,8 @@ model User {
   assignedLaptops  Laptop[]
   assignedPhones   Phone[]
   assignedEmails   EmailAccountUser[]
+  maintenances     Maintenance[]   @relation("MaintenanceTechnician")
+  supportTickets   SupportTicket[] @relation("TicketReporter")
   ideas            Idea[]
   createdRoutes    Route[]        @relation("RouteCreatedBy")
   assignedTasks    Task[]         @relation("TaskAssignee")
@@ -458,6 +463,8 @@ model Laptop {
   assignedTo     User?         @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
   emailAccountId String?       @map("email_account_id")
   emailAccount   EmailAccount? @relation("LaptopEmailAccount", fields: [emailAccountId], references: [id], onDelete: SetNull)
+  maintenances   Maintenance[]
+  supportTickets SupportTicket[]
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
 
@@ -483,6 +490,8 @@ model Phone {
   assignedTo     User?         @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
   emailAccountId String?       @map("email_account_id")
   emailAccount   EmailAccount? @relation("PhoneEmailAccount", fields: [emailAccountId], references: [id], onDelete: SetNull)
+  maintenances   Maintenance[]
+  supportTickets SupportTicket[]
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
 
@@ -798,4 +807,83 @@ model RateLimit {
   lastRequest BigInt @map("last_request")
 
   @@map("rate_limits")
+}
+
+// ---- Soporte de TI: mantenimientos y reportes de equipo ----
+// Evidencia para ISO 9001: de cada mantenimiento queda quién lo hizo, cuándo se
+// programó, cuándo se hizo de verdad, qué se encontró y fotos.
+
+enum MaintenanceKind {
+  preventive
+  corrective
+}
+
+enum MaintenanceStatus {
+  scheduled
+  done
+  cancelled
+}
+
+/// Equipo sobre el que se trabaja. Hoy solo hay laptops y celulares dados de alta.
+enum EquipmentKind {
+  laptop
+  phone
+}
+
+model Maintenance {
+  id            String            @id @default(cuid()) @map("id")
+  kind          MaintenanceKind   @map("kind")
+  status        MaintenanceStatus @default(scheduled) @map("status")
+  equipmentKind EquipmentKind     @map("equipment_kind")
+  laptopId      String?           @map("laptop_id")
+  laptop        Laptop?           @relation(fields: [laptopId], references: [id], onDelete: Cascade)
+  phoneId       String?           @map("phone_id")
+  phone         Phone?            @relation(fields: [phoneId], references: [id], onDelete: Cascade)
+  /// Qué se va a hacer (al programar) o qué se hizo (al cerrar).
+  description   String            @map("description")
+  /// Lo que se encontró al revisar el equipo.
+  findings      String?           @map("findings")
+  scheduledFor  DateTime          @map("scheduled_for")
+  performedAt   DateTime?         @map("performed_at")
+  /// Fotos de evidencia: [{ url, publicId }].
+  photos        Json?             @map("photos")
+  technicianId  String            @map("technician_id")
+  technician    User              @relation("MaintenanceTechnician", fields: [technicianId], references: [id], onDelete: Cascade)
+  /// Reporte que originó el mantenimiento, si nació de uno.
+  ticketId      String?           @map("ticket_id")
+  ticket        SupportTicket?    @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+
+  @@index([scheduledFor])
+  @@map("maintenances")
+}
+
+enum TicketStatus {
+  open
+  in_progress
+  resolved
+}
+
+model SupportTicket {
+  id            String        @id @default(cuid()) @map("id")
+  title         String        @map("title")
+  description   String        @map("description")
+  status        TicketStatus  @default(open) @map("status")
+  equipmentKind EquipmentKind? @map("equipment_kind")
+  laptopId      String?       @map("laptop_id")
+  laptop        Laptop?       @relation(fields: [laptopId], references: [id], onDelete: SetNull)
+  phoneId       String?       @map("phone_id")
+  phone         Phone?        @relation(fields: [phoneId], references: [id], onDelete: SetNull)
+  reporterId    String        @map("reporter_id")
+  reporter      User          @relation("TicketReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  /// Cómo se resolvió; queda como evidencia junto al mantenimiento.
+  resolution    String?       @map("resolution")
+  resolvedAt    DateTime?     @map("resolved_at")
+  maintenances  Maintenance[]
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@map("support_tickets")
 }

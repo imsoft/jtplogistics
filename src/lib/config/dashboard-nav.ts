@@ -18,7 +18,7 @@ import { ScrollText } from "lucide-react";
 import { Ship } from "lucide-react";
 import { Anchor } from "lucide-react";
 import { DollarSign } from "lucide-react";
-import { AlertTriangle, Inbox, TrendingUp, Network, StarIcon, LayoutPanelTop, MailCheck } from "lucide-react";
+import { AlertTriangle, Inbox, TrendingUp, Network, StarIcon, LayoutPanelTop, MailCheck, LifeBuoy } from "lucide-react";
 
 export interface DashboardNavItem {
   title: string;
@@ -88,6 +88,7 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
       { title: "Tareas", href: "/admin/dashboard/tasks", icon: ClipboardList },
       { title: "Cuenta demo", href: "/admin/dashboard/demo-account", icon: Copy },
       { title: "Correos de prueba", href: "/admin/dashboard/email-demos", icon: MailCheck },
+      { title: "Soporte de TI", href: "/admin/dashboard/support", icon: LifeBuoy },
       { title: "Configuración", href: "/admin/dashboard/settings", icon: Settings },
       { title: "Historial de cambios", href: "/admin/dashboard/routes/logs", icon: ScrollText },
     ],

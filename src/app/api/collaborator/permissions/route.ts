@@ -18,6 +18,7 @@ export async function GET() {
         canViewEmployees: true,
         canViewVendors: true,
         canViewLaptops: true,
+        canViewMaintenance: true,
         canViewPhones: true,
         canViewEmails: true,
         canViewTasks: true,
