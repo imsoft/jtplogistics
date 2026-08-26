@@ -679,8 +679,11 @@ export function CarrierRoutesManager({
             </div>
           </div>
 
-          {/* Atajo al pie: con la lista larga, guardar quedaba muy abajo. */}
-          {hasPendingChanges && !footerVisible && (
+          {/* Atajo al pie: con la lista larga, guardar quedaba muy abajo. Se
+              muestra siempre que el botón de guardar no esté a la vista; no
+              solo al cambiar algo, porque al entrar por "Gestionar" las rutas
+              pactadas ya vienen marcadas y no habría ningún cambio todavía. */}
+          {!footerVisible && (
             <div className="pointer-events-none fixed inset-x-0 bottom-4 z-40 flex justify-center px-4">
               <Button
                 type="button"
@@ -691,7 +694,9 @@ export function CarrierRoutesManager({
               >
                 <ArrowDown className="size-4" />
                 Ir a guardar
-                {selectionChanged && newSelections.size > 0 && ` (${newSelections.size} nueva${newSelections.size === 1 ? "" : "s"})`}
+                {hasPendingChanges && newSelections.size > 0
+                  ? ` (${newSelections.size} nueva${newSelections.size === 1 ? "" : "s"})`
+                  : ""}
               </Button>
             </div>
           )}
