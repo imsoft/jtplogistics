@@ -126,7 +126,7 @@ export function brandedEmail(options: BrandedEmailOptions): string {
               <div style="text-align:left;">${body}</div>
               ${
                 highlight
-                  ? `<div style="margin:18px 0 0;padding:14px 16px;background:${BRAND.surface};border-left:3px solid ${BRAND.blue};border-radius:${RADIUS};text-align:left;color:${BRAND.text};font-size:14px;line-height:1.6;">${highlight}</div>`
+                  ? `<div style="margin:18px 0 0;padding:14px 16px;background:${BRAND.surface};border-radius:${RADIUS};text-align:left;color:${BRAND.text};font-size:14px;line-height:1.6;">${highlight}</div>`
                   : ""
               }
               ${

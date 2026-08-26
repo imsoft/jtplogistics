@@ -76,13 +76,11 @@ export function buildSignature(person: SignaturePerson, options: SignatureOption
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
         <tr>
           <!-- Logo -->
-          <td style="padding:0 20px 0 0;vertical-align:middle;">
+          <td style="padding:0 24px 0 0;vertical-align:middle;">
             <img src="${options.logoUrl}" width="118" alt="JTP Logistics" style="display:block;width:118px;height:auto;border:0;" />
           </td>
-          <!-- Filete azul: el mismo recurso que separa las secciones en la app -->
-          <td style="width:3px;background:${BRAND.blue};font-size:0;line-height:0;">&nbsp;</td>
           <!-- Datos -->
-          <td style="padding:2px 0 2px 20px;vertical-align:middle;">
+          <td style="padding:2px 0 2px 4px;vertical-align:middle;">
             <p style="margin:0 0 1px;font-size:17px;font-weight:700;color:${BRAND.blue};letter-spacing:.01em;">${escapeHtml(name)}</p>
             ${
               role
