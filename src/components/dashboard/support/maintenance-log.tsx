@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { DataTableSkeleton } from "@/components/ui/skeletons";
 import { MAINTENANCE_KIND_LABELS, MAINTENANCE_STATUS_LABELS } from "@/lib/support";
 import { fuzzyMatch } from "@/lib/search";
+import { MaintenanceReportButton } from "./maintenance-report-button";
 
 interface LogItem {
   id: string;
@@ -38,7 +39,7 @@ function formatDate(iso: string): string {
 }
 
 /** Bitácora de mantenimientos, solo para consultar. */
-export function MaintenanceLog() {
+export function MaintenanceLog({ currentUserName }: { currentUserName: string }) {
   const [items, setItems] = useState<LogItem[] | null>(null);
   const [search, setSearch] = useState("");
   const [kind, setKind] = useState("all");
@@ -67,6 +68,10 @@ export function MaintenanceLog() {
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <MaintenanceReportButton items={items} generatedBy={currentUserName} />
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-[1fr_220px]">
         <div className="space-y-2">
           <Label htmlFor="log-search">Buscar</Label>

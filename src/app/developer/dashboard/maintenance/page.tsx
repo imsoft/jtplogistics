@@ -4,7 +4,7 @@ import { requireDeveloperPage } from "@/lib/auth-server";
 export const metadata = { title: "Mantenimientos | JTP Logistics" };
 
 export default async function MaintenancePage() {
-  await requireDeveloperPage();
+  const session = await requireDeveloperPage();
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
       <div className="min-w-0">
@@ -13,7 +13,7 @@ export default async function MaintenancePage() {
           Preventivos y correctivos del equipo de cómputo, con su evidencia.
         </p>
       </div>
-      <MaintenanceBoard />
+      <MaintenanceBoard currentUserName={session.user.name} />
     </div>
   );
 }

@@ -22,6 +22,7 @@ import {
   MAINTENANCE_KIND_LABELS,
   MAINTENANCE_STATUS_LABELS,
 } from "@/lib/support";
+import { MaintenanceReportButton } from "./maintenance-report-button";
 
 interface EquipmentItem {
   id: string;
@@ -61,7 +62,7 @@ function todayIso(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-export function MaintenanceBoard() {
+export function MaintenanceBoard({ currentUserName }: { currentUserName: string }) {
   const [items, setItems] = useState<MaintenanceItem[] | null>(null);
   const [equipment, setEquipment] = useState<{ laptops: EquipmentItem[]; phones: EquipmentItem[] } | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -134,16 +135,18 @@ export function MaintenanceBoard() {
           Cada mantenimiento deja constancia de quién lo hizo, cuándo se programó,
           cuándo se hizo y con qué evidencia: es lo que revisa la auditoría de ISO 9001.
         </p>
-        <Button
-          onClick={() => {
-            setError(null);
-            setShowForm(true);
-          }}
-          className="shrink-0"
-        >
-          <Plus className="size-4" />
-          Programar
-        </Button>
+        <div className="flex shrink-0 gap-3">
+          <MaintenanceReportButton items={items ?? []} generatedBy={currentUserName} />
+          <Button
+            onClick={() => {
+              setError(null);
+              setShowForm(true);
+            }}
+          >
+            <Plus className="size-4" />
+            Programar
+          </Button>
+        </div>
       </div>
 
       <Dialog open={showForm} onOpenChange={setShowForm}>

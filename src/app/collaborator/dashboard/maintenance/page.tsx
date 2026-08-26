@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MaintenanceLog } from "@/components/dashboard/support/maintenance-log";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
@@ -10,6 +10,15 @@ export default function CollaboratorMaintenancePage() {
   const router = useRouter();
   const { permissions, isLoaded } = useCollaboratorPermissions();
   const hasRedirected = useRef(false);
+  // El pie del reporte deja constancia de quién lo descargó.
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    fetch("/api/profile")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { name?: string } | null) => setUserName(d?.name ?? ""))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (isLoaded && !permissions?.canViewMaintenance && !hasRedirected.current) {
@@ -29,7 +38,7 @@ export default function CollaboratorMaintenancePage() {
           Bitácora de preventivos y correctivos del equipo de cómputo, con su evidencia.
         </p>
       </div>
-      <MaintenanceLog />
+      <MaintenanceLog currentUserName={userName} />
     </div>
   );
 }
