@@ -4,9 +4,15 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { CalendarClock, Loader2, Plus, ShieldCheck, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AppSelect } from "@/components/ui/app-select";
@@ -128,72 +134,84 @@ export function MaintenanceBoard() {
           Cada mantenimiento deja constancia de quién lo hizo, cuándo se programó,
           cuándo se hizo y con qué evidencia: es lo que revisa la auditoría de ISO 9001.
         </p>
-        <Button onClick={() => setShowForm((v) => !v)} className="shrink-0">
+        <Button
+          onClick={() => {
+            setError(null);
+            setShowForm(true);
+          }}
+          className="shrink-0"
+        >
           <Plus className="size-4" />
           Programar
         </Button>
       </div>
 
-      {showForm && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Nuevo mantenimiento
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div className="space-y-2">
-                  <Label htmlFor="m-kind">Tipo</Label>
-                  <AppSelect
-                    value={kind}
-                    onValueChange={(v) => setKind(v as typeof kind)}
-                    options={[
-                      { value: "preventive", label: "Preventivo" },
-                      { value: "corrective", label: "Correctivo" },
-                    ]}
-                    className="w-full"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {kind === "preventive"
-                      ? "Revisión programada para evitar fallas."
-                      : "Atención de algo que ya falló."}
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="m-equipment">Equipo</Label>
-                  <AppSelect
-                    value={equipmentValue}
-                    onValueChange={setEquipmentValue}
-                    options={equipmentOptions}
-                    className="w-full"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="m-date">Fecha</Label>
-                  <DatePicker id="m-date" value={scheduledFor} onChange={setScheduledFor} />
-                </div>
-              </div>
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Programar mantenimiento</DialogTitle>
+            <DialogDescription>
+              Queda agendado y, al hacerlo, se cierra con la evidencia.
+            </DialogDescription>
+          </DialogHeader>
 
+          <form onSubmit={handleCreate} className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="m-desc">Qué se va a hacer</Label>
-                <Textarea id="m-desc" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
+                <Label htmlFor="m-kind">Tipo</Label>
+                <AppSelect
+                  value={kind}
+                  onValueChange={(v) => setKind(v as typeof kind)}
+                  options={[
+                    { value: "preventive", label: "Preventivo" },
+                    { value: "corrective", label: "Correctivo" },
+                  ]}
+                  className="w-full"
+                />
+                <p className="text-xs text-muted-foreground">
+                  {kind === "preventive"
+                    ? "Revisión programada para evitar fallas."
+                    : "Atención de algo que ya falló."}
+                </p>
               </div>
-
-              {error && <p className="text-sm font-medium text-destructive">{error}</p>}
-
-              <div className="flex justify-end gap-3">
-                <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
-                <Button type="submit" disabled={isSaving}>
-                  {isSaving ? <Loader2 className="size-4 animate-spin" /> : null}
-                  {isSaving ? "Guardando…" : "Programar"}
-                </Button>
+              <div className="space-y-2">
+                <Label htmlFor="m-date">Fecha</Label>
+                <DatePicker id="m-date" value={scheduledFor} onChange={setScheduledFor} />
               </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="m-equipment">Equipo</Label>
+              <AppSelect
+                value={equipmentValue}
+                onValueChange={setEquipmentValue}
+                options={equipmentOptions}
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground">
+                Laptops y celulares dados de alta, con su responsable.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="m-desc">Qué se va a hacer</Label>
+              <Textarea id="m-desc" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
+            </div>
+
+            {error && <p className="text-sm font-medium text-destructive">{error}</p>}
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? <Loader2 className="size-4 animate-spin" /> : null}
+                {isSaving ? "Guardando…" : "Programar"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {!items ? (
         <DataTableSkeleton />
