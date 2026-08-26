@@ -167,7 +167,8 @@ export function ResetPasswordButton({
                     autoComplete="off"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Déjalo vacío y se genera una temporal. Mínimo 8 caracteres.
+                    Déjalo vacío y se genera una temporal. Mínimo 8 caracteres; se
+                    guarda en mayúsculas, igual que el correo de aviso.
                   </p>
                 </div>
 

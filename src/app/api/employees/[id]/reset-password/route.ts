@@ -49,7 +49,9 @@ export function POST(request: Request, { params }: { params: Promise<{ id: strin
 
     let password: string;
     if (typeof body.password === "string" && body.password.trim()) {
-      password = body.password.trim();
+      // En mayúsculas porque el correo de aviso también lo va: si se guardara
+      // en minúsculas, la que le llega al colaborador no le serviría.
+      password = body.password.trim().toLocaleUpperCase("es-MX");
       if (password.length < MIN_LENGTH) {
         return Response.json(
           { error: `La contraseña debe tener al menos ${MIN_LENGTH} caracteres.` },
@@ -113,9 +115,6 @@ export function POST(request: Request, { params }: { params: Promise<{ id: strin
           subject: built.subject,
           html: built.html || undefined,
           text: built.text,
-          // Único correo que NO se sube a mayúsculas: lleva la contraseña
-          // temporal dentro y subirla la volvería incorrecta.
-          preserveCase: true,
         });
         emailed = true;
       } catch (e) {

@@ -89,13 +89,13 @@ function upper(value: string | null | undefined): string {
   return (value ?? "").toUpperCase();
 }
 
-/** "$10,500+IVA-RET", como en el machote. */
+/** "$10,500". El IVA ya se aclara en los términos, no en cada renglón. */
 function formatCost(cost: number): string {
   const amount = cost.toLocaleString("es-MX", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   });
-  return `$${amount}+IVA-RET`;
+  return `$${amount}`;
 }
 
 interface Props {
