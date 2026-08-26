@@ -175,11 +175,9 @@ export function CarrierQuotesTable({
 
   useEffect(() => { loadRoutes(); }, [loadRoutes]);
 
-  // ── Derived: unit types present in routes ──
-  const availableUnitTypes = useMemo(() => {
-    const vals = Array.from(new Set(routes.map((r) => r.unitType)));
-    return vals.map((v) => ({ value: v, label: unitTypes.find((u) => u.value === v)?.label ?? v }));
-  }, [routes, unitTypes]);
+  // El catálogo completo de unidades, no solo las que usan las rutas dadas de
+  // alta: se cotiza cualquier trayecto, con cualquier unidad.
+  const availableUnitTypes = unitTypes;
 
   // ── Derived: filtered routes by unit type ──
   const filteredByUnit = useMemo(
@@ -307,12 +305,17 @@ export function CarrierQuotesTable({
     ? `${quoteOrigin}||${quoteDestination}||${selectedUnitLabel ?? ""}`
     : null;
 
+  // Sin ruta registrada nadie pone el tipo de unidad por nosotros, y la columna
+  // UNIDAD del PDF no puede salir vacía delante del cliente.
+  const missingUnitType = !selectedRoute && !selectedUnitType;
+
   // Sin ruta registrada no hay targets de referencia, así que el precio debe
   // capturarse a mano antes de poder agregar el trayecto.
   const canAddToQuote =
     hasCityPair &&
     selectedRouteKey != null &&
     !usedRouteKeys.has(selectedRouteKey) &&
+    !missingUnitType &&
     (finalPrice != null || suggestedPrice != null);
 
   function addCurrentRouteToQuote() {
@@ -578,10 +581,12 @@ export function CarrierQuotesTable({
               <DataTable<CarrierQuote, unknown> columns={columns} data={filteredCarriers} getRowId={(row) => row.id} filterColumn="" />
             )
           ) : (
-            <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-              Este trayecto no corresponde a una ruta registrada, así que no hay
-              targets de transportistas como referencia. Captura el precio para
-              agregarlo a la cotización.
+            <p className="rounded-lg border border-dashed px-3 py-2 text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">Trayecto libre.</span>{" "}
+              Todavía no está dado de alta en rutas, así que no hay targets de
+              transportistas como referencia: elige el tipo de unidad, captura el
+              costo y agrégalo. Si se cierra el trato, la ruta se da de alta
+              después.
             </p>
           )}
 
@@ -664,6 +669,10 @@ export function CarrierQuotesTable({
                 {selectedRouteKey && usedRouteKeys.has(selectedRouteKey) ? (
                   <span className="text-xs text-muted-foreground">
                     Este trayecto ya está en la cotización.
+                  </span>
+                ) : missingUnitType ? (
+                  <span className="text-xs text-muted-foreground">
+                    Elige el tipo de unidad para agregarlo.
                   </span>
                 ) : !canAddToQuote ? (
                   <span className="text-xs text-muted-foreground">
