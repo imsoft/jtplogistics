@@ -4,6 +4,7 @@
  */
 
 import { Resend } from "resend";
+import { uppercaseEmailHtml, uppercaseEmailText } from "@/lib/email-uppercase";
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
@@ -28,6 +29,12 @@ export interface SendEmailOptions {
   /** A dónde van las respuestas, si es distinto del remitente. */
   replyTo?: string;
   attachments?: EmailAttachment[];
+  /**
+   * Deja el texto tal cual, sin subirlo a mayúsculas. Solo para correos que
+   * llevan un valor donde la caja importa —una contraseña temporal—, porque
+   * subirlo lo convertiría en un dato equivocado.
+   */
+  preserveCase?: boolean;
 }
 
 /**
@@ -47,13 +54,20 @@ export class EmailSendError extends Error {
 
 export async function sendEmail({
   to,
-  subject,
-  text,
-  html,
+  subject: rawSubject,
+  text: rawText,
+  html: rawHtml,
   from,
   replyTo,
   attachments,
+  preserveCase = false,
 }: SendEmailOptions): Promise<void> {
+  // Toda la plataforma va en mayúsculas y los correos no son la excepción. Se
+  // hace aquí, en el único punto de salida, para que ningún correo se escape.
+  const subject = preserveCase ? rawSubject : uppercaseEmailText(rawSubject);
+  const text = preserveCase ? rawText : uppercaseEmailText(rawText);
+  const html = rawHtml && !preserveCase ? uppercaseEmailHtml(rawHtml) : rawHtml;
+
   if (resend) {
     const { error } = await resend.emails.send({
       from: from ?? DEFAULT_FROM,

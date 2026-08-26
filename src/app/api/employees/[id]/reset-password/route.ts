@@ -113,6 +113,9 @@ export function POST(request: Request, { params }: { params: Promise<{ id: strin
           subject: built.subject,
           html: built.html || undefined,
           text: built.text,
+          // Único correo que NO se sube a mayúsculas: lleva la contraseña
+          // temporal dentro y subirla la volvería incorrecta.
+          preserveCase: true,
         });
         emailed = true;
       } catch (e) {

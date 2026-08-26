@@ -2,6 +2,7 @@ import { permissionHandler } from "@/lib/api-handler";
 import { sendEmail } from "@/lib/email";
 import { logAudit } from "@/lib/audit-log";
 import { EMAIL_PREVIEWS, findEmailPreview } from "@/lib/email-previews";
+import { uppercaseEmailHtml, uppercaseEmailText } from "@/lib/email-uppercase";
 
 /** Tope por envío: esta pantalla es para revisar plantillas, no para difundir. */
 const MAX_PER_REQUEST = 12;
@@ -20,13 +21,15 @@ export function GET(request: Request) {
     if (id) {
       const preview = findEmailPreview(id);
       if (!preview) return Response.json({ error: "Plantilla desconocida" }, { status: 404 });
+      // Se aplica la misma subida a mayúsculas que hace sendEmail, para que la
+      // vista previa sea idéntica al correo que llega.
       const built = preview.build();
       return Response.json({
         id: preview.id,
         label: preview.label,
-        subject: built.subject,
-        html: built.html ?? null,
-        text: built.text,
+        subject: uppercaseEmailText(built.subject),
+        html: built.html ? uppercaseEmailHtml(built.html) : null,
+        text: uppercaseEmailText(built.text),
       });
     }
 
