@@ -99,19 +99,19 @@ export function NotificationBell() {
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent align="end" className="w-80 p-0">
+      <PopoverContent align="end" className="w-[min(24rem,calc(100vw-2rem))] p-0">
         {/* Header */}
-        <div className="flex items-center justify-between border-b px-4 py-3">
-          <span className="text-sm font-semibold">Notificaciones</span>
+        <div className="flex items-center justify-between gap-2 border-b px-4 py-3">
+          <span className="truncate text-sm font-semibold">Notificaciones</span>
           {unread > 0 && (
             <Button
               variant="ghost"
               size="sm"
-              className="h-auto px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
+              className="h-auto shrink-0 whitespace-nowrap px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
               onClick={markAllRead}
             >
               <Check className="size-3 mr-1" />
-              Marcar todo como leído
+              Marcar leídas
             </Button>
           )}
         </div>
