@@ -1,6 +1,6 @@
 "use client";
 
-import { User as UserIcon, ClipboardList, Wrench, LifeBuoy } from "lucide-react";
+import { User as UserIcon, ClipboardList, Wrench, LifeBuoy, UserRound } from "lucide-react";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 
 const developerNavItems = [
@@ -13,6 +13,11 @@ const developerNavItems = [
     title: "Reportes de equipo",
     href: "/developer/dashboard/tickets",
     icon: LifeBuoy,
+  },
+  {
+    title: "Colaboradores",
+    href: "/developer/dashboard/employees",
+    icon: UserRound,
   },
   {
     title: "Mis tareas",

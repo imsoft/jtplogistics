@@ -108,6 +108,22 @@ export async function requireDeveloper() {
   return session;
 }
 
+/**
+ * Dirección y soporte de TI. Soporte necesita la ficha completa del
+ * colaborador para atender su equipo y restablecerle la contraseña.
+ */
+export async function requireAdminOrDeveloper() {
+  const session = await requireSession();
+  const role = session.user.role;
+  if (role !== "admin" && role !== "developer") {
+    throw new Response(JSON.stringify({ error: "Prohibido" }), {
+      status: 403,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  return session;
+}
+
 // ── Guardias para SERVER COMPONENTS (páginas y layouts) ──────────────────────
 // A diferencia de las versiones para rutas API (que lanzan un Response), estas
 // REDIRIGEN. En un server component un `throw new Response()` no lo maneja Next

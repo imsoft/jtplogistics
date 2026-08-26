@@ -39,3 +39,45 @@ export function buildPasswordResetEmail(input: { name: string; url: string }): B
     ].join("\n"),
   };
 }
+
+/**
+ * Aviso al colaborador de que soporte le restableció la contraseña. Lleva la
+ * temporal dentro, así que solo se manda cuando quien la restablece lo pide.
+ */
+export function buildPasswordResetByStaffEmail(input: {
+  name: string;
+  password: string;
+  actorName: string;
+  loginUrl: string;
+}): BuiltEmail {
+  const name = firstName(input.name);
+
+  return {
+    subject: "Tu contraseña de JTP Logistics cambió",
+    html: brandedEmail({
+      preheader: "Entra con la contraseña temporal y cámbiala.",
+      eyebrow: "Tu cuenta",
+      heading: "Tu contraseña cambió",
+      paragraphs: [
+        `Hola <strong>${escapeHtml(name)}</strong>,`,
+        `<strong>${escapeHtml(input.actorName)}</strong> restableció la contraseña de tu cuenta en JTP Logistics. Esta es tu contraseña temporal:`,
+        `<strong style="font-size:18px;letter-spacing:.05em;">${escapeHtml(input.password)}</strong>`,
+      ],
+      highlight:
+        "Entra con ella y cámbiala desde tu perfil en cuanto puedas. Si no esperabas este cambio, avísale a soporte de TI.",
+      ctaLabel: "Entrar",
+      ctaHref: input.loginUrl,
+    }),
+    text: [
+      `Hola ${name},`,
+      "",
+      `${input.actorName} restableció la contraseña de tu cuenta en JTP Logistics.`,
+      "",
+      `Contraseña temporal: ${input.password}`,
+      "",
+      `Entra en ${input.loginUrl} y cámbiala desde tu perfil en cuanto puedas.`,
+      "",
+      "— JTP Logistics",
+    ].join("\n"),
+  };
+}

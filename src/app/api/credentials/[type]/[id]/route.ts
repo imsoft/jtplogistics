@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
+import { requireSession } from "@/lib/auth-server";
 import { decryptSecret } from "@/lib/secret-vault";
 import { logAudit } from "@/lib/audit-log";
 
@@ -11,7 +11,7 @@ import { logAudit } from "@/lib/audit-log";
  * la bitácora de auditoría.
  *
  * Los permisos son los mismos que para leer el módulo: quien puede ver las
- * laptops puede ver sus contraseñas.
+ * laptops puede ver sus contraseñas. Dirección y soporte de TI pasan siempre.
  */
 
 type CredentialType = "laptop" | "phone" | "email" | "employee";
@@ -79,7 +79,11 @@ export async function GET(
   { params }: { params: Promise<{ type: string; id: string }> }
 ) {
   try {
-    const session = await requireCollaboratorOrAdmin();
+    const session = await requireSession();
+    const role = session.user.role;
+    if (role !== "admin" && role !== "developer" && role !== "collaborator") {
+      return Response.json({ error: "Prohibido" }, { status: 403 });
+    }
     const { type, id } = await params;
 
     if (!isCredentialType(type)) {
@@ -87,8 +91,8 @@ export async function GET(
     }
     const resource = RESOURCES[type];
 
-    // El admin pasa siempre; el colaborador necesita el permiso del módulo.
-    if (session.user.role === "collaborator") {
+    // Dirección y soporte pasan siempre; el colaborador necesita el permiso.
+    if (role === "collaborator") {
       const me = await prisma.user.findUnique({
         where: { id: session.user.id },
         select: { [resource.permission]: true },

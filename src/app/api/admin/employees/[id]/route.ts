@@ -1,139 +1,25 @@
 import { prisma } from "@/lib/db";
-import { encryptSecret, hasSecret } from "@/lib/secret-vault";
+import { encryptSecret } from "@/lib/secret-vault";
 import { adminHandler } from "@/lib/api-handler";
 import { logAudit, diffObjects } from "@/lib/audit-log";
-
-const PERMISSION_MODULES = [
-  { suffix: "Messages", label: "Mensajes" },
-  { suffix: "Ideas", label: "Ideas" },
-  { suffix: "Routes", label: "Rutas" },
-  { suffix: "RouteLogs", label: "Historial de cambios" },
-  { suffix: "UnitTypes", label: "Tipos de unidades" },
-  { suffix: "Quotes", label: "Cotizador" },
-  { suffix: "Providers", label: "Proveedores" },
-  { suffix: "Clients", label: "Clientes" },
-  { suffix: "Employees", label: "Colaboradores" },
-  { suffix: "Vendors", label: "Vendedores" },
-  { suffix: "Laptops", label: "Laptops" },
-  { suffix: "Phones", label: "Celulares" },
-  { suffix: "Emails", label: "Correos" },
-  { suffix: "Tasks", label: "Tareas" },
-  { suffix: "Shipments", label: "Embarques" },
-  { suffix: "Finances", label: "Finanzas" },
-  { suffix: "MaritimeQuotes", label: "Cotización marítima" },
-  { suffix: "Mural", label: "Mural" },
-] as const;
-
-const PERMISSION_FIELDS = [
-  ...PERMISSION_MODULES.flatMap((module) => [
-    `canView${module.suffix}`,
-    `canCreate${module.suffix}`,
-    `canUpdate${module.suffix}`,
-    `canDelete${module.suffix}`,
-  ]),
-  "canEditAcceptedQuotes",
-  // Permisos sueltos de solo lectura, sin el juego completo de CRUD.
-  "canViewMaintenance",
-  "canViewEmailDemos",
-];
-
-const PERMISSION_LABELS: Record<string, string> = Object.fromEntries([
-  ...PERMISSION_MODULES.flatMap((module) => [
-    [`canView${module.suffix}`, `${module.label}: leer`],
-    [`canCreate${module.suffix}`, `${module.label}: crear`],
-    [`canUpdate${module.suffix}`, `${module.label}: editar`],
-    [`canDelete${module.suffix}`, `${module.label}: eliminar`],
-  ]),
-  ["canEditAcceptedQuotes", "Cotizaciones aceptadas: editar y eliminar"],
-  ["canViewMaintenance", "Mantenimientos: leer"],
-  ["canViewEmailDemos", "Correos de prueba: usar"],
-]);
+import {
+  PERMISSION_FIELDS,
+  PERMISSION_LABELS,
+  loadEmployeeDetail,
+  serializeEmployeeDetail,
+} from "@/lib/employees";
 
 export function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return adminHandler(async (session) => {
+  return adminHandler(async () => {
     const { id } = await params;
-    const u = await prisma.user.findUnique({
-      where: { id },
-      include: {
-        employeeProfile: true,
-        assignedLaptops: {
-          include: { emailAccount: { select: { id: true, email: true } } },
-        },
-        assignedPhones: {
-          include: { emailAccount: { select: { id: true, email: true } } },
-        },
-        assignedEmails: {
-          include: { emailAccount: { select: { id: true, type: true, email: true, password: true } } },
-        },
-      },
-    });
+    const u = await loadEmployeeDetail(id);
     if (!u || u.role !== "collaborator") {
       return Response.json({ error: "No encontrado" }, { status: 404 });
     }
-    const permissionValues = Object.fromEntries(
-      PERMISSION_FIELDS.map((field) => [field, u[field as keyof typeof u]])
-    );
-    return Response.json({
-      id: u.id,
-      name: u.name,
-      email: u.email,
-      image: u.image,
-      birthDate: u.birthDate ? u.birthDate.toISOString().split("T")[0] : null,
-      hireDate: u.employeeProfile?.hireDate ? u.employeeProfile.hireDate.toISOString().split("T")[0] : null,
-      position: u.employeeProfile?.position ?? null,
-      department: u.employeeProfile?.department ?? null,
-      phone: u.employeeProfile?.phone ?? null,
-      nss: u.employeeProfile?.nss ?? null,
-      rfc: u.employeeProfile?.rfc ?? null,
-      curp: u.employeeProfile?.curp ?? null,
-      address: u.employeeProfile?.address ?? null,
-      hasPasswordReference: Boolean(u.employeeProfile?.password?.trim()),
-      ...permissionValues,
-      createdAt: u.createdAt.toISOString(),
-      laptops: u.assignedLaptops.map((l) => ({
-        id: l.id,
-        name: l.name,
-        equipmentCode: l.equipmentCode,
-        equipmentType: l.equipmentType,
-        brand: l.brand,
-        model: l.model,
-        color: l.color,
-        serialNumber: l.serialNumber,
-        hasPassword: hasSecret(l.password),
-        accessories: l.accessories,
-        generalState: l.generalState,
-        software: l.software,
-        observations: l.observations,
-        maintenanceProvider: l.maintenanceProvider,
-        imageUrl: l.imageUrl,
-        emailAccount: l.emailAccount ? { id: l.emailAccount.id, email: l.emailAccount.email } : null,
-      })),
-      phones: u.assignedPhones.map((p) => ({
-        id: p.id,
-        name: p.name,
-        equipmentCode: p.equipmentCode,
-        phoneNumber: p.phoneNumber,
-        imei: p.imei,
-        serialNumber: p.serialNumber,
-        brand: p.brand,
-        model: p.model,
-        color: p.color,
-        hasPassword: hasSecret(p.password),
-        observations: p.observations,
-        maintenanceProvider: p.maintenanceProvider,
-        imageUrl: p.imageUrl,
-        emailAccount: p.emailAccount ? { id: p.emailAccount.id, email: p.emailAccount.email } : null,
-      })),
-      emailAccounts: u.assignedEmails.map((ea) => ({
-        id: ea.emailAccount.id,
-        type: ea.emailAccount.type,
-        email: ea.emailAccount.email,
-        hasPassword: hasSecret(ea.emailAccount.password),
-      })),
-    });
+    return Response.json(serializeEmployeeDetail(u));
   });
 }
 
