@@ -166,30 +166,6 @@ export default async function VendorDashboardPage() {
           )}
         </CardContent>
       </Card>
-
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Acciones rápidas
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-            <Button asChild variant="outline" className="justify-start">
-              <Link href="/vendor/dashboard/quotes">Nueva cotización</Link>
-            </Button>
-            <Button asChild variant="outline" className="justify-start">
-              <Link href="/vendor/dashboard/generated-quotes">Mis cotizaciones</Link>
-            </Button>
-            <Button asChild variant="outline" className="justify-start">
-              <Link href="/vendor/dashboard/collaborators/new">Nuevo colaborador</Link>
-            </Button>
-            <Button asChild variant="outline" className="justify-start">
-              <Link href="/vendor/dashboard/support">Reportar un problema</Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

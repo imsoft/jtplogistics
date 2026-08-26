@@ -196,30 +196,6 @@ export default async function DeveloperDashboardPage() {
           )}
         </CardContent>
       </Card>
-
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Acciones rápidas
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-            <Button asChild variant="outline" className="justify-start">
-              <Link href="/developer/dashboard/maintenance">Mantenimientos</Link>
-            </Button>
-            <Button asChild variant="outline" className="justify-start">
-              <Link href="/developer/dashboard/tickets">Reportes de equipo</Link>
-            </Button>
-            <Button asChild variant="outline" className="justify-start">
-              <Link href="/developer/dashboard/tasks">Mis tareas</Link>
-            </Button>
-            <Button asChild variant="outline" className="justify-start">
-              <Link href="/developer/dashboard/profile">Mi perfil</Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

@@ -17,7 +17,6 @@ import {
   Users,
   Wrench,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard, fmtInt, fmtMxn } from "@/components/dashboard/home/stat-card";
 import { requireCollaboratorPage } from "@/lib/auth-server";
@@ -63,8 +62,6 @@ export default async function CollaboratorDashboard() {
       canViewLaptops: true,
       canViewPhones: true,
       canViewMaintenance: true,
-      canCreateQuotes: true,
-      canCreateClients: true,
     },
   });
 
@@ -414,39 +411,6 @@ export default async function CollaboratorDashboard() {
           </CardContent>
         </Card>
       )}
-
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Acciones rápidas
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-            {user?.canCreateQuotes && (
-              <Button asChild variant="outline" className="justify-start">
-                <Link href={`${BASE}/quotes/new`}>Crear cotización</Link>
-              </Button>
-            )}
-            {user?.canCreateClients && (
-              <Button asChild variant="outline" className="justify-start">
-                <Link href={`${BASE}/clients/new`}>Nuevo cliente</Link>
-              </Button>
-            )}
-            {user?.canViewMural && (
-              <Button asChild variant="outline" className="justify-start">
-                <Link href={`${BASE}/mural`}>Ver el mural</Link>
-              </Button>
-            )}
-            <Button asChild variant="outline" className="justify-start">
-              <Link href={`${BASE}/support`}>Reportar un problema</Link>
-            </Button>
-            <Button asChild variant="outline" className="justify-start">
-              <Link href={`${BASE}/profile`}>Mi perfil</Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
