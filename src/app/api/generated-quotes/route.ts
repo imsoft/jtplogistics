@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireQuoteAuthor } from "@/lib/auth-server";
 import { logAudit } from "@/lib/audit-log";
-import { nextQuoteNumber } from "@/lib/quote-number";
+import { nextQuoteNumber } from "@/lib/quote-number.server";
 import type { Prisma } from "@prisma/client";
 
 export async function POST(request: NextRequest) {

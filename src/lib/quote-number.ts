@@ -1,11 +1,14 @@
-import { prisma } from "@/lib/db";
-
 /**
  * Número consecutivo de las cotizaciones: JTP-DDMMAAAA-NNN.
  *
- * El consecutivo sale del MAYOR número ya usado ese día, no de cuántas hay:
- * contando, al borrar una cotización el número se repetía y el guardado
- * chocaba contra el índice único, dejando el consecutivo congelado.
+ * El consecutivo es CORRIDO: nunca se reinicia. Antes se calculaba por día y,
+ * como casi siempre se hace una cotización diaria, todas terminaban en 001 y
+ * parecía que no había consecutivo. La fecha del número sigue siendo la del
+ * día en que se generó; lo que ya no depende del día es el contador.
+ *
+ * Sale del MAYOR número ya usado, no de cuántas cotizaciones hay: contando, al
+ * borrar una el número se repetía y el guardado chocaba contra el índice único,
+ * dejando el consecutivo congelado.
  */
 
 /** "24082026" del día indicado, en la zona horaria de la empresa. */
@@ -24,19 +27,15 @@ export function quoteNumberPrefix(date = new Date()): string {
   return `JTP-${quoteDayKey(date)}-`;
 }
 
-/** Siguiente número libre del día. */
-export async function nextQuoteNumber(date = new Date()): Promise<string> {
-  const prefix = quoteNumberPrefix(date);
-  const used = await prisma.generatedQuote.findMany({
-    where: { quoteNumber: { startsWith: prefix } },
-    select: { quoteNumber: true },
-  });
-
+/**
+ * El siguiente consecutivo a partir de los números ya emitidos. Se queda fuera
+ * de la consulta para poder probarlo: es la parte que se ha roto dos veces.
+ */
+export function nextSuffix(usedNumbers: string[]): number {
   let max = 0;
-  for (const { quoteNumber } of used) {
-    const n = Number.parseInt(quoteNumber.slice(prefix.length), 10);
+  for (const number of usedNumbers) {
+    const n = Number.parseInt(number.slice(number.lastIndexOf("-") + 1), 10);
     if (Number.isFinite(n) && n > max) max = n;
   }
-
-  return `${prefix}${String(max + 1).padStart(3, "0")}`;
+  return max + 1;
 }

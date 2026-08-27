@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { requireQuoteAuthor } from "@/lib/auth-server";
-import { nextQuoteNumber } from "@/lib/quote-number";
+import { nextQuoteNumber } from "@/lib/quote-number.server";
 
 export async function GET() {
   try {
