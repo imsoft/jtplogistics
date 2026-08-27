@@ -17,7 +17,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import type { QuoteRow } from "@/types/carrier-quote.types";
+import {
+  buildQuotePdf,
+  downloadQuotePdf,
+} from "@/components/dashboard/quotes/build-quote-pdf";
+import { QuoteSendButton } from "@/components/dashboard/quotes/quote-send-button";
 
 export function QuoteRowActions({
   id,
@@ -48,58 +52,11 @@ export function QuoteRowActions({
   }
 
   // Regenera el PDF con la información actual de la cotización (incluye ediciones).
-  // Imports dinámicos para no cargar @react-pdf/renderer al abrir el CRM.
   async function handleDownloadPdf() {
     setIsDownloading(true);
     try {
-      const [quoteRes, termsRes] = await Promise.all([
-        fetch(`${apiEndpoint}/${id}`),
-        fetch("/api/quote-config"),
-      ]);
-      if (!quoteRes.ok) throw new Error("No se pudo cargar la cotización");
-      const quote = await quoteRes.json() as {
-        quoteNumber: string;
-        company: string;
-        contact: string;
-        phone: string | null;
-        email: string | null;
-        validUntil: string;
-        rows: QuoteRow[];
-        creatorName: string;
-        creatorPosition: string | null;
-      };
-      const termsJson = termsRes.ok
-        ? await termsRes.json()
-        : { bulletsJson: "", contractJson: "", privacyJson: "", limitsJson: "" };
-
-      const [{ pdf }, { QuotePdf }] = await Promise.all([
-        import("@react-pdf/renderer"),
-        import("@/components/dashboard/carrier-quotes/quote-pdf"),
-      ]);
-      const logoUrl = window.location.origin + "/images/logo/jtp-logistics.png";
-      const blob = await pdf(
-        <QuotePdf
-          data={{
-            quoteNumber: quote.quoteNumber,
-            company: quote.company,
-            contact: quote.contact,
-            phone: quote.phone ?? "",
-            email: quote.email ?? "",
-            validUntil: quote.validUntil,
-            rows: quote.rows,
-          }}
-          logoUrl={logoUrl}
-          termsJson={termsJson}
-          creatorName={quote.creatorName}
-          creatorPosition={quote.creatorPosition ?? undefined}
-        />
-      ).toBlob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `Cotizacion-${quote.quoteNumber}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
+      const { quote, blob } = await buildQuotePdf({ id, apiEndpoint });
+      downloadQuotePdf(blob, quote.quoteNumber);
     } catch (e) {
       console.error(e);
       toast.error("No se pudo generar el PDF de la cotización.");
@@ -121,6 +78,12 @@ export function QuoteRowActions({
       >
         {isDownloading ? <Loader2 className="size-3.5 animate-spin" /> : <FileText className="size-3.5" />}
       </Button>
+      <QuoteSendButton
+        id={id}
+        quoteNumber={quoteNumber}
+        apiEndpoint={apiEndpoint}
+        variant="icon"
+      />
       {canEdit && (
         <Button variant="ghost" size="icon" className="size-7" asChild>
           <Link href={`${editBase}/${id}/edit`} aria-label="Editar cotización">

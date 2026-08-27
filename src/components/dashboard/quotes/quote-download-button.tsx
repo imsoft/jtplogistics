@@ -4,7 +4,10 @@ import { useState } from "react";
 import { FileText, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import type { QuoteRow } from "@/types/carrier-quote.types";
+import {
+  buildQuotePdf,
+  downloadQuotePdf,
+} from "@/components/dashboard/quotes/build-quote-pdf";
 
 export function QuoteDownloadButton({
   id,
@@ -20,52 +23,8 @@ export function QuoteDownloadButton({
   async function handleDownloadPdf() {
     setIsDownloading(true);
     try {
-      const [quoteRes, termsRes] = await Promise.all([
-        fetch(`${apiEndpoint}/${id}`),
-        fetch("/api/quote-config"),
-      ]);
-      if (!quoteRes.ok) throw new Error("No se pudo cargar la cotización");
-      const quote = await quoteRes.json() as {
-        quoteNumber: string;
-        company: string;
-        contact: string;
-        phone: string | null;
-        email: string | null;
-        validUntil: string;
-        rows: QuoteRow[];
-        creatorName: string;
-      };
-      const termsJson = termsRes.ok
-        ? await termsRes.json()
-        : { bulletsJson: "", contractJson: "", privacyJson: "", limitsJson: "" };
-
-      const [{ pdf }, { QuotePdf }] = await Promise.all([
-        import("@react-pdf/renderer"),
-        import("@/components/dashboard/carrier-quotes/quote-pdf"),
-      ]);
-      const logoUrl = window.location.origin + "/images/logo/jtp-logistics.png";
-      const blob = await pdf(
-        <QuotePdf
-          data={{
-            quoteNumber: quote.quoteNumber,
-            company: quote.company,
-            contact: quote.contact,
-            phone: quote.phone ?? "",
-            email: quote.email ?? "",
-            validUntil: quote.validUntil,
-            rows: quote.rows,
-          }}
-          logoUrl={logoUrl}
-          termsJson={termsJson}
-          creatorName={quote.creatorName}
-        />
-      ).toBlob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `Cotizacion-${quote.quoteNumber}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
+      const { quote, blob } = await buildQuotePdf({ id, apiEndpoint });
+      downloadQuotePdf(blob, quote.quoteNumber);
     } catch (e) {
       console.error(e);
       toast.error("No se pudo generar el PDF de la cotización.");

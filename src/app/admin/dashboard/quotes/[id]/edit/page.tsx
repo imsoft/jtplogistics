@@ -13,6 +13,7 @@ import {
 } from "@/components/dashboard/carrier-quotes/carrier-quotes-table";
 import { QuoteComments } from "@/components/dashboard/quotes/quote-comments";
 import { QuoteDownloadButton } from "@/components/dashboard/quotes/quote-download-button";
+import { QuoteSendButton } from "@/components/dashboard/quotes/quote-send-button";
 
 export default function EditQuotePage() {
   const { id } = useParams<{ id: string }>();
@@ -78,6 +79,7 @@ export default function EditQuotePage() {
         </div>
         <div className="flex items-center gap-2">
           <QuoteDownloadButton id={id} quoteNumber={quote.quoteNumber} />
+          <QuoteSendButton id={id} quoteNumber={quote.quoteNumber} />
           <DeleteConfirmDialog
             title="¿Eliminar cotización?"
             description={`Esta acción no se puede deshacer. Se eliminará la cotización ${quote.quoteNumber} del historial.`}
