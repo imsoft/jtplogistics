@@ -49,7 +49,7 @@ const s = StyleSheet.create({
    * El hueco donde se firma a mano. Sin esta altura la raya quedaba pegada al
    * rótulo y no cabía una firma: hay que imprimirla, firmarla y escanearla.
    */
-  sigSpace: { height: 46 },
+  sigSpace: { height: 60 },
   sigLine: { borderBottomWidth: 0.8, borderBottomColor: TEXT, marginBottom: 4 },
   sigName: { fontFamily: "Helvetica-Bold", fontSize: 8, textAlign: "center" },
   // ── Page title (pages 2-4) ──
