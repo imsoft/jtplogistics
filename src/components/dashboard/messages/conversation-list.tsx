@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { MessageSquare } from "lucide-react";
+import { CardListSkeleton } from "@/components/ui/skeletons";
 
 export interface Conversation {
   carrierId: string;
@@ -71,7 +72,7 @@ export function ConversationList({ selectedCarrierId, onSelect, initialCarrierId
 
   if (!isLoaded) {
     return (
-      <div className="p-4 text-sm text-muted-foreground">Cargando…</div>
+      <CardListSkeleton cards={4} lines={1} withAvatar className="p-3" />
     );
   }
 

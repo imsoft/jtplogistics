@@ -13,6 +13,7 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 import { formatMxnLive, formatMxn, parseMxn } from "@/lib/utils";
 import { useUnitTypes } from "@/hooks/use-unit-types";
 import { toast } from "sonner";
+import { DataTableSkeleton } from "@/components/ui/skeletons";
 
 interface RouteSelection {
   unitType: string;
@@ -374,7 +375,7 @@ export function CarrierRoutesManager({
   }
 
   if (!isLoaded) {
-    return <p className="text-muted-foreground">Cargando…</p>;
+    return <DataTableSkeleton />;
   }
 
   // El volumen no está bloqueado por el candado (solo protege el target),

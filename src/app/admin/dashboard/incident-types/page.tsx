@@ -30,6 +30,7 @@ import { Pencil, Trash2, Check, X, Plus } from "lucide-react";
 import { toast } from "sonner";
 import type { IncidentTypeDef } from "@/types/incident-type.types";
 import { SortableUnitTypeRow } from "@/components/dashboard/unit-types/sortable-unit-type-row";
+import { CardListSkeleton } from "@/components/ui/skeletons";
 
 export default function IncidentTypesPage() {
   const [incidentTypes, setIncidentTypes] = useState<IncidentTypeDef[]>([]);
@@ -151,7 +152,7 @@ export default function IncidentTypesPage() {
         </CardHeader>
         <CardContent className="p-0">
           {!isLoaded ? (
-            <p className="text-muted-foreground p-4 text-sm">Cargando…</p>
+            <CardListSkeleton cards={4} lines={1} />
           ) : incidentTypes.length === 0 ? (
             <p className="text-muted-foreground p-4 text-sm">No hay tipos de incidencia registrados.</p>
           ) : (

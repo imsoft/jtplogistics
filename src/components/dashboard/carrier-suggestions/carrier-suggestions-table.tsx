@@ -11,6 +11,7 @@ import {
   CARRIER_SUGGESTION_STATUS_LABELS,
 } from "@/lib/constants/carrier-suggestion-status";
 import type { CarrierSuggestion } from "@/types/carrier-suggestion.types";
+import { DataTableSkeleton } from "@/components/ui/skeletons";
 
 interface CarrierSuggestionsTableProps {
   mode: "carrier" | "admin";
@@ -89,7 +90,7 @@ export function CarrierSuggestionsTable({ mode }: CarrierSuggestionsTableProps) 
   }, [mode]);
 
   if (!isLoaded) {
-    return <p className="text-muted-foreground text-sm">Cargando…</p>;
+    return <DataTableSkeleton />;
   }
 
   if (error) {

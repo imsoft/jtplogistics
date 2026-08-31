@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { useProfile } from "@/hooks/use-profile";
 import { EditJtpWhatsapp } from "@/components/dashboard/admin/edit-jtp-whatsapp";
+import { ProfileSkeleton } from "@/components/ui/skeletons";
 
 export default function AdminProfilePage() {
   const { data, isFetching, fetchError } = useProfile();
@@ -51,7 +52,7 @@ export default function AdminProfilePage() {
 
   if (isFetching) {
     return (
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Cargando…</p>
+      <ProfileSkeleton />
     );
   }
 

@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { CoverImageUpload } from "@/components/ui/cover-image-upload";
 import { toast } from "sonner";
+import { FormSkeleton } from "@/components/ui/skeletons";
 
 export default function AdminSettingsPage() {
   const [whatsapp, setWhatsapp] = useState("");
@@ -54,7 +55,7 @@ export default function AdminSettingsPage() {
     }
   }
 
-  if (!isLoaded) return <p className="text-muted-foreground text-sm">Cargando…</p>;
+  if (!isLoaded) return <FormSkeleton fields={3} />;
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">

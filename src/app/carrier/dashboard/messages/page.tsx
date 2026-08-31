@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSession } from "@/lib/auth-client";
 import { ChatWindow } from "@/components/dashboard/messages/chat-window";
+import { ChatSkeleton } from "@/components/ui/skeletons";
 
 export default function CarrierMessagesPage() {
   const { data: session } = useSession();
@@ -15,7 +16,7 @@ export default function CarrierMessagesPage() {
   );
 
   if (!session) {
-    return <p className="text-muted-foreground">Cargando…</p>;
+    return <ChatSkeleton />;
   }
 
   return (

@@ -15,6 +15,7 @@ import {
   CARRIER_SUGGESTION_STATUS_LABELS,
 } from "@/lib/constants/carrier-suggestion-status";
 import type { CarrierSuggestion, CarrierSuggestionFormData } from "@/types/carrier-suggestion.types";
+import { FormSkeleton } from "@/components/ui/skeletons";
 
 function isLoadedSuggestion(
   data: unknown
@@ -40,7 +41,7 @@ export default function EditCarrierSuggestionPage() {
   }
 
   if (!isLoaded) {
-    return <p className="text-muted-foreground text-sm">Cargando…</p>;
+    return <FormSkeleton fields={3} />;
   }
 
   const suggestion = isLoadedSuggestion(data) ? data : null;

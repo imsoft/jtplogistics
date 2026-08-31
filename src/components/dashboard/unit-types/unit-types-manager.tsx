@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { DataTableSkeleton } from "@/components/ui/skeletons";
+import { CardListSkeleton } from "@/components/ui/skeletons";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -173,9 +173,7 @@ export function UnitTypesManager({
         </CardHeader>
         <CardContent className="p-0">
           {!isLoaded ? (
-            <div className="p-4">
-              <DataTableSkeleton />
-            </div>
+            <CardListSkeleton cards={5} lines={1} className="p-4" />
           ) : unitTypes.length === 0 ? (
             <p className="text-muted-foreground p-4 text-sm">No hay tipos de unidades registrados.</p>
           ) : (

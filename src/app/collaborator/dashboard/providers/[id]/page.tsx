@@ -16,7 +16,7 @@ import { CarrierRouteUnlockRequests } from "@/components/dashboard/users/carrier
 import { DeleteUserButton } from "@/components/dashboard/users/delete-user-button";
 import { groupContactsByPerson } from "@/lib/contacts";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
-import { DataTableSkeleton } from "@/components/ui/skeletons";
+import { ResourceDetailSkeleton } from "@/components/ui/skeletons";
 import { USER_ROLE_LABELS } from "@/lib/constants/user-role";
 import type { UserRole } from "@/types/user.types";
 
@@ -117,16 +117,7 @@ export default function ProviderDetailPage() {
 
   if (!permissionsLoaded || !isLoaded) {
     return (
-      <div className="min-w-0 space-y-4 sm:space-y-6">
-        <div className="flex items-start gap-3">
-          <div className="size-10 rounded-full bg-muted" />
-          <div className="flex-1 space-y-2">
-            <div className="h-4 w-32 bg-muted rounded" />
-            <div className="h-3 w-24 bg-muted rounded" />
-          </div>
-        </div>
-        <DataTableSkeleton />
-      </div>
+      <ResourceDetailSkeleton rows={6} />
     );
   }
 

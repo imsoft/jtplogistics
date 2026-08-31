@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { AppSelect } from "@/components/ui/app-select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DataTableSkeleton } from "@/components/ui/skeletons";
+import { CardListSkeleton } from "@/components/ui/skeletons";
 import { MAINTENANCE_KIND_LABELS, MAINTENANCE_STATUS_LABELS } from "@/lib/support";
 import { fuzzyMatch } from "@/lib/search";
 import { MaintenanceReportButton } from "./maintenance-report-button";
@@ -53,7 +53,7 @@ export function MaintenanceLog({ currentUserName }: { currentUserName: string })
       .catch(() => setItems([]));
   }, []);
 
-  if (!items) return <DataTableSkeleton />;
+  if (!items) return <CardListSkeleton cards={4} lines={3} />;
 
   const filtered = items.filter((m) => {
     if (kind !== "all" && m.kind !== kind) return false;

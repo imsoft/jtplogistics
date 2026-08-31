@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { CardListSkeleton } from "@/components/ui/skeletons";
 
 interface User {
   id: string;
@@ -88,7 +89,7 @@ export function QuoteComments({ quoteId }: QuoteCommentsProps) {
   }
 
   if (isLoading) {
-    return <p className="text-muted-foreground text-sm">Cargando comentarios…</p>;
+    return <CardListSkeleton cards={2} lines={2} withAvatar />;
   }
 
   return (

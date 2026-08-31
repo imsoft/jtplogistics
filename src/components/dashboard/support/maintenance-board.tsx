@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AppSelect } from "@/components/ui/app-select";
 import { DatePicker } from "@/components/ui/date-picker";
-import { DataTableSkeleton } from "@/components/ui/skeletons";
+import { CardListSkeleton } from "@/components/ui/skeletons";
 import {
   MAINTENANCE_KIND_LABELS,
   MAINTENANCE_STATUS_LABELS,
@@ -326,7 +326,7 @@ export function MaintenanceBoard({ currentUserName }: { currentUserName: string 
       </Dialog>
 
       {!items ? (
-        <DataTableSkeleton />
+        <CardListSkeleton cards={4} lines={2} />
       ) : (
         <>
           <section className="space-y-3">

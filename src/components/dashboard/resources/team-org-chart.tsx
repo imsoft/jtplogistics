@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { CardListSkeleton } from "@/components/ui/skeletons";
 
 interface OrgEmployee {
   id: string;
@@ -77,7 +78,7 @@ export function TeamOrgChart({ apiEndpoint, companyName = "JTP Logistics" }: Tea
       .map(([name, emps]) => ({ name, employees: emps }));
   }, [employees]);
 
-  if (!isLoaded) return <p className="text-sm text-muted-foreground uppercase tracking-wide py-6">Cargando…</p>;
+  if (!isLoaded) return <CardListSkeleton cards={4} lines={1} withAvatar />;
   if (error) return <p className="text-sm text-destructive uppercase tracking-wide py-6">{error}</p>;
   if (employees.length === 0) return (
     <p className="text-sm text-muted-foreground uppercase tracking-wide rounded-lg border border-dashed p-8 text-center">

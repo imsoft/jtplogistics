@@ -7,6 +7,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
+import { FormSkeleton } from "@/components/ui/skeletons";
 
 export default function VendorProfilePage() {
   const DEFAULT_NOTES = "- Estadías\n- Reparto";
@@ -80,7 +81,7 @@ export default function VendorProfilePage() {
     return (
       <div className="min-w-0 space-y-4">
         <h1 className="page-heading">Mi perfil</h1>
-        <p className="text-muted-foreground text-sm">Cargando…</p>
+        <FormSkeleton fields={4} />
       </div>
     );
   }

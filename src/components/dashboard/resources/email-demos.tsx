@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DataTableSkeleton } from "@/components/ui/skeletons";
+import { CardListSkeleton, EmailPreviewSkeleton } from "@/components/ui/skeletons";
 
 interface PreviewItem {
   id: string;
@@ -110,7 +110,7 @@ export function EmailDemos() {
     }
   }
 
-  if (!items) return <DataTableSkeleton />;
+  if (!items) return <CardListSkeleton cards={5} lines={1} />;
 
   const groups = [...new Set(items.map((i) => i.group))];
   const failed = results?.filter((r) => !r.ok) ?? [];
@@ -233,7 +233,7 @@ export function EmailDemos() {
         </CardHeader>
         <CardContent>
           {isLoadingDetail ? (
-            <DataTableSkeleton />
+            <EmailPreviewSkeleton />
           ) : !detail ? (
             <div className="flex flex-col items-center gap-3 py-16 text-center">
               <div className="flex size-12 items-center justify-center rounded-full bg-muted">

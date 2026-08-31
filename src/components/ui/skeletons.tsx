@@ -146,3 +146,121 @@ export function DashboardHomeSkeleton() {
     </div>
   );
 }
+
+/**
+ * Lista de tarjetas apiladas: la usan las pantallas que no son tabla sino
+ * bloques (mantenimientos, reportes de equipo, sugerencias, comentarios).
+ */
+export function CardListSkeleton({
+  cards = 3,
+  lines = 2,
+  withAvatar = false,
+  className,
+}: {
+  cards?: number;
+  lines?: number;
+  withAvatar?: boolean;
+  className?: string;
+}) {
+  return (
+    <div className={cn("space-y-3", className)}>
+      {Array.from({ length: cards }).map((_, i) => (
+        <div key={i} className="flex gap-3 rounded-xl border p-4">
+          {withAvatar && <Skeleton className="size-10 shrink-0 rounded-full" />}
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-5 w-20 shrink-0 rounded-full" />
+            </div>
+            {Array.from({ length: lines }).map((_, l) => (
+              <Skeleton key={l} className={cn("h-3", l === lines - 1 ? "w-1/2" : "w-full")} />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Ficha de un recurso: encabezado con foto y nombre, y debajo los renglones de
+ * datos. Es la forma de las pantallas /[id] (cliente, laptop, colaborador…).
+ */
+export function ResourceDetailSkeleton({ rows = 8 }: { rows?: number }) {
+  return (
+    <div className="min-w-0 space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-3">
+          <Skeleton className="size-10 shrink-0 rounded-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-3 w-32" />
+          </div>
+        </div>
+        <Skeleton className="h-9 w-full shrink-0 sm:w-28" />
+      </div>
+      <div className="rounded-xl border p-4 sm:p-5">
+        <Skeleton className="h-3 w-24" />
+        <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
+          {Array.from({ length: rows }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between gap-4">
+              <Skeleton className="h-3 w-28" />
+              <Skeleton className="h-3 w-32" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Perfil: foto grande y los campos de la cuenta. */
+export function ProfileSkeleton() {
+  return (
+    <div className="min-w-0 space-y-6">
+      <div className="space-y-2">
+        <Skeleton className="h-7 w-40" />
+        <Skeleton className="h-3 w-64" />
+      </div>
+      <div className="flex items-center gap-4">
+        <Skeleton className="size-20 rounded-full" />
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="h-3 w-52" />
+        </div>
+      </div>
+      <FormSkeleton fields={4} />
+    </div>
+  );
+}
+
+/** Conversación: burbujas alternadas y el campo para escribir. */
+export function ChatSkeleton({ messages = 5 }: { messages?: number }) {
+  return (
+    <div className="space-y-4">
+      {Array.from({ length: messages }).map((_, i) => (
+        <div key={i} className={cn("flex", i % 2 === 0 ? "justify-start" : "justify-end")}>
+          <Skeleton className={cn("h-14 rounded-2xl", i % 2 === 0 ? "w-3/5" : "w-2/5")} />
+        </div>
+      ))}
+      <Skeleton className="h-10 w-full rounded-lg" />
+    </div>
+  );
+}
+
+/** Vista previa de un correo: el asunto y el cuerpo de la plantilla. */
+export function EmailPreviewSkeleton() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-4 w-2/3" />
+      <div className="space-y-3 rounded-lg border p-4">
+        <Skeleton className="mx-auto size-16 rounded-full" />
+        <Skeleton className="mx-auto h-5 w-1/2" />
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-3 w-3/4" />
+        <Skeleton className="mx-auto h-9 w-40 rounded-lg" />
+      </div>
+    </div>
+  );
+}

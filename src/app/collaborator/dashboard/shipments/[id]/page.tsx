@@ -17,6 +17,7 @@ import { getIncidentTypeLabel } from "@/lib/incident-type-label";
 import { SHIPMENT_STATUS_CONFIG } from "@/components/dashboard/resources/shipments-table";
 import { ShipmentTimeline } from "@/components/dashboard/resources/shipment-timeline";
 import type { Shipment } from "@/types/shipment.types";
+import { ResourceDetailSkeleton } from "@/components/ui/skeletons";
 
 function fmtDate(iso: string | null) {
   if (!iso) return null;
@@ -46,7 +47,7 @@ export default function CollaboratorShipmentProfilePage() {
     return getIncidentTypeLabel(shipment.incidentType, incidentTypes);
   }, [shipment?.incidentType, incidentTypes]);
 
-  if (!isLoaded) return <p className="text-muted-foreground py-6">Cargando…</p>;
+  if (!isLoaded) return <ResourceDetailSkeleton />;
   if (error || !shipment) return <p className="text-destructive py-6 text-sm">{error ?? "No encontrado"}</p>;
 
   const title = [shipment.eco, shipment.origin, shipment.destination].filter(Boolean).join(" – ") || "Embarque";

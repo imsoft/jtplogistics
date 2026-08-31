@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
-import { DataTableSkeleton } from "@/components/ui/skeletons";
+import { ProfileSkeleton } from "@/components/ui/skeletons";
 
 export default function CollaboratorProfilePage() {
   const [name, setName] = useState("");
@@ -71,7 +71,7 @@ export default function CollaboratorProfilePage() {
           </p>
         </div>
         <Separator />
-        <DataTableSkeleton />
+        <ProfileSkeleton />
       </div>
     );
   }

@@ -572,7 +572,7 @@ export function CarrierQuotesTable({
         <div className="space-y-4">
           {selectedRouteId ? (
             isLoadingCarriers ? (
-              <p className="text-muted-foreground">Cargando transportistas…</p>
+              <DataTableSkeleton rows={4} />
             ) : carriers.length === 0 ? (
               <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
                 Ningún transportista ha seleccionado esta ruta todavía.

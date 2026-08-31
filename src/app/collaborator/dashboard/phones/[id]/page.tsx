@@ -11,6 +11,7 @@ import { SecretRow } from "@/components/dashboard/users/secret-row";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 import { formatPhone, formatIMEI } from "@/lib/utils";
 import type { PhoneDevice } from "@/types/resources.types";
+import { ResourceDetailSkeleton } from "@/components/ui/skeletons";
 
 export default function CollaboratorPhoneProfilePage() {
   const params = useParams<{ id: string }>();
@@ -45,7 +46,7 @@ export default function CollaboratorPhoneProfilePage() {
       });
   }, [employeeId, phoneId]);
 
-  if (!isLoaded) return <p className="text-muted-foreground py-6">Cargando…</p>;
+  if (!isLoaded) return <ResourceDetailSkeleton />;
   if (error || !phone) return <p className="text-destructive py-6 text-sm">{error ?? "No encontrado"}</p>;
 
   return (

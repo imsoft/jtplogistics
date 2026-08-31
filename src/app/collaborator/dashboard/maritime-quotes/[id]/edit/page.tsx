@@ -7,6 +7,7 @@ import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MaritimeQuoteForm } from "@/components/dashboard/maritime-quotes/maritime-quote-form";
 import type { MaritimeQuoteInput } from "@/lib/maritime-quote";
+import { FormSkeleton } from "@/components/ui/skeletons";
 
 export default function EditCollaboratorMaritimeQuotePage() {
   const params = useParams<{ id: string }>();
@@ -46,7 +47,7 @@ export default function EditCollaboratorMaritimeQuotePage() {
       {error ? (
         <p className="text-destructive text-sm">{error}</p>
       ) : initialInput === null ? (
-        <p className="text-muted-foreground">Cargando…</p>
+        <FormSkeleton />
       ) : (
         <MaritimeQuoteForm mode="edit" quoteId={id} backHref="/collaborator/dashboard/maritime-quotes" initialInput={initialInput} />
       )}

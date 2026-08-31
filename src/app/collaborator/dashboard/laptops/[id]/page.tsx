@@ -10,6 +10,7 @@ import { InfoRow } from "@/components/dashboard/users/info-row";
 import { SecretRow } from "@/components/dashboard/users/secret-row";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 import type { Laptop } from "@/types/resources.types";
+import { ResourceDetailSkeleton } from "@/components/ui/skeletons";
 
 export default function CollaboratorLaptopProfilePage() {
   const params = useParams<{ id: string }>();
@@ -42,7 +43,7 @@ export default function CollaboratorLaptopProfilePage() {
       });
   }, [employeeId, laptopId]);
 
-  if (!isLoaded) return <p className="text-muted-foreground py-6">Cargando…</p>;
+  if (!isLoaded) return <ResourceDetailSkeleton />;
   if (error || !laptop) return <p className="text-destructive py-6 text-sm">{error ?? "No encontrado"}</p>;
 
   return (

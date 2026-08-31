@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { formatPhone } from "@/lib/utils";
+import { FormSkeleton } from "@/components/ui/skeletons";
 
 export function EditJtpWhatsapp() {
   const [phone, setPhone] = useState("");
@@ -66,7 +67,7 @@ export function EditJtpWhatsapp() {
         </p>
 
         {isFetching ? (
-          <p className="text-muted-foreground text-sm">Cargando…</p>
+          <FormSkeleton fields={1} />
         ) : (
           <>
             <div className="flex items-center justify-between gap-4">

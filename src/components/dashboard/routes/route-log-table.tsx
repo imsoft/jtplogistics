@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { MoveRight, Plus, Pencil, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DataTableSkeleton } from "@/components/ui/skeletons";
 
 interface RouteChangeDiff {
   field: string;
@@ -145,7 +146,7 @@ export function RouteLogTable({ routeId }: RouteLogTableProps) {
   }
 
   if (!isLoaded) {
-    return <p className="text-sm text-muted-foreground py-4">Cargando historial…</p>;
+    return <DataTableSkeleton rows={6} columns={4} />;
   }
 
   if (logs.length === 0) {

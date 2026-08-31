@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AppSelect } from "@/components/ui/app-select";
-import { DataTableSkeleton } from "@/components/ui/skeletons";
+import { CardListSkeleton } from "@/components/ui/skeletons";
 import { TICKET_STATUS_LABELS } from "@/lib/support";
 
 interface Ticket {
@@ -60,7 +60,7 @@ export function TicketsBoard() {
     }
   }
 
-  if (!tickets) return <DataTableSkeleton />;
+  if (!tickets) return <CardListSkeleton cards={4} />;
 
   if (tickets.length === 0) {
     return (

@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoRow } from "@/components/dashboard/users/info-row";
 import { Badge } from "@/components/ui/badge";
 import type { EmailAccount } from "@/types/resources.types";
+import { ResourceDetailSkeleton } from "@/components/ui/skeletons";
 
 const EMAIL_TYPE_LABELS: Record<string, string> = {
   administrative: "Administrativo / Qweb360",
@@ -54,7 +55,7 @@ export default function CollaboratorEmailProfilePage() {
       });
   }, [accountId, employeeId]);
 
-  if (!isLoaded) return <p className="text-muted-foreground py-6">Cargando…</p>;
+  if (!isLoaded) return <ResourceDetailSkeleton />;
   if (error || !account) return <p className="text-destructive py-6 text-sm">{error ?? "No encontrado"}</p>;
 
   return (

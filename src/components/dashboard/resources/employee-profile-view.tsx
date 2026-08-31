@@ -11,6 +11,7 @@ import { ResetPasswordButton } from "@/components/dashboard/resources/reset-pass
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import type { Employee } from "@/types/resources.types";
 import { formatPhone } from "@/lib/utils";
+import { ResourceDetailSkeleton } from "@/components/ui/skeletons";
 
 interface EmployeeProfileViewProps {
   /** De dónde se lee la ficha: cada panel tiene su endpoint. */
@@ -108,7 +109,7 @@ export function EmployeeProfileView({
   const resourceHref = (kind: "laptops" | "phones" | "emails", resourceId: string) =>
     resourcesBasePath ? `${resourcesBasePath}/${kind}/${resourceId}` : null;
 
-  if (!isLoaded) return <p className="text-muted-foreground py-6">Cargando…</p>;
+  if (!isLoaded) return <ResourceDetailSkeleton />;
   if (error || !employee) return <p className="text-destructive py-6 text-sm">{error ?? "No encontrado"}</p>;
 
   const laptops = employee.laptops ?? [];

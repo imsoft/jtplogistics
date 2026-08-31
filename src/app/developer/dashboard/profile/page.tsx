@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
+import { FormSkeleton } from "@/components/ui/skeletons";
 
 export default function DeveloperProfilePage() {
   const [name, setName] = useState("");
@@ -58,7 +59,7 @@ export default function DeveloperProfilePage() {
     return (
       <div className="min-w-0 space-y-4">
         <h1 className="page-heading">Mi perfil</h1>
-        <p className="text-muted-foreground text-sm">Cargando…</p>
+        <FormSkeleton fields={4} />
       </div>
     );
   }

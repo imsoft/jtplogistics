@@ -16,6 +16,7 @@ import { useUnitTypes } from "@/hooks/use-unit-types";
 import { toast } from "sonner";
 import type { Route } from "@/types/route.types";
 import { fuzzyMatch } from "@/lib/search";
+import { CardListSkeleton } from "@/components/ui/skeletons";
 
 interface ClientRoutesDialogProps {
   clientId: string;
@@ -177,7 +178,7 @@ export function ClientRoutesDialog({ clientId, open, onOpenChange, onSave }: Cli
 
         <div className="min-h-0 flex-1 overflow-y-auto px-6">
           {!isLoaded ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">Cargando…</p>
+            <CardListSkeleton cards={3} lines={1} />
           ) : filtered.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">No hay rutas.</p>
           ) : (

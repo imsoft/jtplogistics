@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { MoveRight, Plus, Pencil, Trash2, Eye, ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppSelect } from "@/components/ui/app-select";
+import { DataTableSkeleton } from "@/components/ui/skeletons";
 
 interface AuditChange {
   field: string;
@@ -168,7 +169,7 @@ export function AuditLogTable() {
   }
 
   if (!isLoaded) {
-    return <p className="text-sm text-muted-foreground py-4">Cargando historial…</p>;
+    return <DataTableSkeleton rows={6} columns={4} />;
   }
 
   return (

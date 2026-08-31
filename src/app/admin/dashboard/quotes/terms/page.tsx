@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronLeft, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LexicalEditor } from "@/components/ui/lexical-editor";
+import { FormSkeleton } from "@/components/ui/skeletons";
 
 interface QuoteConfig {
   bulletsJson: string;
@@ -68,7 +69,7 @@ export default function QuoteTermsPage() {
     return (
       <div className="min-w-0 space-y-4">
         <h1 className="page-heading">Textos legales</h1>
-        <p className="text-muted-foreground text-sm">Cargando…</p>
+        <FormSkeleton fields={2} />
       </div>
     );
   }

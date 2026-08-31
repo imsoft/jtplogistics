@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUnitTypes } from "@/hooks/use-unit-types";
+import { CardListSkeleton } from "@/components/ui/skeletons";
 
 export default function CarrierUnitTypesIndexPage() {
   const router = useRouter();
@@ -14,5 +15,5 @@ export default function CarrierUnitTypesIndexPage() {
     }
   }, [unitTypes, router]);
 
-  return <p className="text-muted-foreground">Cargando…</p>;
+  return <CardListSkeleton cards={4} lines={1} />;
 }

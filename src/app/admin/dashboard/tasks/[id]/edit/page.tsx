@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { TaskForm } from "@/components/dashboard/tasks/task-form";
 import { toast } from "sonner";
 import type { Task, TaskFormData } from "@/types/task.types";
+import { FormSkeleton } from "@/components/ui/skeletons";
 
 export default function EditTaskPage() {
   const router = useRouter();
@@ -46,7 +47,7 @@ export default function EditTaskPage() {
     }
   }
 
-  if (!task) return <p className="text-muted-foreground text-sm">Cargando…</p>;
+  if (!task) return <FormSkeleton fields={4} />;
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">

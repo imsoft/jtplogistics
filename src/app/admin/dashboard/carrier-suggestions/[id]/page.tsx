@@ -20,6 +20,7 @@ import {
   CARRIER_SUGGESTION_STATUS_LABELS,
 } from "@/lib/constants/carrier-suggestion-status";
 import type { CarrierSuggestion } from "@/types/carrier-suggestion.types";
+import { ResourceDetailSkeleton } from "@/components/ui/skeletons";
 
 export default function AdminCarrierSuggestionDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -99,7 +100,7 @@ export default function AdminCarrierSuggestionDetailPage() {
   }
 
   if (!isLoaded) {
-    return <p className="text-muted-foreground text-sm">Cargando…</p>;
+    return <ResourceDetailSkeleton rows={6} />;
   }
 
   if (loadError || !row) {

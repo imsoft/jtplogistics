@@ -10,6 +10,7 @@ import { InfoRow } from "@/components/dashboard/users/info-row";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { formatPhone } from "@/lib/utils";
 import type { Client } from "@/types/client.types";
+import { ResourceDetailSkeleton } from "@/components/ui/skeletons";
 
 function initials(name: string) {
   return name.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase();
@@ -22,7 +23,7 @@ export default function CollaboratorClientProfilePage() {
     redirectHref: "/collaborator/dashboard/clients",
   });
 
-  if (!isLoaded) return <p className="text-muted-foreground py-6">Cargando…</p>;
+  if (!isLoaded) return <ResourceDetailSkeleton />;
   if (error || !client) return <p className="text-destructive py-6 text-sm">{error ?? "No encontrado"}</p>;
 
   return (

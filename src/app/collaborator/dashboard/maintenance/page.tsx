@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MaintenanceLog } from "@/components/dashboard/support/maintenance-log";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
-import { DataTableSkeleton } from "@/components/ui/skeletons";
+import { CardListSkeleton } from "@/components/ui/skeletons";
 
 export default function CollaboratorMaintenancePage() {
   const router = useRouter();
@@ -27,7 +27,7 @@ export default function CollaboratorMaintenancePage() {
     }
   }, [isLoaded, permissions, router]);
 
-  if (!isLoaded) return <DataTableSkeleton />;
+  if (!isLoaded) return <CardListSkeleton cards={4} lines={3} />;
   if (!permissions?.canViewMaintenance) return null;
 
   return (

@@ -17,6 +17,7 @@ import { formatMxn, formatPhone } from "@/lib/utils";
 import { SHIPMENT_STATUS_CONFIG } from "@/components/dashboard/resources/shipments-table";
 import type { FinanceShipmentDetail } from "@/types/finance.types";
 import type { ShipmentStatus } from "@/types/shipment.types";
+import { ResourceDetailSkeleton } from "@/components/ui/skeletons";
 
 function fmtDate(iso: string | null) {
   if (!iso) return null;
@@ -45,7 +46,7 @@ export default function CollaboratorFinanceReadOnlyPage() {
     return unitTypes.find((t) => t.value === row.unit)?.label ?? row.unit;
   }, [row?.unit, unitTypes]);
 
-  if (!isLoaded) return <p className="text-muted-foreground py-6">Cargando…</p>;
+  if (!isLoaded) return <ResourceDetailSkeleton />;
   if (error || !row?.shipmentId) {
     return <p className="text-destructive py-6 text-sm">{error ?? "No encontrado"}</p>;
   }

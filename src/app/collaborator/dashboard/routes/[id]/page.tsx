@@ -18,6 +18,7 @@ import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions
 import { formatMxn } from "@/lib/utils";
 import { ROUTE_STATUS_LABELS } from "@/lib/constants/route-status";
 import type { RouteStatus } from "@/types/route.types";
+import { ResourceDetailSkeleton } from "@/components/ui/skeletons";
 
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline"> = {
   active: "default",
@@ -106,7 +107,7 @@ export default function CollaboratorRouteDetailPage() {
   }, [id]);
 
   if (!isLoaded)
-    return <p className="text-muted-foreground py-6">Cargando…</p>;
+    return <ResourceDetailSkeleton />;
   if (error || !route)
     return (
       <p className="text-destructive py-6 text-sm">

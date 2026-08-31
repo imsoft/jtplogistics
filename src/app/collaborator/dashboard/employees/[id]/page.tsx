@@ -10,6 +10,7 @@ import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 import type { Employee } from "@/types/resources.types";
 import { formatPhone } from "@/lib/utils";
+import { ResourceDetailSkeleton } from "@/components/ui/skeletons";
 
 function initials(name: string) {
   return name.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase();
@@ -30,7 +31,7 @@ export default function CollaboratorEmployeeProfilePage() {
     redirectHref: "/collaborator/dashboard/employees",
   });
 
-  if (!isLoaded) return <p className="text-muted-foreground py-6">Cargando…</p>;
+  if (!isLoaded) return <ResourceDetailSkeleton />;
   if (error || !employee) return <p className="text-destructive py-6 text-sm">{error ?? "No encontrado"}</p>;
 
   const laptops = employee.laptops ?? [];

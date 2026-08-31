@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useProfile } from "@/hooks/use-profile";
+import { FormSkeleton } from "@/components/ui/skeletons";
 
 const PHONE_LABELS = ["Oficina", "Celular", "Casa", "Principal", "Otro"] as const;
 const EMAIL_LABELS = ["Principal", "Operaciones", "Cotizaciones", "Ventas", "Otro"] as const;
@@ -275,7 +276,7 @@ export default function CarrierProfilePage() {
     return (
       <div className="min-w-0 space-y-4">
         <h1 className="page-heading">Mi perfil</h1>
-        <p className="text-muted-foreground text-sm">Cargando…</p>
+        <FormSkeleton fields={4} />
       </div>
     );
   }

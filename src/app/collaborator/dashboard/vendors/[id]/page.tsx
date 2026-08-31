@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoRow } from "@/components/dashboard/users/info-row";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import type { Vendor } from "@/types/resources.types";
+import { ResourceDetailSkeleton } from "@/components/ui/skeletons";
 
 function initials(name: string) {
   return name.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase();
@@ -20,7 +21,7 @@ export default function CollaboratorVendorProfilePage() {
     redirectHref: "/collaborator/dashboard/vendors",
   });
 
-  if (!isLoaded) return <p className="text-muted-foreground py-6">Cargando…</p>;
+  if (!isLoaded) return <ResourceDetailSkeleton />;
   if (error || !vendor) return <p className="text-destructive py-6 text-sm">{error ?? "No encontrado"}</p>;
 
   return (

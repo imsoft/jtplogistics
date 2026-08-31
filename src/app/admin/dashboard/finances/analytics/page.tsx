@@ -17,6 +17,7 @@ import {
   ReferenceLine,
 } from "recharts";
 import type { FinancesAnalytics, RouteMargin, LegalNameCount } from "@/app/api/admin/finances/analytics/route";
+import { DashboardHomeSkeleton } from "@/components/ui/skeletons";
 
 const MAX_ROUTES = 20;
 
@@ -90,7 +91,7 @@ export default function FinancesAnalyticsPage() {
       </div>
 
       {!isLoaded ? (
-        <p className="text-sm text-muted-foreground">Cargando datos…</p>
+        <DashboardHomeSkeleton />
       ) : !data ? (
         <p className="text-sm text-destructive">No se pudieron cargar los datos.</p>
       ) : (

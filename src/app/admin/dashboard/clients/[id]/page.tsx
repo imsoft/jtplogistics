@@ -13,6 +13,7 @@ import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { useUnitTypes } from "@/hooks/use-unit-types";
 import { formatPhone, formatMxn } from "@/lib/utils";
 import type { Client } from "@/types/client.types";
+import { CardListSkeleton, ResourceDetailSkeleton } from "@/components/ui/skeletons";
 
 interface AssignedRoute {
   id: string;
@@ -72,7 +73,7 @@ export default function ClientProfilePage() {
     loadRoutes();
   }, [loadRoutes]);
 
-  if (!isLoaded) return <p className="text-muted-foreground py-6">Cargando…</p>;
+  if (!isLoaded) return <ResourceDetailSkeleton />;
   if (error || !client) return <p className="text-destructive py-6 text-sm">{error ?? "No encontrado"}</p>;
 
   return (
@@ -188,7 +189,7 @@ export default function ClientProfilePage() {
         </CardHeader>
         <CardContent className="px-0 pb-0">
           {!routesLoaded ? (
-            <p className="text-muted-foreground text-sm px-4 pb-4">Cargando rutas…</p>
+            <CardListSkeleton cards={2} lines={1} className="px-4 pb-4" />
           ) : routes.length === 0 ? (
             <p className="text-muted-foreground rounded-lg border border-dashed mx-4 mb-4 p-4 text-center text-sm">
               No hay rutas asignadas. Usa el botón {'"Seleccionar rutas"'} para asignarlas.

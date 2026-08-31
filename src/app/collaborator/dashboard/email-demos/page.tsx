@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { EmailDemos } from "@/components/dashboard/resources/email-demos";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
-import { DataTableSkeleton } from "@/components/ui/skeletons";
+import { CardListSkeleton } from "@/components/ui/skeletons";
 
 export default function CollaboratorEmailDemosPage() {
   const router = useRouter();
@@ -19,7 +19,7 @@ export default function CollaboratorEmailDemosPage() {
     }
   }, [isLoaded, permissions, router]);
 
-  if (!isLoaded) return <DataTableSkeleton />;
+  if (!isLoaded) return <CardListSkeleton cards={5} lines={1} />;
   if (!permissions?.canViewEmailDemos) return null;
 
   return (

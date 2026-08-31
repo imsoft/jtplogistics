@@ -8,6 +8,7 @@ import { TASK_STATUS_OPTIONS, TASK_STATUS_LABELS } from "@/lib/constants/task-st
 import { getTasksColumns } from "./tasks-columns";
 import { toast } from "sonner";
 import type { Task, TaskStatus } from "@/types/task.types";
+import { DataTableSkeleton } from "@/components/ui/skeletons";
 
 const ALL = "all";
 
@@ -75,7 +76,7 @@ export function DeveloperTasksTable() {
     [handleStatusChange]
   );
 
-  if (!isLoaded) return <p className="text-muted-foreground text-sm">Cargando…</p>;
+  if (!isLoaded) return <DataTableSkeleton />;
   if (error) return <p className="text-destructive text-sm">{error}</p>;
 
   return (

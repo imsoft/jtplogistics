@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { ConversationList } from "@/components/dashboard/messages/conversation-list";
 import { ChatWindow } from "@/components/dashboard/messages/chat-window";
 import { Button } from "@/components/ui/button";
+import { ChatSkeleton } from "@/components/ui/skeletons";
 
 export function StaffMessagesView() {
   const { data: session } = useSession();
@@ -17,7 +18,7 @@ export function StaffMessagesView() {
   const [selectedCarrierName, setSelectedCarrierName] = useState<string>("");
 
   if (!session) {
-    return <p className="text-muted-foreground">Cargando…</p>;
+    return <ChatSkeleton />;
   }
 
   function handleSelect(carrierId: string, carrierName: string) {

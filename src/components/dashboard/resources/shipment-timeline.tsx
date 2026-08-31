@@ -5,6 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SHIPMENT_STATUS_CONFIG } from "@/components/dashboard/resources/shipments-table";
 import type { ShipmentTimelineEntry } from "@/app/api/admin/shipments/[id]/timeline/route";
+import { CardListSkeleton } from "@/components/ui/skeletons";
 
 function fmtDateTime(iso: string) {
   return new Date(iso).toLocaleString("es-MX", {
@@ -51,7 +52,7 @@ export function ShipmentTimeline({ shipmentId, scope = "admin" }: ShipmentTimeli
       </CardHeader>
       <CardContent className="px-4 pb-5">
         {!isLoaded ? (
-          <p className="text-sm text-muted-foreground">Cargando…</p>
+          <CardListSkeleton cards={3} lines={1} />
         ) : entries.length === 0 ? (
           <p className="text-sm text-muted-foreground">Sin historial de estados.</p>
         ) : (

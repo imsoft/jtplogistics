@@ -9,6 +9,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { useUnitTypes } from "@/hooks/use-unit-types";
 import { getCarrierHomeColumns } from "@/components/dashboard/carrier/carrier-home-columns";
 import type { CarrierHomeRouteRow } from "@/types/carrier-home.types";
+import { DataTableSkeleton } from "@/components/ui/skeletons";
 
 interface RouteSelection {
   unitType: string;
@@ -93,7 +94,7 @@ export function CarrierDashboardHome() {
   const columns = useMemo(() => getCarrierHomeColumns(), []);
 
   if (!data) {
-    return <p className="text-muted-foreground">Cargando tu panel…</p>;
+    return <DataTableSkeleton />;
   }
 
   return (

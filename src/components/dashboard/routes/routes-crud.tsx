@@ -22,6 +22,7 @@ import { fuzzyMatch } from "@/lib/search";
 import { ROUTE_STATUS_LABELS } from "@/lib/constants/route-status";
 import type { Route, RouteStatus } from "@/types/route.types";
 import { ROUTE_STATUS_OPTIONS } from "@/lib/constants/route-status";
+import { DataTableSkeleton } from "@/components/ui/skeletons";
 
 const STATUS_FILTER_ALL = "all";
 const UNIT_FILTER_ALL = "all";
@@ -107,7 +108,7 @@ export function RoutesCrud({
   }, [filteredRoutes]);
 
   if (!isLoaded) {
-    return <p className="text-muted-foreground">Cargando…</p>;
+    return <DataTableSkeleton />;
   }
 
   return (
