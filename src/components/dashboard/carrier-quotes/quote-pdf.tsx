@@ -42,9 +42,14 @@ const s = StyleSheet.create({
   termsTitle: { fontFamily: "Helvetica-Bold", fontSize: 10, textAlign: "center", textDecoration: "underline", marginBottom: 4, marginTop: 4 },
   validity: { fontFamily: "Helvetica-Bold", fontSize: 8, textAlign: "center", textDecoration: "underline", marginTop: 5, marginBottom: 4 },
   // ── Signatures ──
-  sigBlock: { flexDirection: "row", justifyContent: "space-between", marginTop: 6, paddingTop: 0 },
+  sigBlock: { flexDirection: "row", justifyContent: "space-between", marginTop: 18, paddingTop: 0 },
   sigColumn: { width: "45%" },
-  sigLabel: { fontFamily: "Helvetica-Bold", fontSize: 9, marginBottom: 10, textAlign: "center" },
+  sigLabel: { fontFamily: "Helvetica-Bold", fontSize: 9, marginBottom: 6, textAlign: "center" },
+  /**
+   * El hueco donde se firma a mano. Sin esta altura la raya quedaba pegada al
+   * rótulo y no cabía una firma: hay que imprimirla, firmarla y escanearla.
+   */
+  sigSpace: { height: 46 },
   sigLine: { borderBottomWidth: 0.8, borderBottomColor: TEXT, marginBottom: 4 },
   sigName: { fontFamily: "Helvetica-Bold", fontSize: 8, textAlign: "center" },
   // ── Page title (pages 2-4) ──
@@ -113,6 +118,7 @@ function Signatures({
       <View style={s.sigBlock}>
         <View style={s.sigColumn}>
           <Text style={s.sigLabel}>ATENTAMENTE</Text>
+          <View style={s.sigSpace} />
           <View style={s.sigLine} />
           {creatorName ? (
             <Text style={s.sigName}>{creatorName}</Text>
@@ -127,6 +133,7 @@ function Signatures({
         </View>
         <View style={s.sigColumn}>
           <Text style={s.sigLabel}>ACEPTAMOS COTIZACION</Text>
+          <View style={s.sigSpace} />
           <View style={s.sigLine} />
           {contactName ? <Text style={s.sigName}>{titleCase(contactName)}</Text> : null}
         </View>
