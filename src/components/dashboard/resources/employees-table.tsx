@@ -21,6 +21,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { downloadXlsxFromAoa } from "@/lib/excel-export";
 import { Label } from "@/components/ui/label";
 import { FileDown } from "lucide-react";
+import { formatPhone } from "@/lib/utils";
 import type { Employee } from "@/types/resources.types";
 
 // ── Excel export ──────────────────────────────────────────────────────────────
@@ -83,7 +84,8 @@ function getColumns(): ColumnDef<Employee>[] {
   return [
     {
       id: "search",
-      accessorFn: (row) => `${row.name} ${row.email} ${row.position ?? ""} ${row.department ?? ""}`,
+      accessorFn: (row) =>
+        `${row.name} ${row.email} ${row.phone ?? ""} ${row.position ?? ""} ${row.department ?? ""}`,
       filterFn: "fuzzy",
       header: () => null,
       cell: () => null,
@@ -99,6 +101,18 @@ function getColumns(): ColumnDef<Employee>[] {
       accessorKey: "email",
       header: ({ column }) => <SortableColumnHeader column={column} title="Correo" />,
       cell: ({ row }) => <span className="text-muted-foreground text-email">{row.getValue("email")}</span>,
+    },
+    {
+      accessorKey: "phone",
+      header: ({ column }) => <SortableColumnHeader column={column} title="Teléfono" />,
+      cell: ({ row }) => {
+        const v = row.getValue("phone") as string | null;
+        return v ? (
+          <span className="whitespace-nowrap">{formatPhone(v)}</span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        );
+      },
     },
     {
       accessorKey: "position",
