@@ -19,6 +19,8 @@ interface LogItem {
   status: keyof typeof MAINTENANCE_STATUS_LABELS;
   description: string;
   findings: string | null;
+  /** A quién se le hizo, congelado al registrarlo. */
+  recipientName: string | null;
   scheduledFor: string;
   performedAt: string | null;
   photos: { url: string }[] | null;
@@ -57,7 +59,8 @@ export function MaintenanceLog({ currentUserName }: { currentUserName: string })
     if (kind !== "all" && m.kind !== kind) return false;
     if (!search.trim()) return true;
     const equipo = m.laptop?.name ?? m.phone?.name ?? "";
-    const persona = m.laptop?.assignedTo?.name ?? m.phone?.assignedTo?.name ?? "";
+    // Los registros viejos no lo guardaron: se cae al responsable actual.
+    const persona = m.recipientName ?? m.laptop?.assignedTo?.name ?? m.phone?.assignedTo?.name ?? "";
     return (
       fuzzyMatch(equipo, search) ||
       fuzzyMatch(persona, search) ||

@@ -33,7 +33,13 @@ export async function GET(request: NextRequest) {
   }
 }
 
-/** POST: programar un mantenimiento (o registrar uno ya hecho). */
+/**
+ * POST: programar un mantenimiento a futuro o anotar uno ya hecho.
+ *
+ * Anotar uno hecho manda `status: "done"` con su fecha real, lo que se hizo y
+ * las fotos: así no hay que programarlo primero y luego cerrarlo, que era el
+ * camino largo para el trabajo que ya se había realizado.
+ */
 export async function POST(request: NextRequest) {
   try {
     const session = await requireDeveloper();
@@ -44,6 +50,11 @@ export async function POST(request: NextRequest) {
       description?: string;
       scheduledFor?: string;
       ticketId?: string | null;
+      /** "done" para anotar uno ya hecho; si no, queda programado. */
+      status?: string;
+      performedAt?: string;
+      findings?: string | null;
+      photos?: { url: string; publicId?: string }[];
     };
 
     if (body.kind !== "preventive" && body.kind !== "corrective") {
@@ -65,6 +76,29 @@ export async function POST(request: NextRequest) {
     }
 
     const equipmentKind = body.equipmentKind as EquipmentKind;
+    const yaHecho = body.status === "done";
+
+    // Anotar uno ya hecho exige su fecha real: es el dato que revisa el auditor.
+    let performedAt: Date | null = null;
+    if (yaHecho) {
+      performedAt = body.performedAt ? new Date(body.performedAt) : scheduledFor;
+      if (Number.isNaN(performedAt.getTime())) {
+        return Response.json({ error: "Elige la fecha en que se hizo." }, { status: 400 });
+      }
+    }
+
+    // A quién se le hizo: se congela el responsable que tiene el equipo hoy,
+    // porque mañana puede estar asignado a otra persona.
+    const owner =
+      equipmentKind === "laptop"
+        ? await prisma.laptop.findUnique({
+            where: { id: body.equipmentId },
+            select: { assignedTo: { select: { name: true } } },
+          })
+        : await prisma.phone.findUnique({
+            where: { id: body.equipmentId },
+            select: { assignedTo: { select: { name: true } } },
+          });
 
     const data: Prisma.MaintenanceUncheckedCreateInput = {
       kind: body.kind as MaintenanceKind,
@@ -72,7 +106,12 @@ export async function POST(request: NextRequest) {
       laptopId: equipmentKind === "laptop" ? body.equipmentId : null,
       phoneId: equipmentKind === "phone" ? body.equipmentId : null,
       description,
+      findings: body.findings?.trim() || null,
       scheduledFor,
+      performedAt,
+      status: yaHecho ? "done" : "scheduled",
+      photos: (body.photos ?? []) as unknown as Prisma.InputJsonValue,
+      recipientName: owner?.assignedTo?.name ?? null,
       technicianId: session.user.id,
       ticketId: body.ticketId || null,
     };
@@ -81,7 +120,7 @@ export async function POST(request: NextRequest) {
 
     void logAudit({
       resource: "maintenance", resourceId: maintenance.id,
-      resourceLabel: `${maintenance.kind === "preventive" ? "Preventivo" : "Correctivo"} — ${maintenance.laptop?.name ?? maintenance.phone?.name ?? ""}`,
+      resourceLabel: `${maintenance.kind === "preventive" ? "Preventivo" : "Correctivo"} ${yaHecho ? "registrado" : "programado"} — ${maintenance.laptop?.name ?? maintenance.phone?.name ?? ""}`,
       action: "created", userId: session.user.id, userName: session.user.name,
     });
 

@@ -156,7 +156,11 @@ export function MaintenanceDetail({ id }: { id: string }) {
             )}
             {equipo?.equipmentCode && <Row label="Código" value={equipo.equipmentCode} />}
             {equipo?.serialNumber && <Row label="Serie" value={equipo.serialNumber} />}
-            {equipo?.assignedTo?.name && <Row label="Asignado a" value={equipo.assignedTo.name} />}
+            {/* Quien tenía el equipo el día del mantenimiento; si el registro es
+                viejo y no lo guardó, se cae al responsable actual del equipo. */}
+            {(item.recipientName ?? equipo?.assignedTo?.name) && (
+              <Row label="Se le hizo a" value={item.recipientName ?? equipo!.assignedTo!.name} />
+            )}
             {item.ticket && (
               <Row label="Reporte" value={item.ticket.title} />
             )}

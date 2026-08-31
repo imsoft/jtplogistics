@@ -846,6 +846,10 @@ model Maintenance {
   description   String            @map("description")
   /// Lo que se encontró al revisar el equipo.
   findings      String?           @map("findings")
+  /// A quién se le hizo: el responsable del equipo EN ESE MOMENTO. Se congela
+  /// al registrarlo porque el equipo cambia de manos y la evidencia de ISO
+  /// tiene que seguir diciendo a quién se le atendió aquel día.
+  recipientName String?           @map("recipient_name")
   scheduledFor  DateTime          @map("scheduled_for")
   performedAt   DateTime?         @map("performed_at")
   /// Fotos de evidencia: [{ url, publicId }].

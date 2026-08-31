@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { CalendarClock, Loader2, Plus, ShieldCheck, Wrench } from "lucide-react";
+import Image from "next/image";
+import { CalendarClock, Camera, ClipboardCheck, Loader2, Plus, ShieldCheck, Wrench, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -37,6 +38,8 @@ export interface MaintenanceItem {
   status: keyof typeof MAINTENANCE_STATUS_LABELS;
   description: string;
   findings: string | null;
+  /** A quién se le hizo, congelado al registrarlo. */
+  recipientName: string | null;
   scheduledFor: string;
   performedAt: string | null;
   photos: { url: string }[] | null;
@@ -66,13 +69,56 @@ export function MaintenanceBoard({ currentUserName }: { currentUserName: string 
   const [items, setItems] = useState<MaintenanceItem[] | null>(null);
   const [equipment, setEquipment] = useState<{ laptops: EquipmentItem[]; phones: EquipmentItem[] } | null>(null);
   const [showForm, setShowForm] = useState(false);
+  /**
+   * El mismo formulario sirve para agendar a futuro y para anotar trabajo ya
+   * hecho; en el segundo caso pide además qué se encontró y las fotos.
+   */
+  const [formMode, setFormMode] = useState<"schedule" | "log">("schedule");
 
   const [kind, setKind] = useState<"preventive" | "corrective">("preventive");
   const [equipmentValue, setEquipmentValue] = useState("");
   const [description, setDescription] = useState("");
   const [scheduledFor, setScheduledFor] = useState(todayIso());
+  const [findings, setFindings] = useState("");
+  const [photos, setPhotos] = useState<{ url: string; publicId?: string }[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const yaHecho = formMode === "log";
+
+  function openForm(mode: "schedule" | "log") {
+    setFormMode(mode);
+    setError(null);
+    setKind("preventive");
+    setEquipmentValue("");
+    setDescription("");
+    setFindings("");
+    setPhotos([]);
+    setScheduledFor(todayIso());
+    setShowForm(true);
+  }
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploading(true);
+    setError(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/developer/uploads", { method: "POST", body: fd });
+      const data = (await res.json().catch(() => ({}))) as { url?: string; publicId?: string; error?: string };
+      if (!res.ok || !data.url) throw new Error(data.error ?? "No se pudo subir la foto");
+      setPhotos((prev) => [...prev, { url: data.url!, publicId: data.publicId }]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo subir la foto");
+    } finally {
+      setIsUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
 
   const load = useCallback(() => {
     fetch("/api/developer/maintenance")
@@ -104,7 +150,14 @@ export function MaintenanceBoard({ currentUserName }: { currentUserName: string 
     e.preventDefault();
     setError(null);
     if (!equipmentValue) { setError("Elige el equipo."); return; }
-    if (!description.trim()) { setError("Describe qué se va a hacer."); return; }
+    if (!description.trim()) {
+      setError(yaHecho ? "Describe qué se hizo." : "Describe qué se va a hacer.");
+      return;
+    }
+    if (yaHecho && !findings.trim()) {
+      setError("Anota qué se encontró: es la evidencia que revisa la auditoría.");
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -112,11 +165,16 @@ export function MaintenanceBoard({ currentUserName }: { currentUserName: string 
       const res = await fetch("/api/developer/maintenance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind, equipmentKind, equipmentId, description, scheduledFor }),
+        body: JSON.stringify({
+          kind, equipmentKind, equipmentId, description, scheduledFor,
+          ...(yaHecho
+            ? { status: "done", performedAt: scheduledFor, findings, photos }
+            : {}),
+        }),
       });
       const data = await res.json().catch(() => ({})) as { error?: string };
-      if (!res.ok) { setError(data.error ?? "No se pudo programar."); return; }
-      setDescription(""); setEquipmentValue(""); setShowForm(false);
+      if (!res.ok) { setError(data.error ?? "No se pudo guardar."); return; }
+      setDescription(""); setEquipmentValue(""); setFindings(""); setPhotos([]); setShowForm(false);
       load();
     } catch {
       setError("Error de conexión.");
@@ -137,12 +195,11 @@ export function MaintenanceBoard({ currentUserName }: { currentUserName: string 
         </p>
         <div className="flex shrink-0 gap-3">
           <MaintenanceReportButton items={items ?? []} generatedBy={currentUserName} />
-          <Button
-            onClick={() => {
-              setError(null);
-              setShowForm(true);
-            }}
-          >
+          <Button variant="outline" onClick={() => openForm("log")}>
+            <ClipboardCheck className="size-4" />
+            Anotar uno hecho
+          </Button>
+          <Button onClick={() => openForm("schedule")}>
             <Plus className="size-4" />
             Programar
           </Button>
@@ -152,9 +209,13 @@ export function MaintenanceBoard({ currentUserName }: { currentUserName: string 
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Programar mantenimiento</DialogTitle>
+            <DialogTitle>
+              {yaHecho ? "Anotar un mantenimiento hecho" : "Programar mantenimiento"}
+            </DialogTitle>
             <DialogDescription>
-              Queda agendado y, al hacerlo, se cierra con la evidencia.
+              {yaHecho
+                ? "Queda registrado como realizado, con su fecha, lo que se hizo y las fotos."
+                : "Queda agendado y, al hacerlo, se cierra con la evidencia."}
             </DialogDescription>
           </DialogHeader>
 
@@ -178,7 +239,7 @@ export function MaintenanceBoard({ currentUserName }: { currentUserName: string 
                 </p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="m-date">Fecha</Label>
+                <Label htmlFor="m-date">{yaHecho ? "Fecha en que se hizo" : "Fecha"}</Label>
                 <DatePicker id="m-date" value={scheduledFor} onChange={setScheduledFor} />
               </div>
             </div>
@@ -192,14 +253,62 @@ export function MaintenanceBoard({ currentUserName }: { currentUserName: string 
                 className="w-full"
               />
               <p className="text-xs text-muted-foreground">
-                Laptops y celulares dados de alta, con su responsable.
+                Laptops y celulares dados de alta, con su responsable. A quién se
+                le hizo queda guardado con el registro.
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="m-desc">Qué se va a hacer</Label>
+              <Label htmlFor="m-desc">{yaHecho ? "Qué se hizo" : "Qué se va a hacer"}</Label>
               <Textarea id="m-desc" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
             </div>
+
+            {yaHecho && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="m-findings">Qué se encontró</Label>
+                  <Textarea
+                    id="m-findings"
+                    rows={3}
+                    value={findings}
+                    onChange={(e) => setFindings(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Cómo estaba el equipo y cómo quedó. Es lo que revisa la
+                    auditoría de ISO 9001.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Fotos</Label>
+                  <div className="flex flex-wrap gap-3">
+                    {photos.map((p, i) => (
+                      <div key={p.url} className="relative size-24 overflow-hidden rounded-lg border">
+                        <Image src={p.url} alt={`Evidencia ${i + 1}`} fill className="object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setPhotos((prev) => prev.filter((x) => x.url !== p.url))}
+                          className="absolute right-1 top-1 rounded-full bg-background/90 p-1 text-destructive"
+                          aria-label="Quitar foto"
+                        >
+                          <X className="size-3" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => fileRef.current?.click()}
+                      disabled={isUploading}
+                      className="flex size-24 flex-col items-center justify-center gap-1 rounded-lg border border-dashed text-muted-foreground transition hover:bg-muted/50"
+                    >
+                      {isUploading ? <Loader2 className="size-5 animate-spin" /> : <Camera className="size-5" />}
+                      <span className="text-[10px]">Agregar</span>
+                    </button>
+                    <input ref={fileRef} type="file" accept="image/*" onChange={handleUpload} className="hidden" />
+                  </div>
+                </div>
+              </>
+            )}
 
             {error && <p className="text-sm font-medium text-destructive">{error}</p>}
 
@@ -207,9 +316,9 @@ export function MaintenanceBoard({ currentUserName }: { currentUserName: string 
               <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isSaving}>
+              <Button type="submit" disabled={isSaving || isUploading}>
                 {isSaving ? <Loader2 className="size-4 animate-spin" /> : null}
-                {isSaving ? "Guardando…" : "Programar"}
+                {isSaving ? "Guardando…" : yaHecho ? "Registrar" : "Programar"}
               </Button>
             </DialogFooter>
           </form>

@@ -59,6 +59,7 @@ export interface ReportItem {
   scheduledFor: string;
   performedAt: string | null;
   photos: { url: string }[] | null;
+  recipientName?: string | null;
   laptop: { name: string; serialNumber?: string | null; assignedTo?: { name: string } | null } | null;
   phone: { name: string; serialNumber?: string | null; assignedTo?: { name: string } | null } | null;
   technician: { name: string };
@@ -182,10 +183,12 @@ export function MaintenanceReportPdf({
                       <Text style={s.value}>{equipo.serialNumber}</Text>
                     </View>
                   ) : null}
-                  {equipo?.assignedTo?.name ? (
+                  {/* Quien tenía el equipo el día del mantenimiento; los
+                      registros viejos caen al responsable actual. */}
+                  {(m.recipientName ?? equipo?.assignedTo?.name) ? (
                     <View style={s.row}>
-                      <Text style={s.label}>Usuario</Text>
-                      <Text style={s.value}>{equipo.assignedTo.name}</Text>
+                      <Text style={s.label}>Se le hizo a</Text>
+                      <Text style={s.value}>{m.recipientName ?? equipo!.assignedTo!.name}</Text>
                     </View>
                   ) : null}
                   <View style={s.row}>
