@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { CalendarClock, Camera, ClipboardCheck, Loader2, Plus, ShieldCheck, Wrench, X } from "lucide-react";
+import { CalendarClock, CalendarDays, Camera, ClipboardCheck, List, Loader2, Plus, ShieldCheck, Wrench, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -24,6 +24,7 @@ import {
   MAINTENANCE_STATUS_LABELS,
 } from "@/lib/support";
 import { MaintenanceReportButton } from "./maintenance-report-button";
+import { MaintenanceCalendar } from "./maintenance-calendar";
 
 interface EquipmentItem {
   id: string;
@@ -69,6 +70,8 @@ export function MaintenanceBoard({ currentUserName }: { currentUserName: string 
   const [items, setItems] = useState<MaintenanceItem[] | null>(null);
   const [equipment, setEquipment] = useState<{ laptops: EquipmentItem[]; phones: EquipmentItem[] } | null>(null);
   const [showForm, setShowForm] = useState(false);
+  /** Calendario o lista; el calendario es lo primero que se ve. */
+  const [vista, setVista] = useState<"calendario" | "lista">("calendario");
   /**
    * El mismo formulario sirve para agendar a futuro y para anotar trabajo ya
    * hecho; en el segundo caso pide además qué se encontró y las fotos.
@@ -193,7 +196,29 @@ export function MaintenanceBoard({ currentUserName }: { currentUserName: string 
           Cada mantenimiento deja constancia de quién lo hizo, cuándo se programó,
           cuándo se hizo y con qué evidencia: es lo que revisa la auditoría de ISO 9001.
         </p>
-        <div className="flex shrink-0 gap-3">
+        <div className="flex shrink-0 flex-wrap gap-3">
+          <div className="flex rounded-lg border p-0.5">
+            <button
+              type="button"
+              onClick={() => setVista("calendario")}
+              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
+                vista === "calendario" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+              }`}
+            >
+              <CalendarDays className="size-3.5" />
+              Calendario
+            </button>
+            <button
+              type="button"
+              onClick={() => setVista("lista")}
+              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
+                vista === "lista" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+              }`}
+            >
+              <List className="size-3.5" />
+              Lista
+            </button>
+          </div>
           <MaintenanceReportButton items={items ?? []} generatedBy={currentUserName} />
           <Button variant="outline" onClick={() => openForm("log")}>
             <ClipboardCheck className="size-4" />
@@ -327,6 +352,8 @@ export function MaintenanceBoard({ currentUserName }: { currentUserName: string 
 
       {!items ? (
         <CardListSkeleton cards={4} lines={2} />
+      ) : vista === "calendario" ? (
+        <MaintenanceCalendar items={items} detailBasePath="/developer/dashboard/maintenance" />
       ) : (
         <>
           <section className="space-y-3">
