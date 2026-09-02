@@ -15,7 +15,27 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { MAINTENANCE_KIND_LABELS, MAINTENANCE_STATUS_LABELS } from "@/lib/support";
-import type { MaintenanceItem } from "./maintenance-board";
+
+/**
+ * Lo mínimo que el calendario necesita de un mantenimiento. Se declara aquí en
+ * vez de importar el tipo del panel de soporte para que también lo pueda usar
+ * la bitácora de calidad, que trae los mismos datos con otra forma.
+ */
+export interface CalendarMaintenance {
+  id: string;
+  kind: keyof typeof MAINTENANCE_KIND_LABELS;
+  status: keyof typeof MAINTENANCE_STATUS_LABELS;
+  description: string;
+  findings: string | null;
+  recipientName: string | null;
+  scheduledFor: string;
+  performedAt: string | null;
+  photos: { url: string }[] | null;
+  laptop: { name: string } | null;
+  phone: { name: string } | null;
+  technician: { name: string };
+  ticket: { title: string } | null;
+}
 
 const STATUS_STYLES: Record<string, string> = {
   scheduled: "bg-blue-100 text-blue-800",
@@ -36,7 +56,7 @@ const WEEKDAYS = ["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM"];
  * El día que le toca a un mantenimiento en el calendario: el realmente hecho
  * si ya se cerró, y si no, el que está agendado.
  */
-function dayKey(m: MaintenanceItem): string {
+function dayKey(m: CalendarMaintenance): string {
   return (m.status === "done" && m.performedAt ? m.performedAt : m.scheduledFor).slice(0, 10);
 }
 
@@ -58,17 +78,17 @@ export function MaintenanceCalendar({
   items,
   detailBasePath,
 }: {
-  items: MaintenanceItem[];
+  items: CalendarMaintenance[];
   /** Base de la ficha completa. Sin ella, el modal no ofrece abrirla. */
   detailBasePath?: string;
 }) {
   const hoy = new Date();
   const [year, setYear] = useState(hoy.getUTCFullYear());
   const [month, setMonth] = useState(hoy.getUTCMonth());
-  const [selected, setSelected] = useState<MaintenanceItem | null>(null);
+  const [selected, setSelected] = useState<CalendarMaintenance | null>(null);
 
   const porDia = useMemo(() => {
-    const mapa = new Map<string, MaintenanceItem[]>();
+    const mapa = new Map<string, CalendarMaintenance[]>();
     for (const m of items) {
       const key = dayKey(m);
       const bucket = mapa.get(key);
@@ -106,7 +126,7 @@ export function MaintenanceCalendar({
     setMonth(d.getUTCMonth());
   }
 
-  const equipoDe = (m: MaintenanceItem) =>
+  const equipoDe = (m: CalendarMaintenance) =>
     m.laptop?.name ?? m.phone?.name ?? "Equipo dado de baja";
 
   return (

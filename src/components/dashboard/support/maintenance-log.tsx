@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { CalendarClock, ShieldCheck, Wrench } from "lucide-react";
+import { CalendarClock, CalendarDays, List, ShieldCheck, Wrench } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AppSelect } from "@/components/ui/app-select";
@@ -12,6 +12,7 @@ import { CardListSkeleton } from "@/components/ui/skeletons";
 import { MAINTENANCE_KIND_LABELS, MAINTENANCE_STATUS_LABELS } from "@/lib/support";
 import { fuzzyMatch } from "@/lib/search";
 import { MaintenanceReportButton } from "./maintenance-report-button";
+import { MaintenanceCalendar } from "./maintenance-calendar";
 
 interface LogItem {
   id: string;
@@ -45,6 +46,8 @@ export function MaintenanceLog({ currentUserName }: { currentUserName: string })
   const [items, setItems] = useState<LogItem[] | null>(null);
   const [search, setSearch] = useState("");
   const [kind, setKind] = useState("all");
+  /** Calendario o lista; el calendario es lo primero que se ve. */
+  const [vista, setVista] = useState<"calendario" | "lista">("calendario");
 
   useEffect(() => {
     fetch("/api/collaborator/maintenance")
@@ -71,10 +74,38 @@ export function MaintenanceLog({ currentUserName }: { currentUserName: string })
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-end gap-3">
+        <div className="flex rounded-lg border p-0.5">
+          <button
+            type="button"
+            onClick={() => setVista("calendario")}
+            className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
+              vista === "calendario" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+            }`}
+          >
+            <CalendarDays className="size-3.5" />
+            Calendario
+          </button>
+          <button
+            type="button"
+            onClick={() => setVista("lista")}
+            className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
+              vista === "lista" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+            }`}
+          >
+            <List className="size-3.5" />
+            Lista
+          </button>
+        </div>
         <MaintenanceReportButton items={items} generatedBy={currentUserName} />
       </div>
 
+      {/* El calendario ya trae su propio filtro por mes; los de búsqueda y tipo
+          son de la lista. */}
+      {vista === "calendario" ? (
+        <MaintenanceCalendar items={items} />
+      ) : (
+      <>
       <div className="grid gap-4 sm:grid-cols-[1fr_220px]">
         <div className="space-y-2">
           <Label htmlFor="log-search">Buscar</Label>
@@ -175,6 +206,8 @@ export function MaintenanceLog({ currentUserName }: { currentUserName: string })
             );
           })}
         </div>
+      )}
+      </>
       )}
     </div>
   );
