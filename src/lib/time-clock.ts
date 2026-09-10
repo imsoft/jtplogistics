@@ -58,12 +58,18 @@ export function workDateKey(value: Date): string {
   return value.toISOString().slice(0, 10);
 }
 
-/** "09:42" en hora de la empresa. */
+/**
+ * "09:42:17" en hora de la empresa.
+ *
+ * Con segundos porque es lo que quedó registrado: en la bitácora de
+ * correcciones importa poder decir exactamente qué hora tenía la marca antes.
+ */
 export function companyTime(date: Date): string {
   return new Intl.DateTimeFormat("es-MX", {
     timeZone: COMPANY_TZ,
     hour: "2-digit",
     minute: "2-digit",
+    second: "2-digit",
     hour12: false,
   }).format(date);
 }

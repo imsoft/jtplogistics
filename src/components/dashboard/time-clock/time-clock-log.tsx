@@ -71,10 +71,12 @@ interface Row {
   corrections: Correction[];
 }
 
-function hhmm(iso: string) {
+/** La hora de una marca, al segundo: es lo que quedó registrado. */
+function hms(iso: string) {
   return new Date(iso).toLocaleTimeString("es-MX", {
     hour: "2-digit",
     minute: "2-digit",
+    second: "2-digit",
     hour12: false,
     timeZone: "America/Mexico_City",
   });
@@ -156,7 +158,7 @@ export function TimeClockLog({ canCorrect = false }: { canCorrect?: boolean }) {
         </Card>
       ) : (
         <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full min-w-[860px] text-sm">
+          <table className="w-full min-w-[940px] text-sm">
             <thead>
               <tr className="border-b bg-muted/40">
                 <th className="px-4 py-2 text-left font-medium">Colaborador</th>
@@ -187,7 +189,7 @@ export function TimeClockLog({ canCorrect = false }: { canCorrect?: boolean }) {
                       <td key={c.mark} className="px-4 py-2.5">
                         {m ? (
                           <span className="flex flex-col">
-                            <span className="font-semibold tabular-nums">{hhmm(m.at)}</span>
+                            <span className="font-semibold tabular-nums">{hms(m.at)}</span>
                             {m.distanceM !== null && (
                               <span
                                 className={`flex items-center gap-1 text-xs ${

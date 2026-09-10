@@ -52,10 +52,12 @@ interface State {
   entries: Entry[];
 }
 
-function hhmm(iso: string) {
+/** La hora de una marca, al segundo: es lo que quedó registrado. */
+function hms(iso: string) {
   return new Date(iso).toLocaleTimeString("es-MX", {
     hour: "2-digit",
     minute: "2-digit",
+    second: "2-digit",
     hour12: false,
     timeZone: "America/Mexico_City",
   });
@@ -335,7 +337,7 @@ export function PunchPanel({ variant = "full" }: { variant?: "full" | "compact" 
                         </span>
                       )}
                       <span className="text-base font-semibold tabular-nums">
-                        {hhmm(entry.markedAt)}
+                        {hms(entry.markedAt)}
                       </span>
                     </span>
                   ) : (
