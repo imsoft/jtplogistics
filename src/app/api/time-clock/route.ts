@@ -5,9 +5,10 @@ import {
   allowedMarksAfter,
   companyDateKey,
   distanceInMeters,
+  isNetworkAllowed,
   workDateFromKey,
 } from "@/lib/time-clock";
-import { loadOfficeGeofence } from "@/lib/time-clock-config";
+import { loadTimeClockConfig } from "@/lib/time-clock-config";
 
 const MARKS: TimeClockMark[] = ["clock_in", "lunch_start", "lunch_end", "clock_out"];
 const GEO_STATUSES: GeoStatus[] = ["granted", "denied", "unavailable"];
@@ -106,16 +107,32 @@ export async function POST(request: Request) {
     // La entrada abre jornada nueva; las demás heredan la que ya está abierta.
     const workDate = shift ? shift.workDate : workDateFromKey(companyDateKey());
 
+    const config = await loadTimeClockConfig();
+    const ip = clientIp(request);
+
+    // La red sí puede bloquear, a diferencia de la ubicación: estar conectado
+    // al internet de la oficina es una condición que se controla, mientras que
+    // el GPS falla solo. Con la lista vacía nunca bloquea (ver isNetworkAllowed).
+    if (!isNetworkAllowed(config.network, ip)) {
+      return Response.json(
+        {
+          error:
+            "Esta conexión no es la de la oficina. El checador solo funciona desde la red de la empresa.",
+        },
+        { status: 403 }
+      );
+    }
+
     const lat = typeof body.latitude === "number" ? body.latitude : null;
     const lng = typeof body.longitude === "number" ? body.longitude : null;
     const accuracy = typeof body.accuracy === "number" ? body.accuracy : null;
 
     let distanceM: number | null = null;
-    if (lat !== null && lng !== null) {
-      const office = await loadOfficeGeofence();
-      if (office) {
-        distanceM = distanceInMeters({ lat, lng }, { lat: office.lat, lng: office.lng });
-      }
+    if (lat !== null && lng !== null && config.geofence) {
+      distanceM = distanceInMeters(
+        { lat, lng },
+        { lat: config.geofence.lat, lng: config.geofence.lng }
+      );
     }
 
     const geoStatus =
@@ -128,7 +145,7 @@ export async function POST(request: Request) {
         userId,
         mark,
         workDate,
-        ipAddress: clientIp(request),
+        ipAddress: ip,
         userAgent: request.headers.get("user-agent")?.slice(0, 400) ?? null,
         deviceId: typeof body.deviceId === "string" ? body.deviceId.slice(0, 64) : null,
         latitude: lat,

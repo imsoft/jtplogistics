@@ -87,3 +87,40 @@ export function distanceInMeters(
     Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
   return Math.round(2 * R * Math.asin(Math.sqrt(h)));
 }
+
+/**
+ * Qué hacer cuando alguien marca desde una conexión que no es la de la oficina.
+ *
+ * - `off`   — ni se revisa. La conexión se guarda igual.
+ * - `flag`  — se deja marcar y queda señalado para que RH lo mire.
+ * - `block` — no se puede marcar fuera de la red autorizada.
+ */
+export type NetworkMode = "off" | "flag" | "block";
+
+export const NETWORK_MODES: NetworkMode[] = ["off", "flag", "block"];
+
+export interface NetworkPolicy {
+  mode: NetworkMode;
+  allowedIps: string[];
+}
+
+/**
+ * Si esta conexión puede marcar.
+ *
+ * Falla en abierto a propósito: con la lista vacía nunca se bloquea, aunque el
+ * modo diga `block`. Una lista mal capturada dejaría a toda la empresa sin
+ * poder registrar su entrada, y eso cuesta muchísimo más de lo que protege.
+ */
+export function isNetworkAllowed(policy: NetworkPolicy, ip: string | null): boolean {
+  if (policy.mode !== "block") return true;
+  if (policy.allowedIps.length === 0) return true;
+  if (!ip) return false;
+  return policy.allowedIps.includes(ip);
+}
+
+/** Si la conexión merece bandera, sin impedir la marca. */
+export function isNetworkForeign(policy: NetworkPolicy, ip: string | null): boolean {
+  if (policy.mode === "off") return false;
+  if (policy.allowedIps.length === 0) return false;
+  return !ip || !policy.allowedIps.includes(ip);
+}

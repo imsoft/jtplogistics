@@ -5,6 +5,8 @@ import {
   distanceInMeters,
   workDateFromKey,
   workDateKey,
+  isNetworkAllowed,
+  isNetworkForeign,
 } from "@/lib/time-clock";
 
 describe("secuencia de marcas", () => {
@@ -64,5 +66,34 @@ describe("distancia a la oficina", () => {
       { lat: 20.7214, lng: -103.3918 }
     );
     expect(d).toBeGreaterThan(5000);
+  });
+});
+
+describe("política de red", () => {
+  it("nunca bloquea con la lista vacía, aunque el modo diga bloquear", () => {
+    // Una lista mal capturada dejaría a toda la empresa sin poder marcar.
+    expect(isNetworkAllowed({ mode: "block", allowedIps: [] }, "1.2.3.4")).toBe(true);
+  });
+
+  it("deja pasar la conexión autorizada", () => {
+    expect(isNetworkAllowed({ mode: "block", allowedIps: ["187.247.153.228"] }, "187.247.153.228")).toBe(true);
+  });
+
+  it("detiene la que no está en la lista", () => {
+    expect(isNetworkAllowed({ mode: "block", allowedIps: ["187.247.153.228"] }, "189.178.215.122")).toBe(false);
+  });
+
+  it("no bloquea si no se pudo leer la conexión y el modo es señalar", () => {
+    expect(isNetworkAllowed({ mode: "flag", allowedIps: ["187.247.153.228"] }, null)).toBe(true);
+  });
+
+  it("señala la conexión de fuera sin impedir la marca", () => {
+    const policy = { mode: "flag" as const, allowedIps: ["187.247.153.228"] };
+    expect(isNetworkForeign(policy, "189.178.215.122")).toBe(true);
+    expect(isNetworkForeign(policy, "187.247.153.228")).toBe(false);
+  });
+
+  it("apagado no señala nada", () => {
+    expect(isNetworkForeign({ mode: "off", allowedIps: ["187.247.153.228"] }, "1.2.3.4")).toBe(false);
   });
 });

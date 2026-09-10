@@ -11,6 +11,7 @@ import { ShoppingBag } from "lucide-react";
 import { ClipboardList } from "lucide-react";
 import { Settings } from "lucide-react";
 import { CalendarClock } from "lucide-react";
+import { Wifi } from "lucide-react";
 import { Boxes } from "lucide-react";
 import { Users } from "lucide-react";
 import { Copy } from "lucide-react";
@@ -68,6 +69,7 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
       { title: "Colaboradores", href: "/admin/dashboard/employees", icon: UserRound },
       { title: "Organigrama", href: "/admin/dashboard/employees/org-chart", icon: Network },
       { title: "Checador", href: "/admin/dashboard/time-clock", icon: CalendarClock },
+      { title: "Config. del checador", href: "/admin/dashboard/time-clock/config", icon: Wifi },
     ],
   },
   {
