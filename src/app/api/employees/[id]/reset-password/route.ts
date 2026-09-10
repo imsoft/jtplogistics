@@ -1,26 +1,14 @@
-import { randomBytes } from "node:crypto";
-import { hashPassword } from "better-auth/crypto";
 import { prisma } from "@/lib/db";
 import { adminOrDeveloperHandler } from "@/lib/api-handler";
-import { encryptSecret } from "@/lib/secret-vault";
+import {
+  MIN_PASSWORD_LENGTH,
+  applyPasswordReset,
+  generatePassword,
+} from "@/lib/password-reset";
 import { logAudit } from "@/lib/audit-log";
 import { sendEmail } from "@/lib/email";
 import { buildPasswordResetByStaffEmail } from "@/lib/account-email";
 import { appUrl } from "@/lib/email-layout";
-
-/** Mínimo que pide Better Auth para una contraseña. */
-const MIN_LENGTH = 8;
-
-/**
- * Genera una contraseña temporal legible: se dicta por teléfono sin confundir
- * mayúsculas con minúsculas ni el 0 con la O.
- */
-function generatePassword(): string {
-  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const bytes = randomBytes(8);
-  const body = Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
-  return `JTP-${body}`;
-}
 
 /**
  * POST /api/employees/[id]/reset-password
@@ -52,9 +40,9 @@ export function POST(request: Request, { params }: { params: Promise<{ id: strin
       // En mayúsculas porque el correo de aviso también lo va: si se guardara
       // en minúsculas, la que le llega al colaborador no le serviría.
       password = body.password.trim().toLocaleUpperCase("es-MX");
-      if (password.length < MIN_LENGTH) {
+      if (password.length < MIN_PASSWORD_LENGTH) {
         return Response.json(
-          { error: `La contraseña debe tener al menos ${MIN_LENGTH} caracteres.` },
+          { error: `La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres.` },
           { status: 400 }
         );
       }
@@ -62,43 +50,7 @@ export function POST(request: Request, { params }: { params: Promise<{ id: strin
       password = generatePassword();
     }
 
-    const hashed = await hashPassword(password);
-    const now = new Date();
-
-    // La cuenta de credenciales puede no existir si el usuario se dio de alta
-    // por otro medio; en ese caso se crea para que pueda entrar con correo.
-    const account = await prisma.account.findFirst({
-      where: { userId: id, providerId: "credential" },
-      select: { id: true },
-    });
-
-    if (account) {
-      await prisma.account.update({
-        where: { id: account.id },
-        data: { password: hashed, updatedAt: now },
-      });
-    } else {
-      await prisma.account.create({
-        data: {
-          id: crypto.randomUUID(),
-          accountId: target.email,
-          providerId: "credential",
-          userId: id,
-          password: hashed,
-          createdAt: now,
-          updatedAt: now,
-        },
-      });
-    }
-
-    // La referencia de la ficha queda al día, para que no muestre una vieja.
-    await prisma.employeeProfile.updateMany({
-      where: { userId: id },
-      data: { password: encryptSecret(password) },
-    });
-
-    // Quien estuviera dentro con la contraseña anterior queda fuera.
-    const { count: closedSessions } = await prisma.session.deleteMany({ where: { userId: id } });
+    const { closedSessions } = await applyPasswordReset(id, target.email, password);
 
     let emailed = false;
     let emailError: string | null = null;
