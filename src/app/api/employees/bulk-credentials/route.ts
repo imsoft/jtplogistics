@@ -6,8 +6,14 @@ import { buildPasswordResetByStaffEmail } from "@/lib/account-email";
 import { appUrl } from "@/lib/email-layout";
 import { applyPasswordReset, generatePassword } from "@/lib/password-reset";
 
-/** El equipo de JTP. Los transportistas son externos y quedan fuera. */
-const INTERNAL_ROLES = ["collaborator", "admin", "vendor", "developer"] as const;
+/**
+ * A quiénes alcanza el envío masivo.
+ *
+ * Los transportistas quedan fuera por externos, y dirección por decisión del
+ * cliente: se queda con la contraseña que ya tiene. Si algún día hay que
+ * cambiársela, es desde su ficha y de una en una, no aquí.
+ */
+const INTERNAL_ROLES = ["collaborator", "vendor", "developer"] as const;
 
 /**
  * GET /api/employees/bulk-credentials

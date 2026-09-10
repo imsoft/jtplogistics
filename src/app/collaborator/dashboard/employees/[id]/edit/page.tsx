@@ -5,6 +5,7 @@ import { FormSkeleton } from "@/components/ui/skeletons";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { ResourceEditHeader } from "@/components/dashboard/resources/resource-edit-header";
 import { EmployeeForm } from "@/components/dashboard/resources/employee-form";
+import { EmployeeScheduleCard } from "@/components/dashboard/time-clock/employee-schedule-card";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 import type { Employee } from "@/types/resources.types";
 
@@ -42,7 +43,9 @@ export default function CollaboratorEditEmployeePage() {
             cancelHref={`/collaborator/dashboard/employees/${id}`}
             onSubmit={handleSubmit}
             isSubmitting={isSubmitting}
-          />
+          >
+            {permissions?.canManageSchedules && <EmployeeScheduleCard userId={id} />}
+          </EmployeeForm>
         )}
       </div>
     </div>

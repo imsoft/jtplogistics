@@ -12,7 +12,6 @@ import { ClipboardList } from "lucide-react";
 import { Settings } from "lucide-react";
 import { CalendarClock } from "lucide-react";
 import { Wifi } from "lucide-react";
-import { CalendarCog } from "lucide-react";
 import { KeyRound } from "lucide-react";
 import { Boxes } from "lucide-react";
 import { Users } from "lucide-react";
@@ -72,7 +71,6 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
       { title: "Organigrama", href: "/admin/dashboard/employees/org-chart", icon: Network },
       { title: "Mandar accesos", href: "/admin/dashboard/employees/credentials", icon: KeyRound },
       { title: "Checador", href: "/admin/dashboard/time-clock", icon: CalendarClock },
-      { title: "Horarios", href: "/admin/dashboard/time-clock/schedules", icon: CalendarCog },
       { title: "Config. del checador", href: "/admin/dashboard/time-clock/config", icon: Wifi },
     ],
   },

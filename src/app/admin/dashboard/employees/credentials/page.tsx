@@ -19,7 +19,6 @@ import {
 
 const ROLE_LABELS: Record<string, string> = {
   collaborator: "Colaborador",
-  admin: "Dirección",
   vendor: "Vendedor",
   developer: "Soporte TI",
 };
@@ -147,8 +146,9 @@ export default function BulkCredentialsPage() {
             </li>
           </ul>
           <p className="text-muted-foreground">
-            Tu propia cuenta no aparece en la lista: cerrarte la sesión a media operación te
-            dejaría fuera sin nadie que lo arregle.
+            No aparecen ni los transportistas, que son externos, ni dirección, que se queda
+            con la contraseña que ya tiene. Tu propia cuenta tampoco: cerrarte la sesión a
+            media operación te dejaría fuera sin nadie que lo arregle.
           </p>
         </CardContent>
       </Card>

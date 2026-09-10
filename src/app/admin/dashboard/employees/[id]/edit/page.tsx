@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { ResourceEditHeader } from "@/components/dashboard/resources/resource-edit-header";
 import { EmployeeForm } from "@/components/dashboard/resources/employee-form";
+import { EmployeeScheduleCard } from "@/components/dashboard/time-clock/employee-schedule-card";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -167,6 +168,8 @@ export default function EditEmployeePage() {
             onSubmit={onSubmit}
             isSubmitting={isSubmitting}
           >
+            <EmployeeScheduleCard userId={id} />
+
             {/* Recursos vinculados */}
             {hasLinks && (
               <Card>
