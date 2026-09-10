@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { Loader2, Moon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Moon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -20,10 +18,24 @@ const WEEKDAYS = [
   { n: 0, label: "Domingo" },
 ];
 
-interface Day {
+export interface Day {
   weekday: number;
   startMinute: number;
   endMinute: number;
+}
+
+/** Guarda el horario. Lo llama la ficha al mandar el formulario completo. */
+export async function saveSchedule(userId: string, days: Day[]): Promise<boolean> {
+  try {
+    const res = await fetch("/api/time-clock/schedules", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, days }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 /** "09:00" ↔ 540 */
@@ -42,13 +54,18 @@ function toMinutes(time: string): number | null {
 /**
  * El horario del colaborador, dentro de su propia ficha.
  *
- * Se guarda aparte del resto del formulario a propósito: cambiarle el horario
- * a alguien cambia desde cuándo se le cuentan retardos, y eso no debería
- * viajar escondido en el mismo "guardar cambios" que su teléfono.
+ * No guarda por su cuenta: va con el "Guardar cambios" del formulario. Avisa
+ * hacia arriba en cada edición, y manda "invalid" si alguna hora quedó vacía
+ * para que la ficha no mande un horario a medias.
  */
-export function EmployeeScheduleCard({ userId }: { userId: string }) {
+export function EmployeeScheduleCard({
+  userId,
+  onChange,
+}: {
+  userId: string;
+  onChange: (days: Day[] | "invalid") => void;
+}) {
   const [draft, setDraft] = useState<Record<number, { start: string; end: string }> | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     fetch(`/api/time-clock/schedules?userId=${userId}`)
@@ -63,6 +80,22 @@ export function EmployeeScheduleCard({ userId }: { userId: string }) {
       .catch(() => setDraft({}));
   }, [userId]);
 
+  // Cada cambio sube convertido a minutos; la ficha decide cuándo guardarlo.
+  useEffect(() => {
+    if (draft === null) return;
+    const days: Day[] = [];
+    for (const [weekday, v] of Object.entries(draft)) {
+      const startMinute = toMinutes(v.start);
+      const endMinute = toMinutes(v.end);
+      if (startMinute === null || endMinute === null) {
+        onChange("invalid");
+        return;
+      }
+      days.push({ weekday: Number(weekday), startMinute, endMinute });
+    }
+    onChange(days);
+  }, [draft, onChange]);
+
   function toggleDay(weekday: number, on: boolean) {
     setDraft((prev) => {
       const next = { ...(prev ?? {}) };
@@ -72,43 +105,14 @@ export function EmployeeScheduleCard({ userId }: { userId: string }) {
     });
   }
 
-  async function save() {
-    if (!draft) return;
-    const days: Day[] = [];
-    for (const [weekday, v] of Object.entries(draft)) {
-      const startMinute = toMinutes(v.start);
-      const endMinute = toMinutes(v.end);
-      if (startMinute === null || endMinute === null) {
-        toast.error("Revisa las horas: alguna no es válida.");
-        return;
-      }
-      days.push({ weekday: Number(weekday), startMinute, endMinute });
-    }
-
-    setIsSaving(true);
-    try {
-      const res = await fetch("/api/time-clock/schedules", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, days }),
-      });
-      if (!res.ok) throw new Error();
-      toast.success("Horario guardado.");
-    } catch {
-      toast.error("No se pudo guardar el horario.");
-    } finally {
-      setIsSaving(false);
-    }
-  }
-
   return (
     <Card>
       <CardHeader className="space-y-1">
         <CardTitle className="text-left text-base sm:text-lg">Horario</CardTitle>
         <CardDescription className="text-left text-xs sm:text-sm">
-          Los días que no marques significan que no labora ese día. La entrada tiene
-          10 minutos de tolerancia; después de eso es retardo y tiene que escribir
-          el motivo para poder marcar.
+          Se guarda con el resto de la ficha. Los días que no marques significan que
+          no labora ese día. La entrada tiene 10 minutos de tolerancia; después de eso
+          es retardo y tiene que escribir el motivo para poder marcar.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -168,11 +172,6 @@ export function EmployeeScheduleCard({ userId }: { userId: string }) {
                 </div>
               );
             })}
-
-            <Button type="button" onClick={save} disabled={isSaving} className="mt-1">
-              {isSaving && <Loader2 className="size-4 animate-spin" />}
-              Guardar horario
-            </Button>
           </>
         )}
       </CardContent>

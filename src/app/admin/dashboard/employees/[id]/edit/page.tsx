@@ -7,7 +7,11 @@ import Link from "next/link";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { ResourceEditHeader } from "@/components/dashboard/resources/resource-edit-header";
 import { EmployeeForm } from "@/components/dashboard/resources/employee-form";
-import { EmployeeScheduleCard } from "@/components/dashboard/time-clock/employee-schedule-card";
+import {
+  EmployeeScheduleCard,
+  saveSchedule,
+  type Day,
+} from "@/components/dashboard/time-clock/employee-schedule-card";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Laptop, Smartphone, Mail, ChevronRight, Eye, Plus, Pencil, Trash2, AtSign } from "lucide-react";
 import type { Employee, EmployeeFormData } from "@/types/resources.types";
 import { formatPhone } from "@/lib/utils";
+import { toast } from "sonner";
 
 const MODULES = [
   { suffix: "Messages", label: "Mensajes" },
@@ -108,6 +113,10 @@ export default function EditEmployeePage() {
     setPermissions(initial);
   }
 
+  // undefined mientras la tarjeta del horario carga: sin esto, mandar el
+  // formulario antes de que termine borraría el horario que ya tenía.
+  const [schedule, setSchedule] = useState<Day[] | "invalid" | undefined>(undefined);
+
   function togglePerm(key: string) {
     setPermissions((prev) => prev ? { ...prev, [key]: !prev[key] } : prev);
   }
@@ -123,8 +132,17 @@ export default function EditEmployeePage() {
     });
   }
 
-  function onSubmit(formData: EmployeeFormData) {
-    // Merge permissions into form data
+  async function onSubmit(formData: EmployeeFormData) {
+    if (schedule === "invalid") {
+      toast.error("Revisa el horario: alguna hora quedó vacía.");
+      return;
+    }
+    // El horario primero: guardarlo después sería tarde, porque el guardado de
+    // la ficha redirige y se perdería el cambio sin que nadie se entere.
+    if (Array.isArray(schedule) && !(await saveSchedule(id, schedule))) {
+      toast.error("No se pudo guardar el horario. No se guardó nada.");
+      return;
+    }
     handleSubmit({ ...formData, ...permissions });
   }
 
@@ -168,7 +186,7 @@ export default function EditEmployeePage() {
             onSubmit={onSubmit}
             isSubmitting={isSubmitting}
           >
-            <EmployeeScheduleCard userId={id} />
+            <EmployeeScheduleCard userId={id} onChange={setSchedule} />
 
             {/* Recursos vinculados */}
             {hasLinks && (
