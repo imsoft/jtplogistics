@@ -118,3 +118,29 @@ describe("geocerca de la oficina de JTP", () => {
     expect(distanceInMeters(OFICINA, { lat: 20.7211, lng: -103.3874 })).toBeGreaterThan(2000);
   });
 });
+
+describe("dónde se permite pedir la ubicación", () => {
+  // Espejo de la regla en proxy.ts. El inicio va exacto y el checador por
+  // prefijo: con prefijo, el inicio abriría la ubicación en TODO el panel.
+  const EXACT = ["/collaborator/dashboard"];
+  const PREFIXES = ["/collaborator/dashboard/time-clock"];
+  const allows = (p: string) =>
+    EXACT.includes(p) || PREFIXES.some((x) => p.startsWith(x));
+
+  it("el inicio del colaborador sí, porque ahí está el botón de marcar", () => {
+    expect(allows("/collaborator/dashboard")).toBe(true);
+  });
+
+  it("la pantalla del checador sí", () => {
+    expect(allows("/collaborator/dashboard/time-clock")).toBe(true);
+  });
+
+  it("el resto del panel del colaborador no", () => {
+    expect(allows("/collaborator/dashboard/clients")).toBe(false);
+    expect(allows("/collaborator/dashboard/finances")).toBe(false);
+  });
+
+  it("el panel de dirección no", () => {
+    expect(allows("/admin/dashboard")).toBe(false);
+  });
+});

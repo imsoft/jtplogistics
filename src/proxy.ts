@@ -33,10 +33,21 @@ function clientIp(request: NextRequest): string {
 
 /**
  * Rutas donde el navegador sí puede pedir la ubicación: el reloj checador la
- * necesita para saber a qué distancia de la oficina se marcó. En el resto de
- * la app sigue apagada, que es lo correcto por defecto.
+ * necesita para saber a qué distancia de la oficina se marcó, y el botón de
+ * marcado también vive en el inicio del colaborador. En el resto de la app
+ * sigue apagada, que es lo correcto por defecto.
+ *
+ * El inicio va como coincidencia EXACTA y no por prefijo: con prefijo abriría
+ * la ubicación en todo el panel del colaborador, que es justo lo que no se
+ * quiere.
  */
-const GEOLOCATION_PATHS = ["/collaborator/dashboard/time-clock"];
+const GEOLOCATION_PREFIXES = ["/collaborator/dashboard/time-clock"];
+const GEOLOCATION_EXACT = ["/collaborator/dashboard"];
+
+function allowsGeolocation(pathname: string): boolean {
+  if (GEOLOCATION_EXACT.includes(pathname)) return true;
+  return GEOLOCATION_PREFIXES.some((p) => pathname.startsWith(p));
+}
 
 /**
  * Cabeceras de seguridad para todas las respuestas.
@@ -75,9 +86,7 @@ function applySecurityHeaders(headers: Headers, nonce: string, pathname: string)
   headers.set("X-Frame-Options", "DENY");
   headers.set("X-Content-Type-Options", "nosniff");
   headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-  const geolocation = GEOLOCATION_PATHS.some((p) => pathname.startsWith(p))
-    ? "geolocation=(self)"
-    : "geolocation=()";
+  const geolocation = allowsGeolocation(pathname) ? "geolocation=(self)" : "geolocation=()";
   headers.set(
     "Permissions-Policy",
     `camera=(), microphone=(), ${geolocation}, payment=()`

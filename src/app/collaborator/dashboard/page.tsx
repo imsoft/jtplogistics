@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard, fmtInt, fmtMxn } from "@/components/dashboard/home/stat-card";
+import { PunchPanel } from "@/components/dashboard/time-clock/punch-panel";
 import { requireCollaboratorPage } from "@/lib/auth-server";
 import { prisma } from "@/lib/db";
 import { formatDateRange, entryKindLabel } from "@/lib/mural";
@@ -188,6 +189,8 @@ export default async function CollaboratorDashboard() {
           Panel de control • <span className="text-email">{user?.email}</span>
         </p>
       </div>
+
+      <PunchPanel variant="compact" />
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {user?.canViewQuotes && (
