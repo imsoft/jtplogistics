@@ -44,6 +44,7 @@ export const PERMISSION_FIELDS = [
   "canViewEmailDemos",
   "canChangeEmployeeEmail",
   "canViewTimeClock",
+  "canManageSchedules",
 ];
 
 export const PERMISSION_LABELS: Record<string, string> = Object.fromEntries([
@@ -58,6 +59,7 @@ export const PERMISSION_LABELS: Record<string, string> = Object.fromEntries([
   ["canViewEmailDemos", "Correos de prueba: usar"],
   ["canChangeEmployeeEmail", "Colaboradores: cambiar correo de acceso"],
   ["canViewTimeClock", "Checador: ver el registro de todos"],
+  ["canManageSchedules", "Checador: capturar horarios"],
 ]);
 
 /** Todo lo que cuelga de un colaborador: equipo asignado y cuentas de correo. */

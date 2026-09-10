@@ -53,6 +53,7 @@ const PERMISSION_FIELDS = [
   { key: "canChangeEmployeeEmail", label: "Colaboradores: cambiar correo de acceso" },
   // Marcar lo propio no pide permiso; esto es ver el registro de todos.
   { key: "canViewTimeClock", label: "Checador: ver el registro de todos" },
+  { key: "canManageSchedules", label: "Checador: capturar horarios" },
 ];
 
 const PERM_ICONS: Record<string, React.ElementType> = {

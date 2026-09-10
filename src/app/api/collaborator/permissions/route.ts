@@ -22,6 +22,7 @@ export async function GET() {
         canViewEmailDemos: true,
         canChangeEmployeeEmail: true,
         canViewTimeClock: true,
+        canManageSchedules: true,
         canViewPhones: true,
         canViewEmails: true,
         canViewTasks: true,

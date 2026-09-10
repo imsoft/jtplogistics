@@ -53,6 +53,8 @@ model User {
   canChangeEmployeeEmail Boolean @default(false) @map("can_change_employee_email")
   /// Ver el registro del checador de TODOS. Marcar lo propio no pide permiso.
   canViewTimeClock  Boolean       @default(false) @map("can_view_time_clock")
+  /// Capturar los horarios de los colaboradores. Lo lleva RH.
+  canManageSchedules Boolean      @default(false) @map("can_manage_schedules")
   canViewMessages   Boolean       @default(false) @map("can_view_messages")
   canViewIdeas      Boolean       @default(false) @map("can_view_ideas")
   canViewRoutes     Boolean       @default(false) @map("can_view_routes")
@@ -146,6 +148,8 @@ model User {
   maintenances     Maintenance[]   @relation("MaintenanceTechnician")
   supportTickets   SupportTicket[] @relation("TicketReporter")
   timeClockEntries TimeClockEntry[]
+  workSchedules    WorkSchedule[]
+  timeClockIncidents TimeClockIncident[]
   ideas            Idea[]
   createdRoutes    Route[]        @relation("RouteCreatedBy")
   assignedTasks    Task[]         @relation("TaskAssignee")
@@ -926,9 +930,80 @@ model TimeClockEntry {
 
   createdAt DateTime      @default(now()) @map("created_at")
 
+  incidents TimeClockIncident[]
+
   @@index([userId, workDate])
   @@index([workDate])
   @@map("time_clock_entries")
+}
+
+/// Horario de un colaborador para un día de la semana. Lo captura RH.
+/// Que no exista renglón para un día significa que ese día no labora.
+model WorkSchedule {
+  id     String @id @default(cuid()) @map("id")
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// 0 = domingo … 6 = sábado, en la zona de la empresa.
+  weekday Int @map("weekday")
+
+  /// Minutos desde la medianoche. Se guardan así y no como hora para que el
+  /// cálculo no arrastre fechas ni zonas: 9:00 son 540, 22:00 son 1320.
+  startMinute Int @map("start_minute")
+  /// Si es menor o igual al de entrada, el turno cruza la medianoche.
+  endMinute   Int @map("end_minute")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, weekday])
+  @@map("work_schedules")
+}
+
+/// Lo que el checador le anota a un colaborador.
+enum IncidentKind {
+  /// Llegó pasada la tolerancia.
+  retardo
+  /// Tres retardos juntos, o lo que RH determine.
+  falta
+  /// Se pasó de la hora de comida.
+  comida_larga
+  /// Cerró la jornada sin marcar comida. No es falta: la revisa RH.
+  sin_comida
+}
+
+/// Una anotación con fecha de caducidad.
+///
+/// Se materializa en vez de calcularse al vuelo porque los retardos "se
+/// consumen" al volverse falta: sin dejar constancia de cuáles se comió cada
+/// falta, el cuarto retardo dispararía otra falta de inmediato.
+model TimeClockIncident {
+  id     String       @id @default(cuid()) @map("id")
+  userId String       @map("user_id")
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind   IncidentKind @map("kind")
+
+  /// Jornada que la originó.
+  workDate DateTime @db.Date @map("work_date")
+  /// Deja de contar en esta fecha. Ventana rodante de 30 días.
+  expiresOn DateTime @db.Date @map("expires_on")
+
+  /// La checada que la disparó, cuando nació de una.
+  entryId String?         @map("entry_id")
+  entry   TimeClockEntry? @relation(fields: [entryId], references: [id], onDelete: SetNull)
+
+  /// La falta que se comió este retardo. Mientras sea null, el retardo cuenta.
+  consumedById String?             @map("consumed_by_id")
+  consumedBy   TimeClockIncident?  @relation("FaltaConsume", fields: [consumedById], references: [id], onDelete: SetNull)
+  consumed     TimeClockIncident[] @relation("FaltaConsume")
+
+  /// Cuántos minutos tarde, para que RH no tenga que restar horas.
+  minutesLate Int? @map("minutes_late")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, expiresOn])
+  @@map("time_clock_incidents")
 }
 
 enum TicketStatus {

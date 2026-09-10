@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Clock, LogIn, LogOut, UtensilsCrossed, Undo2, Loader2, MapPin } from "lucide-react";
+import { Clock, LogIn, LogOut, UtensilsCrossed, Undo2, Loader2, MapPin, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 import { getDeviceId } from "@/lib/device-id";
 import { readLocation } from "@/lib/geo-reading";
 
@@ -30,12 +32,22 @@ interface Entry {
   markedAt: string;
   distanceM: number | null;
   geoStatus: string | null;
+  reason: string | null;
+}
+
+interface Standing {
+  retardos: number;
+  faltas: number;
+  isProspecto: boolean;
+  nextExpiry: string | null;
 }
 
 interface State {
   workDate: string;
   lastMark: Mark | null;
   allowed: Mark[];
+  schedule: { startMinute: number; endMinute: number } | null;
+  standing: Standing;
   entries: Entry[];
 }
 
@@ -62,6 +74,9 @@ export default function TimeClockPage() {
   const [now, setNow] = useState<Date | null>(null);
   const [pending, setPending] = useState<Mark | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Cuando el servidor pide explicación, la marca queda esperando el motivo.
+  const [askingFor, setAskingFor] = useState<Mark | null>(null);
+  const [reason, setReason] = useState("");
 
   // El reloj de pantalla es solo para el colaborador. La hora que cuenta la
   // pone el servidor al registrar la marca.
@@ -80,7 +95,7 @@ export default function TimeClockPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  async function punch(mark: Mark) {
+  async function punch(mark: Mark, withReason?: string) {
     setError(null);
     setPending(mark);
     try {
@@ -97,13 +112,24 @@ export default function TimeClockPage() {
           latitude: geo.latitude,
           longitude: geo.longitude,
           accuracy: geo.accuracy,
+          ...(withReason ? { reason: withReason } : {}),
         }),
       });
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        reasonRequired?: boolean;
+      };
       if (!res.ok) {
+        if (data.reasonRequired) {
+          // No es un error: es la regla pidiendo que dé la cara en el momento.
+          setAskingFor(mark);
+          setReason("");
+        }
         setError(data.error ?? "No se pudo registrar la marca.");
         return;
       }
+      setAskingFor(null);
+      setReason("");
       load();
     } catch {
       setError("Error de conexión. No se registró la marca.");
@@ -154,6 +180,39 @@ export default function TimeClockPage() {
             <p className="text-muted-foreground text-center text-sm">
               Ya cerraste tu jornada de hoy. Tu siguiente entrada abre una nueva.
             </p>
+          ) : askingFor ? (
+            <div className="flex w-full flex-col gap-3 sm:max-w-sm">
+              <p className="text-sm font-medium">{error}</p>
+              <div className="space-y-2">
+                <Label htmlFor="tc-reason">Motivo</Label>
+                <Textarea
+                  id="tc-reason"
+                  rows={3}
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                />
+                <p className="text-muted-foreground text-xs">
+                  Queda guardado junto a tu marca y ya no se puede editar.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => { setAskingFor(null); setReason(""); setError(null); }}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  className="flex-1"
+                  disabled={pending !== null || !reason.trim()}
+                  onClick={() => punch(askingFor, reason.trim())}
+                >
+                  {pending !== null && <Loader2 className="size-4 animate-spin" />}
+                  Registrar {MARK_LABELS[askingFor].toLowerCase()}
+                </Button>
+              </div>
+            </div>
           ) : (
             <div className="flex w-full flex-col gap-2 sm:max-w-sm">
               {state.allowed.map((mark) => {
@@ -179,9 +238,40 @@ export default function TimeClockPage() {
             </div>
           )}
 
-          {error && <p className="text-destructive text-center text-sm font-medium">{error}</p>}
+          {error && !askingFor && (
+            <p className="text-destructive text-center text-sm font-medium">{error}</p>
+          )}
         </CardContent>
       </Card>
+
+      {(state.standing.retardos > 0 || state.standing.faltas > 0) && (
+        <Card>
+          <CardContent className="flex flex-wrap items-center gap-x-8 gap-y-3 py-4">
+            <div>
+              <p className="text-muted-foreground text-xs uppercase tracking-wider">Retardos</p>
+              <p className="text-2xl font-bold tabular-nums">{state.standing.retardos} de 3</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground text-xs uppercase tracking-wider">Faltas</p>
+              <p className="text-2xl font-bold tabular-nums">{state.standing.faltas} de 3</p>
+            </div>
+            <div className="min-w-0 flex-1">
+              {state.standing.isProspecto ? (
+                <p className="text-destructive flex items-start gap-2 text-sm font-medium">
+                  <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+                  Acumulaste 3 faltas. Acércate con Recursos Humanos.
+                </p>
+              ) : state.standing.nextExpiry ? (
+                <p className="text-muted-foreground text-sm">
+                  Tu retardo más viejo deja de contar el{" "}
+                  <strong className="text-foreground">{longDate(state.standing.nextExpiry)}</strong>.
+                  Cada uno caduca a los 30 días.
+                </p>
+              ) : null}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader className="pb-2">
@@ -200,8 +290,11 @@ export default function TimeClockPage() {
                     <Icon
                       className={`size-4 shrink-0 ${done.has(mark) ? "text-foreground" : "text-muted-foreground/50"}`}
                     />
-                    <span className={done.has(mark) ? "" : "text-muted-foreground"}>
+                    <span className={`min-w-0 ${done.has(mark) ? "" : "text-muted-foreground"}`}>
                       {MARK_LABELS[mark]}
+                      {entry?.reason && (
+                        <span className="text-muted-foreground block text-xs">{entry.reason}</span>
+                      )}
                     </span>
                   </span>
                   {entry ? (

@@ -48,6 +48,7 @@ interface CollaboratorPermissions {
   canViewEmailDemos: boolean;
   canChangeEmployeeEmail: boolean;
   canViewTimeClock: boolean;
+  canManageSchedules: boolean;
   canCreateLaptops: boolean;
   canUpdateLaptops: boolean;
   canDeleteLaptops: boolean;

@@ -76,6 +76,29 @@ export function GET(request: Request) {
       if (e.reason) row.reasons.push(e.reason);
     }
 
-    return Response.json({ rows: [...rows.values()] });
+    // Las anotaciones de esas jornadas, para que RH no tenga que deducirlas.
+    const incidents = await prisma.timeClockIncident.findMany({
+      where: {
+        workDate: { gte: from, lte: to },
+        ...(userId ? { userId } : {}),
+      },
+      select: { userId: true, workDate: true, kind: true, minutesLate: true },
+    });
+
+    const flagsByKey = new Map<string, { kind: string; minutesLate: number | null }[]>();
+    for (const i of incidents) {
+      const key = `${workDateKey(i.workDate)}|${i.userId}`;
+      const bucket = flagsByKey.get(key);
+      const flag = { kind: i.kind, minutesLate: i.minutesLate };
+      if (bucket) bucket.push(flag);
+      else flagsByKey.set(key, [flag]);
+    }
+
+    return Response.json({
+      rows: [...rows.entries()].map(([key, row]) => ({
+        ...row,
+        flags: flagsByKey.get(key) ?? [],
+      })),
+    });
   });
 }

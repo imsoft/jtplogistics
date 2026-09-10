@@ -22,6 +22,26 @@ interface MarkData {
   geoStatus: string | null;
 }
 
+interface Flag {
+  kind: "retardo" | "falta" | "comida_larga" | "sin_comida";
+  minutesLate: number | null;
+}
+
+const FLAG_LABELS: Record<Flag["kind"], string> = {
+  retardo: "Retardo",
+  falta: "Falta",
+  comida_larga: "Comida larga",
+  sin_comida: "Sin marcar comida",
+};
+
+/** El color dice la gravedad; la falta es lo único que escala a baja. */
+const FLAG_TONE: Record<Flag["kind"], string> = {
+  retardo: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
+  falta: "bg-red-100 text-red-900 dark:bg-red-950 dark:text-red-200",
+  comida_larga: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
+  sin_comida: "bg-muted text-muted-foreground",
+};
+
 interface Row {
   workDate: string;
   userId: string;
@@ -30,6 +50,7 @@ interface Row {
   ips: string[];
   devices: string[];
   reasons: string[];
+  flags: Flag[];
 }
 
 function hhmm(iso: string) {
@@ -116,7 +137,7 @@ export function TimeClockLog() {
         </Card>
       ) : (
         <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full min-w-[720px] text-sm">
+          <table className="w-full min-w-[860px] text-sm">
             <thead>
               <tr className="border-b bg-muted/40">
                 <th className="px-4 py-2 text-left font-medium">Colaborador</th>
@@ -124,6 +145,7 @@ export function TimeClockLog() {
                 {COLUMNS.map((c) => (
                   <th key={c.mark} className="px-4 py-2 text-left font-medium">{c.label}</th>
                 ))}
+                <th className="px-4 py-2 text-left font-medium">Anotaciones</th>
                 <th className="px-4 py-2 text-left font-medium">Señales</th>
               </tr>
             </thead>
@@ -152,6 +174,23 @@ export function TimeClockLog() {
                     );
                   })}
                   <td className="px-4 py-2.5">
+                    {row.flags.length === 0 ? (
+                      <span className="text-muted-foreground">—</span>
+                    ) : (
+                      <span className="flex flex-wrap gap-1">
+                        {row.flags.map((f, i) => (
+                          <span
+                            key={i}
+                            className={`rounded px-1.5 py-0.5 text-xs font-medium ${FLAG_TONE[f.kind]}`}
+                          >
+                            {FLAG_LABELS[f.kind]}
+                            {f.minutesLate !== null && f.minutesLate > 0 && ` ${f.minutesLate} min`}
+                          </span>
+                        ))}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-2.5">
                     <span className="text-muted-foreground flex flex-col gap-0.5 text-xs">
                       {row.ips.length > 0 && <span>{row.ips.join(", ")}</span>}
                       {row.devices.length > 1 && (
@@ -173,8 +212,8 @@ export function TimeClockLog() {
       )}
 
       <p className="text-muted-foreground text-xs">
-        Fase 1: aquí todavía no se calculan retardos ni faltas. Se está juntando el
-        histórico que la fase 2 necesita para saber cuál es la conexión de la oficina.
+        Los retardos y las faltas se calculan contra el horario que tenga capturado
+        cada quien: sin horario, no se le anota nada. Todo caduca a los 30 días.
       </p>
     </div>
   );

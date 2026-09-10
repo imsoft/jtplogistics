@@ -7,8 +7,17 @@ import {
   distanceInMeters,
   isNetworkAllowed,
   workDateFromKey,
+  workDateKey,
 } from "@/lib/time-clock";
 import { loadTimeClockConfig } from "@/lib/time-clock-config";
+import { needsReason, standing } from "@/lib/time-clock-rules";
+import {
+  companyMinutes,
+  judgeEntry,
+  liveCounts,
+  todayDateOnly,
+  weekdayOf,
+} from "@/lib/time-clock-judge";
 
 const MARKS: TimeClockMark[] = ["clock_in", "lunch_start", "lunch_end", "clock_out"];
 const GEO_STATUSES: GeoStatus[] = ["granted", "denied", "unavailable"];
@@ -51,22 +60,57 @@ export async function GET() {
     const shift = await openShift(userId);
     const workDate = shift ? shift.workDate : workDateFromKey(companyDateKey());
 
-    const entries = await prisma.timeClockEntry.findMany({
-      where: { userId, workDate },
-      orderBy: { markedAt: "asc" },
-      select: { id: true, mark: true, markedAt: true, distanceM: true, geoStatus: true },
+    const [entries, schedule, counts] = await Promise.all([
+      prisma.timeClockEntry.findMany({
+        where: { userId, workDate },
+        orderBy: { markedAt: "asc" },
+        select: {
+          id: true,
+          mark: true,
+          markedAt: true,
+          distanceM: true,
+          geoStatus: true,
+          reason: true,
+        },
+      }),
+      prisma.workSchedule.findUnique({
+        where: { userId_weekday: { userId, weekday: weekdayOf(workDate) } },
+        select: { startMinute: true, endMinute: true },
+      }),
+      liveCounts(prisma, userId),
+    ]);
+
+    // Cuándo caduca el retardo más viejo: sin esto el colaborador ve un número
+    // sin saber cuándo baja.
+    const nextExpiry = await prisma.timeClockIncident.findFirst({
+      where: {
+        userId,
+        kind: "retardo",
+        consumedById: null,
+        expiresOn: { gte: todayDateOnly() },
+      },
+      orderBy: { expiresOn: "asc" },
+      select: { expiresOn: true },
     });
 
     return Response.json({
       workDate: workDate.toISOString().slice(0, 10),
       lastMark: shift?.mark ?? null,
       allowed: allowedMarksAfter(shift?.mark ?? null),
+      schedule: schedule
+        ? { startMinute: schedule.startMinute, endMinute: schedule.endMinute }
+        : null,
+      standing: {
+        ...standing({ retardosLibres: counts.retardosLibres, faltas: counts.faltas }),
+        nextExpiry: nextExpiry ? workDateKey(nextExpiry.expiresOn) : null,
+      },
       entries: entries.map((e) => ({
         id: e.id,
         mark: e.mark,
         markedAt: e.markedAt.toISOString(),
         distanceM: e.distanceM,
         geoStatus: e.geoStatus,
+        reason: e.reason,
       })),
     });
   } catch (e) {
@@ -140,28 +184,92 @@ export async function POST(request: Request) {
         ? (body.geoStatus as GeoStatus)
         : null;
 
-    const entry = await prisma.timeClockEntry.create({
-      data: {
+    // El horario que RH le capturó para este día. Sin él no hay contra qué
+    // comparar y no se le exige nada: el checador registra, no inventa reglas.
+    const schedule = await prisma.workSchedule.findUnique({
+      where: { userId_weekday: { userId, weekday: weekdayOf(workDate) } },
+      select: { startMinute: true },
+    });
+
+    const lunchStart =
+      mark === "lunch_end"
+        ? await prisma.timeClockEntry.findFirst({
+            where: { userId, workDate, mark: "lunch_start" },
+            orderBy: { markedAt: "desc" },
+            select: { markedAt: true },
+          })
+        : null;
+
+    const markedAt = new Date();
+    const reason = typeof body.reason === "string" ? body.reason.trim() : "";
+
+    // Llegar tarde obliga a explicarlo en el momento. Es lo que cierra el hueco
+    // del aviso: nadie acumula retardos sin enterarse, porque no puede
+    // registrar uno sin reconocerlo ahí mismo.
+    const mustExplain = needsReason({
+      mark,
+      scheduledStart: schedule?.startMinute ?? null,
+      markedMinute: companyMinutes(markedAt),
+      lunchStartedAt: lunchStart?.markedAt ?? null,
+      markedAt,
+    });
+
+    if (mustExplain && !reason) {
+      return Response.json(
+        {
+          error:
+            mark === "clock_in"
+              ? "Llegaste pasada la tolerancia. Escribe por qué para poder registrar tu entrada."
+              : "Te pasaste de la hora de comida. Escribe por qué para poder registrar tu regreso.",
+          reasonRequired: true,
+        },
+        { status: 422 }
+      );
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      const entry = await tx.timeClockEntry.create({
+        data: {
+          userId,
+          mark,
+          workDate,
+          markedAt,
+          ipAddress: ip,
+          userAgent: request.headers.get("user-agent")?.slice(0, 400) ?? null,
+          deviceId: typeof body.deviceId === "string" ? body.deviceId.slice(0, 64) : null,
+          latitude: lat,
+          longitude: lng,
+          accuracyM: accuracy,
+          distanceM,
+          geoStatus,
+          reason: reason || null,
+        },
+        select: { id: true, mark: true, markedAt: true },
+      });
+
+      const judged = await judgeEntry(tx, {
         userId,
+        entryId: entry.id,
         mark,
+        markedAt,
         workDate,
-        ipAddress: ip,
-        userAgent: request.headers.get("user-agent")?.slice(0, 400) ?? null,
-        deviceId: typeof body.deviceId === "string" ? body.deviceId.slice(0, 64) : null,
-        latitude: lat,
-        longitude: lng,
-        accuracyM: accuracy,
-        distanceM,
-        geoStatus,
-      },
-      select: { id: true, mark: true, markedAt: true },
+        scheduledStart: schedule?.startMinute ?? null,
+        lunchStartedAt: lunchStart?.markedAt ?? null,
+      });
+
+      return { entry, judged, counts: await liveCounts(tx, userId) };
     });
 
     return Response.json({
-      id: entry.id,
-      mark: entry.mark,
-      markedAt: entry.markedAt.toISOString(),
-      allowed: allowedMarksAfter(entry.mark),
+      id: result.entry.id,
+      mark: result.entry.mark,
+      markedAt: result.entry.markedAt.toISOString(),
+      allowed: allowedMarksAfter(result.entry.mark),
+      retardo: result.judged.retardo,
+      comidaLarga: result.judged.comidaLarga,
+      faltaGenerada: result.judged.faltaGenerada,
+      retardos: result.counts.retardosLibres,
+      faltas: result.counts.faltas,
     });
   } catch (e) {
     if (e instanceof Response) return e;
