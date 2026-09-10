@@ -97,3 +97,24 @@ describe("política de red", () => {
     expect(isNetworkForeign({ mode: "off", allowedIps: ["187.247.153.228"] }, "1.2.3.4")).toBe(false);
   });
 });
+
+describe("geocerca de la oficina de JTP", () => {
+  // Real de Acueducto 335, Zapopan.
+  const OFICINA = { lat: 20.7114936, lng: -103.4101132 };
+  const RADIO_M = 150;
+
+  it("el edificio queda dentro del radio", () => {
+    // Unos metros a la redonda, que es el margen del GPS en interiores.
+    expect(distanceInMeters(OFICINA, { lat: 20.7116, lng: -103.4102 })).toBeLessThan(RADIO_M);
+  });
+
+  it("el centro comercial de al lado queda fuera", () => {
+    // Andares, a un par de cuadras: no debería contar como "en la oficina".
+    const andares = { lat: 20.7096, lng: -103.4155 };
+    expect(distanceInMeters(OFICINA, andares)).toBeGreaterThan(RADIO_M);
+  });
+
+  it("una casa en Zapopan queda muy lejos", () => {
+    expect(distanceInMeters(OFICINA, { lat: 20.7211, lng: -103.3874 })).toBeGreaterThan(2000);
+  });
+});
