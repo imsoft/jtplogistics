@@ -83,8 +83,9 @@ export function PunchPanel({ variant = "full" }: { variant?: "full" | "compact" 
   const [askingFor, setAskingFor] = useState<Mark | null>(null);
   const [reason, setReason] = useState("");
 
-  // El reloj de pantalla es solo para el colaborador. La hora que cuenta la
-  // pone el servidor al registrar la marca.
+  // El reloj de pantalla es solo para el colaborador: late cada segundo para
+  // que se vea vivo. La hora que cuenta la pone el servidor al registrar la
+  // marca, así que este puede ir unos segundos corrido sin consecuencia.
   useEffect(() => {
     setNow(new Date());
     const t = setInterval(() => setNow(new Date()), 1000);
@@ -187,10 +188,11 @@ export function PunchPanel({ variant = "full" }: { variant?: "full" | "compact" 
                 ? now.toLocaleTimeString("es-MX", {
                     hour: "2-digit",
                     minute: "2-digit",
+                    second: "2-digit",
                     hour12: false,
                     timeZone: "America/Mexico_City",
                   })
-                : "--:--"}
+                : "--:--:--"}
             </p>
           </div>
 
