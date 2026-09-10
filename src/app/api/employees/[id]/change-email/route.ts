@@ -1,6 +1,51 @@
 import { prisma } from "@/lib/db";
-import { adminOrDeveloperHandler } from "@/lib/api-handler";
+import { requireSession } from "@/lib/auth-server";
 import { logAudit } from "@/lib/audit-log";
+
+/**
+ * Quién puede mover un acceso: dirección (admin) y soporte TI (developer) por
+ * su rol, y el colaborador que traiga el permiso suelto — RH, que es quien
+ * mueve los puestos. No basta con "Colaboradores: editar": cambiar el correo
+ * le cierra la sesión al colaborador, no es un dato más de la ficha.
+ */
+async function requireEmailChanger() {
+  const session = await requireSession();
+  const { role, id } = session.user;
+
+  if (role !== "admin" && role !== "developer") {
+    const me =
+      role === "collaborator"
+        ? await prisma.user.findUnique({
+            where: { id },
+            select: { canChangeEmployeeEmail: true },
+          })
+        : null;
+    if (!me?.canChangeEmployeeEmail) {
+      throw new Response(JSON.stringify({ error: "Sin permiso" }), {
+        status: 403,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  }
+
+  return session;
+}
+
+/** Mismo envoltorio de errores que usan los handlers de api-handler. */
+function emailChangerHandler(
+  fn: (session: Awaited<ReturnType<typeof requireEmailChanger>>) => Promise<Response>
+): Promise<Response> {
+  return (async () => {
+    try {
+      const session = await requireEmailChanger();
+      return await fn(session);
+    } catch (e) {
+      if (e instanceof Response) return e;
+      console.error("[employees/:id/change-email]", e);
+      return Response.json({ error: "Error interno del servidor" }, { status: 500 });
+    }
+  })();
+}
 
 /**
  * El acceso a la plataforma solo se da con un buzón administrativo del
@@ -18,7 +63,7 @@ const LOGIN_ACCOUNT_TYPE = "administrative";
  * elegir, en vez de que parezca que faltan del catálogo.
  */
 export function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  return adminOrDeveloperHandler(async () => {
+  return emailChangerHandler(async () => {
     const { id } = await params;
 
     const target = await prisma.user.findUnique({
@@ -72,7 +117,7 @@ export function GET(_req: Request, { params }: { params: Promise<{ id: string }>
  * La contraseña no se toca: entra con la misma, nada más cambia el correo.
  */
 export function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  return adminOrDeveloperHandler(async (session) => {
+  return emailChangerHandler(async (session) => {
     const { id } = await params;
 
     const target = await prisma.user.findUnique({

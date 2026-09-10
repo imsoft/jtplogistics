@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoRow } from "@/components/dashboard/users/info-row";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
+import { ChangeEmailButton } from "@/components/dashboard/resources/change-email-button";
 import type { Employee } from "@/types/resources.types";
 import { formatPhone } from "@/lib/utils";
 import { ResourceDetailSkeleton } from "@/components/ui/skeletons";
@@ -26,7 +27,7 @@ function formatDate(iso: string) {
 export default function CollaboratorEmployeeProfilePage() {
   const { id } = useParams<{ id: string }>();
   const { permissions } = useCollaboratorPermissions();
-  const { data: employee, isLoaded, error } = useResourceEdit<Employee>({
+  const { data: employee, setData: setEmployee, isLoaded, error } = useResourceEdit<Employee>({
     endpoint: "/api/collaborator/employees",
     redirectHref: "/collaborator/dashboard/employees",
   });
@@ -71,14 +72,24 @@ export default function CollaboratorEmployeeProfilePage() {
             </div>
           </div>
         </div>
-        {permissions?.canUpdateEmployees && (
-          <Button asChild className="shrink-0">
-            <Link href={`/collaborator/dashboard/employees/${id}/edit`}>
-              <Pencil className="size-4" />
-              Editar
-            </Link>
-          </Button>
-        )}
+        <div className="flex shrink-0 flex-wrap gap-2">
+          {permissions?.canChangeEmployeeEmail && (
+            <ChangeEmailButton
+              employeeId={id}
+              employeeName={employee.name}
+              currentEmail={employee.email}
+              onChanged={(email) => setEmployee((prev) => (prev ? { ...prev, email } : prev))}
+            />
+          )}
+          {permissions?.canUpdateEmployees && (
+            <Button asChild>
+              <Link href={`/collaborator/dashboard/employees/${id}/edit`}>
+                <Pencil className="size-4" />
+                Editar
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card>

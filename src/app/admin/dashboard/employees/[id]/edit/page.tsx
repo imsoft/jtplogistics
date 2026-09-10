@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Laptop, Smartphone, Mail, ChevronRight, Eye, Plus, Pencil, Trash2 } from "lucide-react";
+import { Laptop, Smartphone, Mail, ChevronRight, Eye, Plus, Pencil, Trash2, AtSign } from "lucide-react";
 import type { Employee, EmployeeFormData } from "@/types/resources.types";
 import { formatPhone } from "@/lib/utils";
 
@@ -49,6 +49,8 @@ const PERMISSION_FIELDS = [
   // Solo lectura: quien lleva ISO 9001 consulta la bitácora, no la edita.
   { key: "canViewMaintenance", label: "Mantenimientos: leer" },
   { key: "canViewEmailDemos", label: "Correos de prueba: usar" },
+  // Aparte de "Colaboradores: editar": cambiar el acceso le cierra la sesión.
+  { key: "canChangeEmployeeEmail", label: "Colaboradores: cambiar correo de acceso" },
 ];
 
 const PERM_ICONS: Record<string, React.ElementType> = {
@@ -57,6 +59,7 @@ const PERM_ICONS: Record<string, React.ElementType> = {
   canUpdate: Pencil,
   canDelete: Trash2,
   canEdit: Pencil,
+  canChange: AtSign,
 };
 
 function getPermIcon(key: string): React.ElementType {

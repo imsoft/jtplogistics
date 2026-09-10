@@ -47,6 +47,10 @@ model User {
   /// Acceso a la pantalla de correos de prueba, para revisar cómo llegan las
   /// plantillas antes de publicar algo.
   canViewEmailDemos Boolean     @default(false) @map("can_view_email_demos")
+  /// Cambiar el correo con el que un colaborador inicia sesión. Va suelto y no
+  /// pegado a canUpdateEmployees porque no es editar la ficha: le cierra la
+  /// sesión y le cambia el acceso. Lo lleva RH junto con dirección y soporte TI.
+  canChangeEmployeeEmail Boolean @default(false) @map("can_change_employee_email")
   canViewMessages   Boolean       @default(false) @map("can_view_messages")
   canViewIdeas      Boolean       @default(false) @map("can_view_ideas")
   canViewRoutes     Boolean       @default(false) @map("can_view_routes")

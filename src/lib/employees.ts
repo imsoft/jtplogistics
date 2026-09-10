@@ -42,6 +42,7 @@ export const PERMISSION_FIELDS = [
   // Permisos sueltos de solo lectura, sin el juego completo de CRUD.
   "canViewMaintenance",
   "canViewEmailDemos",
+  "canChangeEmployeeEmail",
 ];
 
 export const PERMISSION_LABELS: Record<string, string> = Object.fromEntries([
@@ -54,6 +55,7 @@ export const PERMISSION_LABELS: Record<string, string> = Object.fromEntries([
   ["canEditAcceptedQuotes", "Cotizaciones aceptadas: editar y eliminar"],
   ["canViewMaintenance", "Mantenimientos: leer"],
   ["canViewEmailDemos", "Correos de prueba: usar"],
+  ["canChangeEmployeeEmail", "Colaboradores: cambiar correo de acceso"],
 ]);
 
 /** Todo lo que cuelga de un colaborador: equipo asignado y cuentas de correo. */
