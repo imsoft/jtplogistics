@@ -4,7 +4,8 @@ import { EmployeeProfileView } from "@/components/dashboard/resources/employee-p
 
 /**
  * Soporte de TI ve la ficha completa pero no edita al colaborador: eso sigue
- * siendo de dirección. Lo que sí puede es restablecerle la contraseña.
+ * siendo de dirección. Lo que sí puede es administrarle el acceso:
+ * restablecerle la contraseña y cambiarle el correo con el que entra.
  */
 export default function DeveloperEmployeeProfilePage() {
   return (
@@ -13,6 +14,7 @@ export default function DeveloperEmployeeProfilePage() {
       listPath="/developer/dashboard/employees"
       resourcesBasePath={null}
       canResetPassword
+      canChangeEmail
     />
   );
 }

@@ -13,6 +13,7 @@ export default function EmployeeProfilePage() {
       resourcesBasePath="/admin/dashboard"
       editPath={`/admin/dashboard/employees/${id}/edit`}
       canResetPassword
+      canChangeEmail
     />
   );
 }

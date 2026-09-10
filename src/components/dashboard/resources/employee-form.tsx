@@ -104,6 +104,13 @@ export function EmployeeForm({
             onChange={(e) => { setEmail(e.target.value); setFieldErrors((prev) => ({ ...prev, email: undefined })); }}
             disabled={!isNew}
           />
+          {!isNew && (
+            <p className="text-muted-foreground text-xs">
+              Es su correo de acceso y no se edita aquí: al cambiarlo se le cierran
+              las sesiones abiertas, así que lo hace dirección o soporte TI desde
+              el perfil del colaborador.
+            </p>
+          )}
           {fieldErrors.email && (
             <p className="text-destructive text-xs">{fieldErrors.email}</p>
           )}

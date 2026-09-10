@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoRow } from "@/components/dashboard/users/info-row";
 import { SecretRow } from "@/components/dashboard/users/secret-row";
 import { ResetPasswordButton } from "@/components/dashboard/resources/reset-password-button";
+import { ChangeEmailButton } from "@/components/dashboard/resources/change-email-button";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import type { Employee } from "@/types/resources.types";
 import { formatPhone } from "@/lib/utils";
@@ -27,6 +28,8 @@ interface EmployeeProfileViewProps {
   editPath?: string;
   /** Muestra el botón para restablecer la contraseña de acceso. */
   canResetPassword?: boolean;
+  /** Muestra el botón para cambiar el correo con el que inicia sesión. */
+  canChangeEmail?: boolean;
 }
 
 function initials(name: string) {
@@ -99,9 +102,10 @@ export function EmployeeProfileView({
   resourcesBasePath,
   editPath,
   canResetPassword = false,
+  canChangeEmail = false,
 }: EmployeeProfileViewProps) {
   const { id } = useParams<{ id: string }>();
-  const { data: employee, isLoaded, error } = useResourceEdit<Employee>({
+  const { data: employee, setData: setEmployee, isLoaded, error } = useResourceEdit<Employee>({
     endpoint: apiEndpoint,
     redirectHref: listPath,
   });
@@ -151,6 +155,14 @@ export function EmployeeProfileView({
           </div>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
+          {canChangeEmail && (
+            <ChangeEmailButton
+              employeeId={id}
+              employeeName={employee.name}
+              currentEmail={employee.email}
+              onChanged={(email) => setEmployee((prev) => (prev ? { ...prev, email } : prev))}
+            />
+          )}
           {canResetPassword && (
             <ResetPasswordButton employeeId={id} employeeName={employee.name} />
           )}
