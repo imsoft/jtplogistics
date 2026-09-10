@@ -96,14 +96,20 @@ function ComboboxContent({
   align = "start",
   alignOffset = 0,
   anchor,
+  container,
   ...props
 }: ComboboxPrimitive.Popup.Props &
   Pick<
     ComboboxPrimitive.Positioner.Props,
     "side" | "align" | "sideOffset" | "alignOffset" | "anchor"
-  >) {
+  > &
+  Pick<ComboboxPrimitive.Portal.Props, "container">) {
   return (
-    <ComboboxPrimitive.Portal>
+    // Por defecto el popup se va al <body>. Dentro de un diálogo eso no sirve:
+    // Radix le pone pointer-events:none a todo lo que queda fuera del modal, así
+    // que la lista se ve pero no se puede clicar. Quien nos use desde un diálogo
+    // pasa `container` apuntando adentro y el popup se vuelve clicable.
+    <ComboboxPrimitive.Portal container={container}>
       <ComboboxPrimitive.Positioner
         side={side}
         sideOffset={sideOffset}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AtSign, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -59,6 +59,7 @@ export function ChangeEmailButton({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ChangeResult | null>(null);
+  const selectContainer = useRef<HTMLDivElement>(null);
 
   // Se piden al abrir y no al montar: son varias fichas por pantalla y casi
   // ninguna termina en un cambio de correo.
@@ -90,7 +91,6 @@ export function ChangeEmailButton({
 
   // Los tomados y el actual se quedan fuera: elegirlos no haría nada.
   const selectable = (options ?? []).filter((o) => !o.isCurrent && !o.takenBy);
-  const unavailable = (options ?? []).filter((o) => o.takenBy);
 
   async function handleChange() {
     setError(null);
@@ -187,7 +187,7 @@ export function ChangeEmailButton({
                   </p>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2" ref={selectContainer}>
                   <Label>Correo nuevo</Label>
                   {options === null ? (
                     <Skeleton className="h-9 w-full" />
@@ -197,21 +197,12 @@ export function ChangeEmailButton({
                       onValueChange={(v) => { setEmail(v); setError(null); }}
                       options={selectable.map((o) => ({ value: o.email, label: o.email }))}
                       className="w-full"
+                      container={selectContainer}
                     />
                   ) : (
                     <p className="text-sm text-muted-foreground">
                       No hay ningún correo administrativo libre para asignarle. Da de
                       alta el buzón nuevo en la sección de Correos y vuelve aquí.
-                    </p>
-                  )}
-                  <p className="text-xs text-muted-foreground">
-                    Solo salen los buzones administrativos dados de alta en Correos:
-                    con esos se entra a la plataforma.
-                  </p>
-                  {unavailable.length > 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      No aparecen los que ya usa alguien más:{" "}
-                      {unavailable.map((o) => `${o.email} (${o.takenBy})`).join(", ")}.
                     </p>
                   )}
                 </div>

@@ -22,6 +22,11 @@ interface AppSelectProps {
   options: AppSelectOption[]
   disabled?: boolean
   className?: string
+  /**
+   * Dónde montar la lista desplegable. Solo hace falta dentro de un diálogo:
+   * ahí hay que apuntar a un nodo del propio diálogo para que se pueda clicar.
+   */
+  container?: React.RefObject<HTMLElement | null>
 }
 
 function normalize(s: string) {
@@ -32,7 +37,7 @@ function accentFilter(item: AppSelectOption, query: string) {
   return normalize(item.label).includes(normalize(query))
 }
 
-export function AppSelect({ value, onValueChange, options, disabled, className }: AppSelectProps) {
+export function AppSelect({ value, onValueChange, options, disabled, className, container }: AppSelectProps) {
   const selected = React.useMemo(
     () => options.find((o) => o.value === value) ?? null,
     [options, value]
@@ -49,7 +54,7 @@ export function AppSelect({ value, onValueChange, options, disabled, className }
       autoHighlight
     >
       <ComboboxInput showClear={!!selected} className={cn("w-full", className)} />
-      <ComboboxContent>
+      <ComboboxContent container={container}>
         <ComboboxEmpty>Sin resultados.</ComboboxEmpty>
         <ComboboxList>
           {(option) => (
