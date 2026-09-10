@@ -51,6 +51,8 @@ const PERMISSION_FIELDS = [
   { key: "canViewEmailDemos", label: "Correos de prueba: usar" },
   // Aparte de "Colaboradores: editar": cambiar el acceso le cierra la sesión.
   { key: "canChangeEmployeeEmail", label: "Colaboradores: cambiar correo de acceso" },
+  // Marcar lo propio no pide permiso; esto es ver el registro de todos.
+  { key: "canViewTimeClock", label: "Checador: ver el registro de todos" },
 ];
 
 const PERM_ICONS: Record<string, React.ElementType> = {

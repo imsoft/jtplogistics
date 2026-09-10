@@ -66,7 +66,7 @@ export function carrierHandler(
  * lectura. El admin pasa siempre; al colaborador se le revisa la columna.
  */
 export function permissionHandler(
-  field: "canViewEmailDemos",
+  field: "canViewEmailDemos" | "canViewTimeClock",
   fn: (session: Awaited<ReturnType<typeof requireCollaboratorOrAdmin>>) => Promise<Response>
 ): Promise<Response> {
   return (async () => {

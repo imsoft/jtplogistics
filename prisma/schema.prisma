@@ -51,6 +51,8 @@ model User {
   /// pegado a canUpdateEmployees porque no es editar la ficha: le cierra la
   /// sesión y le cambia el acceso. Lo lleva RH junto con dirección y soporte TI.
   canChangeEmployeeEmail Boolean @default(false) @map("can_change_employee_email")
+  /// Ver el registro del checador de TODOS. Marcar lo propio no pide permiso.
+  canViewTimeClock  Boolean       @default(false) @map("can_view_time_clock")
   canViewMessages   Boolean       @default(false) @map("can_view_messages")
   canViewIdeas      Boolean       @default(false) @map("can_view_ideas")
   canViewRoutes     Boolean       @default(false) @map("can_view_routes")
@@ -143,6 +145,7 @@ model User {
   assignedEmails   EmailAccountUser[]
   maintenances     Maintenance[]   @relation("MaintenanceTechnician")
   supportTickets   SupportTicket[] @relation("TicketReporter")
+  timeClockEntries TimeClockEntry[]
   ideas            Idea[]
   createdRoutes    Route[]        @relation("RouteCreatedBy")
   assignedTasks    Task[]         @relation("TaskAssignee")
@@ -868,6 +871,64 @@ model Maintenance {
 
   @@index([scheduledFor])
   @@map("maintenances")
+}
+
+// ---- App: reloj checador (fase 1: solo registro) ----
+
+/// Las cuatro marcas de una jornada.
+enum TimeClockMark {
+  clock_in
+  lunch_start
+  lunch_end
+  clock_out
+}
+
+/// Cómo salió la lectura de ubicación al marcar. Nunca bloquea la checada:
+/// que el colaborador no dé permiso o que el GPS falle se registra y ya.
+enum GeoStatus {
+  granted
+  denied
+  unavailable
+}
+
+/// Una checada. Es INMUTABLE: no se edita ni se borra nunca — por eso no
+/// tiene updatedAt. Una corrección (fase 2) será un renglón nuevo que apunte
+/// a este. La hora la pone siempre el servidor: el navegador dice qué marca
+/// hace, jamás cuándo.
+model TimeClockEntry {
+  id        String        @id @default(cuid()) @map("id")
+  userId    String        @map("user_id")
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mark      TimeClockMark @map("mark")
+  markedAt  DateTime      @default(now()) @map("marked_at")
+
+  /// Jornada a la que pertenece, anclada al día en que EMPIEZA. Un turno de
+  /// 22:00 a 06:00 deja sus cuatro marcas en la misma fecha aunque el reloj
+  /// cruce la medianoche.
+  workDate  DateTime      @db.Date @map("work_date")
+
+  /// Señales de evidencia. Ninguna prueba nada sola; sirven cruzadas.
+  ipAddress String?       @map("ip_address")
+  userAgent String?       @map("user_agent")
+  /// Identificador del navegador, para notar dos personas en el mismo equipo.
+  deviceId  String?       @map("device_id")
+  latitude  Float?        @map("latitude")
+  longitude Float?        @map("longitude")
+  /// Margen de error que reportó el GPS, en metros.
+  accuracyM Float?        @map("accuracy_m")
+  /// Distancia a la oficina en metros, calculada en el servidor.
+  distanceM Float?        @map("distance_m")
+  geoStatus GeoStatus?    @map("geo_status")
+
+  /// Lo que escribe el colaborador. En la fase 2 se vuelve obligatorio al
+  /// llegar con retardo o pasarse de la comida.
+  reason    String?       @map("reason")
+
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  @@index([userId, workDate])
+  @@index([workDate])
+  @@map("time_clock_entries")
 }
 
 enum TicketStatus {

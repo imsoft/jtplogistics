@@ -25,6 +25,8 @@ import {
   LayoutPanelTop,
   LifeBuoy,
   Wrench,
+  Clock,
+  CalendarClock,
 } from "lucide-react";
 import { DashboardSidebar, type NavItem, type NavGroup } from "@/components/dashboard/dashboard-sidebar";
 
@@ -49,6 +51,7 @@ interface Permissions {
   canViewFinances: boolean;
   canViewMaritimeQuotes: boolean;
   canViewMural: boolean;
+  canViewTimeClock: boolean;
 }
 
 const BASE = "/collaborator/dashboard";
@@ -117,6 +120,8 @@ const allNavGroups: PermNavGroup[] = [
   {
     label: "Mi cuenta",
     items: [
+      { title: "Checador", href: `${BASE}/time-clock`, icon: Clock },
+      { title: "Registro del checador", href: `${BASE}/time-clock-log`, icon: CalendarClock, permission: "canViewTimeClock" },
       { title: "Mantenimientos", href: `${BASE}/maintenance`, icon: Wrench, permission: "canViewMaintenance" },
       { title: "Soporte de TI", href: `${BASE}/support`, icon: LifeBuoy },
       { title: "Perfil", href: `${BASE}/profile`, icon: UserIcon },

@@ -32,11 +32,18 @@ function clientIp(request: NextRequest): string {
 }
 
 /**
+ * Rutas donde el navegador sí puede pedir la ubicación: el reloj checador la
+ * necesita para saber a qué distancia de la oficina se marcó. En el resto de
+ * la app sigue apagada, que es lo correcto por defecto.
+ */
+const GEOLOCATION_PATHS = ["/collaborator/dashboard/time-clock"];
+
+/**
  * Cabeceras de seguridad para todas las respuestas.
  * `frame-ancestors` va en la CSP; X-Frame-Options se conserva para los
  * navegadores viejos que no la interpretan.
  */
-function applySecurityHeaders(headers: Headers, nonce: string) {
+function applySecurityHeaders(headers: Headers, nonce: string, pathname: string) {
   // React usa eval() en desarrollo para reconstruir stacks de error; en
   // producción nunca lo hace. Se permite solo en dev para no aflojar la
   // política donde de verdad importa.
@@ -68,9 +75,12 @@ function applySecurityHeaders(headers: Headers, nonce: string) {
   headers.set("X-Frame-Options", "DENY");
   headers.set("X-Content-Type-Options", "nosniff");
   headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  const geolocation = GEOLOCATION_PATHS.some((p) => pathname.startsWith(p))
+    ? "geolocation=(self)"
+    : "geolocation=()";
   headers.set(
     "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=(), payment=()"
+    `camera=(), microphone=(), ${geolocation}, payment=()`
   );
 }
 
@@ -98,7 +108,7 @@ export function proxy(request: NextRequest) {
   requestHeaders.set("x-nonce", nonce);
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
-  applySecurityHeaders(response.headers, nonce);
+  applySecurityHeaders(response.headers, nonce, pathname);
   return response;
 }
 
