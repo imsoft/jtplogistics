@@ -150,6 +150,7 @@ model User {
   timeClockEntries TimeClockEntry[]
   workSchedules    WorkSchedule[]
   timeClockIncidents TimeClockIncident[]
+  timeClockCorrections TimeClockEntry[] @relation("TimeClockCorrector")
   ideas            Idea[]
   createdRoutes    Route[]        @relation("RouteCreatedBy")
   assignedTasks    Task[]         @relation("TaskAssignee")
@@ -895,6 +896,16 @@ enum GeoStatus {
   unavailable
 }
 
+/// Qué hace una corrección con la marca original.
+enum CorrectionKind {
+  /// Cambia la hora de una marca que se registró mal.
+  adjust
+  /// Anula una marca que no debió existir.
+  void
+  /// Agrega una marca que faltó. No corrige a ninguna: nace suelta.
+  add
+}
+
 /// Una checada. Es INMUTABLE: no se edita ni se borra nunca — por eso no
 /// tiene updatedAt. Una corrección (fase 2) será un renglón nuevo que apunte
 /// a este. La hora la pone siempre el servidor: el navegador dice qué marca
@@ -924,9 +935,27 @@ model TimeClockEntry {
   distanceM Float?        @map("distance_m")
   geoStatus GeoStatus?    @map("geo_status")
 
-  /// Lo que escribe el colaborador. En la fase 2 se vuelve obligatorio al
-  /// llegar con retardo o pasarse de la comida.
+  /// Lo que escribe el colaborador. Obligatorio al llegar con retardo o
+  /// pasarse de la comida: sin él, el servidor rechaza la marca.
   reason    String?       @map("reason")
+
+  /// Banderas calculadas al momento de marcar. Se guardan y no se recalculan
+  /// después, porque la configuración de la oficina cambia con el tiempo y el
+  /// registro tiene que decir qué se sabía aquel día.
+  outsideGeofence Boolean? @map("outside_geofence")
+  foreignNetwork  Boolean? @map("foreign_network")
+  /// Otro colaborador marcó desde este mismo equipo en la misma jornada.
+  sharedDevice    Boolean? @map("shared_device")
+
+  /// Una corrección de dirección. La original NUNCA se toca: esta apunta a
+  /// ella y en pantalla se ven las dos.
+  correctionKind   CorrectionKind? @map("correction_kind")
+  correctionOfId   String?         @map("correction_of_id")
+  correctionOf     TimeClockEntry? @relation("EntryCorrection", fields: [correctionOfId], references: [id], onDelete: SetNull)
+  corrections      TimeClockEntry[] @relation("EntryCorrection")
+  correctedById    String?         @map("corrected_by_id")
+  correctedBy      User?           @relation("TimeClockCorrector", fields: [correctedById], references: [id], onDelete: SetNull)
+  correctionReason String?         @map("correction_reason")
 
   createdAt DateTime      @default(now()) @map("created_at")
 

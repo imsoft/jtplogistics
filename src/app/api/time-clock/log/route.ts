@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { permissionHandler } from "@/lib/api-handler";
 import { companyDateKey, workDateFromKey, workDateKey } from "@/lib/time-clock";
+import { effectiveMarks } from "@/lib/time-clock-corrections";
 
 /**
  * GET /api/time-clock/log?from=YYYY-MM-DD&to=YYYY-MM-DD&userId=…
@@ -16,25 +17,43 @@ export function GET(request: Request) {
     const to = workDateFromKey(url.searchParams.get("to") || url.searchParams.get("from") || today);
     const userId = url.searchParams.get("userId");
 
-    const entries = await prisma.timeClockEntry.findMany({
+    const all = await prisma.timeClockEntry.findMany({
       where: {
         workDate: { gte: from, lte: to },
         ...(userId ? { userId } : {}),
       },
       orderBy: [{ workDate: "desc" }, { userId: "asc" }, { markedAt: "asc" }],
-      select: {
-        id: true,
-        mark: true,
-        markedAt: true,
-        workDate: true,
-        distanceM: true,
-        geoStatus: true,
-        ipAddress: true,
-        deviceId: true,
-        reason: true,
+      include: {
         user: { select: { id: true, name: true } },
+        correctedBy: { select: { name: true } },
       },
     });
+
+    // Lo que vale son las marcas ya corregidas; las originales siguen en la
+    // tabla y se listan aparte para que se vean las dos.
+    const byPerson = new Map<string, typeof all>();
+    for (const e of all) {
+      const key = `${workDateKey(e.workDate)}|${e.userId}`;
+      const bucket = byPerson.get(key);
+      if (bucket) bucket.push(e);
+      else byPerson.set(key, [e]);
+    }
+
+    const entries = [...byPerson.values()].flatMap((group) =>
+      effectiveMarks(group).map((e) => ({
+        ...e,
+        user: group.find((g) => g.userId === e.userId)!.user,
+      }))
+    );
+
+    const correctionLog = all
+      .filter((e) => e.correctionKind !== null)
+      .map((e) => ({
+        key: `${workDateKey(e.workDate)}|${e.userId}`,
+        kind: e.correctionKind,
+        reason: e.correctionReason,
+        by: e.correctedBy?.name ?? null,
+      }));
 
     // Una fila por colaborador y jornada, con sus cuatro marcas.
     const rows = new Map<
@@ -43,7 +62,18 @@ export function GET(request: Request) {
         workDate: string;
         userId: string;
         userName: string;
-        marks: Record<string, { at: string; distanceM: number | null; geoStatus: string | null }>;
+        marks: Record<
+          string,
+          {
+            at: string;
+            distanceM: number | null;
+            geoStatus: string | null;
+            outsideGeofence: boolean | null;
+            foreignNetwork: boolean | null;
+            sharedDevice: boolean | null;
+            entryId: string;
+          }
+        >;
         ips: string[];
         devices: string[];
         reasons: string[];
@@ -70,6 +100,10 @@ export function GET(request: Request) {
         at: e.markedAt.toISOString(),
         distanceM: e.distanceM,
         geoStatus: e.geoStatus,
+        outsideGeofence: e.outsideGeofence,
+        foreignNetwork: e.foreignNetwork,
+        sharedDevice: e.sharedDevice,
+        entryId: e.id,
       };
       if (e.ipAddress && !row.ips.includes(e.ipAddress)) row.ips.push(e.ipAddress);
       if (e.deviceId && !row.devices.includes(e.deviceId)) row.devices.push(e.deviceId);
@@ -98,6 +132,7 @@ export function GET(request: Request) {
       rows: [...rows.entries()].map(([key, row]) => ({
         ...row,
         flags: flagsByKey.get(key) ?? [],
+        corrections: correctionLog.filter((c) => c.key === key),
       })),
     });
   });

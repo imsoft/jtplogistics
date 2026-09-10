@@ -1,11 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { MapPin, MonitorSmartphone } from "lucide-react";
+import { MapPin, MonitorSmartphone, WifiOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CorrectionDialog } from "@/components/dashboard/time-clock/correction-dialog";
 
 type Mark = "clock_in" | "lunch_start" | "lunch_end" | "clock_out";
 
@@ -20,7 +21,23 @@ interface MarkData {
   at: string;
   distanceM: number | null;
   geoStatus: string | null;
+  outsideGeofence: boolean | null;
+  foreignNetwork: boolean | null;
+  sharedDevice: boolean | null;
+  entryId: string;
 }
+
+interface Correction {
+  kind: "adjust" | "void" | "add" | null;
+  reason: string | null;
+  by: string | null;
+}
+
+const CORRECTION_LABELS: Record<string, string> = {
+  adjust: "Hora corregida",
+  void: "Marca anulada",
+  add: "Marca agregada",
+};
 
 interface Flag {
   kind: "retardo" | "falta" | "comida_larga" | "sin_comida";
@@ -51,6 +68,7 @@ interface Row {
   devices: string[];
   reasons: string[];
   flags: Flag[];
+  corrections: Correction[];
 }
 
 function hhmm(iso: string) {
@@ -72,7 +90,8 @@ function todayKey() {
   }).format(new Date());
 }
 
-export function TimeClockLog() {
+/** Dirección corrige; RH solo mira. El servidor lo vuelve a revisar. */
+export function TimeClockLog({ canCorrect = false }: { canCorrect?: boolean }) {
   const [from, setFrom] = useState(todayKey);
   const [to, setTo] = useState(todayKey);
   const [rows, setRows] = useState<Row[] | null>(null);
@@ -152,7 +171,15 @@ export function TimeClockLog() {
             <tbody>
               {rows.map((row) => (
                 <tr key={`${row.workDate}-${row.userId}`} className="border-b last:border-0">
-                  <td className="px-4 py-2.5 font-medium">{row.userName}</td>
+                  <td className="px-4 py-2.5 font-medium">
+                    {row.userName}
+                    {row.corrections.map((c, i) => (
+                      <span key={i} className="text-muted-foreground block text-xs font-normal">
+                        {c.kind ? CORRECTION_LABELS[c.kind] : "Corregido"}
+                        {c.by ? ` por ${c.by}` : ""}: {c.reason}
+                      </span>
+                    ))}
+                  </td>
                   <td className="text-muted-foreground px-4 py-2.5 tabular-nums">{row.workDate}</td>
                   {COLUMNS.map((c) => {
                     const m = row.marks[c.mark];
@@ -162,9 +189,32 @@ export function TimeClockLog() {
                           <span className="flex flex-col">
                             <span className="font-semibold tabular-nums">{hhmm(m.at)}</span>
                             {m.distanceM !== null && (
-                              <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                              <span
+                                className={`flex items-center gap-1 text-xs ${
+                                  m.outsideGeofence ? "text-amber-700 dark:text-amber-400" : "text-muted-foreground"
+                                }`}
+                              >
                                 <MapPin className="size-3" />{m.distanceM} m
                               </span>
+                            )}
+                            {m.foreignNetwork && (
+                              <span className="flex items-center gap-1 text-xs text-amber-700 dark:text-amber-400">
+                                <WifiOff className="size-3" />Otra conexión
+                              </span>
+                            )}
+                            {m.sharedDevice && (
+                              <span className="flex items-center gap-1 text-xs text-amber-700 dark:text-amber-400">
+                                <MonitorSmartphone className="size-3" />Equipo compartido
+                              </span>
+                            )}
+                            {canCorrect && (
+                              <CorrectionDialog
+                                entryId={m.entryId}
+                                personName={row.userName}
+                                markLabel={c.label}
+                                currentTime={m.at}
+                                onDone={load}
+                              />
                             )}
                           </span>
                         ) : (
@@ -213,7 +263,8 @@ export function TimeClockLog() {
 
       <p className="text-muted-foreground text-xs">
         Los retardos y las faltas se calculan contra el horario que tenga capturado
-        cada quien: sin horario, no se le anota nada. Todo caduca a los 30 días.
+        cada quien: sin horario, no se le anota nada. Todo caduca a los 30 días. Las
+        horas que se ven son las ya corregidas; las originales siguen guardadas.
       </p>
     </div>
   );

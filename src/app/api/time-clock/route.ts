@@ -11,6 +11,7 @@ import {
 } from "@/lib/time-clock";
 import { loadTimeClockConfig } from "@/lib/time-clock-config";
 import { needsReason, standing } from "@/lib/time-clock-rules";
+import { computeFlags } from "@/lib/time-clock-flags";
 import {
   companyMinutes,
   judgeEntry,
@@ -202,6 +203,7 @@ export async function POST(request: Request) {
 
     const markedAt = new Date();
     const reason = typeof body.reason === "string" ? body.reason.trim() : "";
+    const deviceId = typeof body.deviceId === "string" ? body.deviceId.slice(0, 64) : null;
 
     // Llegar tarde obliga a explicarlo en el momento. Es lo que cierra el hueco
     // del aviso: nadie acumula retardos sin enterarse, porque no puede
@@ -228,15 +230,26 @@ export async function POST(request: Request) {
     }
 
     const result = await prisma.$transaction(async (tx) => {
+      const flags = await computeFlags(tx, {
+        userId,
+        workDate,
+        ip,
+        deviceId,
+        distanceM,
+        radiusM: config.geofence?.radiusM ?? null,
+        network: config.network,
+      });
+
       const entry = await tx.timeClockEntry.create({
         data: {
           userId,
           mark,
           workDate,
           markedAt,
+          ...flags,
           ipAddress: ip,
           userAgent: request.headers.get("user-agent")?.slice(0, 400) ?? null,
-          deviceId: typeof body.deviceId === "string" ? body.deviceId.slice(0, 64) : null,
+          deviceId,
           latitude: lat,
           longitude: lng,
           accuracyM: accuracy,
