@@ -41,6 +41,14 @@ export function buildPasswordResetEmail(input: { name: string; url: string }): B
 }
 
 /**
+ * Aviso de responsabilidad sobre la cuenta. Va en tercera persona a propósito:
+ * la primera versión ("tú eres responsable de lo que pase...") se leía como
+ * regaño, y el cliente pidió un tono institucional.
+ */
+export const ACCOUNT_RESPONSIBILITY_NOTICE =
+  "Esta cuenta es personal e intransferible. El uso que se haga de ella y el resguardo de su contraseña son responsabilidad de su titular.";
+
+/**
  * Aviso al colaborador de que soporte le restableció la contraseña. Lleva la
  * temporal dentro, así que solo se manda cuando quien la restablece lo pide.
  */
@@ -67,6 +75,7 @@ export function buildPasswordResetByStaffEmail(input: {
         "Entra con ella y cámbiala desde tu perfil en cuanto puedas. Si no esperabas este cambio, avísale a soporte de TI.",
       ctaLabel: "Entrar",
       ctaHref: input.loginUrl,
+      footnote: ACCOUNT_RESPONSIBILITY_NOTICE,
     }),
     text: [
       `Hola ${name},`,
@@ -76,6 +85,8 @@ export function buildPasswordResetByStaffEmail(input: {
       `Contraseña temporal: ${input.password}`,
       "",
       `Entra en ${input.loginUrl} y cámbiala desde tu perfil en cuanto puedas.`,
+      "",
+      ACCOUNT_RESPONSIBILITY_NOTICE,
       "",
       "— JTP Logistics",
     ].join("\n"),

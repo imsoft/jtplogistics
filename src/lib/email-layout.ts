@@ -61,6 +61,11 @@ export interface BrandedEmailOptions {
   ctaHref?: string;
   /** Emoji grande sobre el título, para los correos de celebración. */
   emoji?: string;
+  /**
+   * Aviso en el pie, arriba de la firma de la empresa. Para textos formales
+   * que deben ir en el correo sin competir con el mensaje principal.
+   */
+  footnote?: string;
   base?: string;
 }
 
@@ -78,6 +83,7 @@ export function brandedEmail(options: BrandedEmailOptions): string {
     ctaLabel,
     ctaHref,
     emoji,
+    footnote,
     base = appUrl(),
   } = options;
 
@@ -138,6 +144,11 @@ export function brandedEmail(options: BrandedEmailOptions): string {
           </tr>
           <tr>
             <td style="padding:18px 32px 24px;border-top:1px solid ${BRAND.border};text-align:center;">
+              ${
+                footnote
+                  ? `<p style="margin:0 0 12px;color:${BRAND.muted};font-size:12px;line-height:1.6;">${escapeHtml(footnote)}</p>`
+                  : ""
+              }
               <p style="margin:0;color:${BRAND.muted};font-size:12px;line-height:1.6;">
                 JTP Logistics · El mejor socio comercial<br />
                 Este correo es automático, por favor no lo respondas.
