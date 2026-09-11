@@ -128,7 +128,15 @@ export function GET(request: Request) {
       else flagsByKey.set(key, [flag]);
     }
 
+    // Los festivos del rango, para que RH no confunda una jornada sin
+    // anotaciones con un error: ese día no se juzgó.
+    const holidays = await prisma.holiday.findMany({
+      where: { date: { gte: from, lte: to } },
+      select: { date: true, name: true },
+    });
+
     return Response.json({
+      holidays: holidays.map((h) => ({ date: workDateKey(h.date), name: h.name })),
       rows: [...rows.entries()].map(([key, row]) => ({
         ...row,
         flags: flagsByKey.get(key) ?? [],

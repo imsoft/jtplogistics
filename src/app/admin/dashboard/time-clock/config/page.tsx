@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AppSelect } from "@/components/ui/app-select";
 import { FormSkeleton } from "@/components/ui/skeletons";
+import { HolidaysCard } from "@/components/dashboard/time-clock/holidays-card";
 
 const MODE_OPTIONS = [
   { value: "off", label: "No revisar la conexión" },
@@ -209,6 +210,8 @@ export default function TimeClockConfigPage() {
         {isSaving && <Loader2 className="size-4 animate-spin" />}
         {isSaving ? "Guardando…" : "Guardar configuración"}
       </Button>
+
+      <HolidaysCard />
     </div>
   );
 }

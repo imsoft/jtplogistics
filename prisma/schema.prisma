@@ -1035,6 +1035,20 @@ model TimeClockIncident {
   @@map("time_clock_incidents")
 }
 
+/// Día festivo del checador. Lo administra solo dirección.
+///
+/// En un festivo se puede marcar igual — hay quien trabaja —, pero la jornada
+/// no se juzga: no hay retardo, ni motivo obligatorio, ni incidencias.
+model Holiday {
+  id        String   @id @default(cuid()) @map("id")
+  /// DATE a medianoche UTC, igual que work_date, para compararlos directo.
+  date      DateTime @unique @db.Date @map("date")
+  name      String   @map("name")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("holidays")
+}
+
 enum TicketStatus {
   open
   in_progress

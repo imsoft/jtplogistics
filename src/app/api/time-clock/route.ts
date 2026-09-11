@@ -81,6 +81,11 @@ export async function GET() {
       liveCounts(prisma, userId),
     ]);
 
+    const holiday = await prisma.holiday.findUnique({
+      where: { date: workDate },
+      select: { name: true },
+    });
+
     // Cuándo caduca el retardo más viejo: sin esto el colaborador ve un número
     // sin saber cuándo baja.
     const nextExpiry = await prisma.timeClockIncident.findFirst({
@@ -98,6 +103,7 @@ export async function GET() {
       workDate: workDate.toISOString().slice(0, 10),
       lastMark: shift?.mark ?? null,
       allowed: allowedMarksAfter(shift?.mark ?? null),
+      holiday: holiday?.name ?? null,
       schedule: schedule
         ? { startMinute: schedule.startMinute, endMinute: schedule.endMinute }
         : null,
@@ -187,10 +193,19 @@ export async function POST(request: Request) {
 
     // El horario que RH le capturó para este día. Sin él no hay contra qué
     // comparar y no se le exige nada: el checador registra, no inventa reglas.
-    const schedule = await prisma.workSchedule.findUnique({
-      where: { userId_weekday: { userId, weekday: weekdayOf(workDate) } },
-      select: { startMinute: true },
+    // En un festivo se marca igual — hay quien trabaja —, pero no se juzga:
+    // sin horario de referencia no hay retardo ni motivo obligatorio.
+    const holiday = await prisma.holiday.findUnique({
+      where: { date: workDate },
+      select: { name: true },
     });
+
+    const schedule = holiday
+      ? null
+      : await prisma.workSchedule.findUnique({
+          where: { userId_weekday: { userId, weekday: weekdayOf(workDate) } },
+          select: { startMinute: true },
+        });
 
     const lunchStart =
       mark === "lunch_end"
@@ -208,7 +223,7 @@ export async function POST(request: Request) {
     // Llegar tarde obliga a explicarlo en el momento. Es lo que cierra el hueco
     // del aviso: nadie acumula retardos sin enterarse, porque no puede
     // registrar uno sin reconocerlo ahí mismo.
-    const mustExplain = needsReason({
+    const mustExplain = !holiday && needsReason({
       mark,
       scheduledStart: schedule?.startMinute ?? null,
       markedMinute: companyMinutes(markedAt),
@@ -260,7 +275,9 @@ export async function POST(request: Request) {
         select: { id: true, mark: true, markedAt: true },
       });
 
-      const judged = await judgeEntry(tx, {
+      const judged = holiday
+        ? { retardo: false, comidaLarga: false, faltaGenerada: false }
+        : await judgeEntry(tx, {
         userId,
         entryId: entry.id,
         mark,

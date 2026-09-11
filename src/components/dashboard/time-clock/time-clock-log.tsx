@@ -97,6 +97,7 @@ export function TimeClockLog({ canCorrect = false }: { canCorrect?: boolean }) {
   const [from, setFrom] = useState(todayKey);
   const [to, setTo] = useState(todayKey);
   const [rows, setRows] = useState<Row[] | null>(null);
+  const [holidays, setHolidays] = useState<Map<string, string>>(new Map());
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(() => {
@@ -104,7 +105,10 @@ export function TimeClockLog({ canCorrect = false }: { canCorrect?: boolean }) {
     setError(null);
     fetch(`/api/time-clock/log?from=${from}&to=${to}`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((d: { rows: Row[] }) => setRows(d.rows))
+      .then((d: { rows: Row[]; holidays?: { date: string; name: string }[] }) => {
+        setHolidays(new Map((d.holidays ?? []).map((h) => [h.date, h.name])));
+        setRows(d.rows);
+      })
       .catch(() => { setRows([]); setError("No se pudo cargar el registro."); });
   }, [from, to]);
 
@@ -182,7 +186,14 @@ export function TimeClockLog({ canCorrect = false }: { canCorrect?: boolean }) {
                       </span>
                     ))}
                   </td>
-                  <td className="text-muted-foreground px-4 py-2.5 tabular-nums">{row.workDate}</td>
+                  <td className="text-muted-foreground px-4 py-2.5 tabular-nums">
+                    {row.workDate}
+                    {holidays.has(row.workDate) && (
+                      <span className="text-foreground bg-muted mt-1 block w-fit rounded px-1.5 py-0.5 text-xs font-medium">
+                        Festivo: {holidays.get(row.workDate)}
+                      </span>
+                    )}
+                  </td>
                   {COLUMNS.map((c) => {
                     const m = row.marks[c.mark];
                     return (

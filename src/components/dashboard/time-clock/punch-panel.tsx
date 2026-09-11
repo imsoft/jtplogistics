@@ -48,6 +48,8 @@ interface State {
   lastMark: Mark | null;
   allowed: Mark[];
   schedule: { startMinute: number; endMinute: number } | null;
+  /** Nombre del festivo si la jornada cae en uno. */
+  holiday: string | null;
   standing: Standing;
   entries: Entry[];
 }
@@ -172,6 +174,13 @@ export function PunchPanel({ variant = "full" }: { variant?: "full" | "compact" 
             Jornada del {longDate(state.workDate)}.
           </p>
         </div>
+      )}
+
+      {state.holiday && (
+        <p className="rounded-lg border bg-muted/40 px-4 py-3 text-center text-sm">
+          Hoy es día festivo: <strong>{state.holiday}</strong>. Si vienes a trabajar
+          puedes marcar, pero hoy no se cuentan retardos.
+        </p>
       )}
 
       <Card>
