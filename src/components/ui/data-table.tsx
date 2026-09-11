@@ -84,6 +84,14 @@ interface DataTableProps<TData, TValue> {
   onSearchChange?: (value: string) => void;
   /** Atenúa la tabla mientras se recarga. */
   isFetching?: boolean;
+  /**
+   * Avisa qué filas quedan después de la búsqueda, los filtros y el orden, en
+   * todas las páginas. Sirve para exportar exactamente lo que se ve.
+   *
+   * No confundir con onSearchChange: ese pasa la tabla a búsqueda del lado del
+   * servidor y deja de filtrar aquí. Este solo observa.
+   */
+  onVisibleRowsChange?: (rows: TData[]) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -109,6 +117,7 @@ export function DataTable<TData, TValue>({
   search,
   onSearchChange,
   isFetching = false,
+  onVisibleRowsChange,
 }: DataTableProps<TData, TValue>) {
   const [internalSorting, setInternalSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -153,6 +162,18 @@ export function DataTable<TData, TValue>({
         : {}),
     },
   });
+
+  // Se avisa solo cuando cambia la lista de ids. Comparar el arreglo por
+  // identidad haría un ciclo: las columnas suelen recrearse en cada render, la
+  // tabla recalcula, el padre guarda el arreglo nuevo y vuelve a renderizar.
+  const visibleRows = table.getPrePaginationRowModel().rows;
+  const visibleKey = visibleRows.map((r) => r.id).join("|");
+  const lastVisibleKey = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    if (!onVisibleRowsChange || lastVisibleKey.current === visibleKey) return;
+    lastVisibleKey.current = visibleKey;
+    onVisibleRowsChange(visibleRows.map((r) => r.original));
+  }, [visibleKey, visibleRows, onVisibleRowsChange]);
 
   const filterKey =
     filterColumn ??

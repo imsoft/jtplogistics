@@ -3,6 +3,8 @@ import { formatIncidentYesNo } from "@/lib/incident-yes-no";
 import { getIncidentTypeLabel } from "@/lib/incident-type-label";
 import type { FinanceListRow } from "@/types/finance.types";
 import type { Shipment, ShipmentStatus } from "@/types/shipment.types";
+import type { Employee } from "@/types/resources.types";
+import { formatPhone } from "@/lib/utils";
 
 const SHIPMENT_STATUS_LABEL: Record<ShipmentStatus, string> = {
   pending: "Pendiente",
@@ -152,4 +154,81 @@ export function financesToExcelAoa(rows: FinanceListRow[]): (string | number)[][
     fmtDateEs(f.deliveryDate),
   ]);
   return [headers, ...data];
+}
+
+// ── Colaboradores ─────────────────────────────────────────────────────────────
+
+/** Columnas que se pueden exportar de la tabla de colaboradores, en orden. */
+export const EMPLOYEE_EXPORT_COLUMNS: { key: string; label: string }[] = [
+  { key: "name", label: "Nombre" },
+  { key: "email", label: "Correo" },
+  { key: "phone", label: "Teléfono" },
+  { key: "birthDate", label: "Fecha de nacimiento" },
+  { key: "age", label: "Edad" },
+  { key: "hireDate", label: "Fecha de ingreso" },
+  { key: "tenure", label: "Antigüedad" },
+  { key: "position", label: "Puesto" },
+  { key: "department", label: "Departamento" },
+  { key: "nss", label: "NSS" },
+  { key: "rfc", label: "RFC" },
+  { key: "curp", label: "CURP" },
+  { key: "address", label: "Domicilio" },
+];
+
+/** "4 de octubre de 1990". Las fechas vienen como "YYYY-MM-DD": se leen en UTC. */
+function fmtDateLongEs(iso: string | null): string {
+  if (!iso) return "";
+  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("es-MX", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+/** "35 años, 11 meses" desde la fecha dada hasta `now`. */
+function elapsedSince(iso: string, now: Date): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  let y = now.getFullYear() - d.getUTCFullYear();
+  let m = now.getMonth() - d.getUTCMonth();
+  if (m < 0) {
+    y--;
+    m += 12;
+  }
+  const months = `${m} mes${m !== 1 ? "es" : ""}`;
+  return y > 0 ? `${y} año${y !== 1 ? "s" : ""}, ${months}` : months;
+}
+
+/**
+ * Hoja de colaboradores con las columnas elegidas. El teléfono sale con el
+ * mismo formato que en la tabla: exportarlo pelado hacía que el archivo no se
+ * pareciera a lo que la persona tenía en pantalla.
+ */
+export function employeesToExcelAoa(
+  employees: Employee[],
+  selected: Set<string>,
+  now = new Date()
+): ExcelCell[][] {
+  const columns = EMPLOYEE_EXPORT_COLUMNS.filter((c) => selected.has(c.key));
+  const headers = columns.map((c) => c.label);
+
+  const rows = employees.map((emp) =>
+    columns.map((c): ExcelCell => {
+      switch (c.key) {
+        case "age":
+          return emp.birthDate ? elapsedSince(emp.birthDate, now) : "";
+        case "tenure":
+          return emp.hireDate ? elapsedSince(emp.hireDate, now) : "";
+        case "birthDate":
+        case "hireDate":
+          return fmtDateLongEs(emp[c.key] ?? null);
+        case "phone":
+          return emp.phone ? formatPhone(emp.phone) : "";
+        default:
+          return (emp[c.key as keyof Employee] as string | null | undefined) ?? "";
+      }
+    })
+  );
+
+  return [headers, ...rows];
 }

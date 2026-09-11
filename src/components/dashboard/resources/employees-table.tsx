@@ -18,65 +18,16 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { downloadXlsxFromAoa } from "@/lib/excel-export";
+import {
+  EMPLOYEE_EXPORT_COLUMNS,
+  downloadXlsxFromAoa,
+  employeesToExcelAoa,
+  excelExportFilename,
+} from "@/lib/excel-export";
 import { Label } from "@/components/ui/label";
 import { FileDown } from "lucide-react";
 import { formatPhone } from "@/lib/utils";
 import type { Employee } from "@/types/resources.types";
-
-// ── Excel export ──────────────────────────────────────────────────────────────
-
-const ALL_COLUMNS: { key: keyof Employee | "age" | "tenure"; label: string }[] = [
-  { key: "name",      label: "Nombre" },
-  { key: "email",     label: "Correo" },
-  { key: "phone",     label: "Teléfono" },
-  { key: "birthDate", label: "Fecha de nacimiento" },
-  { key: "age",       label: "Edad" },
-  { key: "hireDate",  label: "Fecha de ingreso" },
-  { key: "tenure",    label: "Antigüedad" },
-  { key: "position",  label: "Puesto" },
-  { key: "department",label: "Departamento" },
-  { key: "nss",       label: "NSS" },
-  { key: "rfc",       label: "RFC" },
-  { key: "curp",      label: "CURP" },
-  { key: "address",   label: "Domicilio" },
-];
-
-function formatDateMx(iso: string | null): string {
-  if (!iso) return "";
-  return new Date(iso + "T00:00:00Z").toLocaleDateString("es-MX", {
-    year: "numeric", month: "long", day: "numeric", timeZone: "UTC",
-  });
-}
-
-function calcAge(iso: string): string {
-  const d = new Date(iso + "T00:00:00Z");
-  const now = new Date();
-  let y = now.getFullYear() - d.getUTCFullYear();
-  let m = now.getMonth() - d.getUTCMonth();
-  if (m < 0) { y--; m += 12; }
-  return y > 0 ? `${y} año${y !== 1 ? "s" : ""}, ${m} mes${m !== 1 ? "es" : ""}` : `${m} mes${m !== 1 ? "es" : ""}`;
-}
-
-async function exportToExcel(employees: Employee[], selectedKeys: Set<string>) {
-  const headers = ALL_COLUMNS
-    .filter((c) => selectedKeys.has(c.key))
-    .map((c) => c.label);
-
-  const rows = employees.map((emp) =>
-    ALL_COLUMNS
-      .filter((c) => selectedKeys.has(c.key))
-      .map((c) => {
-        if (c.key === "age")    return emp.birthDate ? calcAge(emp.birthDate) : "";
-        if (c.key === "tenure") return emp.hireDate  ? calcAge(emp.hireDate)  : "";
-        if (c.key === "birthDate" || c.key === "hireDate") return formatDateMx(emp[c.key] as string | null);
-        return (emp[c.key as keyof Employee] as string | null) ?? "";
-      })
-  );
-
-  // El ancho de columna lo calcula downloadXlsxFromAoa a partir del contenido.
-  await downloadXlsxFromAoa("colaboradores.xlsx", "Colaboradores", [headers, ...rows]);
-}
 
 // ── Table columns ─────────────────────────────────────────────────────────────
 
@@ -146,8 +97,11 @@ export function EmployeesTable({
   const [filterDepartment, setFilterDepartment] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(
-    new Set(ALL_COLUMNS.map((c) => c.key))
+    new Set(EMPLOYEE_EXPORT_COLUMNS.map((c) => c.key))
   );
+  // Lo que queda en pantalla tras la búsqueda y el orden. La búsqueda vive
+  // dentro de la tabla, así que antes el Excel la ignoraba y bajaba a todos.
+  const [visibleRows, setVisibleRows] = useState<Employee[] | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
   const departments = useMemo(
@@ -168,10 +122,16 @@ export function EmployeesTable({
     });
   }
 
+  const toExport = visibleRows ?? filtered;
+
   async function handleExport() {
     setIsExporting(true);
     try {
-      await exportToExcel(filtered, selectedKeys);
+      await downloadXlsxFromAoa(
+        excelExportFilename("colaboradores"),
+        "Colaboradores",
+        employeesToExcelAoa(toExport, selectedKeys)
+      );
       setDialogOpen(false);
     } finally {
       setIsExporting(false);
@@ -197,6 +157,7 @@ export function EmployeesTable({
         initialColumnVisibility={{ search: false }}
         getRowId={(row) => row.id}
         onRowClick={(emp) => router.push(`${detailBasePath}/${emp.id}`)}
+        onVisibleRowsChange={setVisibleRows}
         toolbar={
           <>
             <AppSelect
@@ -230,11 +191,11 @@ export function EmployeesTable({
             <DialogTitle>Exportar a Excel</DialogTitle>
             <DialogDescription>
               Selecciona las columnas que quieres incluir en el archivo.
-              {filtered.length !== employees.length && (
-                <span className="block mt-1 text-xs">
-                  Se exportarán {filtered.length} colaborador{filtered.length !== 1 ? "es" : ""} (filtro activo).
-                </span>
-              )}
+              <span className="block mt-1 text-xs">
+                {toExport.length === employees.length
+                  ? `Se exportarán los ${employees.length} colaboradores.`
+                  : `Se exportarán ${toExport.length} de ${employees.length} colaboradores: los que dejan ver la búsqueda y los filtros.`}
+              </span>
             </DialogDescription>
           </DialogHeader>
 
@@ -245,7 +206,7 @@ export function EmployeesTable({
                 <button
                   type="button"
                   className="text-xs text-primary hover:underline"
-                  onClick={() => setSelectedKeys(new Set(ALL_COLUMNS.map((c) => c.key)))}
+                  onClick={() => setSelectedKeys(new Set(EMPLOYEE_EXPORT_COLUMNS.map((c) => c.key)))}
                 >
                   Todas
                 </button>
@@ -258,7 +219,7 @@ export function EmployeesTable({
                 </button>
               </div>
             </div>
-            {ALL_COLUMNS.map((col) => (
+            {EMPLOYEE_EXPORT_COLUMNS.map((col) => (
               <div key={col.key} className="flex items-center gap-3">
                 <Checkbox
                   id={`col-${col.key}`}
