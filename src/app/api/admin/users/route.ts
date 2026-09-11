@@ -46,7 +46,9 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const roleFilter = searchParams.get("role") as UserRole | null;
     const users = await prisma.user.findMany({
-      where: roleFilter ? { role: roleFilter } : undefined,
+      // Los usuarios que un proveedor da de alta no salen aquí como proveedores
+      // sueltos: se ven dentro de la ficha de su empresa.
+      where: { ...(roleFilter ? { role: roleFilter } : {}), parentCarrierId: null },
       orderBy: { createdAt: "desc" },
       include: {
         profile: {

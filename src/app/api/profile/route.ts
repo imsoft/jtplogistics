@@ -19,6 +19,8 @@ export async function GET() {
         image: true,
         birthDate: true,
         role: true,
+        parentCarrierId: true,
+        memberCanEditCompany: true,
         profile: {
           select: {
             commercialName: true,
@@ -41,6 +43,24 @@ export async function GET() {
       return Response.json({ error: "Usuario no encontrado" }, { status: 404 });
     }
 
+    // Un usuario agregado por un proveedor no tiene empresa propia: ve la de su
+    // principal. Sus datos personales (nombre, fecha) sí son suyos.
+    const company = user.parentCarrierId
+      ? await prisma.profile.findUnique({
+          where: { userId: user.parentCarrierId },
+          select: {
+            commercialName: true,
+            legalName: true,
+            rfc: true,
+            address: true,
+            contacts: {
+              select: { id: true, type: true, value: true, label: true, position: true, personName: true },
+              orderBy: { createdAt: "asc" },
+            },
+          },
+        })
+      : user.profile;
+
     return Response.json({
       id: user.id,
       name: user.name,
@@ -48,11 +68,14 @@ export async function GET() {
       image: user.image,
       birthDate: user.birthDate ? user.birthDate.toISOString().split("T")[0] : null,
       role: user.role,
-      commercialName: user.profile?.commercialName ?? "",
-      legalName: user.profile?.legalName ?? "",
-      rfc: user.profile?.rfc ?? "",
-      address: user.profile?.address ?? "",
-      contacts: user.profile?.contacts ?? [],
+      commercialName: company?.commercialName ?? "",
+      legalName: company?.legalName ?? "",
+      rfc: company?.rfc ?? "",
+      address: company?.address ?? "",
+      contacts: company?.contacts ?? [],
+      isCarrierMember: Boolean(user.parentCarrierId),
+      // La pantalla bloquea la sección de empresa cuando esto es falso.
+      companyEditable: !user.parentCarrierId || user.memberCanEditCompany,
       position: user.employeeProfile?.position ?? null,
       department: user.employeeProfile?.department ?? null,
     });
@@ -68,6 +91,17 @@ export async function PATCH(request: NextRequest) {
     const session = await requireSession();
     const userId = session.user.id;
     const body = await request.json();
+
+    // Lo personal se guarda en quien está dentro; lo de la empresa, en el
+    // principal. Si un usuario agregado no tiene permiso sobre la empresa, esa
+    // parte se ignora en vez de rechazar el guardado entero: su nombre sí
+    // puede cambiarlo.
+    const me = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { parentCarrierId: true, memberCanEditCompany: true },
+    });
+    const companyOwnerId = me?.parentCarrierId ?? userId;
+    const canTouchCompany = !me?.parentCarrierId || me.memberCanEditCompany;
 
     const name = body.name != null ? normalizeDisplayName(String(body.name)) : undefined;
     const birthDate = body.birthDate != null
@@ -100,11 +134,39 @@ export async function PATCH(request: NextRequest) {
       });
     }
 
+    if (!canTouchCompany) {
+      const current = await prisma.profile.findUnique({
+        where: { userId: companyOwnerId },
+        select: {
+          commercialName: true,
+          legalName: true,
+          rfc: true,
+          address: true,
+          contacts: {
+            select: { id: true, type: true, value: true, label: true, position: true, personName: true },
+            orderBy: { createdAt: "asc" },
+          },
+        },
+      });
+      void logAudit({
+        resource: "profile", resourceId: userId, resourceLabel: (name ?? session.user.name) as string,
+        action: "updated", userId, userName: (name ?? session.user.name) as string,
+      });
+      return Response.json({
+        name: name ?? session.user.name,
+        commercialName: current?.commercialName ?? "",
+        legalName: current?.legalName ?? "",
+        rfc: current?.rfc ?? "",
+        address: current?.address ?? "",
+        contacts: current?.contacts ?? [],
+      });
+    }
+
     // Upsert profile
     const profile = await prisma.profile.upsert({
-      where: { userId },
+      where: { userId: companyOwnerId },
       create: {
-        userId,
+        userId: companyOwnerId,
         commercialName: commercialName ?? undefined,
         legalName: legalName ?? undefined,
         rfc: rfc ?? undefined,

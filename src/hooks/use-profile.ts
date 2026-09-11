@@ -12,6 +12,10 @@ export interface ProfileApiData {
   rfc: string;
   address: string;
   contacts: { id?: string; type: "phone" | "email"; value: string; label: string | null; position: string | null; personName: string | null }[];
+  /** Usuario que un proveedor dio de alta: la empresa es la de su principal. */
+  isCarrierMember: boolean;
+  /** Si puede cambiar los datos de la empresa. Falso para quien no tiene permiso. */
+  companyEditable: boolean;
 }
 
 export function useProfile() {
@@ -42,6 +46,10 @@ export function useProfile() {
             legalName: json.legalName ?? "",
             rfc: json.rfc ?? "",
             address: json.address ?? "",
+            isCarrierMember: Boolean(json.isCarrierMember),
+            // Por defecto editable: así se comportan todos los que no son
+            // usuarios agregados de un proveedor.
+            companyEditable: json.companyEditable !== false,
             contacts: (json.contacts ?? []).map(
               (c: { id?: string; type: "phone" | "email"; value: string; label?: string | null; position?: string | null; personName?: string | null }) => ({
                 id: c.id,

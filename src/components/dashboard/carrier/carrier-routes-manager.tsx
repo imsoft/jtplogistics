@@ -49,6 +49,12 @@ interface CarrierRoutesResponse {
   canEditTarget: boolean;
   canEditRoutes: boolean;
   canAddRoutes: boolean;
+  /**
+   * Si quien está dentro puede capturar. Es permiso de la persona, no candado
+   * de JTP: un usuario de la empresa con permiso solo de ver no captura aunque
+   * la empresa esté desbloqueada.
+   */
+  canCapture?: boolean;
   routes: CarrierRouteRow[];
 }
 
@@ -108,6 +114,7 @@ export function CarrierRoutesManager({
   const [canEditTarget, setCanEditTarget] = useState(false);
   const [canEditRoutes, setCanEditRoutes] = useState(false);
   const [canAddRoutes, setCanAddRoutes] = useState(false);
+  const [canCapture, setCanCapture] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -157,6 +164,7 @@ export function CarrierRoutesManager({
     setCanEditTarget(data.canEditTarget);
     setCanEditRoutes(data.canEditRoutes);
     setCanAddRoutes(data.canAddRoutes);
+    setCanCapture(data.canCapture !== false);
     setAllRoutes(data.routes);
 
     // Load selections for the current unitType page
@@ -661,6 +669,12 @@ export function CarrierRoutesManager({
 
           {/* Footer */}
           <div ref={footerRef} className="flex flex-col gap-2 pt-2 sm:items-end">
+            {!canCapture && (
+              <p className="text-muted-foreground text-xs sm:text-right">
+                Tu usuario puede ver las tarifas, pero no capturarlas. Pídele el permiso
+                al usuario principal de tu empresa.
+              </p>
+            )}
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:gap-3">
               <span className="text-muted-foreground text-xs text-center sm:text-left">
                 {selectedCount} ruta{selectedCount !== 1 ? "s" : ""} seleccionada
@@ -672,7 +686,7 @@ export function CarrierRoutesManager({
               <Button
                 type="button"
                 onClick={handleSubmit}
-                disabled={isSaving || !canSave}
+                disabled={isSaving || !canSave || !canCapture}
                 className="w-full sm:w-auto"
               >
                 {isSaving ? "Guardando…" : "Guardar selección"}
@@ -684,7 +698,7 @@ export function CarrierRoutesManager({
               muestra siempre que el botón de guardar no esté a la vista; no
               solo al cambiar algo, porque al entrar por "Gestionar" las rutas
               pactadas ya vienen marcadas y no habría ningún cambio todavía. */}
-          {!footerVisible && (
+          {!footerVisible && canCapture && (
             <div className="pointer-events-none fixed inset-x-0 bottom-4 z-40 flex justify-center px-4">
               <Button
                 type="button"

@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
 
       // Transportistas: each word must match name OR email
       prisma.user.findMany({
-        where: { role: "carrier", AND: allWordsMatch(["name", "email"]) },
+        where: { role: "carrier", parentCarrierId: null, AND: allWordsMatch(["name", "email"]) },
         take: 10,
         select: { id: true, name: true, email: true },
       }),

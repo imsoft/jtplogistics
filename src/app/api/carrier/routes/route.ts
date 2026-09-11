@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireCarrier } from "@/lib/auth-server";
+import { requireCarrierAccount } from "@/lib/carrier-account";
 import { sendEmail } from "@/lib/email";
 import { buildCarrierBidEmail, type BidRouteLine } from "@/lib/carrier-email";
 import { logAudit } from "@/lib/audit-log";
@@ -11,7 +11,8 @@ const PRICING_EMAIL = "pricing@jtp.com.mx";
 // GET  — todas las rutas activas + selección guardada del carrier + permiso de edición
 export async function GET() {
   try {
-    const session = await requireCarrier();
+    // Las tarifas son de la empresa: un usuario agregado ve las de su principal.
+    const { carrierId, can } = await requireCarrierAccount("viewRates");
 
     const [routes, carrierRoutes, userRecord] = await Promise.all([
       // El transportista solo ve rutas ACTIVAS: las pendientes e inactivas no
@@ -24,10 +25,10 @@ export async function GET() {
         include: { unitTargets: true },
       }),
       prisma.carrierRoute.findMany({
-        where: { carrierId: session.user.id },
+        where: { carrierId: carrierId },
       }),
       prisma.user.findUnique({
-        where: { id: session.user.id },
+        where: { id: carrierId },
         select: { canEditTarget: true, canEditRoutes: true },
       }),
     ]);
@@ -65,6 +66,10 @@ export async function GET() {
     }
 
     return Response.json({
+      // Si quien está dentro puede capturar. Distinto de los candados de JTP
+      // (canEditTarget/canEditRoutes), que son de la empresa: un usuario con
+      // permiso solo de ver no captura aunque la empresa esté desbloqueada.
+      canCapture: can.editRates,
       canEditTarget: userRecord?.canEditTarget ?? false,
       canEditRoutes: userRecord?.canEditRoutes ?? false,
       canAddRoutes: true,
@@ -103,7 +108,9 @@ export async function GET() {
 // body: [{ routeId, carrierTarget }]
 export async function PUT(request: NextRequest) {
   try {
-    const session = await requireCarrier();
+    // Quien captura (userId) puede no ser la empresa (carrierId): los datos y
+    // los candados de JTP son de la empresa; la bitácora, de quien lo hizo.
+    const { carrierId, userId, session } = await requireCarrierAccount("editRates");
 
     const body: { routeId: string; unitType: string; carrierTarget: number | null; carrierWeeklyVolume: number | null }[] = await request.json();
 
@@ -115,12 +122,12 @@ export async function PUT(request: NextRequest) {
     const pageUnitType = request.nextUrl.searchParams.get("unitType") ?? body[0]?.unitType ?? "";
 
     const userRecord = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: carrierId },
       select: { canEditTarget: true, canEditRoutes: true },
     });
 
     const existingRoutes = await prisma.carrierRoute.findMany({
-      where: { carrierId: session.user.id, unitType: pageUnitType },
+      where: { carrierId: carrierId, unitType: pageUnitType },
       include: { route: { select: { status: true } } },
     });
     const existingMap = new Map(existingRoutes.map((r) => [`${r.routeId}:${r.unitType}`, r]));
@@ -164,7 +171,7 @@ export async function PUT(request: NextRequest) {
       ops.push(
         prisma.carrierRoute.createMany({
           data: toCreate.map((item) => ({
-            carrierId: session.user.id,
+            carrierId: carrierId,
             routeId: item.routeId,
             unitType: item.unitType,
             carrierTarget: item.carrierTarget ?? undefined,
@@ -213,18 +220,18 @@ export async function PUT(request: NextRequest) {
     }
 
     // Notificación a pricing
-    void notifyPricing(session.user.id, body);
+    void notifyPricing(carrierId, body);
 
     // Tras guardar: se bloquea editar lo ya guardado (targets y desmarcar).
     await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: carrierId },
       data: { canEditRoutes: false, canEditTarget: false },
     });
 
     void logAudit({
-      resource: "carrier_routes", resourceId: session.user.id,
+      resource: "carrier_routes", resourceId: carrierId,
       resourceLabel: `Selección de rutas (${body.length})`,
-      action: "updated", userId: session.user.id, userName: (session.user as { name: string }).name,
+      action: "updated", userId, userName: (session.user as { name: string }).name,
     });
 
     return Response.json({ ok: true });

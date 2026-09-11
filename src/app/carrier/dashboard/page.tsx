@@ -13,8 +13,15 @@ export default async function CarrierDashboardPage() {
   if (!session) redirect("/login");
   if (session.user.role !== "carrier") redirect("/login");
 
+  // Un usuario agregado trabaja sobre las tarifas de su empresa, no las suyas.
+  const me = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { parentCarrierId: true },
+  });
+  const carrierId = me?.parentCarrierId ?? session.user.id;
+
   const selectionCount = await prisma.carrierRoute.count({
-    where: { carrierId: session.user.id },
+    where: { carrierId },
   });
   if (selectionCount === 0) {
     redirect("/carrier/dashboard/unit-types");

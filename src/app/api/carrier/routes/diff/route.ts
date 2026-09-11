@@ -1,13 +1,13 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireCarrier } from "@/lib/auth-server";
+import { requireCarrierAccount } from "@/lib/carrier-account";
 import { computeTargetStatus } from "@/lib/target-status";
 
 // Devuelve solo el semáforo (verde/amarillo/rojo) contra el target de JTP.
 // Nunca expone el target de JTP ni el porcentaje de diferencia.
 export async function GET(request: NextRequest) {
   try {
-    await requireCarrier();
+    await requireCarrierAccount("viewRates");
 
     const { searchParams } = request.nextUrl;
     const routeId = searchParams.get("routeId");

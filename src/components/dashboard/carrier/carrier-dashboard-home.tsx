@@ -37,11 +37,17 @@ export function CarrierDashboardHome() {
   const unitTypes = useUnitTypes();
   const [data, setData] = useState<CarrierRoutesResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Un usuario de la empresa sin permiso de tarifas no tiene rutas que ver.
+  const [noRates, setNoRates] = useState(false);
 
   const load = useCallback(async () => {
     setError(null);
     try {
       const res = await fetch("/api/carrier/routes");
+      if (res.status === 403) {
+        setNoRates(true);
+        return;
+      }
       if (!res.ok) throw new Error("No se pudieron cargar tus rutas.");
       const json = (await res.json()) as CarrierRoutesResponse;
       setData(json);
@@ -93,8 +99,22 @@ export function CarrierDashboardHome() {
 
   const columns = useMemo(() => getCarrierHomeColumns(), []);
 
+  if (noRates) {
+    return (
+      <div className="space-y-4">
+        <h1 className="page-heading">Inicio</h1>
+        <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
+          Tu usuario no tiene acceso a las tarifas de la empresa. Usa el menú para ir
+          a lo que sí tienes habilitado.
+        </p>
+      </div>
+    );
+  }
+
+  // Antes, cualquier error dejaba el esqueleto de carga para siempre: el
+  // mensaje solo se pintaba cuando ya había datos.
   if (!data) {
-    return <DataTableSkeleton />;
+    return error ? <p className="text-sm text-destructive">{error}</p> : <DataTableSkeleton />;
   }
 
   return (

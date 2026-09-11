@@ -3,6 +3,22 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth-server";
 import { notify, notifyRole } from "@/lib/notify";
 import { logAudit } from "@/lib/audit-log";
+import { requireCarrierAccount } from "@/lib/carrier-account";
+
+/**
+ * La conversación del transportista en sesión: la de su empresa, si tiene
+ * permiso de mensajes. Devuelve la respuesta de rechazo en vez de lanzarla,
+ * para no depender de cómo la atrape cada método.
+ */
+async function carrierConversation(): Promise<{ carrierId: string } | Response> {
+  try {
+    const { carrierId } = await requireCarrierAccount("message");
+    return { carrierId };
+  } catch (e) {
+    if (e instanceof Response) return e;
+    throw e;
+  }
+}
 
 function isStaff(role: string) {
   return role === "admin" || role === "collaborator";
@@ -45,7 +61,9 @@ export async function GET(request: NextRequest) {
     let targetCarrierId: string;
 
     if (role === "carrier") {
-      targetCarrierId = userId;
+      const conv = await carrierConversation();
+      if (conv instanceof Response) return conv;
+      targetCarrierId = conv.carrierId;
     } else if (isStaff(role)) {
       if (!carrierId) {
         return Response.json({ error: "carrierId requerido" }, { status: 400 });
@@ -115,7 +133,11 @@ export async function POST(request: NextRequest) {
     let senderRole: string;
 
     if (role === "carrier") {
-      carrierId = userId;
+      // La conversación es de la empresa; senderId sigue siendo quien escribe,
+      // así JTP ve qué usuario de la empresa mandó cada mensaje.
+      const conv = await carrierConversation();
+      if (conv instanceof Response) return conv;
+      carrierId = conv.carrierId;
       senderRole = "carrier";
     } else if (isStaff(role)) {
       const cid = String(body.carrierId ?? "").trim();
@@ -164,14 +186,23 @@ export async function POST(request: NextRequest) {
         href: `/collaborator/dashboard/messages?carrierId=${carrierId}`,
       });
     } else {
-      // Staff escribe → notificar al carrier
-      void notify({
-        userId: carrierId,
-        type: "new_message",
-        title: `Respuesta de ${userName}`,
-        body: text.slice(0, 80),
-        href: `/carrier/dashboard/messages`,
-      });
+      // Staff escribe → avisar a la empresa: al principal y a sus usuarios
+      // con permiso de mensajes.
+      void (async () => {
+        const members = await prisma.user.findMany({
+          where: { parentCarrierId: carrierId, memberCanMessage: true, memberRevokedAt: null },
+          select: { id: true },
+        });
+        await notify(
+          [carrierId, ...members.map((m) => m.id)].map((id) => ({
+            userId: id,
+            type: "new_message",
+            title: `Respuesta de ${userName}`,
+            body: text.slice(0, 80),
+            href: `/carrier/dashboard/messages`,
+          }))
+        );
+      })().catch((e) => console.error("[messages] No se pudo avisar a la empresa:", e));
     }
 
     void logAudit({

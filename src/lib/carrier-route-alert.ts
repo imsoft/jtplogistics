@@ -20,12 +20,22 @@ interface NewRouteInfo {
 export async function alertMatchingCarriers(route: NewRouteInfo): Promise<void> {
   try {
     // Load all carriers who already have at least one route assigned
+    // Solo empresas: los usuarios agregados no tienen rutas propias y se suman
+    // abajo a través de su principal.
     const carriers = await prisma.user.findMany({
-      where: { role: "carrier" },
+      where: { role: "carrier", parentCarrierId: null },
       select: {
         id: true,
         name: true,
         email: true,
+        // Además del principal, avisa a quien tenga permiso de tarifas.
+        carrierMembers: {
+          where: {
+            memberRevokedAt: null,
+            OR: [{ memberCanViewRates: true }, { memberCanEditRates: true }],
+          },
+          select: { id: true, name: true, email: true },
+        },
         carrierRoutes: {
           select: {
             route: {
@@ -62,6 +72,11 @@ export async function alertMatchingCarriers(route: NewRouteInfo): Promise<void> 
 
     if (matched.length === 0) return;
 
+    const recipients = matched.flatMap((c) => [
+      { id: c.id, name: c.name, email: c.email },
+      ...c.carrierMembers,
+    ]);
+
     const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
     // Llevamos al transportista a la pantalla correcta de tipos de unidad
     // para que vea rutas ya seleccionadas (targets/volúmenes) y la nueva oferta.
@@ -69,7 +84,7 @@ export async function alertMatchingCarriers(route: NewRouteInfo): Promise<void> 
     const routeLabel = `${route.origin} → ${route.destination}`;
     const stateSuffix = route.destinationState ? ` (${route.destinationState})` : "";
 
-    const notifyInputs = matched.map((c) => ({
+    const notifyInputs = recipients.map((c) => ({
       userId: c.id,
       type: "new_route",
       title: "Nueva ruta disponible",
@@ -77,7 +92,7 @@ export async function alertMatchingCarriers(route: NewRouteInfo): Promise<void> 
       href: routeHref,
     }));
 
-    const emailPromises = matched.map((c) => {
+    const emailPromises = recipients.map((c) => {
       const { subject, html, text } = buildNewRouteEmail({
         name: c.name,
         routeLabel,

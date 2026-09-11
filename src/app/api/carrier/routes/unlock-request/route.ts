@@ -1,12 +1,12 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireCarrier } from "@/lib/auth-server";
+import { requireCarrierAccount } from "@/lib/carrier-account";
 import { logAudit } from "@/lib/audit-log";
 import { computeTargetStatus } from "@/lib/target-status";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireCarrier();
+    const { carrierId, userId, session } = await requireCarrierAccount("editRates");
     const body = await request.json();
     const { routeId, unitType } = body as { routeId?: string; unitType?: string };
 
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
 
     // Find the carrier route record
     const carrierRoute = await prisma.carrierRoute.findUnique({
-      where: { carrierId_routeId_unitType: { carrierId: session.user.id, routeId, unitType } },
+      where: { carrierId_routeId_unitType: { carrierId, routeId, unitType } },
       include: {
         route: {
           select: { origin: true, destination: true, unitType: true, target: true, unitTargets: true },
@@ -64,7 +64,8 @@ export async function POST(request: NextRequest) {
           type: "carrier_unlock_request",
           title: "Solicitud de edición de ruta",
           body: `${(session.user as { name: string }).name} solicita editar: ${routeLabel}.`,
-          href: `/admin/dashboard/users/${session.user.id}`,
+          // La ficha de la empresa, que es donde dirección aprueba el desbloqueo.
+          href: `/admin/dashboard/users/${carrierId}`,
           read: false,
         })),
       });
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
       resourceId: carrierRoute.id,
       resourceLabel: `${carrierRoute.route.origin} → ${carrierRoute.route.destination}`,
       action: "created",
-      userId: session.user.id,
+      userId,
       userName: (session.user as { name: string }).name,
     });
 

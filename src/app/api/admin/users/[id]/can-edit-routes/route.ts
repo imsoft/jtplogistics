@@ -22,6 +22,16 @@ export async function PATCH(
       }
     }
 
+    // Los candados se ponen a la empresa, no a los usuarios que ella da de alta:
+    // esos trabajan con los de su principal.
+    const member = await prisma.user.findUnique({ where: { id }, select: { parentCarrierId: true } });
+    if (member?.parentCarrierId) {
+      return Response.json(
+        { error: "Este usuario pertenece a un proveedor. El permiso se da en la ficha de la empresa." },
+        { status: 409 }
+      );
+    }
+
     await prisma.user.update({
       where: { id },
       data: {

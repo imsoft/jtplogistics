@@ -1,11 +1,14 @@
 import { prisma } from "@/lib/db";
-import { requireCarrierOrVendor } from "@/lib/auth-server";
+// Solo vendedores. Antes también entraba el transportista, y como esto crea
+// usuarios con el rol collaborator —el del personal interno de JTP—, un
+// proveedor podía darle a quien quisiera acceso al panel interno.
+import { requireVendedor } from "@/lib/auth-server";
 import { createAuthUser } from "@/lib/create-auth-user";
 import { logAudit } from "@/lib/audit-log";
 
 export async function GET() {
   try {
-    const session = await requireCarrierOrVendor();
+    const session = await requireVendedor();
     const collaborators = await prisma.user.findMany({
       where: {
         role: "collaborator",
@@ -41,7 +44,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const session = await requireCarrierOrVendor();
+    const session = await requireVendedor();
     const body = await request.json();
     const { name, email, password, birthDate, hireDate, position, department, phone } = body as {
       name: string;

@@ -18,7 +18,7 @@ export async function GET() {
     }
 
     const carriers = await prisma.user.findMany({
-      where: { role: "carrier" },
+      where: { role: "carrier", parentCarrierId: null },
       orderBy: { createdAt: "desc" },
       include: { profile: { select: { commercialName: true, legalName: true } } },
     });

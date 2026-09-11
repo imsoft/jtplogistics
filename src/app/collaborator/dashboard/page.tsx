@@ -107,7 +107,7 @@ export default async function CollaboratorDashboard() {
     when(user?.canViewRoutes, () => prisma.route.count({ where: { status: "active" } }), 0),
     when(user?.canViewRoutes, () => prisma.route.count({ where: { status: "pending" } }), 0),
     when(user?.canViewRoutes, () => prisma.route.count({ where: { status: "inactive" } }), 0),
-    when(user?.canViewProviders, () => prisma.user.count({ where: { role: "carrier" } }), 0),
+    when(user?.canViewProviders, () => prisma.user.count({ where: { role: "carrier", parentCarrierId: null } }), 0),
     when(
       user?.canViewShipments,
       () =>

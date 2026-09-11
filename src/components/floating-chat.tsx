@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { MessageSquare, X, ChevronLeft } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
@@ -18,6 +18,20 @@ export function FloatingChat({ placement = "floating" }: FloatingChatProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedCarrierId, setSelectedCarrierId] = useState<string | null>(null);
   const [selectedCarrierName, setSelectedCarrierName] = useState("");
+  // Para el transportista: de qué empresa es la conversación y si puede usarla.
+  // Un usuario agregado sin permiso de mensajes no ve el chat.
+  const [carrierChat, setCarrierChat] = useState<{ carrierId: string; canMessage: boolean } | null>(null);
+  const sessionRole = (session?.user as { role?: string } | undefined)?.role;
+
+  useEffect(() => {
+    if (sessionRole !== "carrier") return;
+    fetch("/api/carrier/account")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { carrierId: string; can: { message: boolean } } | null) => {
+        if (d) setCarrierChat({ carrierId: d.carrierId, canMessage: d.can.message });
+      })
+      .catch(() => {});
+  }, [sessionRole]);
 
   if (!session) return null;
 
@@ -26,6 +40,7 @@ export function FloatingChat({ placement = "floating" }: FloatingChatProps) {
   const isCarrier = role === "carrier";
 
   if (!isStaff && !isCarrier) return null;
+  if (isCarrier && !carrierChat?.canMessage) return null;
 
   // Hide on messages pages since the user is already there
   if (pathname.includes("/messages")) return null;
@@ -89,7 +104,7 @@ export function FloatingChat({ placement = "floating" }: FloatingChatProps) {
           <div className="flex-1 min-h-0">
             {isCarrier ? (
               <ChatWindow
-                carrierId={session.user.id}
+                carrierId={carrierChat?.carrierId ?? session.user.id}
                 currentUserId={session.user.id}
               />
             ) : selectedCarrierId ? (

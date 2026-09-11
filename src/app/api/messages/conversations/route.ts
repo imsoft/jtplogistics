@@ -17,7 +17,7 @@ export async function GET() {
 
     // Todos los carriers
     const carriers = await prisma.user.findMany({
-      where: { role: "carrier" },
+      where: { role: "carrier", parentCarrierId: null },
       select: { id: true, name: true, image: true },
       orderBy: { name: "asc" },
     });

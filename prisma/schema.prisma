@@ -151,6 +151,24 @@ model User {
   workSchedules    WorkSchedule[]
   timeClockIncidents TimeClockIncident[]
   timeClockCorrections TimeClockEntry[] @relation("TimeClockCorrector")
+
+  /// Usuario que un proveedor (transportista) da de alta para su empresa.
+  /// Conserva el rol carrier para entrar al mismo panel, pero trabaja sobre
+  /// los datos de su usuario principal: tarifas, mensajes y perfil de la
+  /// empresa están amarrados al id del principal, no al suyo.
+  parentCarrierId      String?   @map("parent_carrier_id")
+  parentCarrier        User?     @relation("CarrierMembers", fields: [parentCarrierId], references: [id], onDelete: Cascade)
+  carrierMembers       User[]    @relation("CarrierMembers")
+  /// Lo que el principal le permite. El principal no usa estas columnas: lo
+  /// puede todo en su empresa.
+  memberCanViewRates   Boolean   @default(false) @map("member_can_view_rates")
+  memberCanEditRates   Boolean   @default(false) @map("member_can_edit_rates")
+  memberCanMessage     Boolean   @default(false) @map("member_can_message")
+  memberCanSuggest     Boolean   @default(false) @map("member_can_suggest")
+  memberCanEditCompany Boolean   @default(false) @map("member_can_edit_company")
+  /// Se le quitó el acceso. No se borra el usuario: sus mensajes a JTP se
+  /// borrarían en cascada y la conversación de la empresa perdería registro.
+  memberRevokedAt      DateTime? @map("member_revoked_at")
   ideas            Idea[]
   createdRoutes    Route[]        @relation("RouteCreatedBy")
   assignedTasks    Task[]         @relation("TaskAssignee")
@@ -166,6 +184,7 @@ model User {
   muralEntries     MuralEntry[]   @relation("MuralEntryAuthor")
   muralMentions    MuralEntry[]   @relation("MuralEntrySubject")
 
+  @@index([parentCarrierId])
   @@map("users")
 }
 

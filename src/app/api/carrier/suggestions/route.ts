@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { carrierHandler } from "@/lib/api-handler";
+import { requireCarrierAccount } from "@/lib/carrier-account";
 import { notifyRole } from "@/lib/notify";
 import { logAudit } from "@/lib/audit-log";
 
@@ -24,9 +25,10 @@ function toJson(s: {
 }
 
 export function GET() {
-  return carrierHandler(async (session) => {
+  return carrierHandler(async () => {
+    const { carrierId } = await requireCarrierAccount("suggest");
     const rows = await prisma.carrierSuggestion.findMany({
-      where: { carrierId: session.user.id },
+      where: { carrierId },
       orderBy: { createdAt: "desc" },
     });
     return Response.json(rows.map(toJson));
@@ -34,7 +36,8 @@ export function GET() {
 }
 
 export function POST(request: Request) {
-  return carrierHandler(async (session) => {
+  return carrierHandler(async () => {
+    const { carrierId, userId, session } = await requireCarrierAccount("suggest");
     const body = await request.json();
     const { title, description } = body as { title?: string; description?: string };
 
@@ -46,7 +49,7 @@ export function POST(request: Request) {
       data: {
         title: title.trim(),
         description: description?.trim() || null,
-        carrierId: session.user.id,
+        carrierId,
       },
     });
 
@@ -62,7 +65,7 @@ export function POST(request: Request) {
       resourceId: row.id,
       resourceLabel: row.title,
       action: "created",
-      userId: session.user.id,
+      userId,
       userName: session.user.name,
     });
 

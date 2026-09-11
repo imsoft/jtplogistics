@@ -103,6 +103,9 @@ function flattenPersons(persons: PersonInput[]): FlatContact[] {
 
 export default function CarrierProfilePage() {
   const { data, isFetching, fetchError } = useProfile();
+  // Un usuario agregado sin permiso sobre la empresa ve sus datos, pero no los
+  // cambia: el servidor los ignoraría de todos modos.
+  const companyLocked = data?.companyEditable === false;
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -249,17 +252,19 @@ export default function CarrierProfilePage() {
             })),
           }),
         }),
-        fetch("/api/carrier/notes", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ notes: form.notes }),
-        }),
+        companyLocked
+          ? Promise.resolve(null)
+          : fetch("/api/carrier/notes", {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ notes: form.notes }),
+            }),
       ]);
       if (!profileRes.ok) {
         const err = await profileRes.json().catch(() => ({}));
         throw new Error(err.error ?? "Error al guardar");
       }
-      if (!notesRes.ok) {
+      if (notesRes && !notesRes.ok) {
         const err = await notesRes.json().catch(() => ({}));
         throw new Error(err.error ?? "Error al guardar notas");
       }
@@ -348,20 +353,26 @@ export default function CarrierProfilePage() {
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             Datos de empresa
           </h2>
+          {companyLocked && (
+            <p className="rounded-lg border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+              Los datos de la empresa, sus contactos y las notas los administra el
+              usuario principal. Si necesitas cambiarlos, pídele el permiso.
+            </p>
+          )}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="commercialName">Nombre comercial</Label>
-              <Input id="commercialName" disabled={isLoading} value={form.commercialName} onChange={field("commercialName")} />
+              <Input id="commercialName" disabled={isLoading || companyLocked} value={form.commercialName} onChange={field("commercialName")} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="legalName">Razón social</Label>
-              <Input id="legalName" disabled={isLoading} value={form.legalName} onChange={field("legalName")} />
+              <Input id="legalName" disabled={isLoading || companyLocked} value={form.legalName} onChange={field("legalName")} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="rfc">RFC</Label>
               <Input
                 id="rfc"
-                disabled={isLoading}
+                disabled={isLoading || companyLocked}
                 value={form.rfc}
                 onChange={field("rfc")}
                 className="uppercase"
@@ -375,7 +386,7 @@ export default function CarrierProfilePage() {
               id="address"
               rows={2}
               className="resize-none"
-              disabled={isLoading}
+              disabled={isLoading || companyLocked}
               value={form.address}
               onChange={field("address")}
             />
@@ -388,7 +399,7 @@ export default function CarrierProfilePage() {
             <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
               <User className="size-3.5" /> Personas de contacto
             </h2>
-            <Button type="button" variant="outline" size="sm" onClick={addPerson} disabled={isLoading}>
+            <Button type="button" variant="outline" size="sm" onClick={addPerson} disabled={isLoading || companyLocked}>
               <Plus className="size-3.5" /> Agregar persona
             </Button>
           </div>
@@ -404,6 +415,7 @@ export default function CarrierProfilePage() {
                   key={i}
                   type="button"
                   onClick={() => setEditingIndex(i)}
+                  disabled={companyLocked}
                   className="rounded-lg border p-4 text-left transition-colors hover:bg-hover hover:text-hover-foreground"
                 >
                   <p className="font-semibold text-sm">{p.position.trim() || "Sin puesto"}</p>
@@ -435,7 +447,7 @@ export default function CarrierProfilePage() {
           <Textarea
             id="notes"
             rows={5}
-            disabled={isLoading}
+            disabled={isLoading || companyLocked}
             value={form.notes}
             onChange={field("notes")}
             className="resize-y"

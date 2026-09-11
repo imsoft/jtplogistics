@@ -1,15 +1,17 @@
 import { prisma } from "@/lib/db";
 import { carrierHandler } from "@/lib/api-handler";
+import { requireCarrierAccount } from "@/lib/carrier-account";
 import { logAudit } from "@/lib/audit-log";
 
 export function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return carrierHandler(async (session) => {
+  return carrierHandler(async () => {
+    const { carrierId } = await requireCarrierAccount("suggest");
     const { id } = await params;
     const row = await prisma.carrierSuggestion.findFirst({
-      where: { id, carrierId: session.user.id },
+      where: { id, carrierId },
     });
     if (!row) return Response.json({ error: "No encontrado" }, { status: 404 });
     return Response.json({
@@ -28,13 +30,14 @@ export function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return carrierHandler(async (session) => {
+  return carrierHandler(async () => {
+    const { carrierId, userId, session } = await requireCarrierAccount("suggest");
     const { id } = await params;
     const body = await request.json();
     const { title, description } = body as { title?: string; description?: string };
 
     const row = await prisma.carrierSuggestion.findFirst({
-      where: { id, carrierId: session.user.id },
+      where: { id, carrierId },
     });
     if (!row) return Response.json({ error: "No encontrado" }, { status: 404 });
 
@@ -62,7 +65,7 @@ export function PATCH(
       resourceId: id,
       resourceLabel: updated.title,
       action: "updated",
-      userId: session.user.id,
+      userId,
       userName: session.user.name,
     });
 
@@ -74,10 +77,11 @@ export function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return carrierHandler(async (session) => {
+  return carrierHandler(async () => {
+    const { carrierId, userId, session } = await requireCarrierAccount("suggest");
     const { id } = await params;
     const row = await prisma.carrierSuggestion.findFirst({
-      where: { id, carrierId: session.user.id },
+      where: { id, carrierId },
     });
     if (!row) return Response.json({ error: "No encontrado" }, { status: 404 });
 
@@ -95,7 +99,7 @@ export function DELETE(
       resourceId: id,
       resourceLabel: row.title,
       action: "deleted",
-      userId: session.user.id,
+      userId,
       userName: session.user.name,
     });
 

@@ -92,3 +92,53 @@ export function buildPasswordResetByStaffEmail(input: {
     ].join("\n"),
   };
 }
+
+/**
+ * Invitación a un usuario que un proveedor da de alta para su empresa. Lleva
+ * la contraseña temporal y el mismo aviso de responsabilidad que los accesos
+ * del equipo de JTP: la cuenta la usa un tercero dentro del sistema.
+ */
+export function buildCarrierMemberInviteEmail(input: {
+  name: string;
+  companyName: string;
+  inviterName: string;
+  email: string;
+  password: string;
+  loginUrl: string;
+}): BuiltEmail {
+  const name = firstName(input.name);
+
+  return {
+    subject: `Tu acceso a JTP Logistics por ${input.companyName}`,
+    html: brandedEmail({
+      preheader: "Entra con la contraseña temporal y cámbiala.",
+      eyebrow: "Tu cuenta",
+      heading: "Te dieron acceso",
+      paragraphs: [
+        `Hola <strong>${escapeHtml(name)}</strong>,`,
+        `<strong>${escapeHtml(input.inviterName)}</strong> te dio acceso a la plataforma de JTP Logistics para trabajar a nombre de <strong>${escapeHtml(input.companyName)}</strong>.`,
+        `Tu correo de acceso es <strong>${escapeHtml(input.email)}</strong> y tu contraseña temporal es:`,
+        `<strong style="font-size:18px;letter-spacing:.05em;">${escapeHtml(input.password)}</strong>`,
+      ],
+      highlight:
+        "Entra con ella y cámbiala desde tu perfil en cuanto puedas. Lo que puedes ver y hacer lo decide el usuario principal de tu empresa.",
+      ctaLabel: "Entrar",
+      ctaHref: input.loginUrl,
+      footnote: ACCOUNT_RESPONSIBILITY_NOTICE,
+    }),
+    text: [
+      `Hola ${name},`,
+      "",
+      `${input.inviterName} te dio acceso a la plataforma de JTP Logistics para trabajar a nombre de ${input.companyName}.`,
+      "",
+      `Correo de acceso: ${input.email}`,
+      `Contraseña temporal: ${input.password}`,
+      "",
+      `Entra en ${input.loginUrl} y cámbiala desde tu perfil en cuanto puedas.`,
+      "",
+      ACCOUNT_RESPONSIBILITY_NOTICE,
+      "",
+      "— JTP Logistics",
+    ].join("\n"),
+  };
+}

@@ -18,7 +18,7 @@ export async function GET(_req: NextRequest) {
 
     // Retornar solo usuarios con rol "carrier" (proveedores)
     const users = await prisma.user.findMany({
-      where: { role: "carrier" },
+      where: { role: "carrier", parentCarrierId: null },
       include: {
         profile: {
           select: {

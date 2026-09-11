@@ -10,7 +10,7 @@ export const metadata = {
 
 export default async function ProvidersPage() {
   await requireAdminPage();
-  const providersCount = await prisma.user.count({ where: { role: "carrier" } });
+  const providersCount = await prisma.user.count({ where: { role: "carrier", parentCarrierId: null } });
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
