@@ -203,11 +203,14 @@ export function QuotesCrmTable({
                 {filtered.map((q) => (
                   <tr key={q.id} className="border-b last:border-0">
                     <td className="px-4 py-3 font-mono text-xs font-medium">{q.quoteNumber}</td>
-                    <td className="px-4 py-3">{q.company}</td>
+                    <td className="px-4 py-3">
+                      {/* Un borrador puede guardarse antes de saber el cliente. */}
+                      {q.company || <span className="text-muted-foreground italic">Sin cliente</span>}
+                    </td>
                     <td className="px-4 py-3">
                       <StatusCell quote={q} onChange={changeStatus} editable={canUpdateStatus} />
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{q.contact}</td>
+                    <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{q.contact || "—"}</td>
                     <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
                       {q.phone ? formatPhone(q.phone) : "—"}
                     </td>

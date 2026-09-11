@@ -14,6 +14,7 @@ export default function EditCollaboratorMaritimeQuotePage() {
   const id = params.id;
   const [initialInput, setInitialInput] = useState<MaritimeQuoteInput | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     fetch(`/api/maritime-quotes/${id}`)
@@ -21,7 +22,8 @@ export default function EditCollaboratorMaritimeQuotePage() {
         if (!r.ok) throw new Error("No se pudo cargar la cotización");
         return r.json();
       })
-      .then((q: { reference: string; client: string; validUntil: string; data: MaritimeQuoteInput }) => {
+      .then((q: { reference: string; client: string; validUntil: string; status: string; data: MaritimeQuoteInput }) => {
+        setStatus(q.status);
         setInitialInput({
           ...q.data,
           reference: q.reference,
@@ -49,7 +51,7 @@ export default function EditCollaboratorMaritimeQuotePage() {
       ) : initialInput === null ? (
         <FormSkeleton />
       ) : (
-        <MaritimeQuoteForm mode="edit" quoteId={id} backHref="/collaborator/dashboard/maritime-quotes" initialInput={initialInput} />
+        <MaritimeQuoteForm mode="edit" quoteId={id} backHref="/collaborator/dashboard/maritime-quotes" initialInput={initialInput} initialStatus={status} />
       )}
     </div>
   );

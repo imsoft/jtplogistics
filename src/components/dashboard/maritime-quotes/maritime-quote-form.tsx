@@ -55,9 +55,12 @@ interface Props {
   quoteId?: string;
   backHref: string;
   initialInput?: MaritimeQuoteInput;
+  /** Estado guardado; con "borrador" la edición no exige cliente. */
+  initialStatus?: string;
 }
 
-export function MaritimeQuoteForm({ mode, quoteId, backHref, initialInput }: Props) {
+export function MaritimeQuoteForm({ mode, quoteId, backHref, initialInput, initialStatus }: Props) {
+  const isDraft = initialStatus === "borrador";
   const router = useRouter();
   const [input, setInput] = useState<MaritimeQuoteInput>(initialInput ?? emptyInput());
   const [isSaving, setIsSaving] = useState(false);
@@ -104,9 +107,10 @@ export function MaritimeQuoteForm({ mode, quoteId, backHref, initialInput }: Pro
     });
   }
 
-  function validate(): string | null {
+  /** Con asDraft no se exige cliente: el borrador es lo que va a medias. */
+  function validate(asDraft = false): string | null {
     if (!input.reference.trim()) return "Falta la referencia.";
-    if (!input.client.trim()) return "Falta el cliente.";
+    if (!asDraft && !input.client.trim()) return "Falta el cliente.";
     if (!input.validUntil) return "Falta la vigencia.";
     return null;
   }
@@ -130,8 +134,9 @@ export function MaritimeQuoteForm({ mode, quoteId, backHref, initialInput }: Pro
     }
   }
 
-  async function handleSave() {
-    const err = validate();
+  async function handleSave(asDraft = false) {
+    // Editar un borrador tampoco exige cliente todavía.
+    const err = validate(asDraft || (mode === "edit" && isDraft));
     if (err) {
       toast.error(err);
       return;
@@ -143,6 +148,8 @@ export function MaritimeQuoteForm({ mode, quoteId, backHref, initialInput }: Pro
         client: input.client,
         validUntil: input.validUntil,
         data: input,
+        // Solo al crear: en la edición el estado se queda como estaba.
+        ...(mode === "new" && { status: asDraft ? "borrador" : "enviada" }),
       };
       const res =
         mode === "new"
@@ -160,7 +167,9 @@ export function MaritimeQuoteForm({ mode, quoteId, backHref, initialInput }: Pro
         const j = await res.json().catch(() => ({}));
         throw new Error(j.error ?? "Error al guardar");
       }
-      toast.success(mode === "new" ? "Cotización creada" : "Cotización actualizada");
+      toast.success(
+        asDraft ? "Borrador guardado" : mode === "new" ? "Cotización creada" : "Cotización actualizada"
+      );
       router.push(backHref);
       router.refresh();
     } catch (e) {
@@ -346,7 +355,12 @@ export function MaritimeQuoteForm({ mode, quoteId, backHref, initialInput }: Pro
             <Button variant="outline" onClick={handleGeneratePdf} disabled={isGenerating}>
               {isGenerating ? "Generando…" : "Generar PDF"}
             </Button>
-            <Button onClick={handleSave} disabled={isSaving}>
+            {mode === "new" && (
+              <Button variant="outline" onClick={() => handleSave(true)} disabled={isSaving}>
+                Guardar borrador
+              </Button>
+            )}
+            <Button onClick={() => handleSave()} disabled={isSaving}>
               {isSaving ? "Guardando…" : mode === "new" ? "Crear cotización" : "Guardar cambios"}
             </Button>
           </div>

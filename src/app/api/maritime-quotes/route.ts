@@ -46,19 +46,27 @@ export async function POST(request: NextRequest) {
     const session = await gateMaritime("canCreateMaritimeQuotes");
     const body = (await request.json()) as {
       reference: string;
-      client: string;
+      client?: string;
       validUntil: string;
       data: MaritimeQuoteInput;
+      /** "borrador" para guardar sin enviar; cualquier otra cosa es enviada. */
+      status?: string;
     };
+    const isDraft = body.status === "borrador";
 
-    if (!body.reference || !body.client || !body.validUntil || !body.data) {
+    // El borrador puede ir sin cliente: es lo que va a medias.
+    if (!body.reference || !body.validUntil || !body.data) {
+      return Response.json({ error: "Datos incompletos" }, { status: 400 });
+    }
+    if (!isDraft && !body.client) {
       return Response.json({ error: "Datos incompletos" }, { status: 400 });
     }
 
     const quote = await prisma.maritimeQuote.create({
       data: {
         reference: body.reference.trim(),
-        client: body.client.trim(),
+        client: (body.client ?? "").trim(),
+        status: isDraft ? "borrador" : "enviada",
         validUntil: new Date(body.validUntil),
         data: body.data as unknown as Prisma.InputJsonValue,
         createdById: session.user.id,
@@ -67,7 +75,7 @@ export async function POST(request: NextRequest) {
 
     void logAudit({
       resource: "maritime_quote", resourceId: quote.id,
-      resourceLabel: `${quote.reference} — ${quote.client}`,
+      resourceLabel: `${quote.reference} — ${quote.client || "borrador sin cliente"}`,
       action: "created", userId: session.user.id, userName: (session.user as { name: string }).name,
     });
 

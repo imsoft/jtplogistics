@@ -22,17 +22,26 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json() as {
       quoteNumber: string;
-      company: string;
-      contact: string;
+      company?: string;
+      contact?: string;
       phone?: string;
       email?: string;
       validUntil: string;
       rows: Prisma.InputJsonValue[];
+      /** "borrador" para guardar sin enviar; cualquier otra cosa es enviada. */
+      status?: string;
     };
 
     const { quoteNumber, company, contact, phone, email, validUntil, rows } = body;
+    const isDraft = body.status === "borrador";
 
-    if (!quoteNumber || !company || !contact || !validUntil || !rows?.length) {
+    // Un borrador existe justamente para guardar lo que va a medias: puede no
+    // tener cliente todavía. Lo que sí necesita son las rutas, que son el
+    // trabajo que no se quiere perder.
+    if (!quoteNumber || !validUntil || !rows?.length) {
+      return Response.json({ error: "Datos incompletos" }, { status: 400 });
+    }
+    if (!isDraft && (!company || !contact)) {
       return Response.json({ error: "Datos incompletos" }, { status: 400 });
     }
 
@@ -48,8 +57,9 @@ export async function POST(request: NextRequest) {
         quote = await prisma.generatedQuote.create({
           data: {
             quoteNumber: assignedNumber,
-            company,
-            contact,
+            company: company?.trim() ?? "",
+            contact: contact?.trim() ?? "",
+            status: isDraft ? "borrador" : "enviada",
             phone: phone?.trim() || null,
             email: email?.trim() || null,
             validUntil: new Date(validUntil),
@@ -74,7 +84,7 @@ export async function POST(request: NextRequest) {
 
     void logAudit({
       resource: "generated_quote", resourceId: quote.id,
-      resourceLabel: `${assignedNumber} — ${company}`,
+      resourceLabel: `${assignedNumber} — ${company?.trim() || "borrador sin cliente"}`,
       action: "created", userId: session.user.id, userName: (session.user as { name: string }).name,
     });
 

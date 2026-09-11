@@ -104,6 +104,21 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Un borrador que ya salió hacia el cliente deja de serlo. Va después del
+    // envío a propósito: marcarla antes la dejaría como enviada aunque el
+    // correo hubiera fallado. Solo toca borradores — una en negociación o
+    // aceptada no debe retroceder por reenviarla. Si la cotización no está
+    // guardada (se mandó desde una nueva sin descargar), no hay nada que mover.
+    try {
+      await prisma.generatedQuote.updateMany({
+        where: { quoteNumber: body.quoteNumber, status: "borrador" },
+        data: { status: "enviada" },
+      });
+    } catch (e) {
+      // El correo ya salió: un fallo aquí no puede reportarse como envío fallido.
+      console.error("[quotes/send] No se pudo pasar el borrador a enviada:", e);
+    }
+
     void logAudit({
       resource: "generated_quote",
       resourceId: body.quoteNumber,

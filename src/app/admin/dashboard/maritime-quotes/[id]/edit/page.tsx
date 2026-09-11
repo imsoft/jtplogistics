@@ -43,7 +43,7 @@ export default async function EditMaritimeQuotePage({
           </p>
         </div>
       </div>
-      <MaritimeQuoteForm mode="edit" quoteId={id} backHref="/admin/dashboard/maritime-quotes" initialInput={initialInput} />
+      <MaritimeQuoteForm mode="edit" quoteId={id} backHref="/admin/dashboard/maritime-quotes" initialInput={initialInput} initialStatus={quote.status} />
     </div>
   );
 }

@@ -27,10 +27,13 @@ export default async function VendorNewQuotePage() {
         </div>
       </div>
       {/* El endpoint del vendedor sirve las mismas rutas y transportistas que el
-          de admin; las cotizaciones que genere quedan a su nombre. */}
+          de admin; las cotizaciones que genere quedan a su nombre. Sin borrador:
+          el vendedor no tiene pantalla para retomar una cotización, y un
+          borrador que no se puede abrir es trabajo perdido. */}
       <CarrierQuotesTable
         apiEndpoint="/api/vendor/carrier-quotes"
         listPath="/vendor/dashboard/generated-quotes"
+        allowDraft={false}
       />
     </div>
   );

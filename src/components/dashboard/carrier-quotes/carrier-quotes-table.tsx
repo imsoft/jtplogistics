@@ -2,10 +2,11 @@
 
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { DataTableSkeleton } from "@/components/ui/skeletons";
 import Link from "next/link";
 import { pdf } from "@react-pdf/renderer";
-import { Plus, Trash2, FileText, Loader2, Settings, Send } from "lucide-react";
+import { Plus, Trash2, FileText, Loader2, Settings, Send, Save } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,6 +50,8 @@ export interface EditQuote {
   /** Quien creó la cotización originalmente (para la zona de firmas). */
   creatorName?: string;
   creatorPosition?: string;
+  /** Estado guardado; con "borrador" la edición no exige cliente. */
+  status?: string;
 }
 
 interface CarrierQuotesTableProps {
@@ -58,6 +61,11 @@ interface CarrierQuotesTableProps {
   editQuote?: EditQuote;
   /** Base para guardar la edición (PATCH `${updateEndpoint}/${id}`). Admin por defecto. */
   updateEndpoint?: string;
+  /**
+   * Muestra "Guardar borrador". Se apaga donde no hay pantalla para retomar la
+   * cotización después: un borrador que nadie puede abrir es trabajo perdido.
+   */
+  allowDraft?: boolean;
   /** Listado de cotizaciones del rol: a dónde se vuelve al guardar o cancelar. */
   listPath?: string;
   /** Pantalla de textos legales. Sin ella no se muestra el enlace. */
@@ -109,9 +117,11 @@ export function CarrierQuotesTable({
   updateEndpoint = "/api/admin/generated-quotes",
   listPath = "/admin/dashboard/quotes",
   termsPath = "/admin/dashboard/quotes/terms",
+  allowDraft = true,
 }: CarrierQuotesTableProps) {
   const router = useRouter();
   const isEditing = !!editQuote;
+  const isDraft = editQuote?.status === "borrador";
 
   // ── Explorer state ──
   const [routes, setRoutes] = useState<ActiveRoute[]>([]);
@@ -139,6 +149,7 @@ export function CarrierQuotesTable({
   const [validUntil, setValidUntil] = useState(editQuote?.validUntil ?? defaultValidUntil());
   const [quoteRows, setQuoteRows] = useState<QuoteRow[]>(editQuote?.rows ?? []);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
   // ── Envío por correo ──
   const [sendOpen, setSendOpen] = useState(false);
   const [sendTo, setSendTo] = useState("");
@@ -341,8 +352,10 @@ export function CarrierQuotesTable({
   async function handleSaveEdit() {
     if (!editQuote) return;
     setQuoteError(null);
-    if (!company.trim()) { setQuoteError("Ingresa el nombre de la compañía."); return; }
-    if (!contact.trim()) { setQuoteError("Ingresa el nombre del contacto."); return; }
+    if (!isDraft) {
+      if (!company.trim()) { setQuoteError("Ingresa el nombre de la compañía."); return; }
+      if (!contact.trim()) { setQuoteError("Ingresa el nombre del contacto."); return; }
+    }
     if (quoteRows.length === 0) { setQuoteError("Agrega al menos una ruta."); return; }
     setIsSaving(true);
     try {
@@ -439,6 +452,44 @@ export function CarrierQuotesTable({
       setSendError(`No se pudo enviar la cotización: ${errorText(e)}`);
     } finally {
       setIsSending(false);
+    }
+  }
+
+  /**
+   * Guarda lo que hay en pantalla como borrador, sin generar el PDF.
+   *
+   * Hasta ahora la cotización solo se guardaba como efecto de descargar el PDF,
+   * así que no había forma de dejar el trabajo a medias. El borrador no exige
+   * cliente — solo las rutas, que son lo que cuesta armar — y toma su folio
+   * como cualquier otra cotización.
+   */
+  async function handleSaveDraft() {
+    setQuoteError(null);
+    if (quoteRows.length === 0) {
+      setQuoteError("Agrega al menos una ruta para guardar el borrador.");
+      return;
+    }
+    setIsSavingDraft(true);
+    try {
+      const res = await fetch("/api/generated-quotes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          quoteNumber, company, contact, phone, email: email || null, validUntil,
+          rows: quoteRows,
+          status: "borrador",
+        }),
+      });
+      const saved = await res.json().catch(() => ({})) as { error?: string };
+      if (!res.ok) throw new Error(saved.error ?? `Error ${res.status}`);
+      toast.success("Borrador guardado. Lo encuentras en la lista para terminarlo.");
+      router.push(listPath);
+      router.refresh();
+    } catch (e) {
+      console.error("Error al guardar el borrador:", e);
+      setQuoteError(`No se pudo guardar el borrador: ${errorText(e)}`);
+    } finally {
+      setIsSavingDraft(false);
     }
   }
 
@@ -800,6 +851,13 @@ export function CarrierQuotesTable({
 
         {quoteError && <p className="text-sm text-destructive">{quoteError}</p>}
 
+        {isDraft && (
+          <p className="text-sm text-muted-foreground">
+            Es un borrador: se guarda sin mandarse al cliente. Pasa a Enviada cuando
+            la mandes por correo o le cambies el estado en la lista.
+          </p>
+        )}
+
         {isEditing ? (
           <div className="flex justify-end gap-3 pb-4">
             <Button type="button" variant="outline" asChild>
@@ -816,6 +874,18 @@ export function CarrierQuotesTable({
           </div>
         ) : (
           <div className="flex flex-col justify-end gap-3 pb-4 sm:flex-row">
+            {allowDraft && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleSaveDraft}
+                disabled={isSavingDraft}
+                size="lg"
+              >
+                {isSavingDraft ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+                {isSavingDraft ? "Guardando…" : "Guardar borrador"}
+              </Button>
+            )}
             <Button type="button" variant="outline" onClick={openSendDialog} size="lg">
               <Send className="size-4" />
               Enviar por correo

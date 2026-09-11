@@ -170,7 +170,10 @@ export function MaritimeQuotesCrmTable({
                   return (
                     <tr key={q.id} className="border-b last:border-0">
                       <td className="px-4 py-3 font-mono text-xs font-medium">{q.reference}</td>
-                      <td className="px-4 py-3">{q.client}</td>
+                      <td className="px-4 py-3">
+                        {/* Un borrador puede guardarse antes de saber el cliente. */}
+                        {q.client || <span className="text-muted-foreground italic">Sin cliente</span>}
+                      </td>
                       <td className="px-4 py-3">
                         {!statusEditable ? (
                           <Badge variant="outline" className={cn("border-0", QUOTE_STATUS_CONFIG[display].badgeClass)}>
