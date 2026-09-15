@@ -3,7 +3,7 @@
 import { Document, Page, Text, View, Image, StyleSheet } from "@react-pdf/renderer";
 import type { QuoteData } from "@/types/carrier-quote.types";
 import { renderLexicalContent } from "@/lib/utils/lexical-to-pdf";
-import { titleCase } from "@/lib/utils";
+import { pdfSentence, pdfTitle } from "@/lib/pdf-text-case";
 
 const BRAND = "#2D4EAA";       // oklch(0.488 0.243 264) → JTP primary blue
 const BRAND_LIGHT = "#EBF0FB"; // very light tint for alternating rows
@@ -29,7 +29,7 @@ const s = StyleSheet.create({
   companyValue: { fontSize: 9 },
   // ── Quote number ──
   quoteNumWrapper: { borderBottomWidth: 0.8, borderColor: BRAND, paddingVertical: 5, marginBottom: 0 },
-  quoteNumText: { color: BRAND, fontSize: 10, fontFamily: "Helvetica-Bold", letterSpacing: 2, textAlign: "center" },
+  quoteNumText: { color: BRAND, fontSize: 10, fontFamily: "Helvetica-Bold", letterSpacing: 0.5, textAlign: "center" },
   // ── Table ──
   table: { marginBottom: 10 },
   tableHead: { flexDirection: "row", borderBottomWidth: 1.2, borderBottomColor: BRAND },
@@ -76,8 +76,8 @@ function formatDateEs(date: Date): string {
 
 function formatValidUntilEs(iso: string): string {
   const [y, m, d] = iso.split("-").map(Number);
-  const months = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
-  return `VIGENCIA AL ${d} DE ${months[m - 1]} DEL ${y}`;
+  const months = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  return `Vigencia al ${d} de ${months[m - 1]} del ${y}`;
 }
 
 function PageHeader({ logoUrl, date }: { logoUrl: string; date: string }) {
@@ -117,25 +117,25 @@ function Signatures({
     <View wrap={false}>
       <View style={s.sigBlock}>
         <View style={s.sigColumn}>
-          <Text style={s.sigLabel}>ATENTAMENTE</Text>
+          <Text style={s.sigLabel}>Atentamente</Text>
           <View style={s.sigSpace} />
           <View style={s.sigLine} />
           {creatorName ? (
-            <Text style={s.sigName}>{creatorName}</Text>
+            <Text style={s.sigName}>{pdfTitle(creatorName)}</Text>
           ) : null}
           {creatorPosition ? (
             <Text style={{ fontSize: 8, color: MUTED, textAlign: "center" }}>
-              {/* El puesto se guarda en mayúsculas; en la firma va en minúsculas.
+              {/* El puesto se captura como sea; en la firma va en formato oración.
                   Se transforma en JS porque react-pdf no aplica text-transform. */}
-              {creatorPosition.toLowerCase()}
+              {pdfSentence(creatorPosition)}
             </Text>
           ) : null}
         </View>
         <View style={s.sigColumn}>
-          <Text style={s.sigLabel}>ACEPTAMOS COTIZACION</Text>
+          <Text style={s.sigLabel}>Aceptamos cotización</Text>
           <View style={s.sigSpace} />
           <View style={s.sigLine} />
-          {contactName ? <Text style={s.sigName}>{titleCase(contactName)}</Text> : null}
+          {contactName ? <Text style={s.sigName}>{pdfTitle(contactName)}</Text> : null}
         </View>
       </View>
     </View>
@@ -175,13 +175,14 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
         </View>
         <View style={[s.companyRow, { marginBottom: 2 }]}>
           <Text style={s.companyLabel}>Compañía:</Text>
-          <Text style={s.companyValue}>{data.company}</Text>
+          <Text style={s.companyValue}>{pdfTitle(data.company)}</Text>
         </View>
         <View style={[s.companyRow, { marginBottom: 2 }]}>
           <Text style={s.companyLabel}>Contacto:</Text>
-          {/* El contacto sale con la inicial de cada palabra en mayúscula,
-              se haya capturado como se haya capturado. */}
-          <Text style={s.companyValue}>{titleCase(data.contact)}</Text>
+          {/* Compañía, contacto, lugares y firmas pasan por pdfTitle/pdfSentence:
+              la plataforma enseña todo en mayúsculas al capturar y nadie ve
+              cómo se guarda. Lo que ya viene bien escrito se respeta. */}
+          <Text style={s.companyValue}>{pdfTitle(data.contact)}</Text>
         </View>
         {data.phone ? (
           <View style={[s.companyRow, { marginBottom: 2 }]}>
@@ -198,7 +199,7 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
           <View style={{ marginBottom: 10 }} />
         )}
         <View style={s.quoteNumWrapper}>
-          <Text style={s.quoteNumText}>N O . &nbsp; C O T I Z A C I O N &nbsp; {data.quoteNumber}</Text>
+          <Text style={s.quoteNumText}>No. de cotización {data.quoteNumber}</Text>
         </View>
         <View style={s.table}>
           <View style={s.tableHead}>
@@ -206,23 +207,23 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
             <Text style={s.tableHeadCell}>Destino</Text>
             <Text style={s.tableHeadCell}>Estado</Text>
             <Text style={s.tableHeadCell}>Costo</Text>
-            <Text style={s.tableHeadCellLast}>UNIDAD</Text>
+            <Text style={s.tableHeadCellLast}>Unidad</Text>
           </View>
           {data.rows.map((row, i) => (
             <View key={i} wrap={false} style={[s.tableRow, { backgroundColor: rowBg(i) }]}>
-              <Text style={s.tableCell}>{row.origin}</Text>
-              <Text style={s.tableCell}>{row.destination}</Text>
-              <Text style={s.tableCell}>{row.destinationState ?? ""}</Text>
+              <Text style={s.tableCell}>{pdfTitle(row.origin)}</Text>
+              <Text style={s.tableCell}>{pdfTitle(row.destination)}</Text>
+              <Text style={s.tableCell}>{pdfTitle(row.destinationState)}</Text>
               <Text style={s.tableCell}>${Number(row.cost).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
-              <Text style={s.tableCellLast}>{row.unitLabel}</Text>
+              <Text style={s.tableCellLast}>{pdfSentence(row.unitLabel)}</Text>
             </View>
           ))}
         </View>
-        <Text style={s.termsTitle}>TERMINOS Y CONDICIONES</Text>
+        <Text style={s.termsTitle}>Términos y condiciones</Text>
         {/* Las viñetas fluyen y se reparten entre páginas si hace falta: si se
             agrupan con las firmas, una tabla larga manda todo el bloque a la
             hoja siguiente y deja la primera a medias. */}
-        {renderLexicalContent(termsJson.bulletsJson, lexStyles)}
+        {renderLexicalContent(termsJson.bulletsJson, lexStyles, { sentenceCase: true })}
         <Text style={s.validity}>{formatValidUntilEs(data.validUntil)}</Text>
         <Signatures
           creatorName={creatorName}
@@ -235,8 +236,8 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
       <Page size="A4" style={s.page}>
         <PageHeader logoUrl={logoUrl} date={dateStr} />
         <PageFooter />
-        <Text style={s.pageTitle}>TERMINOS INSERTOS EN EL CONTRATO</Text>
-        {renderLexicalContent(termsJson.contractJson, lexStyles)}
+        <Text style={s.pageTitle}>Términos insertos en el contrato</Text>
+        {renderLexicalContent(termsJson.contractJson, lexStyles, { sentenceCase: true })}
         <Signatures
           creatorName={creatorName}
           creatorPosition={creatorPosition}
@@ -248,8 +249,8 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
       <Page size="A4" style={s.page}>
         <PageHeader logoUrl={logoUrl} date={dateStr} />
         <PageFooter />
-        <Text style={s.pageTitle}>AVISO DE PRIVACIDAD</Text>
-        {renderLexicalContent(termsJson.privacyJson, lexStyles)}
+        <Text style={s.pageTitle}>Aviso de privacidad</Text>
+        {renderLexicalContent(termsJson.privacyJson, lexStyles, { sentenceCase: true })}
         <Signatures
           creatorName={creatorName}
           creatorPosition={creatorPosition}
@@ -261,7 +262,7 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
       <Page size="A4" style={s.page}>
         <PageHeader logoUrl={logoUrl} date={dateStr} />
         <PageFooter />
-        {renderLexicalContent(termsJson.limitsJson, lexStyles)}
+        {renderLexicalContent(termsJson.limitsJson, lexStyles, { sentenceCase: true })}
         <Signatures
           creatorName={creatorName}
           creatorPosition={creatorPosition}

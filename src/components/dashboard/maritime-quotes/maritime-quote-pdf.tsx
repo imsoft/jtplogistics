@@ -6,6 +6,7 @@ import {
   type MaritimeQuoteInput,
   type MaritimeQuoteComputed,
 } from "@/lib/maritime-quote";
+import { pdfSentence, pdfTitle } from "@/lib/pdf-text-case";
 
 const BRAND = "#2D4EAA";
 const TEXT = "#1A1A1A";
@@ -117,23 +118,23 @@ export function MaritimeQuotePdf({ input, computed, logoUrl }: Props) {
           <Image src={logoUrl} style={s.logo} />
         </View>
 
-        <Text style={s.title}>SOLICITUD DE IMPUESTOS</Text>
+        <Text style={s.title}>Solicitud de impuestos</Text>
         <Text style={s.subtitle}>{genDate()}</Text>
 
         <View style={s.rowBetween}>
           <View style={{ flexDirection: "row" }}>
-            <Text style={s.label}>CLIENTE: </Text>
-            <Text>{input.client}</Text>
+            <Text style={s.label}>Cliente: </Text>
+            <Text>{pdfTitle(input.client)}</Text>
           </View>
           <View style={{ flexDirection: "row" }}>
-            <Text style={s.label}>REFERENCIA: </Text>
+            <Text style={s.label}>Referencia: </Text>
             <Text style={s.underlineValue}>{input.reference}</Text>
           </View>
         </View>
 
-        <Text style={[s.para, s.bold]}>ESTIMADOS CLIENTES Y AMIGOS :</Text>
+        <Text style={[s.para, s.bold]}>Estimados clientes y amigos:</Text>
         <Text style={s.para}>
-          Hemos recibido documentacion para su despacho por este puerto, correspondiente a los siguientes documentos:
+          Hemos recibido documentación para su despacho por este puerto, correspondiente a los siguientes documentos:
         </Text>
         <View style={s.rowBetween}>
           <View style={{ flexDirection: "row", flex: 1 }}>
@@ -141,17 +142,17 @@ export function MaritimeQuotePdf({ input, computed, logoUrl }: Props) {
             <Text>{input.invoiceNumbers}</Text>
           </View>
           <View style={{ flexDirection: "row" }}>
-            <Text style={s.label}>de Fecha: </Text>
+            <Text style={s.label}>de fecha: </Text>
             <Text style={s.underlineValue}>{input.invoiceDate}</Text>
           </View>
         </View>
         <View style={{ flexDirection: "row", marginBottom: 4 }}>
           <Text style={s.label}>Clientes: </Text>
-          <Text>{input.clientName}</Text>
+          <Text>{pdfTitle(input.clientName)}</Text>
         </View>
 
         <Text style={s.para}>
-          El calculo de los impuestos se determinó de acuerdo a la información proporcionada en los documentos enviados,
+          El cálculo de los impuestos se determinó de acuerdo a la información proporcionada en los documentos enviados,
           basados en ello sugerimos las siguientes fracciones :
         </Text>
         {fractions.map((f, i) => (
@@ -161,16 +162,16 @@ export function MaritimeQuotePdf({ input, computed, logoUrl }: Props) {
         ))}
 
         {/* ── Cálculo del valor en aduana ── */}
-        <Text style={s.sectionTitle}>CALCULO DEL VALOR EN ADUANA DE LAS MERCANCIAS</Text>
+        <Text style={s.sectionTitle}>Cálculo del valor en aduana de las mercancías</Text>
         <View style={s.twoCol}>
           <View style={s.col}>
             <View style={s.vaRow}>
-              <Text style={s.vaLabel}>Valor Factura.</Text>
+              <Text style={s.vaLabel}>Valor factura</Text>
               <Text style={s.vaCurrency}>USD</Text>
               <Text style={s.vaValue}>{money(input.invoiceValueUsd)}</Text>
             </View>
             <View style={s.vaRow}>
-              <Text style={s.vaLabel}>Flete Internacional</Text>
+              <Text style={s.vaLabel}>Flete internacional</Text>
               <Text style={s.vaCurrency}>USD</Text>
               <Text style={s.vaValue}>{money(input.internationalFreightUsd)}</Text>
             </View>
@@ -185,7 +186,7 @@ export function MaritimeQuotePdf({ input, computed, logoUrl }: Props) {
               <Text style={s.vaValue}>{money(input.othersUsd)}</Text>
             </View>
             <View style={s.vaRow}>
-              <Text style={s.vaLabel}>Total Incrementables</Text>
+              <Text style={s.vaLabel}>Total incrementables</Text>
               <Text style={s.vaCurrency}>USD</Text>
               <Text style={s.vaValue}>{money(computed.totalIncrementables)}</Text>
             </View>
@@ -197,13 +198,13 @@ export function MaritimeQuotePdf({ input, computed, logoUrl }: Props) {
 
           <View style={s.col}>
             <View style={[s.vaRow, { marginBottom: 6 }]}>
-              <Text style={s.vaLabel}>Tipo de Cambio</Text>
+              <Text style={s.vaLabel}>Tipo de cambio</Text>
               <Text style={s.vaValue}>{money(input.exchangeRate)}</Text>
             </View>
             <View style={s.advHead}>
               <Text style={[s.advCellLabel, { color: BRAND }]}>ADV.</Text>
               <Text style={s.advHeadCell}>EUR</Text>
-              <Text style={s.advHeadCell}>PESOS</Text>
+              <Text style={s.advHeadCell}>Pesos</Text>
             </View>
             {computed.brackets.map((b) => (
               <View key={b.key} style={s.advRow}>
@@ -213,7 +214,7 @@ export function MaritimeQuotePdf({ input, computed, logoUrl }: Props) {
               </View>
             ))}
             <View style={s.advTotalRow}>
-              <Text style={s.advTotalLabel}>TOTAL</Text>
+              <Text style={s.advTotalLabel}>Total</Text>
               <Text style={s.advTotalCell}>{money(computed.totalForeign)}</Text>
               <Text style={s.advTotalCell}>{money(computed.totalPesos)}</Text>
             </View>
@@ -221,7 +222,7 @@ export function MaritimeQuotePdf({ input, computed, logoUrl }: Props) {
         </View>
 
         {/* ── Gastos e impuestos ── */}
-        <Text style={s.sectionTitle}>EL CALCULO ESTIMADO DE SUS GASTOS E IMPUESTOS QUEDAN DE LA SIGUIENTE MANERA:</Text>
+        <Text style={s.sectionTitle}>El cálculo estimado de sus gastos e impuestos queda de la siguiente manera:</Text>
         <View style={s.twoCol}>
           <View style={s.col}>
             {leftCharges.map((c, i) => (
@@ -236,17 +237,17 @@ export function MaritimeQuotePdf({ input, computed, logoUrl }: Props) {
         </View>
 
         <View style={s.totalRow}>
-          <Text style={s.totalLabel}>TOTAL A DEPOSITAR:</Text>
+          <Text style={s.totalLabel}>Total a depositar:</Text>
           <Text style={s.totalValue}>$ {money(computed.totalADepositar)}</Text>
         </View>
 
         {/* ── Restricciones / vigencia ── */}
-        <Text style={s.restricTitle}>RESTRICCIONES:</Text>
-        <Text style={s.restricText}>{input.restricciones}</Text>
+        <Text style={s.restricTitle}>Restricciones:</Text>
+        <Text style={s.restricText}>{pdfSentence(input.restricciones)}</Text>
         <Text style={s.vigencia}>
-          Cotizacion con vigencia hasta el:{"  "}
+          Cotización con vigencia hasta el:{"  "}
           <Text style={s.bold}>{formatValidUntil(input.validUntil)}</Text>
-          {"  "}Si desea que su mercancia viaje con seguro favor de indicarlo, de lo contrario viajará por cuenta y
+          {"  "}Si desea que su mercancía viaje con seguro favor de indicarlo, de lo contrario viajará por cuenta y
           riesgo del consignatario. La presente cotización queda sujeta a reconocimiento previo.
         </Text>
 
@@ -255,19 +256,19 @@ export function MaritimeQuotePdf({ input, computed, logoUrl }: Props) {
           Favor de realizar su depósito en la siguiente cuenta y enviar comprobante a
         </Text>
         <View style={s.bankHead}>
-          <Text style={s.bankHeadCell}>BANCO</Text>
-          <Text style={s.bankHeadCell}>CLABE INTERBANCARIA</Text>
-          <Text style={[s.bankHeadCell, { borderRightWidth: 0 }]}>No. DE CUENTA</Text>
+          <Text style={s.bankHeadCell}>Banco</Text>
+          <Text style={s.bankHeadCell}>CLABE interbancaria</Text>
+          <Text style={[s.bankHeadCell, { borderRightWidth: 0 }]}>No. de cuenta</Text>
         </View>
         <View style={s.bankRow}>
-          <Text style={s.bankCell}>{input.bankName}</Text>
+          <Text style={s.bankCell}>{pdfTitle(input.bankName)}</Text>
           <Text style={s.bankCell}>{input.clabe}</Text>
           <Text style={[s.bankCell, { borderRightWidth: 0 }]}>{input.accountNumber}</Text>
         </View>
 
         <View style={s.sigRow}>
-          <Text style={s.sigLabel}>Elaboró {input.elaboro ? `  ${input.elaboro}` : ""}</Text>
-          <Text style={s.sigLabel}>Aprobó. {input.aprobo ? `  ${input.aprobo}` : ""}</Text>
+          <Text style={s.sigLabel}>Elaboró {input.elaboro ? `  ${pdfTitle(input.elaboro)}` : ""}</Text>
+          <Text style={s.sigLabel}>Aprobó {input.aprobo ? `  ${pdfTitle(input.aprobo)}` : ""}</Text>
         </View>
       </Page>
     </Document>
