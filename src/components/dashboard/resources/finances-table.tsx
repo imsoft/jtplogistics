@@ -71,16 +71,19 @@ function getColumns(): ColumnDef<FinanceListRow>[] {
     },
     {
       accessorKey: "origin",
+      meta: { className: "hidden @3xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Origen" />,
       cell: ({ row }) => row.getValue("origin") ?? <span className="text-muted-foreground">—</span>,
     },
     {
       accessorKey: "destination",
+      meta: { className: "hidden @3xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Destino" />,
       cell: ({ row }) => row.getValue("destination") ?? <span className="text-muted-foreground">—</span>,
     },
     {
       accessorKey: "sale",
+      meta: { className: "hidden @xl/table:table-cell" },
       header: ({ column }) => (
         <SortableColumnHeader
           column={column}
@@ -99,6 +102,7 @@ function getColumns(): ColumnDef<FinanceListRow>[] {
     },
     {
       accessorKey: "cost",
+      meta: { className: "hidden @xl/table:table-cell" },
       header: ({ column }) => (
         <SortableColumnHeader
           column={column}
@@ -117,11 +121,13 @@ function getColumns(): ColumnDef<FinanceListRow>[] {
     },
     {
       accessorKey: "operatorName",
+      meta: { className: "hidden @4xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Operador" />,
       cell: ({ row }) => row.getValue("operatorName") ?? <span className="text-muted-foreground">—</span>,
     },
     {
       accessorKey: "pickupDate",
+      meta: { className: "hidden @5xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Recolección" />,
       cell: ({ row }) => {
         const v = row.getValue<string | null>("pickupDate");
@@ -130,6 +136,7 @@ function getColumns(): ColumnDef<FinanceListRow>[] {
     },
     {
       accessorKey: "deliveryDate",
+      meta: { className: "hidden @5xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Entrega" />,
       cell: ({ row }) => {
         const v = row.getValue<string | null>("deliveryDate");

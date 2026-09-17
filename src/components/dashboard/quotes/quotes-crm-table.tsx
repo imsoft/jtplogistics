@@ -184,17 +184,17 @@ export function QuotesCrmTable({
 
       <Card>
         <CardContent className="px-0 py-0">
-          <div className="overflow-x-auto">
+          <div className="@container/table overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/40 text-xs text-muted-foreground">
                   <th className="px-4 py-2 text-left font-medium">No. Cotización</th>
                   <th className="px-4 py-2 text-left font-medium">Compañía</th>
                   <th className="px-4 py-2 text-left font-medium">Estado</th>
-                  <th className="px-4 py-2 text-left font-medium hidden sm:table-cell">Contacto</th>
-                  <th className="px-4 py-2 text-left font-medium hidden md:table-cell">Teléfono</th>
-                  <th className="px-4 py-2 text-left font-medium hidden md:table-cell">Vigencia</th>
-                  <th className="px-4 py-2 text-left font-medium hidden lg:table-cell">Generado por</th>
+                  <th className="px-4 py-2 text-left font-medium hidden @2xl/table:table-cell">Contacto</th>
+                  <th className="px-4 py-2 text-left font-medium hidden @4xl/table:table-cell">Teléfono</th>
+                  <th className="px-4 py-2 text-left font-medium hidden @4xl/table:table-cell">Vigencia</th>
+                  <th className="px-4 py-2 text-left font-medium hidden @5xl/table:table-cell">Generado por</th>
                   <th className="px-4 py-2 text-left font-medium">Fecha</th>
                   <th className="px-4 py-2 w-24" />
                 </tr>
@@ -210,16 +210,16 @@ export function QuotesCrmTable({
                     <td className="px-4 py-3">
                       <StatusCell quote={q} onChange={changeStatus} editable={canUpdateStatus} />
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{q.contact || "—"}</td>
-                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+                    <td className="px-4 py-3 text-muted-foreground hidden @2xl/table:table-cell">{q.contact || "—"}</td>
+                    <td className="px-4 py-3 text-muted-foreground hidden @4xl/table:table-cell">
                       {q.phone ? formatPhone(q.phone) : "—"}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+                    <td className="px-4 py-3 text-muted-foreground hidden @4xl/table:table-cell">
                       {new Date(q.validUntil).toLocaleDateString("es-MX", {
                         year: "numeric", month: "short", day: "numeric", timeZone: "UTC",
                       })}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">{q.createdByName}</td>
+                    <td className="px-4 py-3 text-muted-foreground hidden @5xl/table:table-cell">{q.createdByName}</td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">
                       {new Date(q.createdAt).toLocaleDateString("es-MX", {
                         year: "numeric", month: "short", day: "numeric",

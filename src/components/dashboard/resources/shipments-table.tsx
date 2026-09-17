@@ -126,16 +126,19 @@ function getColumns(incidentTypes: { value: string; label: string }[]): ColumnDe
     },
     {
       accessorKey: "origin",
+      meta: { className: "hidden @xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Origen" />,
       cell: ({ row }) => row.getValue("origin") ?? <span className="text-muted-foreground">—</span>,
     },
     {
       accessorKey: "destination",
+      meta: { className: "hidden @xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Destino" />,
       cell: ({ row }) => row.getValue("destination") ?? <span className="text-muted-foreground">—</span>,
     },
     {
       accessorKey: "pickupDate",
+      meta: { className: "hidden @3xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Recolección" />,
       cell: ({ row }) => {
         const v = row.getValue<string | null>("pickupDate");
@@ -144,6 +147,7 @@ function getColumns(incidentTypes: { value: string; label: string }[]): ColumnDe
     },
     {
       accessorKey: "deliveryDate",
+      meta: { className: "hidden @3xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Entrega" />,
       cell: ({ row }) => {
         const v = row.getValue<string | null>("deliveryDate");
@@ -152,6 +156,7 @@ function getColumns(incidentTypes: { value: string; label: string }[]): ColumnDe
     },
     {
       accessorKey: "legalName",
+      meta: { className: "hidden @4xl/table:table-cell" },
       header: ({ column }) => (
         <SortableColumnHeader column={column} title="Proveedor" />
       ),
@@ -168,6 +173,7 @@ function getColumns(incidentTypes: { value: string; label: string }[]): ColumnDe
     },
     {
       accessorKey: "comments",
+      meta: { className: "hidden @6xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Comentarios" />,
       cell: ({ row }) => {
         const v = row.getValue<string | null>("comments")?.trim();
@@ -189,6 +195,7 @@ function getColumns(incidentTypes: { value: string; label: string }[]): ColumnDe
     },
     {
       accessorKey: "incidentType",
+      meta: { className: "hidden @5xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Tipo de incidencia" />,
       cell: ({ row }) => {
         const v = row.getValue<string | null>("incidentType")?.trim();
@@ -208,6 +215,7 @@ function getColumns(incidentTypes: { value: string; label: string }[]): ColumnDe
     },
     {
       accessorKey: "phone",
+      meta: { className: "hidden @5xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Celular" />,
       cell: ({ row }) => {
         const v = row.getValue<string | null>("phone");
@@ -220,6 +228,7 @@ function getColumns(incidentTypes: { value: string; label: string }[]): ColumnDe
     },
     {
       accessorKey: "incident",
+      meta: { className: "hidden @6xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Incidencia" />,
       cell: ({ row }) => {
         const v = row.getValue<string | null>("incident")?.trim();

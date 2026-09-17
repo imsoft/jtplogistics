@@ -33,6 +33,7 @@ export function getCarrierHomeColumns(): ColumnDef<CarrierHomeRouteRow>[] {
     },
     {
       accessorKey: "unitTypeLabel",
+      meta: { className: "hidden @xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Tipo de unidad" />,
       cell: ({ row }) => row.original.unitTypeLabel,
     },
@@ -46,6 +47,7 @@ export function getCarrierHomeColumns(): ColumnDef<CarrierHomeRouteRow>[] {
     },
     {
       accessorKey: "carrierWeeklyVolume",
+      meta: { className: "hidden @3xl/table:table-cell" },
       header: "Vol./mes",
       cell: ({ row }) => {
         const v = row.original.carrierWeeklyVolume;

@@ -19,6 +19,7 @@ export function getUsersColumns(): ColumnDef<User>[] {
     },
     {
       id: "commercialName",
+      meta: { className: "hidden @3xl/table:table-cell" },
       accessorFn: (row) => row.profile?.commercialName ?? "",
       header: ({ column }) => <SortableColumnHeader column={column} title="Nombre comercial" />,
       cell: ({ row }) => {
@@ -44,12 +45,14 @@ export function getUsersColumns(): ColumnDef<User>[] {
     },
     {
       accessorKey: "role",
+      meta: { className: "hidden @xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Rol" />,
       cell: ({ row }) =>
         USER_ROLE_LABELS[row.getValue("role") as User["role"]],
     },
     {
       accessorKey: "createdAt",
+      meta: { className: "hidden @4xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Registro" />,
       cell: ({ row }) => {
         const date = row.getValue("createdAt") as string;

@@ -145,7 +145,7 @@ export function MaritimeQuotesCrmTable({
 
       <Card>
         <CardContent className="px-0 py-0">
-          <div className="overflow-x-auto">
+          <div className="@container/table overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/40 text-xs text-muted-foreground">
@@ -153,8 +153,8 @@ export function MaritimeQuotesCrmTable({
                   <th className="px-4 py-2 text-left font-medium">Cliente</th>
                   <th className="px-4 py-2 text-left font-medium">Estado</th>
                   <th className="px-4 py-2 text-right font-medium">Total a depositar</th>
-                  <th className="px-4 py-2 text-left font-medium hidden md:table-cell">Vigencia</th>
-                  <th className="px-4 py-2 text-left font-medium hidden lg:table-cell">Creó</th>
+                  <th className="px-4 py-2 text-left font-medium hidden @4xl/table:table-cell">Vigencia</th>
+                  <th className="px-4 py-2 text-left font-medium hidden @5xl/table:table-cell">Creó</th>
                   <th className="px-4 py-2 text-left font-medium">Fecha</th>
                   <th className="px-4 py-2 w-20" />
                 </tr>
@@ -203,10 +203,10 @@ export function MaritimeQuotesCrmTable({
                         )}
                       </td>
                       <td className="px-4 py-3 text-right font-medium">${formatMxn(q.total)}</td>
-                      <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+                      <td className="px-4 py-3 text-muted-foreground hidden @4xl/table:table-cell">
                         {new Date(q.validUntil).toLocaleDateString("es-MX", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" })}
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">{q.createdByName}</td>
+                      <td className="px-4 py-3 text-muted-foreground hidden @5xl/table:table-cell">{q.createdByName}</td>
                       <td className="px-4 py-3 text-muted-foreground text-xs">
                         {new Date(q.createdAt).toLocaleDateString("es-MX", { year: "numeric", month: "short", day: "numeric" })}
                       </td>

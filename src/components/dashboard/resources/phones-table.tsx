@@ -38,6 +38,7 @@ function getColumns(): ColumnDef<PhoneDevice>[] {
     },
     {
       accessorKey: "imei",
+      meta: { className: "hidden @4xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="IMEI" />,
       cell: ({ row }) => {
         const v = row.getValue<string | null>("imei");
@@ -46,6 +47,7 @@ function getColumns(): ColumnDef<PhoneDevice>[] {
     },
     {
       accessorKey: "color",
+      meta: { className: "hidden @5xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Color" />,
       cell: ({ row }) => {
         const v = row.getValue<string | null>("color");
@@ -54,6 +56,7 @@ function getColumns(): ColumnDef<PhoneDevice>[] {
     },
     {
       accessorKey: "department",
+      meta: { className: "hidden @3xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Departamento" />,
       cell: ({ row }) => {
         const v = row.getValue<string | null>("department");
@@ -62,6 +65,7 @@ function getColumns(): ColumnDef<PhoneDevice>[] {
     },
     {
       id: "assignedTo",
+      meta: { className: "hidden @xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Asignado a" />,
       accessorFn: (row) => row.assignedTo?.name ?? "",
       cell: ({ row }) => {
@@ -71,6 +75,7 @@ function getColumns(): ColumnDef<PhoneDevice>[] {
     },
     {
       id: "emailAccount",
+      meta: { className: "hidden @5xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Correo" />,
       accessorFn: (row) => row.emailAccount?.email ?? "",
       cell: ({ row }) => {

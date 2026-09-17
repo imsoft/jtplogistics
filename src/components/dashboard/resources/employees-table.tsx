@@ -55,6 +55,7 @@ function getColumns(): ColumnDef<Employee>[] {
     },
     {
       accessorKey: "phone",
+      meta: { className: "hidden @xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Teléfono" />,
       cell: ({ row }) => {
         const v = row.getValue("phone") as string | null;
@@ -67,11 +68,13 @@ function getColumns(): ColumnDef<Employee>[] {
     },
     {
       accessorKey: "position",
+      meta: { className: "hidden @3xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Puesto" />,
       cell: ({ row }) => row.getValue("position") ?? <span className="text-muted-foreground">—</span>,
     },
     {
       accessorKey: "department",
+      meta: { className: "hidden @4xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Departamento" />,
       cell: ({ row }) => row.getValue("department") ?? <span className="text-muted-foreground">—</span>,
     },
