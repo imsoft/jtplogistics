@@ -50,6 +50,15 @@ function PageSizeSelect({ value, onChange }: { value: number; onChange: (size: n
   );
 }
 
+/**
+ * Lo que cada columna puede pedirle a la tabla. `className` se aplica al
+ * encabezado y a la celda, así que sirve para esconder columnas por ancho
+ * ("hidden lg:table-cell") o para limitar el ancho de una columna larga.
+ */
+export interface DataTableColumnMeta {
+  className?: string;
+}
+
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -214,7 +223,10 @@ export function DataTable<TData, TValue>({
       <div
         aria-busy={isFetching}
         className={cn(
-          "w-full max-w-full overflow-x-auto rounded-md border transition-opacity",
+          // @container/table: las columnas se esconden según el ancho de ESTA
+          // tabla, no el de la ventana. Con las clases normales (lg:, xl:) el
+          // menú lateral se come el espacio y la tabla se sigue saliendo.
+          "@container/table w-full max-w-full overflow-x-auto rounded-md border transition-opacity",
           isFetching && "pointer-events-none opacity-60"
         )}
       >
@@ -223,7 +235,10 @@ export function DataTable<TData, TValue>({
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead
+                    key={header.id}
+                    className={(header.column.columnDef.meta as DataTableColumnMeta | undefined)?.className}
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -245,7 +260,10 @@ export function DataTable<TData, TValue>({
                   className={`${onRowClick ? "cursor-pointer hover:bg-hover hover:text-hover-foreground" : ""} ${getRowClassName?.(row.original) ?? ""}`.trim()}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell
+                      key={cell.id}
+                      className={(cell.column.columnDef.meta as DataTableColumnMeta | undefined)?.className}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()

@@ -14,6 +14,30 @@ import {
 import type { Client } from "@/types/client.types";
 import { formatPhone } from "@/lib/utils";
 
+/**
+ * Texto que no debe ensanchar la tabla.
+ *
+ * El recorte va en un elemento dentro de la celda, no en la celda: con el
+ * ancho automático de la tabla, un max-width sobre la celda no se respeta y el
+ * contenido la ensancha igual. Al pasar el cursor se lee completo.
+ */
+function Truncated({
+  value,
+  width,
+  className = "",
+}: {
+  value: string | null | undefined;
+  width: string;
+  className?: string;
+}) {
+  if (!value) return <span className="text-muted-foreground">—</span>;
+  return (
+    <span className={`block ${width} truncate ${className}`.trim()} title={value}>
+      {value}
+    </span>
+  );
+}
+
 function getColumns(): ColumnDef<Client>[] {
   return [
     {
@@ -28,26 +52,34 @@ function getColumns(): ColumnDef<Client>[] {
     },
     {
       accessorKey: "name",
+      // Siempre visible. El resto se va escondiendo conforme falta ancho, de lo
+      // menos a lo más importante: la ficha del cliente tiene todo.
       header: ({ column }) => <SortableColumnHeader column={column} title="Nombre" />,
-      cell: ({ row }) => <span className="font-medium">{row.getValue("name")}</span>,
+      cell: ({ row }) => (
+        <Truncated value={row.getValue("name")} width="max-w-56" className="font-medium" />
+      ),
     },
     {
       accessorKey: "contactName",
+      meta: { className: "hidden @xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Nombre de contacto" />,
-      cell: ({ row }) => row.getValue("contactName") ?? <span className="text-muted-foreground">—</span>,
+      cell: ({ row }) => <Truncated value={row.getValue("contactName")} width="max-w-44" />,
     },
     {
       accessorKey: "position",
+      meta: { className: "hidden @6xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Puesto" />,
-      cell: ({ row }) => row.getValue("position") ?? <span className="text-muted-foreground">—</span>,
+      cell: ({ row }) => <Truncated value={row.getValue("position")} width="max-w-40" />,
     },
     {
       accessorKey: "legalName",
+      meta: { className: "hidden @6xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Razón social" />,
-      cell: ({ row }) => row.getValue("legalName") ?? <span className="text-muted-foreground">—</span>,
+      cell: ({ row }) => <Truncated value={row.getValue("legalName")} width="max-w-52" />,
     },
     {
       accessorKey: "productTypes",
+      meta: { className: "hidden @4xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Tipos de producto" />,
       cell: ({ row }) => {
         const types = row.original.productTypes ?? [];
@@ -68,14 +100,20 @@ function getColumns(): ColumnDef<Client>[] {
     },
     {
       accessorKey: "email",
+      // El correo es a lo que más se entra, así que se queda desde el principio.
       header: ({ column }) => <SortableColumnHeader column={column} title="Correo" />,
       cell: ({ row }) => {
         const v = row.getValue<string | null>("email");
-        return v ? <span className="text-email">{v}</span> : <span className="text-muted-foreground">—</span>;
+        return v ? (
+          <span className="text-email block max-w-60 truncate" title={v}>{v}</span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        );
       },
     },
     {
       accessorKey: "phone",
+      meta: { className: "hidden whitespace-nowrap @3xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Teléfono" />,
       cell: ({ row }) => {
         const v = row.getValue<string | null>("phone");
