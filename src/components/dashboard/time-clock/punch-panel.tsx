@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { getDeviceId } from "@/lib/device-id";
 import { readLocation } from "@/lib/geo-reading";
+import { isWorkingLeave, LEAVE_LABELS, type LeaveKind } from "@/lib/time-clock-leaves";
 
 type Mark = "clock_in" | "lunch_start" | "lunch_end" | "clock_out";
 
@@ -50,6 +51,8 @@ interface State {
   schedule: { startMinute: number; endMinute: number } | null;
   /** Nombre del festivo si la jornada cae en uno. */
   holiday: string | null;
+  /** Vacaciones, home office, incapacidad o permiso programado para hoy. */
+  leave: LeaveKind | null;
   standing: Standing;
   entries: Entry[];
 }
@@ -174,6 +177,15 @@ export function PunchPanel({ variant = "full" }: { variant?: "full" | "compact" 
             Jornada del {longDate(state.workDate)}.
           </p>
         </div>
+      )}
+
+      {state.leave && (
+        <p className="rounded-lg border bg-muted/40 px-4 py-3 text-center text-sm">
+          Hoy tienes <strong>{LEAVE_LABELS[state.leave]}</strong>.{" "}
+          {isWorkingLeave(state.leave)
+            ? "Puedes marcar desde donde estés; tu horario y tus retardos son los de siempre."
+            : "Si de todos modos trabajas puedes marcar, y no se te cuenta nada."}
+        </p>
       )}
 
       {state.holiday && (

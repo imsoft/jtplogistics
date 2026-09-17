@@ -151,6 +151,8 @@ model User {
   workSchedules    WorkSchedule[]
   timeClockIncidents TimeClockIncident[]
   timeClockCorrections TimeClockEntry[] @relation("TimeClockCorrector")
+  leaves               TimeClockLeave[] @relation("LeaveOwner")
+  leavesCreated        TimeClockLeave[] @relation("LeaveAuthor")
 
   /// Usuario que un proveedor (transportista) da de alta para su empresa.
   /// Conserva el rol carrier para entrar al mismo panel, pero trabaja sobre
@@ -1066,6 +1068,41 @@ model Holiday {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("holidays")
+}
+
+/// Días programados que cambian cómo se juzga la jornada de UNA persona.
+enum LeaveKind {
+  vacaciones
+  home_office
+  incapacidad
+  permiso
+}
+
+/// Periodo programado para un colaborador: vacaciones, home office,
+/// incapacidad o permiso.
+///
+/// Los cuatro dejan marcar desde donde sea: quien está de home office no está
+/// en la oficina, y quien está de vacaciones tampoco. Solo el home office
+/// sigue siendo día de trabajo, así que es el único al que se le cuenta
+/// retardo contra su horario.
+model TimeClockLeave {
+  id     String    @id @default(cuid()) @map("id")
+  userId String    @map("user_id")
+  user   User      @relation("LeaveOwner", fields: [userId], references: [id], onDelete: Cascade)
+  kind   LeaveKind @map("kind")
+
+  /// Ambas inclusive, como DATE: se comparan directo contra work_date.
+  startDate DateTime @db.Date @map("start_date")
+  endDate   DateTime @db.Date @map("end_date")
+
+  note String? @map("note")
+
+  createdById String? @map("created_by_id")
+  createdBy   User?   @relation("LeaveAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([userId, startDate, endDate])
+  @@map("time_clock_leaves")
 }
 
 enum TicketStatus {

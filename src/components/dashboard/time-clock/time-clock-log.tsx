@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LEAVE_LABELS, type LeaveKind } from "@/lib/time-clock-leaves";
 import { CorrectionDialog } from "@/components/dashboard/time-clock/correction-dialog";
 
 type Mark = "clock_in" | "lunch_start" | "lunch_end" | "clock_out";
@@ -60,6 +61,7 @@ const FLAG_TONE: Record<Flag["kind"], string> = {
 };
 
 interface Row {
+  leave: string | null;
   workDate: string;
   userId: string;
   userName: string;
@@ -188,6 +190,11 @@ export function TimeClockLog({ canCorrect = false }: { canCorrect?: boolean }) {
                   </td>
                   <td className="text-muted-foreground px-4 py-2.5 tabular-nums">
                     {row.workDate}
+                    {row.leave && (
+                      <span className="text-foreground bg-muted mt-1 block w-fit rounded px-1.5 py-0.5 text-xs font-medium">
+                        {LEAVE_LABELS[row.leave as LeaveKind] ?? row.leave}
+                      </span>
+                    )}
                     {holidays.has(row.workDate) && (
                       <span className="text-foreground bg-muted mt-1 block w-fit rounded px-1.5 py-0.5 text-xs font-medium">
                         Festivo: {holidays.get(row.workDate)}

@@ -70,16 +70,22 @@ export async function computeFlags(
     distanceM: number | null;
     radiusM: number | null;
     network: NetworkPolicy;
+    /** Día con periodo programado: no se evalúa dónde ni desde qué red marcó. */
+    skipLocation?: boolean;
   }
 ): Promise<EntryFlags> {
+  // En vacaciones, home office, incapacidad o permiso no hay nada que
+  // reclamar sobre el lugar: las banderas quedan sin evaluar, no en falso.
   const outsideGeofence =
-    input.distanceM !== null && input.radiusM !== null
+    !input.skipLocation && input.distanceM !== null && input.radiusM !== null
       ? input.distanceM > input.radiusM
       : null;
 
   // Primero la lista capturada; si no hay, la mayoría del día.
   let foreignNetwork: boolean | null = null;
-  if (input.network.allowedIps.length > 0) {
+  if (input.skipLocation) {
+    foreignNetwork = null;
+  } else if (input.network.allowedIps.length > 0) {
     foreignNetwork = isNetworkForeign(input.network, input.ip);
   } else {
     const { ip: consensus } = await consensusIp(tx, input.workDate, input.userId);

@@ -81,10 +81,13 @@ export async function GET() {
       liveCounts(prisma, userId),
     ]);
 
-    const holiday = await prisma.holiday.findUnique({
-      where: { date: workDate },
-      select: { name: true },
-    });
+    const [holiday, leave] = await Promise.all([
+      prisma.holiday.findUnique({ where: { date: workDate }, select: { name: true } }),
+      prisma.timeClockLeave.findFirst({
+        where: { userId, startDate: { lte: workDate }, endDate: { gte: workDate } },
+        select: { kind: true },
+      }),
+    ]);
 
     // Cuándo caduca el retardo más viejo: sin esto el colaborador ve un número
     // sin saber cuándo baja.
@@ -104,6 +107,7 @@ export async function GET() {
       lastMark: shift?.mark ?? null,
       allowed: allowedMarksAfter(shift?.mark ?? null),
       holiday: holiday?.name ?? null,
+      leave: leave?.kind ?? null,
       schedule: schedule
         ? { startMinute: schedule.startMinute, endMinute: schedule.endMinute }
         : null,
@@ -161,10 +165,33 @@ export async function POST(request: Request) {
     const config = await loadTimeClockConfig();
     const ip = clientIp(request);
 
+    // El horario que RH le capturó para este día. Sin él no hay contra qué
+    // comparar y no se le exige nada: el checador registra, no inventa reglas.
+    // En un festivo se marca igual — hay quien trabaja —, pero no se juzga:
+    // sin horario de referencia no hay retardo ni motivo obligatorio.
+    const holiday = await prisma.holiday.findUnique({
+      where: { date: workDate },
+      select: { name: true },
+    });
+
+    // Vacaciones, home office, incapacidad o permiso de ESTA persona.
+    const leave = await prisma.timeClockLeave.findFirst({
+      where: { userId, startDate: { lte: workDate }, endDate: { gte: workDate } },
+      select: { kind: true },
+    });
+
+    // Los cuatro tipos dejan marcar desde donde sea: quien está de home office
+    // no está en la oficina, y quien está de vacaciones tampoco.
+    const anywhere = Boolean(leave);
+    // Solo el home office sigue siendo día de trabajo; lo demás no se juzga,
+    // igual que un festivo.
+    const offDuty = Boolean(holiday) || Boolean(leave && leave.kind !== "home_office");
+
+
     // La red sí puede bloquear, a diferencia de la ubicación: estar conectado
     // al internet de la oficina es una condición que se controla, mientras que
     // el GPS falla solo. Con la lista vacía nunca bloquea (ver isNetworkAllowed).
-    if (!isNetworkAllowed(config.network, ip)) {
+    if (!anywhere && !isNetworkAllowed(config.network, ip)) {
       return Response.json(
         {
           error:
@@ -191,16 +218,7 @@ export async function POST(request: Request) {
         ? (body.geoStatus as GeoStatus)
         : null;
 
-    // El horario que RH le capturó para este día. Sin él no hay contra qué
-    // comparar y no se le exige nada: el checador registra, no inventa reglas.
-    // En un festivo se marca igual — hay quien trabaja —, pero no se juzga:
-    // sin horario de referencia no hay retardo ni motivo obligatorio.
-    const holiday = await prisma.holiday.findUnique({
-      where: { date: workDate },
-      select: { name: true },
-    });
-
-    const schedule = holiday
+    const schedule = offDuty
       ? null
       : await prisma.workSchedule.findUnique({
           where: { userId_weekday: { userId, weekday: weekdayOf(workDate) } },
@@ -223,7 +241,7 @@ export async function POST(request: Request) {
     // Llegar tarde obliga a explicarlo en el momento. Es lo que cierra el hueco
     // del aviso: nadie acumula retardos sin enterarse, porque no puede
     // registrar uno sin reconocerlo ahí mismo.
-    const mustExplain = !holiday && needsReason({
+    const mustExplain = !offDuty && needsReason({
       mark,
       scheduledStart: schedule?.startMinute ?? null,
       markedMinute: companyMinutes(markedAt),
@@ -253,6 +271,8 @@ export async function POST(request: Request) {
         distanceM,
         radiusM: config.geofence?.radiusM ?? null,
         network: config.network,
+        // Con un periodo programado no se le puede reclamar dónde estaba.
+        skipLocation: anywhere,
       });
 
       const entry = await tx.timeClockEntry.create({
@@ -275,7 +295,7 @@ export async function POST(request: Request) {
         select: { id: true, mark: true, markedAt: true },
       });
 
-      const judged = holiday
+      const judged = offDuty
         ? { retardo: false, comidaLarga: false, faltaGenerada: false }
         : await judgeEntry(tx, {
         userId,

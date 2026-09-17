@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { permissionHandler } from "@/lib/api-handler";
 import { companyDateKey, workDateFromKey, workDateKey } from "@/lib/time-clock";
 import { effectiveMarks } from "@/lib/time-clock-corrections";
+import { eachDateKey } from "@/lib/time-clock-leaves";
 
 /**
  * GET /api/time-clock/log?from=YYYY-MM-DD&to=YYYY-MM-DD&userId=…
@@ -135,11 +136,36 @@ export function GET(request: Request) {
       select: { date: true, name: true },
     });
 
+    // Vacaciones, home office, incapacidad y permiso que caen en el rango: sin
+    // esto, una jornada vacía parecería que alguien no marcó.
+    const leaves = await prisma.timeClockLeave.findMany({
+      where: {
+        startDate: { lte: to },
+        endDate: { gte: from },
+        ...(userId ? { userId } : {}),
+      },
+      select: { userId: true, kind: true, startDate: true, endDate: true },
+    });
+
+    const leaveByKey = new Map<string, string>();
+    for (const l of leaves) {
+      for (const day of eachDateKey(workDateKey(l.startDate), workDateKey(l.endDate))) {
+        if (day >= workDateKey(from) && day <= workDateKey(to)) {
+          leaveByKey.set(`${day}|${l.userId}`, l.kind);
+        }
+      }
+    }
+
     return Response.json({
       holidays: holidays.map((h) => ({ date: workDateKey(h.date), name: h.name })),
+      leaves: [...leaveByKey.entries()].map(([key, kind]) => {
+        const [date, user] = key.split("|");
+        return { date, userId: user, kind };
+      }),
       rows: [...rows.entries()].map(([key, row]) => ({
         ...row,
         flags: flagsByKey.get(key) ?? [],
+        leave: leaveByKey.get(key) ?? null,
         corrections: correctionLog.filter((c) => c.key === key),
       })),
     });

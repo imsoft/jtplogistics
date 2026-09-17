@@ -12,6 +12,7 @@ import {
   saveSchedule,
   type Day,
 } from "@/components/dashboard/time-clock/employee-schedule-card";
+import { EmployeeLeavesCard } from "@/components/dashboard/time-clock/employee-leaves-card";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -187,6 +188,8 @@ export default function EditEmployeePage() {
             isSubmitting={isSubmitting}
           >
             <EmployeeScheduleCard userId={id} onChange={setSchedule} />
+
+            <EmployeeLeavesCard userId={id} />
 
             {/* Recursos vinculados */}
             {hasLinks && (

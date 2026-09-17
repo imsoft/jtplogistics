@@ -12,6 +12,7 @@ import {
   saveSchedule,
   type Day,
 } from "@/components/dashboard/time-clock/employee-schedule-card";
+import { EmployeeLeavesCard } from "@/components/dashboard/time-clock/employee-leaves-card";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 import type { Employee } from "@/types/resources.types";
 
@@ -69,7 +70,10 @@ export default function CollaboratorEditEmployeePage() {
             isSubmitting={isSubmitting}
           >
             {permissions?.canManageSchedules && (
-              <EmployeeScheduleCard userId={id} onChange={setSchedule} />
+              <>
+                <EmployeeScheduleCard userId={id} onChange={setSchedule} />
+                <EmployeeLeavesCard userId={id} />
+              </>
             )}
           </EmployeeForm>
         )}
