@@ -124,7 +124,16 @@ export function EditRouteForm({
         </CardHeader>
         {historyOpen && (
           <CardContent>
-            <RouteLogTable routeId={route.id} />
+            {/* Desde el panel de colaborador, su propia API: la de dirección
+                lo rechaza aunque tenga permiso de ver el historial. */}
+            <RouteLogTable
+              routeId={route.id}
+              apiEndpoint={
+                basePath.startsWith("/collaborator")
+                  ? "/api/collaborator/route-logs"
+                  : "/api/admin/route-logs"
+              }
+            />
           </CardContent>
         )}
       </Card>

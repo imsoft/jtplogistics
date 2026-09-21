@@ -27,6 +27,11 @@ interface RouteLogEntry {
 interface RouteLogTableProps {
   /** Si se provee, filtra solo los logs de esa ruta */
   routeId?: string;
+  /**
+   * De dónde leer el historial. Dirección por defecto; el panel de colaborador
+   * pasa el suyo, que revisa el permiso de ver historial.
+   */
+  apiEndpoint?: string;
 }
 
 const ACTION_CONFIG = {
@@ -114,27 +119,43 @@ function LogRow({ log, showRoute }: { log: RouteLogEntry; showRoute: boolean }) 
   );
 }
 
-export function RouteLogTable({ routeId }: RouteLogTableProps) {
+export function RouteLogTable({
+  routeId,
+  apiEndpoint = "/api/admin/route-logs",
+}: RouteLogTableProps) {
   const [logs, setLogs] = useState<RouteLogEntry[]>([]);
   const [total, setTotal] = useState(0);
   const [skip, setSkip] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const take = 25;
 
   const fetchLogs = useCallback(async (s: number) => {
     const params = new URLSearchParams({ skip: String(s), take: String(take) });
     if (routeId) params.set("routeId", routeId);
-    const res = await fetch(`/api/admin/route-logs?${params}`);
-    if (!res.ok) return;
+    const res = await fetch(`${apiEndpoint}?${params}`);
+    // Antes solo se regresaba sin avisar: el esqueleto de carga se quedaba
+    // para siempre. Pasa, por ejemplo, con quien puede editar rutas pero no
+    // tiene permiso de ver el historial.
+    if (!res.ok) {
+      setError(
+        res.status === 403
+          ? "No tienes permiso para ver el historial de cambios."
+          : "No se pudo cargar el historial."
+      );
+      setIsLoaded(true);
+      return;
+    }
     const data = await res.json();
     setLogs((prev) => s === 0 ? data.logs : [...prev, ...data.logs]);
     setTotal(data.total);
     setIsLoaded(true);
-  }, [routeId]);
+  }, [routeId, apiEndpoint]);
 
   useEffect(() => {
     setSkip(0);
     setLogs([]);
+    setError(null);
     setIsLoaded(false);
     fetchLogs(0);
   }, [fetchLogs]);
@@ -147,6 +168,10 @@ export function RouteLogTable({ routeId }: RouteLogTableProps) {
 
   if (!isLoaded) {
     return <DataTableSkeleton rows={6} columns={4} />;
+  }
+
+  if (error) {
+    return <p className="text-sm text-muted-foreground py-6 text-center">{error}</p>;
   }
 
   if (logs.length === 0) {
