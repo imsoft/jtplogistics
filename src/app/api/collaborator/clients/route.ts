@@ -1,41 +1,10 @@
 import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 import { parseClientProductTypes } from "@/lib/parse-client-product-types";
+import { listClientsPage } from "@/lib/clients-list";
 import { logAudit } from "@/lib/audit-log";
 
-function toJson(c: {
-  id: string;
-  name: string;
-  contactName?: string | null;
-  position?: string | null;
-  legalName: string | null;
-  rfc: string | null;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
-  notes: string | null;
-  detentionConditions: string | null;
-  productTypes: string[];
-  createdAt: Date;
-}) {
-  return {
-    id: c.id,
-    name: c.name,
-    contactName: c.contactName ?? null,
-    position: c.position ?? null,
-    legalName: c.legalName,
-    rfc: c.rfc,
-    email: c.email,
-    phone: c.phone,
-    address: c.address,
-    notes: c.notes,
-    detentionConditions: c.detentionConditions,
-    productTypes: c.productTypes ?? [],
-    createdAt: c.createdAt.toISOString(),
-  };
-}
-
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await requireCollaboratorOrAdmin();
 
@@ -48,10 +17,9 @@ export async function GET() {
       return Response.json({ error: "Sin permiso" }, { status: 403 });
     }
 
-    const clients = await prisma.client.findMany({
-      orderBy: { createdAt: "desc" },
-    });
-    return Response.json(clients.map(toJson));
+    // La misma consulta que dirección: la tabla pagina en el servidor.
+    const { searchParams } = new URL(request.url);
+    return Response.json(await listClientsPage(searchParams));
   } catch (e) {
     if (e instanceof Response) return e;
     console.error(e);

@@ -50,7 +50,9 @@ export function ShipmentForm({
   unlocked = false,
   scope = "admin",
 }: ShipmentFormProps) {
-  const clientsEndpoint = scope === "collaborator" ? "/api/collaborator/clients" : "/api/admin/clients?all=1";
+  // ?all=1 en los dos: la API pagina, y sin él el selector solo traería los
+  // primeros 20 clientes sin avisar que faltan los demás.
+  const clientsEndpoint = scope === "collaborator" ? "/api/collaborator/clients?all=1" : "/api/admin/clients?all=1";
   const carriersEndpoint = scope === "collaborator" ? "/api/collaborator/shipment-carriers" : "/api/admin/users?role=carrier";
   const [eco, setEco] = useState(initialValues.eco ?? "");
   const [client, setClient] = useState(initialValues.client ?? "");

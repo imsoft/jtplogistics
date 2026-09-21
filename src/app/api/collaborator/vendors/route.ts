@@ -2,8 +2,9 @@ import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 import { createAuthUser } from "@/lib/create-auth-user";
 import { logAudit } from "@/lib/audit-log";
+import { listVendorsPage } from "@/lib/vendors-list";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await requireCollaboratorOrAdmin();
 
@@ -16,22 +17,9 @@ export async function GET() {
       return Response.json({ error: "Sin permiso" }, { status: 403 });
     }
 
-    const vendors = await prisma.user.findMany({
-      where: { role: "vendor" },
-      orderBy: { createdAt: "desc" },
-    });
-
-    return Response.json(
-      vendors.map((u) => ({
-        id: u.id,
-        name: u.name,
-        position: u.position,
-        email: u.email,
-        image: u.image,
-        birthDate: u.birthDate ? u.birthDate.toISOString().split("T")[0] : null,
-        createdAt: u.createdAt.toISOString(),
-      }))
-    );
+    // La misma consulta que dirección: la tabla pagina en el servidor.
+    const { searchParams } = new URL(request.url);
+    return Response.json(await listVendorsPage(searchParams));
   } catch (e) {
     if (e instanceof Response) return e;
     console.error(e);
