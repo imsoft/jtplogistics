@@ -115,6 +115,18 @@ export function PunchPanel({ variant = "full" }: { variant?: "full" | "compact" 
       // La ubicación se pide aquí y no al abrir la pantalla: así el permiso se
       // asocia a una acción que el colaborador entiende.
       const geo = await readLocation();
+
+      // Sin ubicación no se marca. Se corta aquí para poder explicar cómo
+      // activarla; el servidor lo vuelve a revisar de todos modos.
+      if (geo.status !== "granted") {
+        setError(
+          geo.status === "denied"
+            ? "Para checar necesitas permitir la ubicación. En la computadora: toca el candado que está a la izquierda de la dirección de la página, activa Ubicación y vuelve a intentar. En el celular, revisa además que el navegador tenga permiso de ubicación en los ajustes del teléfono."
+            : "No pudimos obtener tu ubicación. Revisa que la ubicación del equipo esté encendida y vuelve a intentar."
+        );
+        return;
+      }
+
       const res = await fetch("/api/time-clock", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

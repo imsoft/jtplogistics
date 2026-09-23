@@ -218,6 +218,20 @@ export async function POST(request: Request) {
         ? (body.geoStatus as GeoStatus)
         : null;
 
+    // Sin ubicación no se marca. Antes se permitía y la checada quedaba sin
+    // rastro de dónde se hizo: negar el permiso era la forma más fácil de
+    // checar desde cualquier lado. Lo revisa el servidor, no la pantalla.
+    if (geoStatus !== "granted" || lat === null || lng === null) {
+      return Response.json(
+        {
+          error:
+            "Para checar necesitas permitir la ubicación. Actívala en tu navegador y vuelve a intentar.",
+          locationRequired: true,
+        },
+        { status: 422 }
+      );
+    }
+
     const schedule = offDuty
       ? null
       : await prisma.workSchedule.findUnique({

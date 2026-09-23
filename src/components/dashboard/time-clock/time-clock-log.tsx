@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { MapPin, MonitorSmartphone, WifiOff } from "lucide-react";
+import { MapPin, MapPinOff, MonitorSmartphone, WifiOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -208,6 +208,13 @@ export function TimeClockLog({ canCorrect = false }: { canCorrect?: boolean }) {
                         {m ? (
                           <span className="flex flex-col">
                             <span className="font-semibold tabular-nums">{hms(m.at)}</span>
+                            {/* Checadas viejas: antes se podía marcar sin
+                                ubicación y no quedaba rastro de dónde. */}
+                            {m.geoStatus !== "granted" && (
+                              <span className="flex items-center gap-1 text-xs text-amber-700 dark:text-amber-400">
+                                <MapPinOff className="size-3" />Sin ubicación
+                              </span>
+                            )}
                             {m.distanceM !== null && (
                               <span
                                 className={`flex items-center gap-1 text-xs ${
