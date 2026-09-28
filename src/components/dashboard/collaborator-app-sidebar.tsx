@@ -13,6 +13,7 @@ import {
   UserRound,
   ShoppingBag,
   Truck,
+  Search,
   Laptop,
   Smartphone,
   Mail,
@@ -38,6 +39,7 @@ interface Permissions {
   canViewUnitTypes: boolean;
   canViewQuotes: boolean;
   canViewProviders: boolean;
+  canViewProviderProspects: boolean;
   canViewClients: boolean;
   canViewEmployees: boolean;
   canViewVendors: boolean;
@@ -90,6 +92,7 @@ const allNavGroups: PermNavGroup[] = [
     items: [
       { title: "Clientes", href: `${BASE}/clients`, icon: Users, permission: "canViewClients" },
       { title: "Proveedores", href: `${BASE}/providers`, icon: Truck, permission: "canViewProviders" },
+      { title: "Prospección de proveedores", href: `${BASE}/prospects`, icon: Search, permission: "canViewProviderProspects" },
     ],
   },
   {

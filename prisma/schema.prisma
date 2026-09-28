@@ -62,6 +62,10 @@ model User {
   canViewUnitTypes  Boolean       @default(false) @map("can_view_unit_types")
   canViewQuotes     Boolean       @default(false) @map("can_view_quotes")
   canViewProviders  Boolean       @default(false) @map("can_view_providers")
+  canViewProviderProspects   Boolean @default(false) @map("can_view_provider_prospects")
+  canCreateProviderProspects Boolean @default(false) @map("can_create_provider_prospects")
+  canUpdateProviderProspects Boolean @default(false) @map("can_update_provider_prospects")
+  canDeleteProviderProspects Boolean @default(false) @map("can_delete_provider_prospects")
   canViewClients    Boolean       @default(false) @map("can_view_clients")
   canViewEmployees  Boolean       @default(false) @map("can_view_employees")
   canViewVendors    Boolean       @default(false) @map("can_view_vendors")
@@ -153,6 +157,7 @@ model User {
   timeClockCorrections TimeClockEntry[] @relation("TimeClockCorrector")
   leaves               TimeClockLeave[] @relation("LeaveOwner")
   leavesCreated        TimeClockLeave[] @relation("LeaveAuthor")
+  prospects            ProviderProspect[] @relation("ProspectAuthor")
 
   /// Usuario que un proveedor (transportista) da de alta para su empresa.
   /// Conserva el rol carrier para entrar al mismo panel, pero trabaja sobre
@@ -1103,6 +1108,66 @@ model TimeClockLeave {
 
   @@index([userId, startDate, endDate])
   @@map("time_clock_leaves")
+}
+
+// ---- App: prospección de proveedores (CRM de transportistas) ----
+
+/// Cómo se consiguió el contacto del transportista.
+enum ProspectSource {
+  carretera
+  whatsapp
+  internet
+  calle
+}
+
+/// Qué tipo de rutas cubre.
+enum ProspectCoverage {
+  nacional
+  internacional
+  ambas
+}
+
+/// Etapa del prospecto. Avanza de pendiente a listo para operar; descartado se
+/// puede marcar desde cualquier etapa y exige un motivo.
+enum ProspectStatus {
+  pendiente
+  prospectando
+  negociando
+  en_alta
+  listo
+  descartado
+}
+
+/// Transportista en prospección, antes de darlo de alta como proveedor.
+model ProviderProspect {
+  id             String            @id @default(cuid()) @map("id")
+  commercialName String            @map("commercial_name")
+  contactName    String?           @map("contact_name")
+  phone          String?           @map("phone")
+  email          String?           @map("email")
+  website        String?           @map("website")
+  source         ProspectSource?   @map("source")
+  coverage       ProspectCoverage? @map("coverage")
+  status         ProspectStatus    @default(pendiente) @map("status")
+
+  /// Los usa hoy en su Excel: la razón social hace falta al darlo de alta y la
+  /// ciudad es lo que más se busca para encontrar transportista por zona.
+  legalName   String?   @map("legal_name")
+  city        String?   @map("city")
+  contactedOn DateTime? @db.Date @map("contacted_on")
+  notes       String?   @map("notes")
+
+  /// Por qué se descartó. Obligatorio al descartar; se conserva si vuelve a
+  /// otra etapa, para saber qué había pasado antes.
+  discardReason String? @map("discard_reason")
+
+  createdById String? @map("created_by_id")
+  createdBy   User?   @relation("ProspectAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@map("provider_prospects")
 }
 
 enum TicketStatus {

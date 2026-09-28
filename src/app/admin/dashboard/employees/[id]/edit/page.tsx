@@ -31,6 +31,7 @@ const MODULES = [
   { suffix: "UnitTypes", label: "Tipos de unidades" },
   { suffix: "Quotes", label: "Cotizador" },
   { suffix: "Providers", label: "Proveedores" },
+  { suffix: "ProviderProspects", label: "Prospección de proveedores" },
   { suffix: "Clients", label: "Clientes" },
   { suffix: "Employees", label: "Colaboradores" },
   { suffix: "Vendors", label: "Vendedores" },

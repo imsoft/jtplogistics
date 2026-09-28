@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import { Route as RouteIcon } from "lucide-react";
 import { Truck } from "lucide-react";
+import { Search } from "lucide-react";
 import { Calculator } from "lucide-react";
 import { UserRound } from "lucide-react";
 import { Laptop } from "lucide-react";
@@ -53,6 +54,7 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
     items: [
       { title: "Clientes", href: "/admin/dashboard/clients", icon: Users },
       { title: "Proveedores", href: "/admin/dashboard/providers", icon: Truck },
+      { title: "Prospección de proveedores", href: "/admin/dashboard/prospects", icon: Search },
     ],
   },
   {
