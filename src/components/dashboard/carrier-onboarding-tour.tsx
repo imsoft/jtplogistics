@@ -59,7 +59,7 @@ const steps = [
     popover: {
       title: "Mi perfil",
       description:
-        "Actualiza tus datos de contacto, cambia tu contraseña y personaliza tu cuenta.",
+        "Actualiza los datos de tu empresa, tus contactos y tu foto.",
       side: "right" as const,
       align: "center" as const,
     },

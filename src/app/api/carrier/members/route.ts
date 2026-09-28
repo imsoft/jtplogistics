@@ -115,6 +115,7 @@ export async function POST(request: Request) {
         email,
         password,
         loginUrl: `${appUrl()}/login`,
+        manualUrl: `${appUrl()}/manual-proveedor`,
       });
       await sendEmail({ to: email, subject: built.subject, html: built.html || undefined, text: built.text });
       emailed = true;

@@ -49,6 +49,14 @@ export const ACCOUNT_RESPONSIBILITY_NOTICE =
   "Esta cuenta es personal e intransferible. El uso que se haga de ella y el resguardo de su contraseña son responsabilidad de su titular.";
 
 /**
+ * Cómo cambiar la contraseña temporal. La app no tiene cambio de contraseña en
+ * el perfil: el camino es "¿Olvidaste tu contraseña?" en la pantalla de acceso,
+ * que manda un enlace al correo. Antes estos correos decían "desde tu perfil".
+ */
+export const CHANGE_PASSWORD_HINT =
+  "Si quieres cambiarla, en la pantalla de acceso usa «¿Olvidaste tu contraseña?» y te llegará un enlace a tu correo para poner una nueva.";
+
+/**
  * Aviso al colaborador de que soporte le restableció la contraseña. Lleva la
  * temporal dentro, así que solo se manda cuando quien la restablece lo pide.
  */
@@ -63,7 +71,7 @@ export function buildPasswordResetByStaffEmail(input: {
   return {
     subject: "Tu contraseña de JTP Logistics cambió",
     html: brandedEmail({
-      preheader: "Entra con la contraseña temporal y cámbiala.",
+      preheader: "Tu contraseña temporal para entrar.",
       eyebrow: "Tu cuenta",
       heading: "Tu contraseña cambió",
       paragraphs: [
@@ -72,7 +80,7 @@ export function buildPasswordResetByStaffEmail(input: {
         `<strong style="font-size:18px;letter-spacing:.05em;">${escapeHtml(input.password)}</strong>`,
       ],
       highlight:
-        "Entra con ella y cámbiala desde tu perfil en cuanto puedas. Si no esperabas este cambio, avísale a soporte de TI.",
+        `${CHANGE_PASSWORD_HINT} Si no esperabas este cambio, avísale a soporte de TI.`,
       ctaLabel: "Entrar",
       ctaHref: input.loginUrl,
       footnote: ACCOUNT_RESPONSIBILITY_NOTICE,
@@ -84,7 +92,7 @@ export function buildPasswordResetByStaffEmail(input: {
       "",
       `Contraseña temporal: ${input.password}`,
       "",
-      `Entra en ${input.loginUrl} y cámbiala desde tu perfil en cuanto puedas.`,
+      `Entra en ${input.loginUrl}. ${CHANGE_PASSWORD_HINT}`,
       "",
       ACCOUNT_RESPONSIBILITY_NOTICE,
       "",
@@ -105,13 +113,15 @@ export function buildCarrierMemberInviteEmail(input: {
   email: string;
   password: string;
   loginUrl: string;
+  /** Manual público del proveedor: el paso a paso para su primer ingreso. */
+  manualUrl: string;
 }): BuiltEmail {
   const name = firstName(input.name);
 
   return {
     subject: `Tu acceso a JTP Logistics por ${input.companyName}`,
     html: brandedEmail({
-      preheader: "Entra con la contraseña temporal y cámbiala.",
+      preheader: "Tu contraseña temporal para entrar.",
       eyebrow: "Tu cuenta",
       heading: "Te dieron acceso",
       paragraphs: [
@@ -119,9 +129,10 @@ export function buildCarrierMemberInviteEmail(input: {
         `<strong>${escapeHtml(input.inviterName)}</strong> te dio acceso a la plataforma de JTP Logistics para trabajar a nombre de <strong>${escapeHtml(input.companyName)}</strong>.`,
         `Tu correo de acceso es <strong>${escapeHtml(input.email)}</strong> y tu contraseña temporal es:`,
         `<strong style="font-size:18px;letter-spacing:.05em;">${escapeHtml(input.password)}</strong>`,
+        `¿Es tu primera vez? En el <a href="${escapeHtml(input.manualUrl)}" style="color:#1d3fd4;font-weight:600;">manual del proveedor</a> está paso a paso cómo registrar tarifas y leer el semáforo.`,
       ],
       highlight:
-        "Entra con ella y cámbiala desde tu perfil en cuanto puedas. Lo que puedes ver y hacer lo decide el usuario principal de tu empresa.",
+        `${CHANGE_PASSWORD_HINT} Lo que puedes ver y hacer lo decide el usuario principal de tu empresa.`,
       ctaLabel: "Entrar",
       ctaHref: input.loginUrl,
       footnote: ACCOUNT_RESPONSIBILITY_NOTICE,
@@ -134,7 +145,9 @@ export function buildCarrierMemberInviteEmail(input: {
       `Correo de acceso: ${input.email}`,
       `Contraseña temporal: ${input.password}`,
       "",
-      `Entra en ${input.loginUrl} y cámbiala desde tu perfil en cuanto puedas.`,
+      `Entra en ${input.loginUrl}. ${CHANGE_PASSWORD_HINT}`,
+      "",
+      `¿Es tu primera vez? El manual del proveedor está en ${input.manualUrl}`,
       "",
       ACCOUNT_RESPONSIBILITY_NOTICE,
       "",
