@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { UsersRound } from "lucide-react";
+import { BookOpen, UsersRound } from "lucide-react";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { userDashboardNavItems } from "@/lib/config/user-dashboard-nav";
 import { useUnitTypes } from "@/hooks/use-unit-types";
@@ -72,8 +72,11 @@ export function UserAppSidebar() {
       });
     }
 
+    // El manual es público y vive fuera del panel: siempre la versión vigente.
+    accountItems.push({ title: "Manual", href: "/manual-proveedor", icon: BookOpen });
+
     const groups: NavGroup[] = [{ label: "Mi cuenta", items: mainItems }];
-    if (accountItems.length > 0) groups.push({ label: "Cuenta", items: accountItems });
+    groups.push({ label: "Cuenta", items: accountItems });
     return groups;
   }, [unitTypes, can]);
 
