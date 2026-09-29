@@ -10,6 +10,11 @@ import { toast } from "sonner";
 const DEMO_EMAIL = "demo@jtp.com.mx";
 const DEMO_PASSWORD = "Demo2026";
 
+/** Parte el mensaje para pintar correo y contraseña tal cual, fuera del uppercase. */
+const KEEP_CASE_SPLIT = new RegExp(
+  `(${[DEMO_EMAIL, DEMO_PASSWORD].map((v) => v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`
+);
+
 function getWhatsAppMessage(): string {
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://www.jtplogistics.com";
   return `Cuenta demo JTP Logistics
@@ -52,7 +57,18 @@ export default function DemoAccountPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <pre className="text-muted-foreground rounded-lg border bg-muted/50 p-4 text-xs sm:text-sm whitespace-pre-wrap font-sans">
-            {getWhatsAppMessage()}
+            {/* La contraseña y el correo, tal cual: el resto va en mayúsculas. */}
+            {getWhatsAppMessage()
+              .split(KEEP_CASE_SPLIT)
+              .map((part, i) =>
+                part === DEMO_PASSWORD ? (
+                  <span key={i} className="text-password">{part}</span>
+                ) : part === DEMO_EMAIL ? (
+                  <span key={i} className="text-email">{part}</span>
+                ) : (
+                  part
+                )
+              )}
           </pre>
           <Button onClick={handleCopy} variant="outline" className="gap-2" disabled={copied}>
             <Copy className="size-4" />

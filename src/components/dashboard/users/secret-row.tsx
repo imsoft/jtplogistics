@@ -75,7 +75,7 @@ export function SecretRow({
         <span className="text-sm font-medium">—</span>
       ) : (
         <span className="flex items-center gap-1">
-          <span className="text-sm font-medium break-all">
+          <span className="text-password text-sm font-medium break-all">
             {visible ? value || "—" : "••••••••••"}
           </span>
           <Button

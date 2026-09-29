@@ -9,6 +9,35 @@
  * usa el motor de Word y lo ignora.
  */
 
+/**
+ * Marcas invisibles (uso privado de Unicode) para lo que debe llegar tal cual:
+ * las contraseñas. Una contraseña distingue mayúsculas, y subirla en el correo
+ * hace que la que recibe la persona no le sirva. Las marcas se quitan al
+ * procesar el correo, así que nunca llegan al destinatario.
+ */
+const KEEP_OPEN = "\uE000";
+const KEEP_CLOSE = "\uE001";
+/** Con grupo de captura: al partir, lo marcado queda en las posiciones impares. */
+const KEEP_REGION = /\uE000([\s\S]*?)\uE001/;
+const STRAY_MARKS = /[\uE000\uE001]/g;
+
+/**
+ * Marca un texto para que el correo lo conserve exactamente como está. Se
+ * envuelve el valor ya escapado y nunca una etiqueta HTML.
+ */
+export function keepCase(value: string): string {
+  return `${KEEP_OPEN}${value}${KEEP_CLOSE}`;
+}
+
+/** Aplica `transform` fuera de lo marcado; lo marcado sale intacto y sin marcas. */
+function outsideKept(value: string, transform: (chunk: string) => string): string {
+  return value
+    .split(KEEP_REGION)
+    .map((chunk, i) => (i % 2 === 0 ? transform(chunk) : chunk))
+    .join("")
+    .replace(STRAY_MARKS, "");
+}
+
 /** Lo que nunca se toca dentro de un texto plano: URLs y correos. */
 const UNTOUCHED_IN_TEXT = /(https?:\/\/\S+|mailto:\S+|[^\s<>@]+@[^\s<>@]+\.[^\s<>@,;:]+)/gi;
 
@@ -25,6 +54,10 @@ function upper(value: string): string {
  * mayúsculas en la parte del path.
  */
 export function uppercaseEmailText(text: string): string {
+  return outsideKept(text, upperPlain);
+}
+
+function upperPlain(text: string): string {
   return text
     .split(UNTOUCHED_IN_TEXT)
     .map((chunk, i) => (i % 2 === 0 ? upper(chunk) : chunk))
@@ -36,8 +69,12 @@ export function uppercaseEmailText(text: string): string {
  * entidades; dentro del texto visible también se respetan las URLs escritas.
  */
 export function uppercaseEmailHtml(html: string): string {
-  return html
-    .split(UNTOUCHED_IN_HTML)
-    .map((chunk, i) => (i % 2 === 0 ? uppercaseEmailText(chunk) : chunk))
-    .join("");
+  // Lo marcado se separa ANTES que las etiquetas y entidades: una contraseña con
+  // "&" se escapa a "&amp;" y, partida por la entidad, perdería sus marcas.
+  return outsideKept(html, (chunk) =>
+    chunk
+      .split(UNTOUCHED_IN_HTML)
+      .map((part, i) => (i % 2 === 0 ? upperPlain(part) : part))
+      .join("")
+  );
 }

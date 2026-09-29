@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { uppercaseEmailHtml, uppercaseEmailText } from "@/lib/email-uppercase";
+import { keepCase, uppercaseEmailHtml, uppercaseEmailText } from "@/lib/email-uppercase";
 
 describe("uppercaseEmailText", () => {
   it("sube el texto", () => {
@@ -49,5 +49,31 @@ describe("uppercaseEmailHtml", () => {
     expect(uppercaseEmailHtml(html)).toBe(
       '<!doctype html><html lang="es"><body><h1>BIENVENIDO</h1></body></html>'
     );
+  });
+});
+
+describe("keepCase: lo que el correo no debe subir", () => {
+  it("conserva la contraseña en texto plano y quita las marcas", () => {
+    expect(uppercaseEmailText(`Contraseña temporal: ${keepCase("miClave2026")}`)).toBe(
+      "CONTRASEÑA TEMPORAL: miClave2026"
+    );
+  });
+
+  it("conserva la contraseña dentro del HTML", () => {
+    expect(uppercaseEmailHtml(`<p>Tu clave</p><strong>${keepCase("miClave2026")}</strong>`)).toBe(
+      "<p>TU CLAVE</p><strong>miClave2026</strong>"
+    );
+  });
+
+  // Escapada, "&" se vuelve "&amp;": no debe partir la región marcada.
+  it("aguanta una contraseña con caracteres que se escapan", () => {
+    expect(uppercaseEmailHtml(`<strong>${keepCase("aB&amp;cD<x")}</strong>`)).toBe(
+      "<strong>aB&amp;cD<x</strong>"
+    );
+  });
+
+  it("no deja marcas sueltas en el correo", () => {
+    const out = uppercaseEmailHtml(`<p>a\uE000b</p><p>${keepCase("Xy")}</p>c\uE001`);
+    expect(out).not.toMatch(/[\uE000\uE001]/);
   });
 });

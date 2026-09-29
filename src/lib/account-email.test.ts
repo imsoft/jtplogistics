@@ -6,6 +6,7 @@ import {
   buildPasswordResetByStaffEmail,
   buildPasswordResetEmail,
 } from "@/lib/account-email";
+import { uppercaseEmailHtml, uppercaseEmailText } from "@/lib/email-uppercase";
 
 const input = {
   name: "Mario Barajas",
@@ -84,5 +85,35 @@ describe("cómo cambiar la contraseña temporal", () => {
   it.each(correos)("%s explica el camino que sí existe", (_, built) => {
     expect(built.html).toContain("¿Olvidaste tu contraseña?");
     expect(built.text).toContain(CHANGE_PASSWORD_HINT);
+  });
+});
+
+describe("la contraseña llega tal cual se guardó", () => {
+  // Así sale de sendEmail: todo el correo pasa a mayúsculas antes de enviarse.
+  const mixta = "Jtp&Clave2026x";
+
+  it("restablecida por soporte: igual en HTML y en texto", () => {
+    const built = buildPasswordResetByStaffEmail({ ...input, password: mixta });
+    expect(uppercaseEmailHtml(built.html)).toContain("Jtp&amp;Clave2026x");
+    expect(uppercaseEmailText(built.text)).toContain(mixta);
+  });
+
+  it("invitación del proveedor: igual en HTML y en texto", () => {
+    const built = buildCarrierMemberInviteEmail({
+      name: "Laura Méndez",
+      companyName: "Transportes del Norte",
+      inviterName: "Mario Barajas",
+      email: "laura@example.com",
+      password: mixta,
+      loginUrl: "https://www.jtplogistics.com/login",
+      manualUrl: "https://www.jtplogistics.com/manual-proveedor",
+    });
+    expect(uppercaseEmailHtml(built.html)).toContain("Jtp&amp;Clave2026x");
+    expect(uppercaseEmailText(built.text)).toContain(mixta);
+  });
+
+  it("el resto del correo sí va en mayúsculas", () => {
+    const built = buildPasswordResetByStaffEmail({ ...input, password: mixta });
+    expect(uppercaseEmailText(built.text)).toContain("CONTRASEÑA TEMPORAL:");
   });
 });

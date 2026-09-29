@@ -169,7 +169,7 @@ export default function BulkCredentialsPage() {
                     <p className="text-muted-foreground text-xs lowercase">{r.email}</p>
                     {r.password && (
                       <div className="mt-2 flex items-center gap-2">
-                        <code className="flex-1 break-all text-base font-bold">{r.password}</code>
+                        <code className="text-password flex-1 break-all text-base font-bold">{r.password}</code>
                         <Button
                           variant="ghost"
                           size="icon"

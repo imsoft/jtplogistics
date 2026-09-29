@@ -5,6 +5,7 @@
  */
 
 import { brandedEmail, escapeHtml } from "@/lib/email-layout";
+import { keepCase } from "@/lib/email-uppercase";
 import { firstName } from "@/lib/celebration-email";
 import type { BuiltEmail } from "@/lib/celebration-email";
 
@@ -77,7 +78,7 @@ export function buildPasswordResetByStaffEmail(input: {
       paragraphs: [
         `Hola <strong>${escapeHtml(name)}</strong>,`,
         `<strong>${escapeHtml(input.actorName)}</strong> restableció la contraseña de tu cuenta en JTP Logistics. Esta es tu contraseña temporal:`,
-        `<strong style="font-size:18px;letter-spacing:.05em;">${escapeHtml(input.password)}</strong>`,
+        `<strong style="font-size:18px;letter-spacing:.05em;">${keepCase(escapeHtml(input.password))}</strong>`,
       ],
       highlight:
         `${CHANGE_PASSWORD_HINT} Si no esperabas este cambio, avísale a soporte de TI.`,
@@ -90,7 +91,7 @@ export function buildPasswordResetByStaffEmail(input: {
       "",
       `${input.actorName} restableció la contraseña de tu cuenta en JTP Logistics.`,
       "",
-      `Contraseña temporal: ${input.password}`,
+      `Contraseña temporal: ${keepCase(input.password)}`,
       "",
       `Entra en ${input.loginUrl}. ${CHANGE_PASSWORD_HINT}`,
       "",
@@ -128,7 +129,7 @@ export function buildCarrierMemberInviteEmail(input: {
         `Hola <strong>${escapeHtml(name)}</strong>,`,
         `<strong>${escapeHtml(input.inviterName)}</strong> te dio acceso a la plataforma de JTP Logistics para trabajar a nombre de <strong>${escapeHtml(input.companyName)}</strong>.`,
         `Tu correo de acceso es <strong>${escapeHtml(input.email)}</strong> y tu contraseña temporal es:`,
-        `<strong style="font-size:18px;letter-spacing:.05em;">${escapeHtml(input.password)}</strong>`,
+        `<strong style="font-size:18px;letter-spacing:.05em;">${keepCase(escapeHtml(input.password))}</strong>`,
         `¿Es tu primera vez? En el <a href="${escapeHtml(input.manualUrl)}" style="color:#1d3fd4;font-weight:600;">manual del proveedor</a> está paso a paso cómo registrar tarifas y leer el semáforo.`,
       ],
       highlight:
@@ -143,7 +144,7 @@ export function buildCarrierMemberInviteEmail(input: {
       `${input.inviterName} te dio acceso a la plataforma de JTP Logistics para trabajar a nombre de ${input.companyName}.`,
       "",
       `Correo de acceso: ${input.email}`,
-      `Contraseña temporal: ${input.password}`,
+      `Contraseña temporal: ${keepCase(input.password)}`,
       "",
       `Entra en ${input.loginUrl}. ${CHANGE_PASSWORD_HINT}`,
       "",

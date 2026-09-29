@@ -37,9 +37,9 @@ export function POST(request: Request, { params }: { params: Promise<{ id: strin
 
     let password: string;
     if (typeof body.password === "string" && body.password.trim()) {
-      // En mayúsculas porque el correo de aviso también lo va: si se guardara
-      // en minúsculas, la que le llega al colaborador no le serviría.
-      password = body.password.trim().toLocaleUpperCase("es-MX");
+      // Tal como la escribieron: una contraseña distingue mayúsculas. El correo
+      // de aviso la conserva igual (keepCase), aunque el resto vaya en mayúsculas.
+      password = body.password.trim();
       if (password.length < MIN_PASSWORD_LENGTH) {
         return Response.json(
           { error: `La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres.` },

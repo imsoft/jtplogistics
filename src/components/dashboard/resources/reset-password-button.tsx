@@ -117,7 +117,7 @@ export function ResetPasswordButton({
 
               <div className="space-y-4">
                 <div className="flex items-center gap-2 rounded-lg border bg-muted/50 p-3">
-                  <code className="min-w-0 flex-1 break-all text-base font-bold tracking-wide">
+                  <code className="text-password min-w-0 flex-1 break-all text-base font-bold">
                     {result.password}
                   </code>
                   <Button variant="ghost" size="icon" onClick={copy} aria-label="Copiar contraseña">
@@ -165,10 +165,11 @@ export function ResetPasswordButton({
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="off"
+                    className="text-password"
                   />
                   <p className="text-xs text-muted-foreground">
                     Déjalo vacío y se genera una temporal. Mínimo 8 caracteres; se
-                    guarda en mayúsculas, igual que el correo de aviso.
+                    guarda tal como la escribas, con mayúsculas y minúsculas.
                   </p>
                 </div>
 

@@ -238,7 +238,7 @@ export default function CarrierUsersPage() {
               Pásale esta contraseña por otro medio o no va a poder entrar:
             </p>
             <div className="flex items-center gap-2 rounded-lg border bg-muted/50 p-3">
-              <code className="flex-1 break-all text-base font-bold">{pendingPassword.password}</code>
+              <code className="text-password flex-1 break-all text-base font-bold">{pendingPassword.password}</code>
               <Button variant="ghost" size="icon" aria-label="Copiar contraseña" onClick={() => copy(pendingPassword.password)}>
                 {copied ? <Check className="size-4 text-green-600" /> : <Copy className="size-4" />}
               </Button>
