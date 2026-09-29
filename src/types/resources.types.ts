@@ -215,6 +215,9 @@ export interface EmailAccount {
   email: string;
   /** Indica si hay contraseña guardada. El valor se pide aparte a /api/credentials. */
   hasPassword: boolean;
+  /** Departamentos de todas las personas asignadas, para filtrar. */
+  departments: string[];
+  /** Los mismos, juntos para mostrarlos en la tabla. */
   department: string | null;
   assignees: { id: string; name: string }[];
   createdAt: string;

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { encryptSecret } from "@/lib/secret-vault";
+import { EMAIL_ACCOUNT_LIST_INCLUDE, emailAccountToJson } from "@/lib/email-accounts-list";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 import { logAudit } from "@/lib/audit-log";
 
@@ -18,31 +19,10 @@ export async function GET() {
 
     const emails = await prisma.emailAccount.findMany({
       orderBy: { createdAt: "desc" },
-      include: {
-        assignees: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                employeeProfile: { select: { department: true } },
-              },
-            },
-          },
-        },
-      },
+      include: EMAIL_ACCOUNT_LIST_INCLUDE,
     });
 
-    return Response.json(
-      emails.map((e) => ({
-        id: e.id,
-        type: e.type,
-        email: e.email,
-        department: e.assignees[0]?.user?.employeeProfile?.department ?? null,
-        assignees: e.assignees.map((a) => ({ id: a.user.id, name: a.user.name })),
-        createdAt: e.createdAt.toISOString(),
-      }))
-    );
+    return Response.json(emails.map(emailAccountToJson));
   } catch (e) {
     if (e instanceof Response) return e;
     console.error(e);

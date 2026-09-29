@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
 import { AppSelect } from "@/components/ui/app-select";
 import type { EmailAccount } from "@/types/resources.types";
+import { ALL, matchesEmailFilters } from "@/lib/email-accounts-list";
 
 const EMAIL_TYPE_LABELS: Record<string, string> = {
   administrative: "Administrativo / Qweb360",
@@ -19,6 +20,7 @@ const EMAIL_TYPE_LABELS: Record<string, string> = {
   outlook: "Outlook",
   hosting: "Hosting",
   yahoo: "Yahoo",
+  corporativo: "Corporativo",
 };
 
 function emailTypeLabel(type: string) {
@@ -80,11 +82,8 @@ export function EmailsTable({
     apiEndpoint,
     "Error al cargar correos"
   );
-  const [filterType, setFilterType] = useState("all");
-  const [filterDepartment, setFilterDepartment] = useState("all");
-
-  const assigned = useMemo(() => emails.filter((e) => e.assignees.length > 0), [emails]);
-  const unassigned = useMemo(() => emails.filter((e) => e.assignees.length === 0), [emails]);
+  const [filterType, setFilterType] = useState(ALL);
+  const [filterDepartment, setFilterDepartment] = useState(ALL);
 
   const availableTypes = useMemo(
     () => [...new Set(emails.map((e) => e.type))].sort(),
@@ -92,23 +91,22 @@ export function EmailsTable({
   );
 
   const departments = useMemo(
-    () => Array.from(new Set(assigned.map((e) => e.department).filter(Boolean) as string[])).sort(),
-    [assigned]
+    () => [...new Set(emails.flatMap((e) => e.departments ?? []))].sort((a, b) => a.localeCompare(b, "es")),
+    [emails]
   );
 
-  const filteredAssigned = useMemo(
-    () => assigned.filter((e) => {
-      if (filterType !== "all" && e.type !== filterType) return false;
-      if (filterDepartment !== "all" && e.department !== filterDepartment) return false;
-      return true;
-    }),
-    [assigned, filterType, filterDepartment]
+  const filtered = useMemo(
+    () =>
+      emails.filter((e) =>
+        matchesEmailFilters(
+          { type: e.type, departments: e.departments ?? [] },
+          { type: filterType, department: filterDepartment }
+        )
+      ),
+    [emails, filterType, filterDepartment]
   );
-
-  const filteredUnassigned = useMemo(
-    () => unassigned.filter((e) => filterType === "all" || e.type === filterType),
-    [unassigned, filterType]
-  );
+  const filteredAssigned = useMemo(() => filtered.filter((e) => e.assignees.length > 0), [filtered]);
+  const filteredUnassigned = useMemo(() => filtered.filter((e) => e.assignees.length === 0), [filtered]);
 
   const columns = useMemo(() => getColumns(), []);
 
@@ -122,35 +120,35 @@ export function EmailsTable({
     );
   }
 
-  const hasActiveFilters = filterType !== "all" || filterDepartment !== "all";
+  const hasActiveFilters = filterType !== ALL || filterDepartment !== ALL;
 
   return (
     <div className="space-y-8">
+      {/* Aplican a las dos tablas. La ✕ del selector deja el valor vacío: se toma como "todos". */}
+      <div className="flex flex-wrap items-center gap-2">
+        <AppSelect
+          value={filterDepartment}
+          onValueChange={(v) => setFilterDepartment(v || ALL)}
+          options={[{ value: ALL, label: "Todos los departamentos" }, ...departments.map((d) => ({ value: d, label: d }))]}
+          className="w-full sm:w-56"
+        />
+        <AppSelect
+          value={filterType}
+          onValueChange={(v) => setFilterType(v || ALL)}
+          options={[{ value: ALL, label: "Todos los tipos" }, ...availableTypes.map((t) => ({ value: t, label: emailTypeLabel(t) }))]}
+          className="w-full sm:w-56"
+        />
+        {hasActiveFilters && (
+          <Button type="button" variant="outline" onClick={() => { setFilterType(ALL); setFilterDepartment(ALL); }}>
+            Limpiar filtros
+          </Button>
+        )}
+      </div>
+
       <div className="space-y-3">
-        <div className="flex flex-wrap items-start justify-between gap-2">
-          <div>
-            <h2 className="text-sm font-semibold">Asignados</h2>
-            <p className="text-xs text-muted-foreground">{filteredAssigned.length} correo{filteredAssigned.length !== 1 ? "s" : ""}</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <AppSelect
-              value={filterDepartment}
-              onValueChange={setFilterDepartment}
-              options={[{value: "all", label: "Todos los depto."}, ...departments.map((d) => ({value: d, label: d}))]}
-              className="w-full sm:w-40"
-            />
-            <AppSelect
-              value={filterType}
-              onValueChange={setFilterType}
-              options={[{value: "all", label: "Todos los tipos"}, ...availableTypes.map((t) => ({value: t, label: emailTypeLabel(t)}))]}
-              className="w-full sm:w-35"
-            />
-            {hasActiveFilters && (
-              <Button type="button" variant="outline" onClick={() => { setFilterType("all"); setFilterDepartment("all"); }}>
-                Limpiar
-              </Button>
-            )}
-          </div>
+        <div>
+          <h2 className="text-sm font-semibold">Asignados</h2>
+          <p className="text-xs text-muted-foreground">{filteredAssigned.length} correo{filteredAssigned.length !== 1 ? "s" : ""}</p>
         </div>
         {filteredAssigned.length === 0 ? (
           <p className="text-muted-foreground rounded-lg border border-dashed p-6 text-center text-sm">
@@ -175,7 +173,11 @@ export function EmailsTable({
         </div>
         {filteredUnassigned.length === 0 ? (
           <p className="text-muted-foreground rounded-lg border border-dashed p-6 text-center text-sm">
-            Todos los correos están asignados.
+            {hasActiveFilters
+              ? filterDepartment !== ALL
+                ? "Los correos sin asignar no tienen departamento: quita ese filtro para verlos."
+                : "No hay correos sin asignar con esos filtros."
+              : "Todos los correos están asignados."}
           </p>
         ) : (
           <DataTable<EmailAccount, unknown>

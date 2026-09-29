@@ -1,37 +1,16 @@
 import { prisma } from "@/lib/db";
-import { encryptSecret, hasSecret } from "@/lib/secret-vault";
+import { encryptSecret } from "@/lib/secret-vault";
+import { EMAIL_ACCOUNT_LIST_INCLUDE, emailAccountToJson } from "@/lib/email-accounts-list";
 import { adminHandler } from "@/lib/api-handler";
 import { logAudit } from "@/lib/audit-log";
 
 export function GET() {
-  return adminHandler(async (session) => {
+  return adminHandler(async () => {
     const emails = await prisma.emailAccount.findMany({
       orderBy: { createdAt: "desc" },
-      include: {
-        assignees: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                employeeProfile: { select: { department: true } },
-              },
-            },
-          },
-        },
-      },
+      include: EMAIL_ACCOUNT_LIST_INCLUDE,
     });
-    return Response.json(
-      emails.map((e) => ({
-        id: e.id,
-        type: e.type,
-        email: e.email,
-        hasPassword: hasSecret(e.password),
-        department: e.assignees[0]?.user?.employeeProfile?.department ?? null,
-        assignees: e.assignees.map((a) => ({ id: a.user.id, name: a.user.name })),
-        createdAt: e.createdAt.toISOString(),
-      }))
-    );
+    return Response.json(emails.map(emailAccountToJson));
   });
 }
 
