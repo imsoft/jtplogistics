@@ -216,7 +216,7 @@ export default function CarrierUsersPage() {
                     }));
                   }}
                 />
-                <Label htmlFor={`new-${p.key}`} className="flex flex-col gap-0.5 font-normal">
+                <Label htmlFor={`new-${p.key}`} className="flex flex-col items-start gap-0.5 leading-snug font-normal">
                   <span>{p.label}</span>
                   <span className="text-muted-foreground text-xs">{p.hint}</span>
                 </Label>

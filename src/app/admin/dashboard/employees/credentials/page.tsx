@@ -212,7 +212,7 @@ export default function BulkCredentialsPage() {
                   checked={selected.has(p.id)}
                   onCheckedChange={() => toggle(p.id)}
                 />
-                <Label htmlFor={`u-${p.id}`} className="flex min-w-0 flex-1 flex-col gap-0.5 font-normal">
+                <Label htmlFor={`u-${p.id}`} className="flex min-w-0 flex-1 flex-col items-start gap-0.5 leading-snug font-normal">
                   <span className="font-medium">{p.name}</span>
                   <span className="text-muted-foreground text-xs lowercase">{p.email}</span>
                 </Label>
