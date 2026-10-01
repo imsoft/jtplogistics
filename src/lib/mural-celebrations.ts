@@ -83,6 +83,9 @@ export function celebrationsInRange(
       ) {
         const date = celebrationDateInYear(origin, year);
         if (date < start || date > end) continue;
+        // El día de ingreso no es aniversario: el primero es al cumplir un año.
+        // Sin esto, a quien entra hoy se le felicitaba por su "aniversario".
+        if (kind === "anniversary" && year <= origin.getUTCFullYear()) continue;
         results.push({
           kind,
           userId: person.id,

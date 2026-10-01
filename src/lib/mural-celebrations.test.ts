@@ -56,10 +56,23 @@ describe("celebrationsInRange", () => {
     expect(result.map((c) => c.name)).toEqual(["Ana", "Luis"]);
   });
 
-  it("no cuenta años cuando el aniversario es el año de ingreso", () => {
+  // Pasó en producción: a quien entró ese día se le felicitó por su aniversario.
+  it("el día de ingreso no es aniversario", () => {
     const people = [person({ hireDate: utc(2026, 8, 14) })];
-    const result = celebrationsInRange(people, utc(2026, 8, 1), utc(2026, 8, 31));
-    expect(result[0].years).toBeNull();
+    expect(celebrationsInRange(people, utc(2026, 8, 1), utc(2026, 8, 31))).toEqual([]);
+  });
+
+  it("el primer aniversario es al cumplir un año", () => {
+    const people = [person({ hireDate: utc(2026, 8, 14) })];
+    const result = celebrationsInRange(people, utc(2027, 8, 1), utc(2027, 8, 31));
+    expect(result).toHaveLength(1);
+    expect(result[0].years).toBe(1);
+  });
+
+  it("un cumpleaños sí se celebra aunque el ingreso sea reciente", () => {
+    const people = [person({ birthDate: utc(1990, 8, 14), hireDate: utc(2026, 8, 14) })];
+    const result = celebrationsInRange(people, utc(2026, 8, 14), utc(2026, 8, 14));
+    expect(result.map((c) => c.kind)).toEqual(["birthday"]);
   });
 
   it("ignora a quien no tiene fechas registradas", () => {
