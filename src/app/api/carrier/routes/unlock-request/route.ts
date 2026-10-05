@@ -3,6 +3,10 @@ import { prisma } from "@/lib/db";
 import { requireCarrierAccount } from "@/lib/carrier-account";
 import { logAudit } from "@/lib/audit-log";
 import { computeTargetStatus } from "@/lib/target-status";
+import { sendEmail } from "@/lib/email";
+import { appUrl } from "@/lib/email-layout";
+import { buildUnlockRequestEmail } from "@/lib/carrier-email";
+import { UNLOCK_APPROVERS_WHERE, unlockRequestRecipients } from "@/lib/unlock-request-notify";
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,25 +54,51 @@ export async function POST(request: NextRequest) {
       data: { editUnlockRequested: true },
     });
 
-    // Notify all admins
-    const admins = await prisma.user.findMany({
-      where: { role: "admin" },
-      select: { id: true },
-    });
+    // Se avisa a todo el que puede autorizar: dirección y los colaboradores
+    // con permiso de editar proveedores (pricing). Cada quien recibe el enlace
+    // a la ficha de su propio panel.
+    const [approvers, company, unitDef] = await Promise.all([
+      prisma.user.findMany({
+        where: UNLOCK_APPROVERS_WHERE,
+        select: { id: true, name: true, email: true, role: true, canUpdateProviders: true },
+      }),
+      prisma.user.findUnique({ where: { id: carrierId }, select: { name: true } }),
+      prisma.unitTypeDef.findUnique({ where: { value: unitType }, select: { name: true } }),
+    ]);
+    const recipients = unlockRequestRecipients(approvers, carrierId);
+    const requesterName = (session.user as { name: string }).name;
+    const carrierName = company?.name ?? requesterName;
+    const routeLabel = `${carrierRoute.route.origin} → ${carrierRoute.route.destination}`;
+    const unitLabel = unitDef?.name ?? unitType;
 
-    if (admins.length > 0) {
-      const routeLabel = `${carrierRoute.route.origin} → ${carrierRoute.route.destination} (${unitType})`;
+    if (recipients.length > 0) {
       await prisma.notification.createMany({
-        data: admins.map((admin) => ({
-          userId: admin.id,
+        data: recipients.map((r) => ({
+          userId: r.id,
           type: "carrier_unlock_request",
           title: "Solicitud de edición de ruta",
-          body: `${(session.user as { name: string }).name} solicita editar: ${routeLabel}.`,
-          // La ficha de la empresa, que es donde dirección aprueba el desbloqueo.
-          href: `/admin/dashboard/users/${carrierId}`,
+          body: `${carrierName} solicita editar: ${routeLabel} (${unitLabel}).`,
+          href: r.href,
           read: false,
         })),
       });
+
+      // El correo no debe tumbar la solicitud: ya quedó registrada y avisada.
+      await Promise.all(
+        recipients.map((r) => {
+          const built = buildUnlockRequestEmail({
+            name: r.name,
+            carrierName,
+            requesterName,
+            routeLabel,
+            unitLabel,
+            href: `${appUrl()}${r.href}`,
+          });
+          return sendEmail({ to: r.email, subject: built.subject, html: built.html, text: built.text }).catch(
+            (e) => console.error(`[unlock-request] No salió el correo a ${r.email}:`, e)
+          );
+        })
+      );
     }
 
     void logAudit({

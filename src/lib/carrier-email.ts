@@ -47,6 +47,52 @@ export function buildNewRouteEmail(input: {
   };
 }
 
+/** Aviso a quien puede autorizar: un proveedor pide desbloquear una ruta. */
+export function buildUnlockRequestEmail(input: {
+  name: string;
+  carrierName: string;
+  /** Quien lo pidió dentro de la empresa; puede ser un usuario agregado. */
+  requesterName: string;
+  routeLabel: string;
+  unitLabel: string;
+  href: string;
+}): BuiltEmail {
+  const name = firstName(input.name);
+  const label = `${input.routeLabel} (${input.unitLabel})`;
+  const who =
+    input.requesterName && input.requesterName !== input.carrierName
+      ? `${input.requesterName}, de ${input.carrierName},`
+      : input.carrierName;
+
+  return {
+    subject: `Solicitud de edición de ruta: ${input.carrierName}`,
+    html: brandedEmail({
+      preheader: `${input.carrierName} pide editar ${label}.`,
+      eyebrow: "Proveedores",
+      heading: "Solicitud de edición de ruta",
+      paragraphs: [
+        `Hola <strong>${escapeHtml(name)}</strong>,`,
+        `<strong>${escapeHtml(who)}</strong> solicita desbloquear una ruta para corregir su target. Salió en rojo en el semáforo.`,
+      ],
+      highlight: `<strong style="font-size:16px;">${escapeHtml(label)}</strong>`,
+      ctaLabel: "Revisar y autorizar",
+      ctaHref: input.href,
+    }),
+    text: [
+      `Hola ${name},`,
+      "",
+      `${who} solicita desbloquear una ruta para corregir su target. Salió en rojo en el semáforo.`,
+      "",
+      label,
+      "",
+      "Revisa y autoriza aquí:",
+      input.href,
+      "",
+      "JTP Logistics",
+    ].join("\n"),
+  };
+}
+
 export interface BidRouteLine {
   origin: string;
   destination: string;
