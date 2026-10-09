@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth-server";
+// Dirección siempre; el colaborador según su permiso de Tipos de unidades.
+import { requireModuleAccess } from "@/lib/module-access";
 import { logAudit } from "@/lib/audit-log";
 
 /**
@@ -8,7 +9,7 @@ import { logAudit } from "@/lib/audit-log";
  */
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireAdmin();
+    const session = await requireModuleAccess("UnitTypes", "update");
     const body = await request.json();
     const orderedIds: unknown = body?.orderedIds;
     if (!Array.isArray(orderedIds)) {

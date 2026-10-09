@@ -24,7 +24,11 @@ export default function CollaboratorProfilePage() {
 
   const load = useCallback(async () => {
     const res = await fetch("/api/profile");
-    if (!res.ok) return;
+    if (!res.ok) {
+      setError("No se pudo cargar tu perfil. Recarga la página.");
+      setIsLoaded(true);
+      return;
+    }
     const data = await res.json();
     setName(data.name ?? "");
     setEmail(data.email ?? "");

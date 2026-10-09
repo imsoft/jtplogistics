@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth-server";
+// Dirección siempre; el colaborador según su permiso de Tipos de unidades.
+import { requireModuleAccess } from "@/lib/module-access";
 import { logAudit } from "@/lib/audit-log";
 
 export async function PATCH(
@@ -8,7 +9,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await requireAdmin();
+    const session = await requireModuleAccess("UnitTypes", "update");
     const { id } = await params;
     const body = await request.json();
     const name = body.name ? String(body.name).trim() : undefined;
@@ -50,7 +51,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await requireAdmin();
+    const session = await requireModuleAccess("UnitTypes", "delete");
     const { id } = await params;
 
     const existing = await prisma.unitTypeDef.findUnique({ where: { id } });

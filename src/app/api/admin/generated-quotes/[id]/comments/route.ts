@@ -1,6 +1,8 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireSession } from "@/lib/auth-server";
+// Los comentarios son internos: dirección y colaboradores con permiso de
+// Cotizador. Antes bastaba cualquier sesión, incluida la de un proveedor.
+import { requireModuleAccess } from "@/lib/module-access";
 
 // GET: obtener comentarios de una cotización
 export async function GET(
@@ -8,7 +10,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await requireSession();
+    const session = await requireModuleAccess("Quotes", "view");
     const { id } = await params;
 
     const comments = await prisma.quoteComment.findMany({
@@ -42,7 +44,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await requireSession();
+    const session = await requireModuleAccess("Quotes", "view");
     const { id } = await params;
     const { comment } = await request.json();
 

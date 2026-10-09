@@ -68,6 +68,10 @@ export const auth = betterAuth({
     window: 60,
     max: 100,
     customRules: {
+      // Cada pantalla pregunta por la sesión varias veces y toda la oficina
+      // sale con la misma IP: con el tope general (100/min) una mañana
+      // ocupada deja a todos con 429. Esta ruta no se adivina por fuerza bruta.
+      "/get-session": { window: 60, max: 1000 },
       "/sign-in/email": { window: 60, max: 10 },
       "/sign-up/email": { window: 60, max: 5 },
       "/forget-password": { window: 60, max: 5 },

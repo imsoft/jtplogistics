@@ -3,6 +3,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { AuthPageHeader } from "@/components/auth/auth-page-header";
 import { ForgotPasswordForm } from "./forgot-password-form";
 
+/**
+ * Dinámica a la fuerza. La CSP firma cada script con un nonce por petición
+ * (proxy.ts); una página prerenderizada en el build sale sin él y el
+ * navegador bloquea todo su JavaScript: el formulario no mandaba el correo.
+ */
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Olvidé mi contraseña | JTP Logistics",
   description: "Restablece tu contraseña de JTP Logistics",

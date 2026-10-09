@@ -41,7 +41,7 @@ export function ShipmentTimeline({ shipmentId, scope = "admin" }: ShipmentTimeli
       .then((r) => (r.ok ? r.json() : []))
       .then((data: ShipmentTimelineEntry[]) => { setEntries(data); setIsLoaded(true); })
       .catch(() => setIsLoaded(true));
-  }, [shipmentId]);
+  }, [shipmentId, base]);
 
   return (
     <Card>

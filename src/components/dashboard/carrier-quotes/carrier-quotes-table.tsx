@@ -595,7 +595,7 @@ export function CarrierQuotesTable({
         </div>
         <div className="space-y-2">
           <Label className="text-xs font-medium">Target vs. ruta</Label>
-          <AppSelect value={filterPrice} onValueChange={setFilterPrice} options={[{value: "all", label: "Todos"}, {value: "below", label: "Por debajo del target"}, {value: "above", label: "Por encima del target"}]} disabled={!selectedRouteId || routeTarget == null} className="w-full" />
+          <AppSelect value={filterPrice} onValueChange={(v) => setFilterPrice(v || "all")} options={[{value: "all", label: "Todos"}, {value: "below", label: "Por debajo del target"}, {value: "above", label: "Por encima del target"}]} disabled={!selectedRouteId || routeTarget == null} className="w-full" />
         </div>
         <div className="space-y-2">
           <Label className="invisible text-xs font-medium">_</Label>

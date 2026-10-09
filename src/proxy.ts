@@ -54,6 +54,12 @@ function allowsGeolocation(pathname: string): boolean {
  * `frame-ancestors` va en la CSP; X-Frame-Options se conserva para los
  * navegadores viejos que no la interpretan.
  */
+/*
+ * OJO: toda página con scripts debe renderizarse por petición. Una página
+ * prerenderizada en el build (○ en la salida de `next build`) sale sin el
+ * nonce y el navegador bloquea su JavaScript. Si agregas una, ponle
+ * `export const dynamic = "force-dynamic"`.
+ */
 function applySecurityHeaders(headers: Headers, nonce: string, pathname: string) {
   // React usa eval() en desarrollo para reconstruir stacks de error; en
   // producción nunca lo hace. Se permite solo en dev para no aflojar la

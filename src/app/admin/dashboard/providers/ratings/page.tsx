@@ -454,13 +454,13 @@ export default function CarrierRatingsPage() {
             </div>
             <AppSelect
               value={starFilter}
-              onValueChange={setStarFilter}
+              onValueChange={(v) => setStarFilter(v || "all")}
               options={STAR_FILTER_OPTIONS}
               className="w-45"
             />
             <AppSelect
               value={minShipments}
-              onValueChange={setMinShipments}
+              onValueChange={(v) => setMinShipments(v || "1")}
               options={[
                 {value: "1", label: "Mín. 1 embarque"},
                 {value: "3", label: "Mín. 3 embarques"},

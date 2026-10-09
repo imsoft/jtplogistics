@@ -141,6 +141,7 @@ export function AuditLogTable() {
   const [total, setTotal] = useState(0);
   const [skip, setSkip] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [resourceFilter, setResourceFilter] = useState<string>("__all__");
   const take = 25;
 
@@ -148,7 +149,12 @@ export function AuditLogTable() {
     const params = new URLSearchParams({ skip: String(s), take: String(take) });
     if (resource !== "__all__") params.set("resource", resource);
     const res = await fetch(`/api/admin/audit-logs?${params}`);
-    if (!res.ok) return;
+    if (!res.ok) {
+      setLoadError("No se pudo cargar la bitácora. Recarga la página.");
+      setIsLoaded(true);
+      return;
+    }
+    setLoadError(null);
     const data = await res.json();
     setLogs((prev) => s === 0 ? data.logs : [...prev, ...data.logs]);
     setTotal(data.total);
@@ -174,6 +180,7 @@ export function AuditLogTable() {
 
   return (
     <div className="space-y-3">
+      {loadError && <p className="text-destructive text-sm">{loadError}</p>}
       <div className="flex items-center gap-3">
         <AppSelect
           value={resourceFilter}

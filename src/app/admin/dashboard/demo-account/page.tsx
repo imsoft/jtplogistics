@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -15,8 +15,7 @@ const KEEP_CASE_SPLIT = new RegExp(
   `(${[DEMO_EMAIL, DEMO_PASSWORD].map((v) => v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`
 );
 
-function getWhatsAppMessage(): string {
-  const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://www.jtplogistics.com";
+function getWhatsAppMessage(baseUrl: string): string {
   return `Cuenta demo JTP Logistics
 
 📧 Correo: ${DEMO_EMAIL}
@@ -27,10 +26,17 @@ Ingresa aquí: ${baseUrl}/login`;
 
 export default function DemoAccountPage() {
   const [copied, setCopied] = useState(false);
+  // El origen solo existe en el navegador. Leerlo al renderizar desfasa
+  // servidor y cliente; así React pinta el fijo y lo cambia ya montado.
+  const baseUrl = useSyncExternalStore(
+    () => () => {},
+    () => window.location.origin,
+    () => "https://www.jtplogistics.com"
+  );
 
   async function handleCopy() {
     try {
-      await navigator.clipboard.writeText(getWhatsAppMessage());
+      await navigator.clipboard.writeText(getWhatsAppMessage(baseUrl));
       setCopied(true);
       toast.success("Copiado. Puedes pegarlo en WhatsApp.");
       setTimeout(() => setCopied(false), 2000);
@@ -58,7 +64,7 @@ export default function DemoAccountPage() {
         <CardContent className="space-y-4">
           <pre className="text-muted-foreground rounded-lg border bg-muted/50 p-4 text-xs sm:text-sm whitespace-pre-wrap font-sans">
             {/* La contraseña y el correo, tal cual: el resto va en mayúsculas. */}
-            {getWhatsAppMessage()
+            {getWhatsAppMessage(baseUrl)
               .split(KEEP_CASE_SPLIT)
               .map((part, i) =>
                 part === DEMO_PASSWORD ? (

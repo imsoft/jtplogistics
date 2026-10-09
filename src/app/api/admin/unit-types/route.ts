@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth-server";
+// Dirección siempre; el colaborador según su permiso de Tipos de unidades.
+import { requireModuleAccess } from "@/lib/module-access";
 import { logAudit } from "@/lib/audit-log";
 import { unitTypeDefOrderBy } from "@/lib/prisma/unit-type-order";
 
@@ -16,7 +17,7 @@ function toJson(u: { id: string; name: string; value: string; sortOrder: number;
 
 export async function GET() {
   try {
-    await requireAdmin();
+    await requireModuleAccess("UnitTypes", "view");
     const types = await prisma.unitTypeDef.findMany({ orderBy: unitTypeDefOrderBy });
     return Response.json(types.map(toJson));
   } catch (e) {
@@ -39,7 +40,7 @@ function slugify(text: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireAdmin();
+    const session = await requireModuleAccess("UnitTypes", "create");
     const body = await request.json();
     const name = String(body.name ?? "").trim();
 

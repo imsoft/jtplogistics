@@ -138,7 +138,7 @@ export function PhonesTable({
           <div className="flex flex-wrap items-center gap-2">
             <AppSelect
               value={filterDepartment}
-              onValueChange={setFilterDepartment}
+              onValueChange={(v) => setFilterDepartment(v || "all")}
               options={[{value: "all", label: "Todos los depto."}, ...departments.map((d) => ({value: d, label: d}))]}
               className="w-full sm:w-40"
             />

@@ -18,3 +18,7 @@ ignoredBuiltDependencies:
 overrides:
   archiver>brace-expansion: '^5.0.8'
   uuid: '^11.1.1'
+  # Transitivas de la CLI de Prisma con avisos de seguridad. mysql2 ni se usa
+  # (la base es Postgres); deepmerge-ts solo corre en la CLI.
+  mysql2: '>=3.23.1'
+  deepmerge-ts: '>=8.0.0'

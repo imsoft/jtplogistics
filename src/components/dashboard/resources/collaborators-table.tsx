@@ -86,7 +86,8 @@ export function CollaboratorsTable() {
         <>
           <AppSelect
             value={filterDepartment}
-            onValueChange={setFilterDepartment}
+            // La ✕ deja el valor vacío: se toma como "todos" para no vaciar la tabla.
+            onValueChange={(v) => setFilterDepartment(v || "all")}
             options={[{value: "all", label: "Todos los depto."}, ...departments.map((d) => ({value: d, label: d}))]}
             className="w-full sm:w-40"
           />

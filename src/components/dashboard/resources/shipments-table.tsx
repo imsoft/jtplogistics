@@ -393,7 +393,7 @@ export function ShipmentsTable({
             </Label>
             <AppSelect
               value={statusFilter}
-              onValueChange={setStatusFilter}
+              onValueChange={(v) => setStatusFilter(v || STATUS_FILTER_ALL)}
               options={[{value: STATUS_FILTER_ALL, label: "Todos los estados"}, ...(Object.keys(SHIPMENT_STATUS_CONFIG) as ShipmentStatus[]).map((key) => ({value: key, label: SHIPMENT_STATUS_CONFIG[key].label}))]}
               className="w-full"
             />

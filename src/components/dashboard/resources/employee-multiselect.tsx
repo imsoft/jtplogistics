@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { usePathname } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
@@ -23,13 +24,18 @@ export function EmployeeMultiSelect({
 }: EmployeeMultiSelectProps) {
   const [employees, setEmployees] = useState<EmployeeOption[]>([]);
   const [search, setSearch] = useState("");
+  // Cada panel tiene su lista. Pedir siempre la de dirección le respondía 403
+  // al colaborador, y ese error se intentaba recorrer como lista: tronaba la
+  // pantalla de editar correos.
+  const pathname = usePathname();
+  const endpoint = pathname?.startsWith("/collaborator") ? "/api/collaborator/employees" : "/api/admin/employees";
 
   useEffect(() => {
-    fetch("/api/admin/employees")
-      .then((r) => r.json())
-      .then((data: EmployeeOption[]) => setEmployees(data))
-      .catch(() => {});
-  }, []);
+    fetch(endpoint)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: unknown) => setEmployees(Array.isArray(data) ? (data as EmployeeOption[]) : []))
+      .catch(() => setEmployees([]));
+  }, [endpoint]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();

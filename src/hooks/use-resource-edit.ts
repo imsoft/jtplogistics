@@ -35,9 +35,14 @@ export function useResourceEdit<T>({
 
   useEffect(() => {
     fetch(`${endpoint}/${id}`)
-      .then((r) => r.json())
+      .then(async (r) => {
+        // Un 403/404 también trae JSON ({ error }); no es un registro.
+        const body = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error((body as { error?: string }).error ?? "No se pudo cargar");
+        return body;
+      })
       .then((d) => { setData(d); setIsLoaded(true); })
-      .catch(() => { setError("Error al cargar"); setIsLoaded(true); });
+      .catch((e) => { setError(e instanceof Error ? e.message : "Error al cargar"); setIsLoaded(true); });
   }, [id, endpoint]);
 
   async function handleSubmit(formData: unknown) {

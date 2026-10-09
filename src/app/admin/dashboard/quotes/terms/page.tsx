@@ -31,10 +31,14 @@ export default function QuoteTermsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const res = await fetch("/api/admin/quote-config");
-    if (!res.ok) return;
+    if (!res.ok) {
+      setLoadError("No se pudieron cargar los textos. Recarga la página.");
+      return;
+    }
     const data: QuoteConfig = await res.json();
     setConfig(data);
   }, []);
@@ -69,7 +73,7 @@ export default function QuoteTermsPage() {
     return (
       <div className="min-w-0 space-y-4">
         <h1 className="page-heading">Textos legales</h1>
-        <FormSkeleton fields={2} />
+        {loadError ? <p className="text-destructive text-sm">{loadError}</p> : <FormSkeleton fields={2} />}
       </div>
     );
   }
