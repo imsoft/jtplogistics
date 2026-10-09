@@ -3,6 +3,10 @@ allowBuilds:
   esbuild: true
   msw: true
   prisma: true
+  # Explícitos en false: sin ellos pnpm mete un marcador y falla al instalar.
+  # Ninguno necesita su script: sharp y unrs-resolver traen binarios ya compilados.
+  sharp: false
+  unrs-resolver: false
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
