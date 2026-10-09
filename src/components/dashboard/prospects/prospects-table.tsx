@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { ChevronDown, Globe, Loader2, Mail, Pencil, Phone, Trash2 } from "lucide-react";
+import { ChevronDown, ClipboardCheck, Globe, Loader2, Mail, Pencil, Phone, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -323,6 +323,17 @@ export function ProspectsTable({
                   {(canEdit || canDelete) && (
                     <td className="px-2 py-3">
                       <div className="flex items-center gap-1">
+                        {canEdit && (p.status === "en_alta" || p.status === "listo") && (
+                          <Button variant="ghost" size="icon" className="size-7" asChild>
+                            <Link
+                              href={`${editBase.replace(/\/prospects$/, "/provider-onboardings")}/new?prospectId=${p.id}`}
+                              aria-label={`Iniciar alta de ${p.commercialName}`}
+                              title="Iniciar alta de proveedor"
+                            >
+                              <ClipboardCheck className="size-3.5" />
+                            </Link>
+                          </Button>
+                        )}
                         {canEdit && (
                           <Button variant="ghost" size="icon" className="size-7" asChild>
                             <Link href={`${editBase}/${p.id}/edit`} aria-label={`Editar ${p.commercialName}`}>

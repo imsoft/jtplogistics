@@ -32,6 +32,7 @@ const MODULES = [
   { suffix: "Quotes", label: "Cotizador" },
   { suffix: "Providers", label: "Proveedores" },
   { suffix: "ProviderProspects", label: "Prospección de proveedores" },
+  { suffix: "ProviderOnboardings", label: "Alta de proveedores" },
   { suffix: "Clients", label: "Clientes" },
   { suffix: "Employees", label: "Colaboradores" },
   { suffix: "Vendors", label: "Vendedores" },

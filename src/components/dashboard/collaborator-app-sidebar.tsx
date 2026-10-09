@@ -14,6 +14,7 @@ import {
   ShoppingBag,
   Truck,
   Search,
+  ClipboardCheck,
   FileText,
   Laptop,
   Smartphone,
@@ -41,6 +42,7 @@ interface Permissions {
   canViewQuotes: boolean;
   canViewProviders: boolean;
   canViewProviderProspects: boolean;
+  canViewProviderOnboardings: boolean;
   canViewClients: boolean;
   canViewEmployees: boolean;
   canUpdateEmployees: boolean;
@@ -95,6 +97,7 @@ const allNavGroups: PermNavGroup[] = [
       { title: "Clientes", href: `${BASE}/clients`, icon: Users, permission: "canViewClients" },
       { title: "Proveedores", href: `${BASE}/providers`, icon: Truck, permission: "canViewProviders" },
       { title: "Prospección de proveedores", href: `${BASE}/prospects`, icon: Search, permission: "canViewProviderProspects" },
+      { title: "Alta de proveedores", href: `${BASE}/provider-onboardings`, icon: ClipboardCheck, permission: "canViewProviderOnboardings" },
     ],
   },
   {

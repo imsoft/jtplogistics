@@ -35,6 +35,10 @@ interface CollaboratorPermissions {
   canCreateProviderProspects: boolean;
   canUpdateProviderProspects: boolean;
   canDeleteProviderProspects: boolean;
+  canViewProviderOnboardings: boolean;
+  canCreateProviderOnboardings: boolean;
+  canUpdateProviderOnboardings: boolean;
+  canDeleteProviderOnboardings: boolean;
   canViewClients: boolean;
   canCreateClients: boolean;
   canUpdateClients: boolean;

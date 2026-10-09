@@ -66,6 +66,10 @@ model User {
   canCreateProviderProspects Boolean @default(false) @map("can_create_provider_prospects")
   canUpdateProviderProspects Boolean @default(false) @map("can_update_provider_prospects")
   canDeleteProviderProspects Boolean @default(false) @map("can_delete_provider_prospects")
+  canViewProviderOnboardings   Boolean @default(false) @map("can_view_provider_onboardings")
+  canCreateProviderOnboardings Boolean @default(false) @map("can_create_provider_onboardings")
+  canUpdateProviderOnboardings Boolean @default(false) @map("can_update_provider_onboardings")
+  canDeleteProviderOnboardings Boolean @default(false) @map("can_delete_provider_onboardings")
   canViewClients    Boolean       @default(false) @map("can_view_clients")
   canViewEmployees  Boolean       @default(false) @map("can_view_employees")
   canViewVendors    Boolean       @default(false) @map("can_view_vendors")
@@ -164,6 +168,7 @@ model User {
   leaves               TimeClockLeave[] @relation("LeaveOwner")
   leavesCreated        TimeClockLeave[] @relation("LeaveAuthor")
   prospects            ProviderProspect[] @relation("ProspectAuthor")
+  onboardings          ProviderOnboarding[] @relation("OnboardingAuthor")
 
   /// Usuario que un proveedor (transportista) da de alta para su empresa.
   /// Conserva el rol carrier para entrar al mismo panel, pero trabaja sobre
@@ -1171,6 +1176,7 @@ model ProviderProspect {
   createdBy   User?   @relation("ProspectAuthor", fields: [createdById], references: [id], onDelete: SetNull)
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
+  onboarding  ProviderOnboarding?
 
   @@index([status])
   @@map("provider_prospects")
@@ -1203,4 +1209,73 @@ model SupportTicket {
 
   @@index([status])
   @@map("support_tickets")
+}
+
+// ---- Alta de proveedores: los documentos y el contrato de cada transportista
+// que Finanzas va dando de alta. Sustituye su Excel "Proceso de alta".
+
+/// Cada documento del expediente: pendiente, recibido o no aplica (en el
+/// Excel: vacío, X, N/A).
+enum OnboardingDocStatus {
+  pending
+  received
+  not_applicable
+}
+
+/// En qué va el contrato. Son los textos que Finanzas usa en su columna de
+/// comentarios, ya como estado.
+enum ContractStatus {
+  not_requested
+  requested_legal
+  sent_to_provider
+  received_signed
+  docs_updated
+}
+
+model ProviderOnboarding {
+  id             String  @id @default(cuid()) @map("id")
+  legalName      String  @map("legal_name")
+  commercialName String  @map("commercial_name")
+  /// De qué prospecto nació, si vino de Prospección.
+  prospectId     String?           @unique @map("prospect_id")
+  prospect       ProviderProspect? @relation(fields: [prospectId], references: [id], onDelete: SetNull)
+
+  startedOn DateTime @db.Date @map("started_on")
+
+  // Expediente, en el orden del Excel.
+  docAltaJtp        OnboardingDocStatus @default(pending) @map("doc_alta_jtp")
+  docBilling        OnboardingDocStatus @default(pending) @map("doc_billing")
+  docTaxCertificate OnboardingDocStatus @default(pending) @map("doc_tax_certificate")
+  docOpinion        OnboardingDocStatus @default(pending) @map("doc_opinion")
+  docAddressProof   OnboardingDocStatus @default(pending) @map("doc_address_proof")
+  docIne            OnboardingDocStatus @default(pending) @map("doc_ine")
+  docArticles       OnboardingDocStatus @default(pending) @map("doc_articles")
+  docPower          OnboardingDocStatus @default(pending) @map("doc_power")
+
+  /// Se llena sola la primera vez que el expediente queda completo; se puede corregir.
+  completedOn       DateTime? @db.Date @map("completed_on")
+  altaAuthorizedBy  String?   @map("alta_authorized_by")
+
+  contractStatus       ContractStatus @default(not_requested) @map("contract_status")
+  legalRequestedOn     DateTime? @db.Date @map("legal_requested_on")
+  legalReceivedOn      DateTime? @db.Date @map("legal_received_on")
+  sentToProviderOn     DateTime? @db.Date @map("sent_to_provider_on")
+  signedReceivedOn     DateTime? @db.Date @map("signed_received_on")
+  contractAuthorizedBy String?   @map("contract_authorized_by")
+
+  notes           String? @map("notes")
+  purchasingNotes String? @map("purchasing_notes")
+
+  /// Detenido: los renglones morados del Excel ("ya no contesta", "empresa
+  /// fantasma"…). Con motivo obligatorio; se puede reactivar.
+  onHoldSince DateTime? @db.Date @map("on_hold_since")
+  holdReason  String?   @map("hold_reason")
+
+  createdById String?  @map("created_by_id")
+  createdBy   User?    @relation("OnboardingAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([contractStatus])
+  @@map("provider_onboardings")
 }
