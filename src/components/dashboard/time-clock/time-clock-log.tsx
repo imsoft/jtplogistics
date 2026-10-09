@@ -1,13 +1,28 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { MapPin, MapPinOff, MonitorSmartphone, WifiOff } from "lucide-react";
+import { ChevronDown, Download, FileSpreadsheet, FileText, FileType, Loader2, MapPin, MapPinOff, MonitorSmartphone, WifiOff } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LEAVE_LABELS, type LeaveKind } from "@/lib/time-clock-leaves";
 import { CorrectionDialog } from "@/components/dashboard/time-clock/correction-dialog";
+import { exportPeriodLabel, timeClockExportFilename, timeClockExportRows } from "@/lib/time-clock-export";
+import {
+  downloadTimeClockExcel,
+  downloadTimeClockPdf,
+  downloadTimeClockWord,
+  type TimeClockExport,
+} from "@/lib/time-clock-download";
 
 type Mark = "clock_in" | "lunch_start" | "lunch_end" | "clock_out";
 
@@ -116,6 +131,26 @@ export function TimeClockLog({ canCorrect = false }: { canCorrect?: boolean }) {
 
   useEffect(() => { load(); }, [load]);
 
+  const [exporting, setExporting] = useState(false);
+
+  /** Descarga lo que está en pantalla: las mismas fechas y las mismas filas. */
+  async function download(run: (data: TimeClockExport) => Promise<void>) {
+    if (!rows?.length) return;
+    setExporting(true);
+    try {
+      await run({
+        period: exportPeriodLabel(from, to),
+        filename: (ext) => timeClockExportFilename(from, to, ext),
+        rows: timeClockExportRows(rows, holidays),
+      });
+    } catch (e) {
+      console.error("[time-clock] descarga", e);
+      toast.error("No se pudo generar el archivo. Intenta de nuevo.");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <div className="min-w-0 space-y-6">
       <div>
@@ -146,6 +181,26 @@ export function TimeClockLog({ canCorrect = false }: { canCorrect?: boolean }) {
             className="w-auto"
           />
         </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" disabled={!rows?.length || exporting} className="sm:ml-auto">
+              {exporting ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
+              Descargar
+              <ChevronDown className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => download(downloadTimeClockExcel)}>
+              <FileSpreadsheet className="size-4" />Excel
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => download(downloadTimeClockWord)}>
+              <FileType className="size-4" />Word
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => download(downloadTimeClockPdf)}>
+              <FileText className="size-4" />PDF
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {error && <p className="text-destructive text-sm font-medium">{error}</p>}
