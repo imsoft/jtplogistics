@@ -6,7 +6,7 @@ import {
   type MaritimeQuoteInput,
   type MaritimeQuoteComputed,
 } from "@/lib/maritime-quote";
-import { pdfSentence, pdfTitle } from "@/lib/pdf-text-case";
+import { pdfSentence, pdfTitle, pdfUpper } from "@/lib/pdf-text-case";
 
 const BRAND = "#2D4EAA";
 const TEXT = "#1A1A1A";
@@ -124,7 +124,7 @@ export function MaritimeQuotePdf({ input, computed, logoUrl }: Props) {
         <View style={s.rowBetween}>
           <View style={{ flexDirection: "row" }}>
             <Text style={s.label}>Cliente: </Text>
-            <Text>{pdfTitle(input.client)}</Text>
+            <Text>{pdfUpper(input.client)}</Text>
           </View>
           <View style={{ flexDirection: "row" }}>
             <Text style={s.label}>Referencia: </Text>
@@ -148,7 +148,7 @@ export function MaritimeQuotePdf({ input, computed, logoUrl }: Props) {
         </View>
         <View style={{ flexDirection: "row", marginBottom: 4 }}>
           <Text style={s.label}>Clientes: </Text>
-          <Text>{pdfTitle(input.clientName)}</Text>
+          <Text>{pdfUpper(input.clientName)}</Text>
         </View>
 
         <Text style={s.para}>
@@ -267,8 +267,8 @@ export function MaritimeQuotePdf({ input, computed, logoUrl }: Props) {
         </View>
 
         <View style={s.sigRow}>
-          <Text style={s.sigLabel}>Elaboró {input.elaboro ? `  ${pdfTitle(input.elaboro)}` : ""}</Text>
-          <Text style={s.sigLabel}>Aprobó {input.aprobo ? `  ${pdfTitle(input.aprobo)}` : ""}</Text>
+          <Text style={s.sigLabel}>Elaboró {input.elaboro ? `  ${pdfUpper(input.elaboro)}` : ""}</Text>
+          <Text style={s.sigLabel}>Aprobó {input.aprobo ? `  ${pdfUpper(input.aprobo)}` : ""}</Text>
         </View>
       </Page>
     </Document>

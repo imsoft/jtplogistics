@@ -171,3 +171,12 @@ export function pdfSentence(value: string | null | undefined): string {
   if (!text) return text;
   return sentenceCaseSegments([text])[0];
 }
+
+/**
+ * En MAYÚSCULAS, para lo que el cliente pidió destacar en el PDF: el nombre del
+ * cliente y los nombres bajo las firmas. Es la excepción dentro de la
+ * excepción: el resto de la cotización sigue en formato oración.
+ */
+export function pdfUpper(value: string | null | undefined): string {
+  return (value ?? "").trim().toLocaleUpperCase("es-MX");
+}

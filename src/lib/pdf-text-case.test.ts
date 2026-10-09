@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { pdfSentence, pdfTitle, sentenceCaseSegments } from "@/lib/pdf-text-case";
+import { pdfSentence, pdfTitle, sentenceCaseSegments, pdfUpper } from "@/lib/pdf-text-case";
 
 describe("nombres en el PDF", () => {
   it("baja lo capturado en mayúsculas", () => {
@@ -89,5 +89,17 @@ describe("términos partidos en pedazos por el formato", () => {
       "\n",
       "Segunda",
     ]);
+  });
+});
+
+describe("pdfUpper: cliente y nombres de las firmas", () => {
+  it("sube todo, con acentos y ñ", () => {
+    expect(pdfUpper("transportes peña y cañón, s.a. de c.v.")).toBe("TRANSPORTES PEÑA Y CAÑÓN, S.A. DE C.V.");
+    expect(pdfUpper("José María Núñez")).toBe("JOSÉ MARÍA NÚÑEZ");
+  });
+
+  it("aguanta vacíos y quita espacios de las orillas", () => {
+    expect(pdfUpper(null)).toBe("");
+    expect(pdfUpper("  ana castro ")).toBe("ANA CASTRO");
   });
 });

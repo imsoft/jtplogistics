@@ -3,7 +3,7 @@
 import { Document, Page, Text, View, Image, StyleSheet } from "@react-pdf/renderer";
 import type { QuoteData } from "@/types/carrier-quote.types";
 import { renderLexicalContent } from "@/lib/utils/lexical-to-pdf";
-import { pdfSentence, pdfTitle } from "@/lib/pdf-text-case";
+import { pdfSentence, pdfTitle, pdfUpper } from "@/lib/pdf-text-case";
 
 const BRAND = "#2D4EAA";       // oklch(0.488 0.243 264) → JTP primary blue
 const BRAND_LIGHT = "#EBF0FB"; // very light tint for alternating rows
@@ -121,7 +121,7 @@ function Signatures({
           <View style={s.sigSpace} />
           <View style={s.sigLine} />
           {creatorName ? (
-            <Text style={s.sigName}>{pdfTitle(creatorName)}</Text>
+            <Text style={s.sigName}>{pdfUpper(creatorName)}</Text>
           ) : null}
           {creatorPosition ? (
             <Text style={{ fontSize: 8, color: MUTED, textAlign: "center" }}>
@@ -135,7 +135,7 @@ function Signatures({
           <Text style={s.sigLabel}>Aceptamos cotización</Text>
           <View style={s.sigSpace} />
           <View style={s.sigLine} />
-          {contactName ? <Text style={s.sigName}>{pdfTitle(contactName)}</Text> : null}
+          {contactName ? <Text style={s.sigName}>{pdfUpper(contactName)}</Text> : null}
         </View>
       </View>
     </View>
@@ -175,7 +175,7 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
         </View>
         <View style={[s.companyRow, { marginBottom: 2 }]}>
           <Text style={s.companyLabel}>Compañía:</Text>
-          <Text style={s.companyValue}>{pdfTitle(data.company)}</Text>
+          <Text style={s.companyValue}>{pdfUpper(data.company)}</Text>
         </View>
         <View style={[s.companyRow, { marginBottom: 2 }]}>
           <Text style={s.companyLabel}>Contacto:</Text>
