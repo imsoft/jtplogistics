@@ -180,12 +180,9 @@ export function POST(request: Request, { params }: { params: Promise<{ id: strin
         data: { email, updatedAt: now },
       });
 
-      // create-auth-user guarda el correo también como account_id. Se mueve
-      // con el del usuario para que la cuenta de credenciales no se descuadre.
-      await tx.account.updateMany({
-        where: { userId: id, providerId: "credential" },
-        data: { accountId: email, updatedAt: now },
-      });
+      // La credencial no se toca: su accountId es el id del usuario, no el
+      // correo (Better Auth la busca así). Cambiar aquí el correo dejaba a
+      // la persona sin poder entrar.
 
       // Si sigue dentro, su sesión quedaría amarrada a un correo que ya no es
       // el suyo. Se le cierra para que vuelva a entrar con el nuevo.

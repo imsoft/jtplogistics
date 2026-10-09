@@ -45,7 +45,9 @@ export async function applyPasswordReset(
     await prisma.account.create({
       data: {
         id: crypto.randomUUID(),
-        accountId: email,
+        // Better Auth busca la credencial por accountId === id del usuario (desde
+        // la 1.7 es obligatorio). Antes iba el correo, y al actualizar nadie pudo entrar.
+        accountId: userId,
         providerId: "credential",
         userId,
         password: hashed,
