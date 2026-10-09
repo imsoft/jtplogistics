@@ -151,7 +151,7 @@ export function ActaForm({
   }
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="min-w-0 space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Datos del acta</CardTitle>
