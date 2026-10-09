@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, Pencil, Laptop, Smartphone, Mail, ChevronRight } from "lucide-react";
+import { ChevronLeft, Pencil, Laptop, Smartphone, Mail, ChevronRight, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoRow } from "@/components/dashboard/users/info-row";
@@ -31,6 +31,8 @@ interface EmployeeProfileViewProps {
   canResetPassword?: boolean;
   /** Muestra "Dar de baja" / "Reactivar". El servidor lo vuelve a revisar. */
   canOffboard?: boolean;
+  /** Muestra el acceso al acta administrativa, que vive en `${listPath}/acta`. */
+  canWriteActa?: boolean;
   /** Muestra el botón para cambiar el correo con el que inicia sesión. */
   canChangeEmail?: boolean;
 }
@@ -107,6 +109,7 @@ export function EmployeeProfileView({
   canResetPassword = false,
   canChangeEmail = false,
   canOffboard = false,
+  canWriteActa = false,
 }: EmployeeProfileViewProps) {
   const { id } = useParams<{ id: string }>();
   const { data: employee, setData: setEmployee, isLoaded, error } = useResourceEdit<Employee>({
@@ -166,6 +169,14 @@ export function EmployeeProfileView({
               currentEmail={employee.email}
               onChanged={(email) => setEmployee((prev) => (prev ? { ...prev, email } : prev))}
             />
+          )}
+          {canWriteActa && !employee.offboardedOn && (
+            <Button variant="outline" asChild>
+              <Link href={`${listPath}/acta?employeeId=${id}`}>
+                <FileText className="size-4" />
+                Acta administrativa
+              </Link>
+            </Button>
           )}
           {/* Con la baja no hay contraseña que restablecer: se reactiva. */}
           {canResetPassword && !employee.offboardedOn && (

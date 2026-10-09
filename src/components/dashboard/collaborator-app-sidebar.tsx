@@ -14,6 +14,7 @@ import {
   ShoppingBag,
   Truck,
   Search,
+  FileText,
   Laptop,
   Smartphone,
   Mail,
@@ -42,6 +43,7 @@ interface Permissions {
   canViewProviderProspects: boolean;
   canViewClients: boolean;
   canViewEmployees: boolean;
+  canUpdateEmployees: boolean;
   canViewVendors: boolean;
   canViewLaptops: boolean;
   canViewMaintenance: boolean;
@@ -102,6 +104,7 @@ const allNavGroups: PermNavGroup[] = [
       { title: "Vendedores", href: `${BASE}/vendors`, icon: ShoppingBag, permission: "canViewVendors" },
       { title: "Colaboradores", href: `${BASE}/employees`, icon: UserRound, permission: "canViewEmployees" },
       { title: "Organigrama", href: `${BASE}/employees/org-chart`, icon: Network, permission: "canViewEmployees" },
+      { title: "Acta administrativa", href: `${BASE}/employees/acta`, icon: FileText, permission: "canUpdateEmployees" },
     ],
   },
   {

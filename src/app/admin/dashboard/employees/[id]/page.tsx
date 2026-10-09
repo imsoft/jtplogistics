@@ -14,6 +14,7 @@ export default function EmployeeProfilePage() {
       editPath={`/admin/dashboard/employees/${id}/edit`}
       canResetPassword
       canOffboard
+      canWriteActa
       canChangeEmail
     />
   );

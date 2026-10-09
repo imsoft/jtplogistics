@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, Pencil, Laptop, Smartphone, Mail, ChevronRight } from "lucide-react";
+import { ChevronLeft, Pencil, Laptop, Smartphone, Mail, ChevronRight, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoRow } from "@/components/dashboard/users/info-row";
@@ -90,6 +90,14 @@ export default function CollaboratorEmployeeProfilePage() {
               assigned={assignedSummary({ laptops: laptops.length, phones: phones.length, emails: emailAccounts.length })}
               onChanged={(next) => setEmployee((prev) => (prev ? { ...prev, ...next } : prev))}
             />
+          )}
+          {permissions?.canUpdateEmployees && !employee.offboardedOn && (
+            <Button variant="outline" asChild>
+              <Link href={`/collaborator/dashboard/employees/acta?employeeId=${id}`}>
+                <FileText className="size-4" />
+                Acta administrativa
+              </Link>
+            </Button>
           )}
           {permissions?.canUpdateEmployees && (
             <Button asChild>

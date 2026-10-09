@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import { Route as RouteIcon } from "lucide-react";
 import { Truck } from "lucide-react";
 import { Search } from "lucide-react";
+import { FileText } from "lucide-react";
 import { Calculator } from "lucide-react";
 import { UserRound } from "lucide-react";
 import { Laptop } from "lucide-react";
@@ -71,6 +72,7 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
       { title: "Vendedores", href: "/admin/dashboard/vendors", icon: ShoppingBag },
       { title: "Colaboradores", href: "/admin/dashboard/employees", icon: UserRound },
       { title: "Organigrama", href: "/admin/dashboard/employees/org-chart", icon: Network },
+      { title: "Acta administrativa", href: "/admin/dashboard/employees/acta", icon: FileText },
       { title: "Mandar accesos", href: "/admin/dashboard/employees/credentials", icon: KeyRound },
       { title: "Checador", href: "/admin/dashboard/time-clock", icon: CalendarClock },
       { title: "Config. del checador", href: "/admin/dashboard/time-clock/config", icon: Wifi },
