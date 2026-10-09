@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { ChevronDown, Loader2, PauseCircle, Pencil, PlayCircle, Trash2 } from "lucide-react";
+import { Check, ChevronDown, Circle, Loader2, Minus, PauseCircle, Pencil, PlayCircle, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,7 +82,7 @@ const STAGE_TONE: Record<OnboardingStage, string> = {
 const DOC_TONE: Record<DocStatus, string> = {
   pending: "border-dashed text-muted-foreground",
   received: "border-green-600 bg-green-50 text-green-800 dark:bg-green-950 dark:text-green-200",
-  not_applicable: "border-muted bg-muted text-muted-foreground line-through",
+  not_applicable: "border-muted bg-muted text-muted-foreground",
 };
 
 function shortDate(iso: string | null) {
@@ -115,11 +115,19 @@ function DocChip({
       title={canEdit ? `${label}. Clic para cambiar.` : label}
       aria-label={label}
       className={cn(
-        "rounded border px-1.5 py-0.5 text-[11px] font-medium leading-none transition-colors",
+        "inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[11px] font-medium leading-none transition-colors",
         DOC_TONE[status],
         canEdit && "hover:ring-2 hover:ring-ring/40"
       )}
     >
+      {/* La X del Excel es una palomita; N/A, una raya; pendiente, un círculo vacío. */}
+      {status === "received" ? (
+        <Check className="size-3 stroke-[3]" aria-hidden />
+      ) : status === "not_applicable" ? (
+        <Minus className="size-3" aria-hidden />
+      ) : (
+        <Circle className="size-2.5" aria-hidden />
+      )}
       {doc.short}
     </button>
   );

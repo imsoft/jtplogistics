@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
+import { Check, Loader2, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -147,10 +147,12 @@ export function OnboardingForm({
                       aria-checked={active}
                       onClick={() => set("docs")({ ...form.docs, [d.key]: s.value })}
                       className={cn(
-                        "rounded-md border px-2 py-1 text-xs font-medium transition-colors",
+                        "inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium transition-colors",
                         active ? DOC_TONE[s.value] || "bg-primary text-primary-foreground border-primary" : "text-muted-foreground hover:bg-accent"
                       )}
                     >
+                      {s.value === "received" && <Check className="size-3 stroke-[3]" aria-hidden />}
+                      {s.value === "not_applicable" && <Minus className="size-3" aria-hidden />}
                       {s.label}
                     </button>
                   );
