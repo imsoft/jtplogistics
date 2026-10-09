@@ -14,6 +14,7 @@ export default function DeveloperEmployeeProfilePage() {
       listPath="/developer/dashboard/employees"
       resourcesBasePath={null}
       canResetPassword
+      canOffboard
       canChangeEmail
     />
   );

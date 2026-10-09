@@ -3,6 +3,7 @@
  * Fire-and-forget: los errores se registran pero nunca se propagan.
  */
 
+import { ACTIVE_USERS } from "@/lib/offboarding";
 import { prisma } from "@/lib/db";
 import { notify } from "@/lib/notify";
 import { sendEmail } from "@/lib/email";
@@ -23,6 +24,7 @@ export async function getMuralAudience(): Promise<MuralAudienceMember[]> {
   const users = await prisma.user.findMany({
     where: {
       OR: [{ role: "admin" }, { role: "collaborator", canViewMural: true }],
+      ...ACTIVE_USERS,
     },
     select: { id: true, name: true, email: true, role: true },
   });

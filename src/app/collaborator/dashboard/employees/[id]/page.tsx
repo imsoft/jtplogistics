@@ -9,6 +9,7 @@ import { InfoRow } from "@/components/dashboard/users/info-row";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 import { ChangeEmailButton } from "@/components/dashboard/resources/change-email-button";
+import { OffboardBanner, OffboardButton, assignedSummary } from "@/components/dashboard/resources/offboard-controls";
 import type { Employee } from "@/types/resources.types";
 import { formatPhone } from "@/lib/utils";
 import { ResourceDetailSkeleton } from "@/components/ui/skeletons";
@@ -81,6 +82,15 @@ export default function CollaboratorEmployeeProfilePage() {
               onChanged={(email) => setEmployee((prev) => (prev ? { ...prev, email } : prev))}
             />
           )}
+          {permissions?.canDeleteEmployees && id !== undefined && (
+            <OffboardButton
+              employeeId={id}
+              employeeName={employee.name}
+              state={employee}
+              assigned={assignedSummary({ laptops: laptops.length, phones: phones.length, emails: emailAccounts.length })}
+              onChanged={(next) => setEmployee((prev) => (prev ? { ...prev, ...next } : prev))}
+            />
+          )}
           {permissions?.canUpdateEmployees && (
             <Button asChild>
               <Link href={`/collaborator/dashboard/employees/${id}/edit`}>
@@ -91,6 +101,8 @@ export default function CollaboratorEmployeeProfilePage() {
           )}
         </div>
       </div>
+
+      <OffboardBanner state={employee} />
 
       <Card>
         <CardHeader className="pb-2">

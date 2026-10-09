@@ -1,3 +1,4 @@
+import { ACTIVE_USERS } from "@/lib/offboarding";
 import { ResourceListPage } from "@/components/dashboard/resources/resource-list-page";
 import { EmployeesTable } from "@/components/dashboard/resources/employees-table";
 import { requireDeveloperPage } from "@/lib/auth-server";
@@ -13,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 export default async function DeveloperEmployeesPage() {
   await requireDeveloperPage();
-  const count = await prisma.user.count({ where: { role: "collaborator" } });
+  const count = await prisma.user.count({ where: { role: "collaborator", ...ACTIVE_USERS } });
 
   return (
     <ResourceListPage

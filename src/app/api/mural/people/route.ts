@@ -1,3 +1,4 @@
+import { ACTIVE_USERS } from "@/lib/offboarding";
 import { prisma } from "@/lib/db";
 import { muralHandler } from "@/lib/mural-auth";
 
@@ -8,7 +9,7 @@ import { muralHandler } from "@/lib/mural-auth";
 export function GET() {
   return muralHandler("canViewMural", async () => {
     const users = await prisma.user.findMany({
-      where: { role: { in: ["admin", "collaborator"] } },
+      where: { role: { in: ["admin", "collaborator"] }, ...ACTIVE_USERS },
       orderBy: { name: "asc" },
       select: {
         id: true,

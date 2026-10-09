@@ -1,3 +1,4 @@
+import { ACTIVE_USERS } from "@/lib/offboarding";
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
 import { logAudit } from "@/lib/audit-log";
@@ -25,7 +26,7 @@ const INTERNAL_ROLES = ["collaborator", "vendor", "developer"] as const;
 export function GET() {
   return adminHandler(async (session) => {
     const users = await prisma.user.findMany({
-      where: { role: { in: [...INTERNAL_ROLES] }, id: { not: session.user.id } },
+      where: { role: { in: [...INTERNAL_ROLES] }, id: { not: session.user.id }, ...ACTIVE_USERS },
       orderBy: [{ role: "asc" }, { name: "asc" }],
       select: {
         id: true,
@@ -77,6 +78,8 @@ export function POST(request: Request) {
       where: {
         id: { in: ids, not: session.user.id },
         role: { in: [...INTERNAL_ROLES] },
+        // Mandarle contraseña a alguien de baja le devolvería el acceso.
+        ...ACTIVE_USERS,
       },
       select: { id: true, name: true, email: true },
     });

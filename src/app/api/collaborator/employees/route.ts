@@ -1,9 +1,10 @@
+import { employeeListWhere, serializeEmployeeRow } from "@/lib/employees";
 import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 import { createAuthUser } from "@/lib/create-auth-user";
 import { logAudit } from "@/lib/audit-log";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await requireCollaboratorOrAdmin();
 
@@ -17,32 +18,12 @@ export async function GET() {
     }
 
     const employees = await prisma.user.findMany({
-      where: { role: "collaborator" },
+      where: employeeListWhere(request),
       orderBy: { createdAt: "desc" },
       include: { employeeProfile: true },
     });
 
-    return Response.json(
-      employees.map((u) => ({
-        id: u.id,
-        name: u.name,
-        email: u.email,
-        image: u.image,
-        birthDate: u.birthDate ? u.birthDate.toISOString().split("T")[0] : null,
-        hireDate: u.employeeProfile?.hireDate
-          ? u.employeeProfile.hireDate.toISOString().split("T")[0]
-          : null,
-        position: u.employeeProfile?.position ?? null,
-        department: u.employeeProfile?.department ?? null,
-        phone: u.employeeProfile?.phone ?? null,
-        nss: u.employeeProfile?.nss ?? null,
-        rfc: u.employeeProfile?.rfc ?? null,
-        curp: u.employeeProfile?.curp ?? null,
-        address: u.employeeProfile?.address ?? null,
-        hasPasswordReference: Boolean(u.employeeProfile?.password?.trim()),
-        createdAt: u.createdAt.toISOString(),
-      }))
-    );
+    return Response.json(employees.map(serializeEmployeeRow));
   } catch (e) {
     if (e instanceof Response) return e;
     console.error(e);

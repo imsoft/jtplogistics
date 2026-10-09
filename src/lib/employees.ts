@@ -7,6 +7,7 @@
  * registra en la bitácora.
  */
 
+import { ACTIVE_USERS, offboardJson } from "@/lib/offboarding";
 import { prisma } from "@/lib/db";
 import { hasSecret } from "@/lib/secret-vault";
 
@@ -104,6 +105,9 @@ export function serializeEmployeeRow(u: {
     address: string | null;
     password: string | null;
   } | null;
+  offboardedOn?: Date | null;
+  offboardReason?: string | null;
+  offboardedByName?: string | null;
 }) {
   const p = u.employeeProfile;
   return {
@@ -122,6 +126,21 @@ export function serializeEmployeeRow(u: {
     address: p?.address ?? null,
     hasPasswordReference: Boolean(p?.password?.trim()),
     createdAt: u.createdAt.toISOString(),
+    ...offboardJson(u),
+  };
+}
+
+/**
+ * Qué colaboradores entran en la lista. Por defecto solo los activos, que es
+ * lo que quieren el organigrama y los selectores para asignar equipo o tareas:
+ * nadie le asigna una laptop a quien ya se fue. La tabla de colaboradores pide
+ * `?status=all` para poder enseñar también las bajas.
+ */
+export function employeeListWhere(request: Request) {
+  const status = new URL(request.url).searchParams.get("status");
+  return {
+    role: "collaborator" as const,
+    ...(status === "all" ? {} : status === "offboarded" ? { offboardedOn: { not: null } } : ACTIVE_USERS),
   };
 }
 

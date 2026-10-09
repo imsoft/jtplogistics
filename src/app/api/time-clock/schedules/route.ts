@@ -1,3 +1,4 @@
+import { ACTIVE_USERS } from "@/lib/offboarding";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/auth-server";
 
@@ -35,7 +36,7 @@ export async function GET(request: Request) {
     const userId = new URL(request.url).searchParams.get("userId");
 
     const users = await prisma.user.findMany({
-      where: { role: "collaborator", ...(userId ? { id: userId } : {}) },
+      where: { role: "collaborator", ...(userId ? { id: userId } : ACTIVE_USERS) },
       orderBy: { name: "asc" },
       select: {
         id: true,

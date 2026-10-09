@@ -60,6 +60,10 @@ export interface Employee {
   address: string | null;
   /** Indica si hay nota de contraseña guardada (el valor nunca se expone por API). */
   hasPasswordReference?: boolean;
+  /** Baja laboral: "YYYY-MM-DD", o null si sigue en la empresa. */
+  offboardedOn: string | null;
+  offboardReason: string | null;
+  offboardedByName: string | null;
   canViewMessages: boolean;
   canViewIdeas: boolean;
   canViewRoutes: boolean;

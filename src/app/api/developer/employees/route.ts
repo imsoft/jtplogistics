@@ -1,17 +1,17 @@
 import { prisma } from "@/lib/db";
 import { requireDeveloper } from "@/lib/auth-server";
-import { serializeEmployeeRow } from "@/lib/employees";
+import { employeeListWhere, serializeEmployeeRow } from "@/lib/employees";
 
 /**
  * GET /api/developer/employees
  * Directorio de colaboradores para soporte de TI: es de solo lectura, el alta
  * y la baja siguen siendo de dirección.
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
     await requireDeveloper();
     const employees = await prisma.user.findMany({
-      where: { role: "collaborator" },
+      where: employeeListWhere(request),
       orderBy: { createdAt: "desc" },
       include: { employeeProfile: true },
     });

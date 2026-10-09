@@ -1,3 +1,4 @@
+import { offboardJson } from "@/lib/offboarding";
 import { prisma } from "@/lib/db";
 import { encryptSecret } from "@/lib/secret-vault";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
@@ -64,6 +65,7 @@ export async function GET(
     }
 
     return Response.json({
+      ...offboardJson(u),
       id: u.id,
       name: u.name,
       email: u.email,

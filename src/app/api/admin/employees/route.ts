@@ -2,33 +2,16 @@ import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
 import { createAuthUser } from "@/lib/create-auth-user";
 import { logAudit } from "@/lib/audit-log";
+import { employeeListWhere, serializeEmployeeRow } from "@/lib/employees";
 
-export function GET() {
-  return adminHandler(async (session) => {
+export function GET(request: Request) {
+  return adminHandler(async () => {
     const employees = await prisma.user.findMany({
-      where: { role: "collaborator" },
+      where: employeeListWhere(request),
       orderBy: { createdAt: "desc" },
       include: { employeeProfile: true },
     });
-    return Response.json(
-      employees.map((u) => ({
-        id: u.id,
-        name: u.name,
-        email: u.email,
-        image: u.image,
-        birthDate: u.birthDate ? u.birthDate.toISOString().split("T")[0] : null,
-        hireDate: u.employeeProfile?.hireDate ? u.employeeProfile.hireDate.toISOString().split("T")[0] : null,
-        position: u.employeeProfile?.position ?? null,
-        department: u.employeeProfile?.department ?? null,
-        phone: u.employeeProfile?.phone ?? null,
-        nss: u.employeeProfile?.nss ?? null,
-        rfc: u.employeeProfile?.rfc ?? null,
-        curp: u.employeeProfile?.curp ?? null,
-        address: u.employeeProfile?.address ?? null,
-        hasPasswordReference: Boolean(u.employeeProfile?.password?.trim()),
-        createdAt: u.createdAt.toISOString(),
-      }))
-    );
+    return Response.json(employees.map(serializeEmployeeRow));
   });
 }
 

@@ -21,6 +21,8 @@ export const UNLOCK_APPROVERS_WHERE = {
     { role: "admin" as const },
     { role: "collaborator" as const, canUpdateProviders: true },
   ],
+  // Quien ya no está en la empresa no autoriza ni recibe avisos.
+  offboardedOn: null,
 };
 
 export function canApproveUnlock(user: Pick<UnlockApprover, "role" | "canUpdateProviders">): boolean {

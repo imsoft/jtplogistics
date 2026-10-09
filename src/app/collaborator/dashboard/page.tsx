@@ -1,3 +1,4 @@
+import { ACTIVE_USERS } from "@/lib/offboarding";
 import Link from "next/link";
 import {
   Anchor,
@@ -136,7 +137,7 @@ export default async function CollaboratorDashboard() {
     ),
     when(user?.canViewMaritimeQuotes, () => prisma.maritimeQuote.count(), 0),
     when(user?.canViewIdeas, () => prisma.idea.count({ where: { status: "pending" } }), 0),
-    when(user?.canViewEmployees, () => prisma.user.count({ where: { role: "collaborator" } }), 0),
+    when(user?.canViewEmployees, () => prisma.user.count({ where: { role: "collaborator", ...ACTIVE_USERS } }), 0),
     when(user?.canViewLaptops, () => prisma.laptop.count(), 0),
     when(user?.canViewPhones, () => prisma.phone.count(), 0),
     when(

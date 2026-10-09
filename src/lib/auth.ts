@@ -33,6 +33,13 @@ export const auth = betterAuth({
     enabled: true,
     revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
+      // Quien está dado de baja no recibe el enlace: con él podría ponerse una
+      // contraseña nueva. No se avisa de nada, igual que con un correo inexistente.
+      const row = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { offboardedOn: true },
+      });
+      if (row?.offboardedOn) return;
       const { subject, html, text } = buildPasswordResetEmail({
         name: user.name,
         url,
@@ -65,6 +72,27 @@ export const auth = betterAuth({
       "/sign-up/email": { window: 60, max: 5 },
       "/forget-password": { window: 60, max: 5 },
       "/reset-password": { window: 60, max: 5 },
+    },
+  },
+  /**
+   * Última barrera de la baja: aunque alguien consiguiera una contraseña, no se
+   * le abre sesión. Va aquí y no en cada guardia para que ninguna ruta se escape.
+   */
+  databaseHooks: {
+    session: {
+      create: {
+        before: async (session) => {
+          const row = await prisma.user.findUnique({
+            where: { id: session.userId },
+            select: { offboardedOn: true },
+          });
+          if (row?.offboardedOn) {
+            throw new APIError("FORBIDDEN", {
+              message: "Tu acceso a la plataforma fue dado de baja. Contacta a Recursos Humanos.",
+            });
+          }
+        },
+      },
     },
   },
   secret: process.env.BETTER_AUTH_SECRET,

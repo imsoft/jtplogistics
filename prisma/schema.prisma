@@ -137,6 +137,12 @@ model User {
   canDeleteRecords  Boolean       @default(false) @map("can_delete_records")
   whatsappPhone  String?        @map("whatsapp_phone")
   onboardingTourCompletedAt DateTime? @map("onboarding_tour_completed_at")
+  /// Baja laboral. No se borra a la persona: sus checadas y su expediente son
+  /// justo lo que respalda la baja. Con fecha aquí, no puede entrar y deja de
+  /// salir en las listas activas.
+  offboardedOn      DateTime? @db.Date @map("offboarded_on")
+  offboardReason    String?   @map("offboard_reason")
+  offboardedByName  String?   @map("offboarded_by_name")
   createdAt     DateTime       @map("created_at")
   updatedAt     DateTime       @map("updated_at")
   sessions         Session[]

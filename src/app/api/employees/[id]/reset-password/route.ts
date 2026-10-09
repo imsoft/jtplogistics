@@ -24,10 +24,17 @@ export function POST(request: Request, { params }: { params: Promise<{ id: strin
 
     const target = await prisma.user.findUnique({
       where: { id },
-      select: { id: true, name: true, email: true, role: true },
+      select: { id: true, name: true, email: true, role: true, offboardedOn: true },
     });
     if (!target || target.role !== "collaborator") {
       return Response.json({ error: "No encontrado" }, { status: 404 });
+    }
+    // Darle contraseña sería devolverle el acceso por la puerta de atrás.
+    if (target.offboardedOn) {
+      return Response.json(
+        { error: "Esta persona está dada de baja. Reactívala para devolverle el acceso." },
+        { status: 409 }
+      );
     }
 
     const body = (await request.json().catch(() => ({}))) as {

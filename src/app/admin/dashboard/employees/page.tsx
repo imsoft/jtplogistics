@@ -1,3 +1,4 @@
+import { ACTIVE_USERS } from "@/lib/offboarding";
 import { ResourceListPage } from "@/components/dashboard/resources/resource-list-page";
 import { EmployeesTable } from "@/components/dashboard/resources/employees-table";
 import { prisma } from "@/lib/db";
@@ -12,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export default async function EmployeesPage() {
   // El mismo filtro que usa la tabla, para que el número cuadre con los renglones.
-  const count = await prisma.user.count({ where: { role: "collaborator" } });
+  const count = await prisma.user.count({ where: { role: "collaborator", ...ACTIVE_USERS } });
 
   return (
     <ResourceListPage

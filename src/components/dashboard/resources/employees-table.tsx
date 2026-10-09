@@ -46,7 +46,16 @@ function getColumns(): ColumnDef<Employee>[] {
     {
       accessorKey: "name",
       header: ({ column }) => <SortableColumnHeader column={column} title="Nombre" />,
-      cell: ({ row }) => <span className="font-medium">{row.getValue("name")}</span>,
+      cell: ({ row }) => (
+        <span className="font-medium">
+          {row.getValue("name")}
+          {row.original.offboardedOn && (
+            <span className="bg-destructive/10 text-destructive ml-2 rounded px-1.5 py-0.5 text-xs font-medium">
+              Baja
+            </span>
+          )}
+        </span>
+      ),
     },
     {
       accessorKey: "email",
@@ -94,10 +103,13 @@ export function EmployeesTable({
 }: EmployeesTableProps = {}) {
   const router = useRouter();
   const { data: employees, isLoaded, error } = useAdminFetch<Employee>(
-    apiEndpoint,
+    // La lista por defecto es solo de activos; aquí también se ven las bajas.
+    `${apiEndpoint}?status=all`,
     "Error al cargar colaboradores"
   );
   const [filterDepartment, setFilterDepartment] = useState("all");
+  const [filterStatus, setFilterStatus] = useState<"active" | "offboarded">("active");
+  const offboardedCount = useMemo(() => employees.filter((e) => e.offboardedOn).length, [employees]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(
     new Set(EMPLOYEE_EXPORT_COLUMNS.map((c) => c.key))
@@ -113,9 +125,10 @@ export function EmployeesTable({
   );
 
   const filtered = useMemo(() => employees.filter((e) => {
+    if ((filterStatus === "offboarded") !== Boolean(e.offboardedOn)) return false;
     if (filterDepartment !== "all" && e.department !== filterDepartment) return false;
     return true;
-  }), [employees, filterDepartment]);
+  }), [employees, filterDepartment, filterStatus]);
 
   function toggleKey(key: string) {
     setSelectedKeys((prev) => {
@@ -164,15 +177,25 @@ export function EmployeesTable({
         toolbar={
           <>
             <AppSelect
+              value={filterStatus}
+              onValueChange={(v) => setFilterStatus(v === "offboarded" ? "offboarded" : "active")}
+              options={[
+                { value: "active", label: "Activos" },
+                { value: "offboarded", label: `Bajas (${offboardedCount})` },
+              ]}
+              className="w-full sm:w-36"
+            />
+            <AppSelect
               value={filterDepartment}
-              onValueChange={setFilterDepartment}
+              // La ✕ deja el valor vacío: se toma como "todos" para no vaciar la tabla.
+              onValueChange={(v) => setFilterDepartment(v || "all")}
               options={[{value: "all", label: "Todos los depto."}, ...departments.map((d) => ({value: d, label: d}))]}
               className="w-full sm:w-40"
             />
             <Button
               type="button"
               variant="outline"
-              onClick={() => setFilterDepartment("all")}
+              onClick={() => { setFilterDepartment("all"); setFilterStatus("active"); }}
             >
               Limpiar filtros
             </Button>

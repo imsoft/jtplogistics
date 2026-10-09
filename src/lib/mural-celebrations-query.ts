@@ -3,6 +3,7 @@
  * La lógica de fechas vive en mural-celebrations.ts (módulo puro).
  */
 
+import { ACTIVE_USERS } from "@/lib/offboarding";
 import { prisma } from "@/lib/db";
 import {
   celebrationsInRange,
@@ -17,7 +18,7 @@ const MAX_RANGE_DAYS = 400;
 /** Carga al personal interno (admin y colaboradores) con sus fechas clave. */
 export async function getCelebrationPeople(): Promise<CelebrationPerson[]> {
   const users = await prisma.user.findMany({
-    where: { role: { in: ["admin", "collaborator"] } },
+    where: { role: { in: ["admin", "collaborator"] }, ...ACTIVE_USERS },
     select: {
       id: true,
       name: true,

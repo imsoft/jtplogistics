@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoRow } from "@/components/dashboard/users/info-row";
 import { SecretRow } from "@/components/dashboard/users/secret-row";
 import { ResetPasswordButton } from "@/components/dashboard/resources/reset-password-button";
+import { OffboardBanner, OffboardButton, assignedSummary } from "@/components/dashboard/resources/offboard-controls";
 import { ChangeEmailButton } from "@/components/dashboard/resources/change-email-button";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import type { Employee } from "@/types/resources.types";
@@ -28,6 +29,8 @@ interface EmployeeProfileViewProps {
   editPath?: string;
   /** Muestra el botón para restablecer la contraseña de acceso. */
   canResetPassword?: boolean;
+  /** Muestra "Dar de baja" / "Reactivar". El servidor lo vuelve a revisar. */
+  canOffboard?: boolean;
   /** Muestra el botón para cambiar el correo con el que inicia sesión. */
   canChangeEmail?: boolean;
 }
@@ -103,6 +106,7 @@ export function EmployeeProfileView({
   editPath,
   canResetPassword = false,
   canChangeEmail = false,
+  canOffboard = false,
 }: EmployeeProfileViewProps) {
   const { id } = useParams<{ id: string }>();
   const { data: employee, setData: setEmployee, isLoaded, error } = useResourceEdit<Employee>({
@@ -163,8 +167,18 @@ export function EmployeeProfileView({
               onChanged={(email) => setEmployee((prev) => (prev ? { ...prev, email } : prev))}
             />
           )}
-          {canResetPassword && (
+          {/* Con la baja no hay contraseña que restablecer: se reactiva. */}
+          {canResetPassword && !employee.offboardedOn && (
             <ResetPasswordButton employeeId={id} employeeName={employee.name} />
+          )}
+          {canOffboard && (
+            <OffboardButton
+              employeeId={id}
+              employeeName={employee.name}
+              state={employee}
+              assigned={assignedSummary({ laptops: laptops.length, phones: phones.length, emails: emailAccounts.length })}
+              onChanged={(next) => setEmployee((prev) => (prev ? { ...prev, ...next } : prev))}
+            />
           )}
           {editPath && (
             <Button asChild>
@@ -176,6 +190,8 @@ export function EmployeeProfileView({
           )}
         </div>
       </div>
+
+      <OffboardBanner state={employee} />
 
       <Card>
         <CardHeader className="pb-2">
