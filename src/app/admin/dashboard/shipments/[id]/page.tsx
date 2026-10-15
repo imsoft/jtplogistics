@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { InfoRow } from "@/components/dashboard/users/info-row";
+import { LOCK_TEXT, shipmentLockReason } from "@/lib/shipment-lock";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { useUnitTypes } from "@/hooks/use-unit-types";
 import { useIncidentTypes } from "@/hooks/use-incident-types";
@@ -50,6 +51,9 @@ export default function ShipmentProfilePage() {
 
   const title = [shipment.eco, shipment.origin, shipment.destination].filter(Boolean).join(" – ") || "Embarque";
 
+  const lock = shipmentLockReason(shipment);
+  const lockText = lock ? LOCK_TEXT[lock] : null;
+
   return (
     <div className="min-w-0 space-y-6">
       {/* Header */}
@@ -81,7 +85,7 @@ export default function ShipmentProfilePage() {
           <Button asChild>
             <Link href={`/admin/dashboard/shipments/${shipment.id}/edit`}>
               <Pencil className="size-4" />
-              {shipment.status === "returned" ? "Reabrir para editar" : "Editar"}
+              {lockText ? lockText.button : "Editar"}
             </Link>
           </Button>
         </div>
@@ -113,6 +117,8 @@ export default function ShipmentProfilePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4">
+            <InfoRow label="Proveedor (transportista)" value={shipment.legalName} />
+            <InfoRow label="Operador" value={shipment.operatorName} />
             <InfoRow label="Celular" value={formatPhone(shipment.phone)} />
             <InfoRow label="Tracto" value={shipment.truck} />
             <InfoRow label="Caja" value={shipment.trailer} />

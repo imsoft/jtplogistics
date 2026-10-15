@@ -51,7 +51,7 @@ export default function EditCollaboratorMaritimeQuotePage() {
       ) : initialInput === null ? (
         <FormSkeleton />
       ) : (
-        <MaritimeQuoteForm mode="edit" quoteId={id} backHref="/collaborator/dashboard/maritime-quotes" initialInput={initialInput} initialStatus={status} />
+        <MaritimeQuoteForm clientsEndpoint="/api/collaborator/clients?all=1" mode="edit" quoteId={id} backHref="/collaborator/dashboard/maritime-quotes" initialInput={initialInput} initialStatus={status} />
       )}
     </div>
   );

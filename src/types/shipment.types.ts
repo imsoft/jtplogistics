@@ -25,6 +25,8 @@ export interface Shipment {
   incident: string | null;
   incidentType: string | null;
   status: ShipmentStatus;
+  /** Tarifa de venta, tomada de Finanzas. Ausente si quien consulta no puede ver Finanzas. */
+  sale?: number | null;
   createdAt: string;
 }
 

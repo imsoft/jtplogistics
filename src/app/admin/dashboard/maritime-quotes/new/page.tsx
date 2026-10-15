@@ -25,7 +25,7 @@ export default async function NewMaritimeQuotePage() {
           </p>
         </div>
       </div>
-      <MaritimeQuoteForm mode="new" backHref="/admin/dashboard/maritime-quotes" />
+      <MaritimeQuoteForm clientsEndpoint="/api/admin/clients?all=1" mode="new" backHref="/admin/dashboard/maritime-quotes" />
     </div>
   );
 }

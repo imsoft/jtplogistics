@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { ClientPicker } from "@/components/dashboard/resources/client-picker";
 import { formatMxn } from "@/lib/utils";
 import {
   ADV_BRACKETS,
@@ -57,9 +58,11 @@ interface Props {
   initialInput?: MaritimeQuoteInput;
   /** Estado guardado; con "borrador" la edición no exige cliente. */
   initialStatus?: string;
+  /** Catálogo de clientes del panel; llena cliente y razón social al elegir. */
+  clientsEndpoint?: string;
 }
 
-export function MaritimeQuoteForm({ mode, quoteId, backHref, initialInput, initialStatus }: Props) {
+export function MaritimeQuoteForm({ mode, quoteId, backHref, initialInput, initialStatus, clientsEndpoint }: Props) {
   const isDraft = initialStatus === "borrador";
   const router = useRouter();
   const [input, setInput] = useState<MaritimeQuoteInput>(initialInput ?? emptyInput());
@@ -195,6 +198,15 @@ export function MaritimeQuoteForm({ mode, quoteId, backHref, initialInput, initi
           <Field label="Referencia">
             <Input value={input.reference} onChange={(e) => setField("reference", e.target.value)} placeholder="202605-07" />
           </Field>
+          {clientsEndpoint && (
+            <ClientPicker
+              endpoint={clientsEndpoint}
+              onPick={(c) => {
+                setField("client", c.name);
+                setField("clientName", c.legalName ?? c.name);
+              }}
+            />
+          )}
           <Field label="Cliente">
             <Input value={input.client} onChange={(e) => setField("client", e.target.value)} />
           </Field>

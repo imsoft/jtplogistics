@@ -12,6 +12,7 @@ import { useUnitTypes } from "@/hooks/use-unit-types";
 import { useIncidentTypes } from "@/hooks/use-incident-types";
 import { getIncidentSelectOptions, incidentAllowsIncidentType } from "@/lib/incident-yes-no";
 import { carrierProviderSelectOptions } from "@/lib/carrier-provider-options";
+import { shipmentLockReason } from "@/lib/shipment-lock";
 import type { Route } from "@/types/route.types";
 import type { Shipment, ShipmentFormData, ShipmentStatus } from "@/types/shipment.types";
 import type { Client } from "@/types/client.types";
@@ -71,7 +72,10 @@ export function ShipmentForm({
   const [incident, setIncident] = useState(initialValues.incident ?? "");
   const [incidentType, setIncidentType] = useState(initialValues.incidentType ?? "");
   const [status, setStatus] = useState<ShipmentStatus>(initialValues.status ?? "pending");
-  const isClosed = status === "returned" && !unlocked;
+  // Cerrado, o ya asentado sin incidencias: de solo lectura (salvo desbloqueo).
+  // El "sin incidencias" se mira sobre lo guardado, no sobre lo que se está
+  // eligiendo ahora: cambiar el select no debe congelar el formulario.
+  const isClosed = (status === "returned" || shipmentLockReason({ incident: initialValues.incident }) !== null) && !unlocked;
 
   const [routes, setRoutes] = useState<Route[]>([]);
   const [clients, setClients] = useState<Client[]>([]);

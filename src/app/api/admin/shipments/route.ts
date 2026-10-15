@@ -2,6 +2,7 @@ import { Prisma, ShipmentStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
 import { logAudit } from "@/lib/audit-log";
+import { findFinanceForShipment } from "@/lib/finance-shipment-match";
 
 /** Campos sobre los que aplica la búsqueda de texto (server-side). */
 const SEARCH_FIELDS = [
@@ -176,8 +177,11 @@ export function GET(request: Request) {
       }),
     ]);
 
+    // La tarifa de venta vive en Finanzas; se empareja igual que en esa tabla.
+    const finances = await prisma.finance.findMany({ orderBy: { createdAt: "desc" } });
+
     return Response.json({
-      data: shipments.map(toJson),
+      data: shipments.map((s) => ({ ...toJson(s), sale: findFinanceForShipment(s, finances)?.sale ?? null })),
       total,
       page,
       pageSize,

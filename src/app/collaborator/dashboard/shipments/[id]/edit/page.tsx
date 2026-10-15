@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ResourceEditHeader } from "@/components/dashboard/resources/resource-edit-header";
+import { LOCK_TEXT, shipmentLockReason } from "@/lib/shipment-lock";
 import { ShipmentForm } from "@/components/dashboard/resources/shipment-form";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
@@ -58,7 +59,9 @@ export default function EditCollaboratorShipmentPage() {
     ? [shipment.eco, shipment.origin, shipment.destination].filter(Boolean).join(" – ") || "Embarque"
     : "Embarque";
 
-  const isClosed = shipment?.status === "returned";
+  const lock = shipment ? shipmentLockReason(shipment) : null;
+  const isClosed = lock !== null;
+  const lockText = lock ? LOCK_TEXT[lock] : null;
   const canDelete = Boolean(permissions?.canDeleteShipments) && shipment?.status !== "returned";
 
   return (
@@ -82,11 +85,11 @@ export default function EditCollaboratorShipmentPage() {
             <div className="mb-3 flex items-center gap-2">
               <LockKeyhole className="size-4 shrink-0 text-amber-600" />
               <p className="text-sm font-semibold text-amber-800">
-                Embarque cerrado
+                {lockText?.title}
               </p>
             </div>
             <p className="mb-4 text-sm text-amber-700">
-              Este embarque está cerrado. Escribe tu correo electrónico para verificar que quieres editarlo.
+              {lockText?.body}
             </p>
             <form onSubmit={handleUnlock} className="flex flex-col gap-3 sm:flex-row sm:items-end">
               <div className="flex-1 space-y-1.5">

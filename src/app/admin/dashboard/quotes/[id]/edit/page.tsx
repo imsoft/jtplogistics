@@ -91,7 +91,7 @@ export default function EditQuotePage() {
 
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <CarrierQuotesTable editQuote={quote} showTermsLink />
+          <CarrierQuotesTable editQuote={quote} showTermsLink clientsEndpoint="/api/admin/clients?all=1" />
         </div>
         <div>
           <QuoteComments quoteId={id} />

@@ -18,7 +18,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { formatPhone } from "@/lib/utils";
+import { formatMxn, formatPhone } from "@/lib/utils";
 import { formatIncidentYesNo } from "@/lib/incident-yes-no";
 import { getIncidentTypeLabel } from "@/lib/incident-type-label";
 import { useIncidentTypes } from "@/hooks/use-incident-types";
@@ -78,8 +78,8 @@ export const SHIPMENT_STATUS_CONFIG: Record<
 
 const STATUS_FILTER_ALL = "all" as const;
 
-function getColumns(incidentTypes: { value: string; label: string }[]): ColumnDef<Shipment>[] {
-  return [
+function getColumns(incidentTypes: { value: string; label: string }[], showSale: boolean): ColumnDef<Shipment>[] {
+  const columns: ColumnDef<Shipment>[] = [
     {
       id: "search",
       accessorFn: (row) => {
@@ -171,6 +171,24 @@ function getColumns(incidentTypes: { value: string; label: string }[]): ColumnDe
         );
       },
     },
+    ...(showSale
+      ? [
+          {
+            accessorKey: "sale",
+            meta: { className: "hidden @4xl/table:table-cell" },
+            header: ({ column }) => <SortableColumnHeader column={column} title="Tarifa de venta" />,
+            cell: ({ row }) => {
+              const v = row.original.sale;
+              return v != null ? (
+                <span className="whitespace-nowrap tabular-nums">${formatMxn(v)}</span>
+              ) : (
+                <span className="text-muted-foreground">—</span>
+              );
+            },
+            enableSorting: false,
+          } satisfies ColumnDef<Shipment>,
+        ]
+      : []),
     {
       accessorKey: "comments",
       meta: { className: "hidden @6xl/table:table-cell" },
@@ -247,6 +265,7 @@ function getColumns(incidentTypes: { value: string; label: string }[]): ColumnDe
       },
     },
   ];
+  return columns;
 }
 
 function getRowClassName(shipment: Shipment): string {
@@ -266,7 +285,6 @@ export function ShipmentsTable({
   const detailBase = detailBasePath;
   const router = useRouter();
   const incidentTypes = useIncidentTypes();
-  const columns = useMemo(() => getColumns(incidentTypes), [incidentTypes]);
   const [compactView, setCompactView] = useState(
     () => typeof window !== "undefined" && window.innerWidth < 1500
   );
@@ -307,6 +325,10 @@ export function ShipmentsTable({
     filters,
     errorMessage: "Error al cargar embarques",
   });
+
+  // La columna aparece solo cuando la API manda la tarifa (dirección, o colaborador que ve Finanzas).
+  const showSale = useMemo(() => shipments.some((s) => "sale" in s), [shipments]);
+  const columns = useMemo(() => getColumns(incidentTypes, showSale), [incidentTypes, showSale]);
 
   const hasActiveQuery =
     search.trim() !== "" || Object.keys(filters).length > 0;

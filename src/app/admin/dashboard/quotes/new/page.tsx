@@ -23,7 +23,7 @@ export default function NewQuotePage() {
           </p>
         </div>
       </div>
-      <CarrierQuotesTable showTermsLink />
+      <CarrierQuotesTable showTermsLink clientsEndpoint="/api/admin/clients?all=1" />
     </div>
   );
 }

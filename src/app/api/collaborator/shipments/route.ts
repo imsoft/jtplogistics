@@ -2,6 +2,7 @@ import { Prisma, ShipmentStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 import { logAudit } from "@/lib/audit-log";
+import { findFinanceForShipment } from "@/lib/finance-shipment-match";
 
 /** Campos sobre los que aplica la búsqueda de texto (server-side). */
 const SEARCH_FIELDS = [
@@ -69,7 +70,7 @@ export async function GET(request: Request) {
     const session = await requireCollaboratorOrAdmin();
     const me = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { canViewShipments: true },
+      select: { canViewShipments: true, canViewFinances: true },
     });
     if (!me?.canViewShipments) {
       return Response.json({ error: "Sin permiso" }, { status: 403 });
@@ -123,8 +124,16 @@ export async function GET(request: Request) {
       }),
     ]);
 
+    // La tarifa de venta es de Finanzas: solo viaja a quien puede verlas.
+    const finances = me.canViewFinances
+      ? await prisma.finance.findMany({ orderBy: { createdAt: "desc" } })
+      : null;
+
     return Response.json({
-      data: shipments.map(toJson),
+      data: shipments.map((s) => ({
+        ...toJson(s),
+        ...(finances ? { sale: findFinanceForShipment(s, finances)?.sale ?? null } : {}),
+      })),
       total,
       page,
       pageSize,

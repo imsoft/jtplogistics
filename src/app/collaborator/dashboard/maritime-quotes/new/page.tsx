@@ -21,7 +21,7 @@ export default function NewCollaboratorMaritimeQuotePage() {
           </p>
         </div>
       </div>
-      <MaritimeQuoteForm mode="new" backHref="/collaborator/dashboard/maritime-quotes" />
+      <MaritimeQuoteForm clientsEndpoint="/api/collaborator/clients?all=1" mode="new" backHref="/collaborator/dashboard/maritime-quotes" />
     </div>
   );
 }

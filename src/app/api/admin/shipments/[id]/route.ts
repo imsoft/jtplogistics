@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
 import { logAudit, diffObjects } from "@/lib/audit-log";
+import { shipmentLockReason, LOCK_TEXT } from "@/lib/shipment-lock";
 
 function toJson(s: {
   id: string;
@@ -109,9 +110,11 @@ export function PATCH(
       typeof _confirmedEmail === "string" &&
       _confirmedEmail.toLowerCase() === session.user.email.toLowerCase();
 
-    if (shipment.status === SHIPMENT_CLOSED_STATUS && !emailConfirmed) {
+    // Cerrado o sin incidencias: solo lectura, salvo que confirme su correo.
+    const lock = shipmentLockReason(shipment);
+    if (lock && !emailConfirmed) {
       return Response.json(
-        { error: "El embarque está cerrado y no se puede modificar. Confirma tu correo electrónico para editar." },
+        { error: `${LOCK_TEXT[lock].title}: no se puede modificar. Confirma tu correo electrónico para editar.` },
         { status: 403 },
       );
     }

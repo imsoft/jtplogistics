@@ -25,6 +25,7 @@ export default function NewQuotePage() {
       </div>
       <CarrierQuotesTable
         apiEndpoint="/api/collaborator/carrier-quotes"
+        clientsEndpoint="/api/collaborator/clients?all=1"
         listPath="/collaborator/dashboard/quotes"
       />
     </div>

@@ -102,6 +102,7 @@ export default function EditQuotePage() {
           <CarrierQuotesTable
             editQuote={quote}
             apiEndpoint="/api/collaborator/carrier-quotes"
+            clientsEndpoint="/api/collaborator/clients?all=1"
             updateEndpoint="/api/collaborator/generated-quotes"
             listPath="/collaborator/dashboard/quotes"
           />

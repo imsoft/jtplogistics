@@ -23,6 +23,7 @@ import {
 import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { AppSelect } from "@/components/ui/app-select";
+import { ClientPicker } from "@/components/dashboard/resources/client-picker";
 import { getCarrierQuotesColumns } from "./carrier-quotes-columns";
 import { QuotePdf } from "./quote-pdf";
 import { CityCombobox } from "@/components/dashboard/routes/city-combobox";
@@ -70,6 +71,8 @@ interface CarrierQuotesTableProps {
   listPath?: string;
   /** Pantalla de textos legales. Sin ella no se muestra el enlace. */
   termsPath?: string;
+  /** Catálogo de clientes del panel. Sin él, los datos del cliente se teclean. */
+  clientsEndpoint?: string;
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -118,6 +121,7 @@ export function CarrierQuotesTable({
   listPath = "/admin/dashboard/quotes",
   termsPath = "/admin/dashboard/quotes/terms",
   allowDraft = true,
+  clientsEndpoint,
 }: CarrierQuotesTableProps) {
   const router = useRouter();
   const isEditing = !!editQuote;
@@ -772,6 +776,17 @@ export function CarrierQuotesTable({
               onChange={(value) => setValidUntil(value)}
             />
           </div>
+          {clientsEndpoint && (
+            <ClientPicker
+              endpoint={clientsEndpoint}
+              onPick={(c) => {
+                setCompany(c.name);
+                setContact(c.contactName ?? "");
+                setPhone(c.phone ?? "");
+                setEmail(c.email ?? "");
+              }}
+            />
+          )}
           <div className="space-y-2">
             <Label htmlFor="qb-company">Compañía</Label>
             <Input id="qb-company" value={company} onChange={(e) => setCompany(e.target.value)} />
