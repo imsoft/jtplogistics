@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, Pencil } from "lucide-react";
@@ -8,6 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { InfoRow } from "@/components/dashboard/users/info-row";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
+import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
+import { ClientViewActions } from "@/components/dashboard/clients/client-view-actions";
+import { ClientAssignedRoutesCard } from "@/components/dashboard/clients/client-assigned-routes-card";
+import { type AssignedRoute, clientRoutesEndpoint } from "@/components/dashboard/clients/client-routes";
 import { formatPhone } from "@/lib/utils";
 import type { Client } from "@/types/client.types";
 import { ResourceDetailSkeleton } from "@/components/ui/skeletons";
@@ -22,6 +27,22 @@ export default function CollaboratorClientProfilePage() {
     endpoint: "/api/collaborator/clients",
     redirectHref: "/collaborator/dashboard/clients",
   });
+  const { permissions } = useCollaboratorPermissions();
+  const canAssign = Boolean(permissions?.canUpdateClients);
+
+  const [routes, setRoutes] = useState<AssignedRoute[]>([]);
+  const [routesLoaded, setRoutesLoaded] = useState(false);
+  const loadRoutes = useCallback(() => {
+    if (!id) return;
+    fetch(`${clientRoutesEndpoint(id)}?idsOnly=false`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: AssignedRoute[]) => { setRoutes(data); setRoutesLoaded(true); })
+      .catch(() => setRoutesLoaded(true));
+  }, [id]);
+
+  useEffect(() => {
+    loadRoutes();
+  }, [loadRoutes]);
 
   if (!isLoaded) return <ResourceDetailSkeleton />;
   if (error || !client) return <p className="text-destructive py-6 text-sm">{error ?? "No encontrado"}</p>;
@@ -47,12 +68,15 @@ export default function CollaboratorClientProfilePage() {
             </div>
           </div>
         </div>
-        <Button asChild className="shrink-0">
-          <Link href={`/collaborator/dashboard/clients/${id}/edit`}>
-            <Pencil className="size-4" />
-            Editar
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2 shrink-0">
+          {canAssign && <ClientViewActions clientId={id} onSave={loadRoutes} />}
+          <Button asChild>
+            <Link href={`/collaborator/dashboard/clients/${id}/edit`}>
+              <Pencil className="size-4" />
+              Editar
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -117,6 +141,8 @@ export default function CollaboratorClientProfilePage() {
           </Card>
         )}
       </div>
+
+      <ClientAssignedRoutesCard routes={routes} loaded={routesLoaded} canAssign={canAssign} />
     </div>
   );
 }

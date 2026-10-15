@@ -1,19 +1,63 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { adminHandler } from "@/lib/api-handler";
+import { requireModuleAccess } from "@/lib/module-access";
 import { logAudit } from "@/lib/audit-log";
 
-// GET — rutas asignadas al cliente
-// ?idsOnly=true  →  { routeId, unitType }[]  (para el dialog de selección)
-// ?idsOnly=false →  AssignedRoute[]           (para las vistas de detalle/edición)
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  return adminHandler(async () => {
-    const { id } = await params;
-    const idsOnly = req.nextUrl.searchParams.get("idsOnly") !== "false";
+/**
+ * Rutas asignadas a un cliente. Una sola API para los dos paneles: quien
+ * tiene permiso de Clientes puede asignar rutas a un cliente aunque no tenga
+ * acceso al módulo de Rutas (Finanzas da de alta clientes sin ver rutas).
+ */
+const MODULE = "Clients";
 
+function fail(e: unknown, where: string) {
+  if (e instanceof Response) return e;
+  console.error(`[clients/:id/routes] ${where}`, e);
+  return Response.json({ error: "Error interno del servidor" }, { status: 500 });
+}
+
+// GET
+// ?catalog=true  →  todas las rutas del sistema, una fila por tipo de unidad,
+//                   sin tarifas (para el diálogo de selección)
+// ?idsOnly=true  →  { routeId, unitType }[]  (lo que ya tiene asignado el cliente)
+// ?idsOnly=false →  AssignedRoute[]           (para las vistas de detalle/edición)
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    await requireModuleAccess(MODULE, "view");
+    const { id } = await params;
+    const sp = req.nextUrl.searchParams;
+
+    if (sp.get("catalog") === "true") {
+      const routes = await prisma.route.findMany({
+        orderBy: [{ origin: "asc" }, { destination: "asc" }],
+        select: {
+          id: true,
+          origin: true,
+          destination: true,
+          destinationState: true,
+          unitType: true,
+          status: true,
+          createdBy: { select: { name: true } },
+          unitTargets: { select: { unitType: true } },
+        },
+      });
+      const rows = routes.flatMap((r) => {
+        const types = r.unitTargets.length > 0 ? r.unitTargets.map((u) => u.unitType) : [r.unitType];
+        return types.map((unitType) => ({
+          key: `${r.id}:${unitType}`,
+          routeId: r.id,
+          unitType,
+          origin: r.origin,
+          destination: r.destination,
+          destinationState: r.destinationState,
+          status: r.status,
+          createdByName: r.createdBy?.name ?? null,
+        }));
+      });
+      return Response.json(rows);
+    }
+
+    const idsOnly = sp.get("idsOnly") !== "false";
     if (idsOnly) {
       const clientRoutes = await prisma.clientRoute.findMany({
         where: { clientId: id },
@@ -58,21 +102,21 @@ export async function GET(
         createdByName: cr.route.createdBy?.name ?? null,
       }))
     );
-  });
+  } catch (e) {
+    return fail(e, "GET");
+  }
 }
 
 // PATCH — actualiza tarifa/volumen de una asignación (por clientRouteId)
 // body: { clientRouteId, target, weeklyVolume }
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  return adminHandler(async (session) => {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const session = await requireModuleAccess(MODULE, "update");
     const { id } = await params;
     const { clientRouteId, routeId, target, weeklyVolume } = await request.json();
 
     const clientRoute = clientRouteId
-      ? await prisma.clientRoute.findUnique({ where: { id: clientRouteId } })
+      ? await prisma.clientRoute.findFirst({ where: { id: clientRouteId, clientId: id } })
       : routeId
         ? await prisma.clientRoute.findFirst({ where: { clientId: id, routeId } })
         : null;
@@ -101,17 +145,17 @@ export async function PATCH(
     });
 
     return Response.json({ ok: true });
-  });
+  } catch (e) {
+    return fail(e, "PATCH");
+  }
 }
 
 // PUT — reemplaza las rutas asignadas al cliente
 // body: { routeId: string; unitType: string }[]
 // Preserva target/weeklyVolume de asignaciones existentes que no se eliminan
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  return adminHandler(async (session) => {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const session = await requireModuleAccess(MODULE, "update");
     const { id } = await params;
     const body: { routeId: string; unitType: string }[] = await request.json();
 
@@ -124,24 +168,17 @@ export async function PUT(
       return Response.json({ error: "Cliente no encontrado" }, { status: 404 });
     }
 
-    // Obtener asignaciones actuales para preservar target/weeklyVolume
     const existing = await prisma.clientRoute.findMany({
       where: { clientId: id },
-      select: { id: true, routeId: true, unitType: true, target: true, weeklyVolume: true },
+      select: { id: true, routeId: true, unitType: true },
     });
-    const existingMap = new Map(
-      existing.map((cr) => [`${cr.routeId}:${cr.unitType}`, cr])
-    );
-
+    const existingKeys = new Set(existing.map((cr) => `${cr.routeId}:${cr.unitType}`));
     const incomingKeys = new Set(body.map((b) => `${b.routeId}:${b.unitType}`));
 
-    // IDs de registros que ya no están seleccionados
     const toDeleteIds = existing
       .filter((cr) => !incomingKeys.has(`${cr.routeId}:${cr.unitType}`))
       .map((cr) => cr.id);
-
-    // Nuevas combinaciones (routeId:unitType) que no existen aún
-    const toCreate = body.filter((b) => !existingMap.has(`${b.routeId}:${b.unitType}`));
+    const toCreate = body.filter((b) => !existingKeys.has(`${b.routeId}:${b.unitType}`));
 
     if (toDeleteIds.length > 0) {
       await prisma.clientRoute.deleteMany({ where: { id: { in: toDeleteIds } } });
@@ -160,8 +197,13 @@ export async function PUT(
       action: "updated",
       userId: session.user.id,
       userName: session.user.name,
+      changes: [
+        { field: "routes", label: "Rutas asignadas", from: String(existing.length), to: String(body.length) },
+      ],
     });
 
-    return Response.json({ ok: true, debug: { bodyCount: body.length, existingCount: existing.length, toCreateCount: toCreate.length, toDeleteCount: toDeleteIds.length, toCreate, sampleExisting: existing.slice(0, 3) } });
-  });
+    return Response.json({ ok: true, added: toCreate.length, removed: toDeleteIds.length });
+  } catch (e) {
+    return fail(e, "PUT");
+  }
 }
