@@ -249,13 +249,7 @@ function CarrierCard({
 }) {
   return (
     <Card className="relative overflow-hidden transition-shadow hover:shadow-md">
-      {/* Rank ribbon */}
-      <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl"
-        style={{
-          background: rank === 1 ? "#f59e0b" : rank === 2 ? "#94a3b8" : rank === 3 ? "#b45309" : "hsl(var(--border))"
-        }}
-      />
-      <CardContent className="pl-5 pr-4 py-4">
+      <CardContent className="px-4 py-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             {/* Header row */}
