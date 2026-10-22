@@ -120,6 +120,7 @@ export default function EditShipmentPage() {
             onSubmit={isClosed ? handleSubmitWithConfirmation : handleSubmit}
             isSubmitting={isSubmitting}
             unlocked={isUnlocked}
+            showTariffs
           />
         )}
       </div>

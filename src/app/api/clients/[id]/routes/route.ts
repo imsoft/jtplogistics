@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireModuleAccess } from "@/lib/module-access";
 import { logAudit } from "@/lib/audit-log";
+import { routeCreatorName } from "@/lib/api/route-utils";
 
 /**
  * Rutas asignadas a un cliente. Una sola API para los dos paneles: quien
@@ -38,6 +39,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           unitType: true,
           status: true,
           createdBy: { select: { name: true } },
+          bulkImported: true,
           unitTargets: { select: { unitType: true } },
         },
       });
@@ -51,7 +53,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           destination: r.destination,
           destinationState: r.destinationState,
           status: r.status,
-          createdByName: r.createdBy?.name ?? null,
+          createdByName: routeCreatorName(r),
         }));
       });
       return Response.json(rows);
@@ -78,6 +80,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             unitType: true,
             status: true,
             createdBy: { select: { name: true } },
+            bulkImported: true,
             unitTargets: { select: { unitType: true, target: true } },
           },
         },
@@ -99,7 +102,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         weeklyVolume: cr.weeklyVolume ?? null,
         clientTarget: cr.target ?? null,
         clientWeeklyVolume: cr.weeklyVolume ?? null,
-        createdByName: cr.route.createdBy?.name ?? null,
+        createdByName: routeCreatorName(cr.route),
       }))
     );
   } catch (e) {

@@ -22,6 +22,8 @@ function rowFromShipmentAndFinance(
     comments: string | null;
     incident: string | null;
     incidentType: string | null;
+    sale?: number | null;
+    cost?: number | null;
     status: string;
     createdAt: Date;
   },
@@ -36,8 +38,9 @@ function rowFromShipmentAndFinance(
     client: shipment.client,
     origin: shipment.origin,
     destination: shipment.destination,
-    sale: finance?.sale ?? null,
-    cost: finance?.cost ?? null,
+    // La tarifa se captura en el embarque; los registros viejos la traen de Finanzas.
+    sale: shipment.sale ?? finance?.sale ?? null,
+    cost: shipment.cost ?? finance?.cost ?? null,
     product: shipment.product,
     pickupDate: shipment.pickupDate?.toISOString() ?? null,
     deliveryDate: shipment.deliveryDate?.toISOString() ?? null,

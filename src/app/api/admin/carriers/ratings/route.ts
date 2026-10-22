@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
+import { ratingStatus } from "@/lib/shipment-outcome";
 
 export interface CarrierRating {
   legalName: string;
@@ -48,6 +49,7 @@ export function GET() {
         select: {
           legalName: true,
           status: true,
+          deliveryOutcome: true,
           incident: true,
         },
       }),
@@ -84,9 +86,11 @@ export function GET() {
       };
 
       entry.total += 1;
-      if (s.status === "delivered") entry.delivered += 1;
-      else if (s.status === "delivered_with_delay") entry.deliveredWithDelay += 1;
-      else if (s.status === "not_delivered") entry.notDelivered += 1;
+      // Un embarque cerrado cuenta con el resultado que tuvo su entrega.
+      const st = ratingStatus(s.status, s.deliveryOutcome);
+      if (st === "delivered") entry.delivered += 1;
+      else if (st === "delivered_with_delay") entry.deliveredWithDelay += 1;
+      else if (st === "not_delivered") entry.notDelivered += 1;
       else entry.inTransit += 1; // pending, at_risk, returned treated as in-transit for scoring
 
       if (hasIncident(s.incident)) entry.withIncident += 1;

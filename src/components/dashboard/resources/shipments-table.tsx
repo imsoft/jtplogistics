@@ -175,7 +175,6 @@ function getColumns(incidentTypes: { value: string; label: string }[], showSale:
       ? [
           {
             accessorKey: "sale",
-            meta: { className: "hidden @4xl/table:table-cell" },
             header: ({ column }) => <SortableColumnHeader column={column} title="Tarifa de venta" />,
             cell: ({ row }) => {
               const v = row.original.sale;

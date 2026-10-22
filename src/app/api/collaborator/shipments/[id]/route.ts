@@ -2,6 +2,9 @@ import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 import { logAudit, diffObjects } from "@/lib/audit-log";
 import { shipmentLockReason, LOCK_TEXT } from "@/lib/shipment-lock";
+import { readTariffs, isTariffOnlyBody, canManageTariffs } from "@/lib/shipment-tariffs";
+import { outcomeAfterStatus } from "@/lib/shipment-outcome";
+import { syncFinanceTariffs } from "@/lib/shipment-tariffs-server";
 
 function toJson(s: {
   id: string;
@@ -21,6 +24,9 @@ function toJson(s: {
   comments: string | null;
   incident: string | null;
   incidentType: string | null;
+  sale?: number | null;
+  cost?: number | null;
+  deliveryOutcome?: string | null;
   status: string;
   createdAt: Date;
 }) {
@@ -42,6 +48,9 @@ function toJson(s: {
     comments: s.comments,
     incident: s.incident,
     incidentType: s.incidentType,
+    sale: s.sale ?? null,
+    cost: s.cost ?? null,
+    deliveryOutcome: s.deliveryOutcome ?? null,
     status: s.status,
     createdAt: s.createdAt.toISOString(),
   };
@@ -55,7 +64,7 @@ export async function GET(
     const session = await requireCollaboratorOrAdmin();
     const me = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { canViewShipments: true },
+      select: { canViewShipments: true, canViewFinances: true },
     });
     if (!me?.canViewShipments) {
       return Response.json({ error: "Sin permiso" }, { status: 403 });
@@ -64,6 +73,13 @@ export async function GET(
     const { id } = await params;
     const shipment = await prisma.shipment.findUnique({ where: { id } });
     if (!shipment) return Response.json({ error: "No encontrado" }, { status: 404 });
+    // Las tarifas son de Finanzas: solo viajan a quien puede verlas.
+    if (!canManageTariffs(session.user, me)) {
+      const json: Partial<ReturnType<typeof toJson>> = toJson(shipment);
+      delete json.sale;
+      delete json.cost;
+      return Response.json(json);
+    }
     return Response.json(toJson(shipment));
   } catch (e) {
     if (e instanceof Response) return e;
@@ -90,6 +106,8 @@ const SHIPMENT_LABELS: Record<string, string> = {
   incident: "Incidencia",
   incidentType: "Tipo de incidencia",
   status: "Estado",
+  sale: "Tarifa de venta",
+  cost: "Tarifa de compra",
 };
 
 const VALID_STATUSES = ["pending", "delivered", "delivered_with_delay", "not_delivered", "at_risk", "returned"] as const;
@@ -103,7 +121,7 @@ export async function PATCH(
     const session = await requireCollaboratorOrAdmin();
     const me = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { canUpdateShipments: true },
+      select: { canUpdateShipments: true, canViewFinances: true },
     });
     if (!me?.canUpdateShipments) {
       return Response.json({ error: "Sin permiso" }, { status: 403 });
@@ -111,12 +129,20 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
+    const canTariffs = canManageTariffs(session.user, me);
     const {
       eco, client, origin, destination, product,
       pickupDate, deliveryDate, legalName, operatorName,
       truck, trailer, unit, phone, comments, incident, incidentType, status,
       _confirmedEmail,
     } = body as Record<string, string | null | undefined>;
+
+    const tariffs = readTariffs(body as Record<string, unknown>);
+    if (!tariffs.ok) return Response.json({ error: tariffs.error }, { status: 400 });
+    const touchesTariffs = Object.keys(tariffs.data).length > 0;
+    if (touchesTariffs && !canTariffs) {
+      return Response.json({ error: "Sin permiso para capturar tarifas" }, { status: 403 });
+    }
 
     const shipment = await prisma.shipment.findUnique({ where: { id } });
     if (!shipment) return Response.json({ error: "No encontrado" }, { status: 404 });
@@ -134,7 +160,9 @@ export async function PATCH(
 
     // Cerrado o sin incidencias: solo lectura, salvo que confirme su correo.
     const lock = shipmentLockReason(shipment);
-    if (lock && !emailConfirmed) {
+    // Las tarifas se pueden capturar aunque esté bloqueado: suelen confirmarse al cerrar.
+    const tariffOnly = canTariffs && isTariffOnlyBody(body as Record<string, unknown>);
+    if (lock && !emailConfirmed && !tariffOnly) {
       return Response.json(
         { error: `${LOCK_TEXT[lock].title}: no se puede modificar. Confirma tu correo electrónico para editar.` },
         { status: 403 },
@@ -160,6 +188,11 @@ export async function PATCH(
     if (incidentType !== undefined) data.incidentType = (incidentType as string)?.trim() || null;
     if (status !== undefined) {
       if (status && VALID_STATUSES.includes(status as (typeof VALID_STATUSES)[number])) data.status = status;
+    }
+    Object.assign(data, tariffs.data);
+    // El resultado de la entrega sobrevive al cierre (lo usa la calificación de transportistas).
+    if (data.status !== undefined && data.status !== shipment.status) {
+      data.deliveryOutcome = outcomeAfterStatus(data.status as string, shipment.deliveryOutcome);
     }
 
     // Si el embarque acaba de pasar a "Cerrado", se crea automáticamente el registro en finanzas.
@@ -197,12 +230,12 @@ export async function PATCH(
             client: merged.client ?? null,
             origin: merged.origin ?? null,
             destination: merged.destination ?? null,
-            sale: null,
+            sale: merged.sale ?? null,
             product: merged.product ?? null,
             pickupDate: merged.pickupDate ?? null,
             deliveryDate: merged.deliveryDate ?? null,
             legalName: merged.legalName ?? null,
-            cost: null,
+            cost: merged.cost ?? null,
             operatorName: merged.operatorName ?? null,
             truck: merged.truck ?? null,
             trailer: merged.trailer ?? null,
@@ -226,6 +259,7 @@ export async function PATCH(
     }
 
     const updated = await prisma.shipment.update({ where: { id }, data });
+    if (touchesTariffs) await syncFinanceTariffs(updated);
 
     const changes = diffObjects(
       shipment as unknown as Record<string, unknown>,

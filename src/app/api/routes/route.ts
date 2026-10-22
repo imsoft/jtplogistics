@@ -7,6 +7,7 @@ import { getCityState } from "@/lib/data/mexico-cities";
 import { logRoute } from "@/lib/route-log";
 import { logAudit } from "@/lib/audit-log";
 import { alertMatchingCarriers } from "@/lib/carrier-route-alert";
+import { isInternalUser } from "@/lib/internal-users";
 import type { RouteStatus } from "@/types/route.types";
 
 export async function GET() {
@@ -88,6 +89,15 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "Selecciona al menos un tipo de unidad" }, { status: 400 });
     }
 
+    // Carga masiva: se puede registrar a nombre de alguien del equipo. Si no se
+    // elige, la ruta queda marcada como carga masiva en lugar de atribuírsela
+    // a quien subió el archivo.
+    const createdForId = typeof body.createdForId === "string" && body.createdForId ? body.createdForId : null;
+    if (createdForId && !(await isInternalUser(createdForId))) {
+      return Response.json({ error: "La persona elegida no es válida." }, { status: 400 });
+    }
+    const bulkImported = body.bulk === true && !createdForId;
+
     const sameOdRoutes = await prisma.route.findMany({
       where: {
         origin: { equals: origin, mode: "insensitive" },
@@ -122,7 +132,8 @@ export async function POST(request: NextRequest) {
         weeklyVolume: weeklyVolume ?? undefined,
         unitType: first.unitType,
         status,
-        createdById: session.user.id,
+        createdById: createdForId ?? session.user.id,
+        bulkImported,
         unitTargets: {
           create: unitTargets.map((ut) => ({
             unitType: ut.unitType,

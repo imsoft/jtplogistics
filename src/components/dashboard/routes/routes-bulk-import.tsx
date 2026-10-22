@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Upload, FileText, AlertCircle, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Label } from "@/components/ui/label";
+import { AppSelect } from "@/components/ui/app-select";
 
 const UNIT_TYPE_MAP: Record<string, string> = {
   "14CJ SENC 48 FT": "caja_seca",
@@ -151,6 +153,17 @@ export function RoutesBulkImport() {
   const [isParsed, setIsParsed] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importDone, setImportDone] = useState(false);
+  // A nombre de quién quedan las rutas. Vacío: se marcan como "Carga masiva"
+  // para no atribuírselas a quien sube el archivo.
+  const [createdForId, setCreatedForId] = useState("");
+  const [creators, setCreators] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    fetch("/api/routes/creators")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => setCreators(Array.isArray(d) ? d : []))
+      .catch(() => setCreators([]));
+  }, []);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleParse() {
@@ -207,6 +220,8 @@ export function RoutesBulkImport() {
             destination: updated[i].destination,
             unitTargets: [{ unitType: updated[i].unitType }],
             status: "active",
+            bulk: true,
+            ...(createdForId ? { createdForId } : {}),
           }),
         });
 
@@ -256,6 +271,21 @@ export function RoutesBulkImport() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* A nombre de quién */}
+      <div className="max-w-md space-y-1.5">
+        <Label>Registrar a nombre de</Label>
+        <AppSelect
+          value={createdForId}
+          onValueChange={(v) => setCreatedForId(v || "")}
+          options={creators.map((c) => ({ value: c.id, label: c.name }))}
+          disabled={isImporting}
+          className="w-full"
+        />
+        <p className="text-xs text-muted-foreground">
+          Quien hizo las rutas del archivo. Si lo dejas vacío, aparecerán como «Carga masiva» en «Creado por».
+        </p>
       </div>
 
       {/* Entrada de datos */}

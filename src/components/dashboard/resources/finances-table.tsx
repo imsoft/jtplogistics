@@ -83,7 +83,6 @@ function getColumns(): ColumnDef<FinanceListRow>[] {
     },
     {
       accessorKey: "sale",
-      meta: { className: "hidden @xl/table:table-cell" },
       header: ({ column }) => (
         <SortableColumnHeader
           column={column}

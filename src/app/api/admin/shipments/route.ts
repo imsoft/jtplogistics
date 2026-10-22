@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
 import { logAudit } from "@/lib/audit-log";
 import { findFinanceForShipment } from "@/lib/finance-shipment-match";
+import { readTariffs, canManageTariffs, effectiveTariffs } from "@/lib/shipment-tariffs";
+import { isDeliveryOutcome } from "@/lib/shipment-outcome";
 
 /** Campos sobre los que aplica la búsqueda de texto (server-side). */
 const SEARCH_FIELDS = [
@@ -102,12 +104,12 @@ export function GET(request: Request) {
           client: shipment.client ?? null,
           origin: shipment.origin ?? null,
           destination: shipment.destination ?? null,
-          sale: null,
+          sale: shipment.sale ?? null,
           product: shipment.product ?? null,
           pickupDate: shipment.pickupDate ?? null,
           deliveryDate: shipment.deliveryDate ?? null,
           legalName: shipment.legalName ?? null,
-          cost: null,
+          cost: shipment.cost ?? null,
           operatorName: shipment.operatorName ?? null,
           truck: shipment.truck ?? null,
           trailer: shipment.trailer ?? null,
@@ -177,11 +179,11 @@ export function GET(request: Request) {
       }),
     ]);
 
-    // La tarifa de venta vive en Finanzas; se empareja igual que en esa tabla.
+    // La tarifa se captura en el embarque; los registros viejos la traen de Finanzas.
     const finances = await prisma.finance.findMany({ orderBy: { createdAt: "desc" } });
 
     return Response.json({
-      data: shipments.map((s) => ({ ...toJson(s), sale: findFinanceForShipment(s, finances)?.sale ?? null })),
+      data: shipments.map((s) => ({ ...toJson(s), ...effectiveTariffs(s, findFinanceForShipment(s, finances)) })),
       total,
       page,
       pageSize,
@@ -197,6 +199,12 @@ export function POST(request: Request) {
       pickupDate, deliveryDate, legalName, operatorName,
       truck, trailer, unit, phone, comments, incident, incidentType, status,
     } = body as Record<string, string | undefined>;
+
+    const tariffs = readTariffs(body as Record<string, unknown>);
+    if (!tariffs.ok) return Response.json({ error: tariffs.error }, { status: 400 });
+    if (Object.keys(tariffs.data).length > 0 && !canManageTariffs(session.user)) {
+      return Response.json({ error: "Sin permiso para capturar tarifas" }, { status: 403 });
+    }
 
     const validStatuses = ["pending", "delivered", "delivered_with_delay", "not_delivered", "at_risk", "returned"];
 
@@ -218,6 +226,8 @@ export function POST(request: Request) {
         comments: comments?.trim() || null,
         incident: incident?.trim() || null,
         incidentType: incidentType?.trim() || null,
+        ...tariffs.data,
+        deliveryOutcome: isDeliveryOutcome(status) ? status : null,
         ...(status && validStatuses.includes(status) && { status: status as "pending" }),
       },
     });

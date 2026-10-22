@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 import { logAudit } from "@/lib/audit-log";
 import { findFinanceForShipment } from "@/lib/finance-shipment-match";
+import { readTariffs, canManageTariffs, effectiveTariffs } from "@/lib/shipment-tariffs";
+import { isDeliveryOutcome } from "@/lib/shipment-outcome";
 
 /** Campos sobre los que aplica la búsqueda de texto (server-side). */
 const SEARCH_FIELDS = [
@@ -132,7 +134,7 @@ export async function GET(request: Request) {
     return Response.json({
       data: shipments.map((s) => ({
         ...toJson(s),
-        ...(finances ? { sale: findFinanceForShipment(s, finances)?.sale ?? null } : {}),
+        ...(finances ? effectiveTariffs(s, findFinanceForShipment(s, finances)) : {}),
       })),
       total,
       page,
@@ -150,7 +152,7 @@ export async function POST(request: Request) {
     const session = await requireCollaboratorOrAdmin();
     const me = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { canCreateShipments: true },
+      select: { canCreateShipments: true, canViewFinances: true },
     });
     if (!me?.canCreateShipments) {
       return Response.json({ error: "Sin permiso" }, { status: 403 });
@@ -162,6 +164,12 @@ export async function POST(request: Request) {
       pickupDate, deliveryDate, legalName, operatorName,
       truck, trailer, unit, phone, comments, incident, incidentType, status,
     } = body as Record<string, string | undefined>;
+
+    const tariffs = readTariffs(body as Record<string, unknown>);
+    if (!tariffs.ok) return Response.json({ error: tariffs.error }, { status: 400 });
+    if (Object.keys(tariffs.data).length > 0 && !canManageTariffs(session.user, me)) {
+      return Response.json({ error: "Sin permiso para capturar tarifas" }, { status: 403 });
+    }
 
     const validStatuses = ["pending", "delivered", "delivered_with_delay", "not_delivered", "at_risk", "returned"];
 
@@ -183,6 +191,8 @@ export async function POST(request: Request) {
         comments: comments?.trim() || null,
         incident: incident?.trim() || null,
         incidentType: incidentType?.trim() || null,
+        ...tariffs.data,
+        deliveryOutcome: isDeliveryOutcome(status) ? status : null,
         ...(status && validStatuses.includes(status) && { status: status as "pending" }),
       },
     });

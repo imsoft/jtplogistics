@@ -12,11 +12,25 @@ export type PrismaRoute = {
   status: string;
   createdById: string | null;
   createdBy: { id: string; name: string } | null;
+  bulkImported?: boolean;
   createdAt: Date;
   unitTargets?: { unitType: string; target: number | null }[];
 };
 
 export const VALID_STATUSES: RouteStatus[] = ["active", "inactive", "pending"];
+
+/** Etiqueta de las rutas que llegaron por carga masiva sin dueño elegido. */
+export const BULK_IMPORT_LABEL = "Carga masiva";
+
+/**
+ * Quién se muestra como creador de una ruta. En una carga masiva el usuario
+ * guardado es quien subió el archivo, no quien hizo la ruta: se muestra
+ * "Carga masiva" para no atribuírsela.
+ */
+export function routeCreatorName(r: { bulkImported?: boolean | null; createdBy?: { name: string } | null }): string | null {
+  if (r.bulkImported) return BULK_IMPORT_LABEL;
+  return r.createdBy?.name ?? null;
+}
 
 export function routeToJson(r: PrismaRoute) {
   const targets =
@@ -38,7 +52,7 @@ export function routeToJson(r: PrismaRoute) {
     unitType: r.unitType as UnitType,
     unitTargets: targets,
     status: r.status as RouteStatus,
-    createdByName: r.createdBy?.name ?? undefined,
+    createdByName: routeCreatorName(r) ?? undefined,
     createdAt: r.createdAt.toISOString(),
   };
 }

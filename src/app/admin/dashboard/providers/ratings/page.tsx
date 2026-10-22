@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { ChevronLeft, Star, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -390,8 +391,28 @@ export default function CarrierRatingsPage() {
         </div>
       </div>
 
+      {/* Las métricas no se capturan: salen de los embarques de cada transportista. */}
+      <div className="rounded-lg border bg-muted/30 p-4 text-sm">
+        <p className="font-medium">Cómo se calcula</p>
+        <ul className="text-muted-foreground mt-1 list-disc space-y-0.5 pl-5 text-xs">
+          <li><b>Puntualidad:</b> entregado cuenta completo, entregado con retraso la mitad y no entregado cero.</li>
+          <li><b>Tasa de entrega:</b> de los embarques con entrega registrada, cuántos llegaron (a tiempo o con retraso).</li>
+          <li><b>Sin incidencias:</b> el porcentaje de embarques con la incidencia en «No».</li>
+          <li>Se actualizan solas al cambiar el estado y la incidencia en la tabla de embarques. Un embarque cerrado cuenta con el resultado que tuvo su entrega.</li>
+          <li>La calificación automática pondera Puntualidad 40 %, Sin incidencias 30 % y Tasa de entrega 30 %. Solo cuentan los embarques con transportista registrado.</li>
+          <li>Lo único manual es «Tu calificación», al pie de cada tarjeta: estrellas y, si quieres, una nota.</li>
+        </ul>
+      </div>
+
       {!isLoaded ? (
-        <p className="text-sm text-muted-foreground">Calculando ratings…</p>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {Array.from({ length: 4 }, (_, i) => (
+              <Skeleton key={i} className="h-20 w-full" />
+            ))}
+          </div>
+          <Skeleton className="h-48 w-full" />
+        </div>
       ) : ratings.length === 0 ? (
         <p className="text-sm text-muted-foreground rounded-lg border border-dashed p-8 text-center">
           No hay embarques con razón social registrada para calcular ratings.
@@ -425,22 +446,6 @@ export default function CarrierRatingsPage() {
               </CardContent>
             </Card>
           </div>
-
-          {/* Methodology note */}
-          <Card className="bg-muted/40 border-dashed">
-            <CardContent className="px-4 py-3">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                <strong>Dos calificaciones:</strong>{" "}
-                la <strong>automática</strong> (estrellas amarillas) la calcula el
-                sistema solo, con el desempeño de los embarques —Puntualidad 40%
-                (entregado = 100 pts, con retraso = 50 pts, no entregado = 0 pts) ·
-                Sin incidencias 30% · Tasa de entrega 30%—. La{" "}
-                <strong>manual</strong> (&ldquo;Tu calificación&rdquo;, al pie de cada
-                tarjeta) la pones tú: elige las estrellas y, si quieres, agrega una
-                nota. Solo se consideran embarques con razón social registrada.
-              </p>
-            </CardContent>
-          </Card>
 
           {/* Filters */}
           <div className="flex flex-wrap gap-3">

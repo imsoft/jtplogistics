@@ -13,6 +13,7 @@ import { useIncidentTypes } from "@/hooks/use-incident-types";
 import { getIncidentSelectOptions, incidentAllowsIncidentType } from "@/lib/incident-yes-no";
 import { carrierProviderSelectOptions } from "@/lib/carrier-provider-options";
 import { shipmentLockReason } from "@/lib/shipment-lock";
+import { formatMxn, formatMxnLive, parseMxn } from "@/lib/utils";
 import type { Route } from "@/types/route.types";
 import type { Shipment, ShipmentFormData, ShipmentStatus } from "@/types/shipment.types";
 import type { Client } from "@/types/client.types";
@@ -40,6 +41,8 @@ interface ShipmentFormProps {
   isSubmitting?: boolean;
   unlocked?: boolean;
   scope?: "admin" | "collaborator";
+  /** Dirección y quien ve Finanzas: captura de tarifa de venta y de compra. */
+  showTariffs?: boolean;
 }
 
 export function ShipmentForm({
@@ -50,6 +53,7 @@ export function ShipmentForm({
   isSubmitting = false,
   unlocked = false,
   scope = "admin",
+  showTariffs = false,
 }: ShipmentFormProps) {
   // ?all=1 en los dos: la API pagina, y sin él el selector solo traería los
   // primeros 20 clientes sin avisar que faltan los demás.
@@ -72,10 +76,18 @@ export function ShipmentForm({
   const [incident, setIncident] = useState(initialValues.incident ?? "");
   const [incidentType, setIncidentType] = useState(initialValues.incidentType ?? "");
   const [status, setStatus] = useState<ShipmentStatus>(initialValues.status ?? "pending");
+  const [sale, setSale] = useState(initialValues.sale != null ? formatMxn(initialValues.sale) : "");
+  const [cost, setCost] = useState(initialValues.cost != null ? formatMxn(initialValues.cost) : "");
+  // Tarifa acordada con el cliente para esta ruta (Clientes → rutas asignadas).
+  const [agreed, setAgreed] = useState<{ key: string; value: number | null } | null>(null);
+  const [saleTouched, setSaleTouched] = useState(initialValues.sale != null);
   // Cerrado, o ya asentado sin incidencias: de solo lectura (salvo desbloqueo).
   // El "sin incidencias" se mira sobre lo guardado, no sobre lo que se está
   // eligiendo ahora: cambiar el select no debe congelar el formulario.
   const isClosed = (status === "returned" || shipmentLockReason({ incident: initialValues.incident }) !== null) && !unlocked;
+  // isClosed también se prende al elegir "Cerrado" en el formulario; para saber
+  // si solo se pueden guardar tarifas importa cómo estaba al abrirlo.
+  const lockedAtLoad = shipmentLockReason(initialValues) !== null && !unlocked;
 
   const [routes, setRoutes] = useState<Route[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
@@ -188,9 +200,48 @@ export function ShipmentForm({
     [routes]
   );
 
+  // Propone la tarifa de venta acordada con el cliente para esta ruta. Si no
+  // hay acceso a las rutas del cliente, simplemente no propone nada.
+  useEffect(() => {
+    if (!showTariffs) return;
+    const c = clients.find((x) => x.name.trim().toLowerCase() === client.trim().toLowerCase());
+    if (!c || !origin.trim() || !destination.trim()) return;
+    const key = `${c.id}|${origin}|${destination}|${unit}`;
+    let cancelled = false;
+    fetch(`/api/clients/${c.id}/routes?idsOnly=false`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((rows: { origin: string; destination: string; unitType: string; clientTarget: number | null }[]) => {
+        if (cancelled || !Array.isArray(rows)) return;
+        const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+        const matches = rows.filter((r) => same(r.origin, origin) && same(r.destination, destination) && r.clientTarget != null);
+        const best = matches.find((r) => unit && r.unitType === unit) ?? matches[0];
+        const target = best?.clientTarget ?? null;
+        setAgreed({ key, value: target });
+        if (target != null && !saleTouched) setSale(formatMxn(target));
+      })
+      .catch(() => {
+        if (!cancelled) setAgreed({ key, value: null });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [showTariffs, clients, client, origin, destination, unit, saleTouched]);
+
+  // Solo vale la tarifa propuesta para el cliente y la ruta que están elegidos ahora.
+  const agreedClient = clients.find((x) => x.name.trim().toLowerCase() === client.trim().toLowerCase());
+  const agreedSale =
+    agreed && agreedClient && agreed.key === `${agreedClient.id}|${origin}|${destination}|${unit}` ? agreed.value : null;
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const tariffs = showTariffs ? { sale: sale.trim(), cost: cost.trim() } : {};
+    // Bloqueado desde que se abrió: lo único que se puede guardar son las tarifas.
+    if (lockedAtLoad && showTariffs) {
+      onSubmit(tariffs as ShipmentFormData);
+      return;
+    }
     onSubmit({
+      ...tariffs,
       eco,
       client,
       origin,
@@ -352,6 +403,63 @@ export function ShipmentForm({
           />
         </div>
       </div>
+      {showTariffs && (
+        <div className="space-y-3 rounded-lg border p-4">
+          <div>
+            <p className="text-sm font-semibold">Tarifas</p>
+            <p className="text-muted-foreground text-xs">
+              {lockedAtLoad
+                ? "El embarque está bloqueado, pero las tarifas sí se pueden capturar."
+                : "Solo las ven dirección y quien tiene acceso a Finanzas. Al cerrar el embarque pasan a la tabla de finanzas."}
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="shipment-sale">Tarifa de venta (precio al cliente)</Label>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground text-sm">$</span>
+                <Input
+                  id="shipment-sale"
+                  inputMode="decimal"
+                  value={sale}
+                  onChange={(e) => {
+                    setSaleTouched(true);
+                    setSale(formatMxnLive(e.target.value));
+                  }}
+                />
+              </div>
+              {agreedSale != null && (
+                <p className="text-muted-foreground text-xs">
+                  {parseMxn(sale) === agreedSale ? (
+                    "Es la tarifa acordada con el cliente para esta ruta."
+                  ) : (
+                    <>
+                      Tarifa acordada con el cliente para esta ruta: ${formatMxn(agreedSale)}.{" "}
+                      <button
+                        type="button"
+                        className="text-primary font-medium underline-offset-2 hover:underline"
+                        onClick={() => {
+                          setSaleTouched(true);
+                          setSale(formatMxn(agreedSale));
+                        }}
+                      >
+                        Usarla
+                      </button>
+                    </>
+                  )}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="shipment-cost">Tarifa de compra (precio del transportista)</Label>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground text-sm">$</span>
+                <Input id="shipment-cost" inputMode="decimal" value={cost} onChange={(e) => setCost(formatMxnLive(e.target.value))} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <FormActions
         submitLabel={submitLabel}
         cancelHref={cancelHref}

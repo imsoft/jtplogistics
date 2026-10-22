@@ -25,8 +25,11 @@ export interface Shipment {
   incident: string | null;
   incidentType: string | null;
   status: ShipmentStatus;
-  /** Tarifa de venta, tomada de Finanzas. Ausente si quien consulta no puede ver Finanzas. */
+  /** Tarifas en pesos. Ausentes si quien consulta no puede ver Finanzas. */
   sale?: number | null;
+  cost?: number | null;
+  /** Cómo terminó la entrega; se conserva al cerrar. */
+  deliveryOutcome?: string | null;
   createdAt: string;
 }
 
@@ -48,4 +51,7 @@ export interface ShipmentFormData {
   incident: string;
   incidentType: string;
   status: ShipmentStatus;
+  /** Solo los manda quien puede capturar tarifas. */
+  sale?: string;
+  cost?: string;
 }

@@ -299,6 +299,9 @@ model Route {
   destinationState String?            @map("destination_state")
   unitType         String             @default("caja_seca") @map("unit_type")
   status           RouteStatus        @default(pending) @map("status")
+  /// Vino de una carga masiva (Excel) sin elegir a nombre de quién: se muestra
+  /// "Carga masiva" en lugar del nombre de quien la subió.
+  bulkImported Boolean      @default(false) @map("bulk_imported")
   createdById      String?            @map("created_by_id")
   createdBy        User?              @relation("RouteCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   createdAt        DateTime           @default(now()) @map("created_at")
@@ -681,6 +684,15 @@ model Shipment {
   comments       String?        @map("comments")
   incident       String?        @map("incident")
   incidentType   String?        @map("incident_type")
+  /// Tarifa de venta (precio al cliente) y de compra (precio del transportista),
+  /// en pesos. Solo las capturan dirección y quien ve Finanzas; al cerrar el
+  /// embarque pasan al registro de finanzas.
+  sale           Float?         @map("sale")
+  cost           Float?         @map("cost")
+  /// Cómo terminó la entrega (delivered, delivered_with_delay, not_delivered).
+  /// Se conserva al cerrar el embarque: el estado "Cerrado" ya no lo dice y la
+  /// calificación de transportistas lo necesita.
+  deliveryOutcome String?       @map("delivery_outcome")
   status         ShipmentStatus @default(pending) @map("status")
   createdAt      DateTime       @default(now()) @map("created_at")
   updatedAt      DateTime       @updatedAt @map("updated_at")

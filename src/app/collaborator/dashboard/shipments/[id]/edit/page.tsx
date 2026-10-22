@@ -124,6 +124,7 @@ export default function EditCollaboratorShipmentPage() {
             onSubmit={isClosed ? handleSubmitWithConfirmation : handleSubmit}
             isSubmitting={isSubmitting}
             unlocked={isUnlocked}
+            showTariffs={permissions?.canViewFinances ?? false}
           />
         )}
       </div>

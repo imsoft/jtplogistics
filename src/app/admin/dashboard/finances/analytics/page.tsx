@@ -16,7 +16,7 @@ import {
   Cell,
   ReferenceLine,
 } from "recharts";
-import type { FinancesAnalytics, RouteMargin, LegalNameCount } from "@/app/api/admin/finances/analytics/route";
+import type { FinancesAnalytics, RouteMargin, LegalNameCount } from "@/lib/finances-analytics";
 import { DashboardHomeSkeleton } from "@/components/ui/skeletons";
 
 const MAX_ROUTES = 20;
@@ -97,6 +97,16 @@ export default function FinancesAnalyticsPage() {
       ) : (
         <div className="space-y-6">
           {/* KPIs */}
+          <p className="text-muted-foreground rounded-lg border bg-muted/30 p-4 text-sm">
+            Se calcula con la tarifa de venta y la de compra que se capturan en cada embarque.{" "}
+            <b>{data.withTariffs}</b> embarque{data.withTariffs === 1 ? "" : "s"} con las dos tarifas
+            {data.withoutTariffs > 0 && (
+              <>
+                {" "}· <b>{data.withoutTariffs}</b> sin tarifa completa, que no cuentan para el margen
+              </>
+            )}
+            .
+          </p>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <Card>
               <CardContent className="px-4 py-4">
@@ -140,7 +150,7 @@ export default function FinancesAnalyticsPage() {
             </CardHeader>
             <CardContent className="px-2 pb-4">
               {routesWithData.length === 0 ? (
-                <p className="px-4 text-sm text-muted-foreground">Sin datos de venta/costo registrados.</p>
+                <p className="px-4 text-sm text-muted-foreground">Todavía no hay embarques con tarifa de venta y de compra. Se capturan al editar cada embarque.</p>
               ) : (
                 <ResponsiveContainer width="100%" height={Math.max(300, routesWithData.length * 36)}>
                   <BarChart data={routesWithData} layout="vertical" margin={{ left: 8, right: 24, top: 4, bottom: 4 }}>

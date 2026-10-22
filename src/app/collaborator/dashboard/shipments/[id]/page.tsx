@@ -13,7 +13,7 @@ import { useUnitTypes } from "@/hooks/use-unit-types";
 import { useIncidentTypes } from "@/hooks/use-incident-types";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 import { formatIncidentYesNo } from "@/lib/incident-yes-no";
-import { formatPhone } from "@/lib/utils";
+import { formatMxn, formatPhone } from "@/lib/utils";
 import { getIncidentTypeLabel } from "@/lib/incident-type-label";
 import { SHIPMENT_STATUS_CONFIG } from "@/components/dashboard/resources/shipments-table";
 import { ShipmentTimeline } from "@/components/dashboard/resources/shipment-timeline";
@@ -104,6 +104,16 @@ export default function CollaboratorShipmentProfilePage() {
           </CardHeader>
           <CardContent className="px-4 pb-4">
             <InfoRow label="ECO" value={shipment.eco} />
+            {shipment.status === "returned" && (
+              <InfoRow
+                label="Resultado de la entrega"
+                value={
+                  shipment.deliveryOutcome
+                    ? SHIPMENT_STATUS_CONFIG[shipment.deliveryOutcome as keyof typeof SHIPMENT_STATUS_CONFIG]?.label ?? shipment.deliveryOutcome
+                    : "Sin registrar"
+                }
+              />
+            )}
             <InfoRow label="Cliente" value={shipment.client} />
             <InfoRow label="Origen" value={shipment.origin} />
             <InfoRow label="Destino" value={shipment.destination} />
@@ -111,6 +121,13 @@ export default function CollaboratorShipmentProfilePage() {
             <InfoRow label="Recolección" value={fmtDate(shipment.pickupDate)} />
             <InfoRow label="Entrega" value={fmtDate(shipment.deliveryDate)} />
             <InfoRow label="Proveedor (transportista)" value={shipment.legalName} />
+            {/* Solo llegan si quien consulta puede ver Finanzas. */}
+            {"sale" in shipment && (
+              <InfoRow label="Tarifa de venta" value={shipment.sale != null ? `$${formatMxn(shipment.sale)}` : null} />
+            )}
+            {"cost" in shipment && (
+              <InfoRow label="Tarifa de compra" value={shipment.cost != null ? `$${formatMxn(shipment.cost)}` : null} />
+            )}
           </CardContent>
         </Card>
 

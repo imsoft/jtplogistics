@@ -19,6 +19,7 @@ export default function NewShipmentPage() {
       error={error}
     >
       <ShipmentForm
+        showTariffs
         submitLabel="Crear embarque"
         cancelHref="/admin/dashboard/shipments"
         onSubmit={handleSubmit}

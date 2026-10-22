@@ -111,6 +111,9 @@ export function shipmentsToExcelAoa(
     "Celular",
     "Incidencia",
   ];
+  // La tarifa solo viene en los datos de quien puede ver Finanzas.
+  const withSale = shipments.some((s) => "sale" in s);
+  if (withSale) headers.push("Tarifa de venta");
   const rows = shipments.map((s) => [
     SHIPMENT_STATUS_LABEL[s.status] ?? s.status,
     s.eco ?? "",
@@ -124,6 +127,7 @@ export function shipmentsToExcelAoa(
     s.incidentType ? getIncidentTypeLabel(s.incidentType, incidentTypes) : "",
     s.phone ?? "",
     s.incident ? formatIncidentYesNo(s.incident) : "",
+    ...(withSale ? [s.sale ?? ""] : []),
   ]);
   return [headers, ...rows];
 }
