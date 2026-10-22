@@ -17,6 +17,7 @@ export async function GET() {
         email: true,
         validUntil: true,
         status: true,
+        rejectionReason: true,
         createdAt: true,
         createdBy: { select: { id: true, name: true } },
       },

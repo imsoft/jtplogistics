@@ -4,6 +4,10 @@
     {
       "path": "/api/cron/mural-greetings",
       "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/lead-followups",
+      "schedule": "0 14 * * *"
     }
   ]
 }

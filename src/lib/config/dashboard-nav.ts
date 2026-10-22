@@ -24,6 +24,7 @@ import { ScrollText } from "lucide-react";
 import { Ship } from "lucide-react";
 import { Anchor } from "lucide-react";
 import { DollarSign } from "lucide-react";
+import { BarChart3, Handshake } from "lucide-react";
 import { AlertTriangle, Inbox, TrendingUp, Network, StarIcon, LayoutPanelTop, MailCheck, LifeBuoy } from "lucide-react";
 
 export interface DashboardNavItem {
@@ -44,6 +45,7 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
       { title: "Rutas", href: "/admin/dashboard/routes", icon: RouteIcon },
       { title: "Cotizador", href: "/admin/dashboard/quotes", icon: Calculator },
       { title: "Cotización marítima", href: "/admin/dashboard/maritime-quotes", icon: Anchor },
+      { title: "KPIs de cotizaciones", href: "/admin/dashboard/quote-kpis", icon: BarChart3 },
       { title: "Tipos de unidades", href: "/admin/dashboard/unit-types", icon: Boxes },
       { title: "Mensajes", href: "/admin/dashboard/messages", icon: MessageSquare },
       { title: "Tipos de incidencia", href: "/admin/dashboard/incident-types", icon: AlertTriangle },
@@ -55,6 +57,7 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
     label: "Contactos",
     items: [
       { title: "Clientes", href: "/admin/dashboard/clients", icon: Users },
+      { title: "CRM de clientes", href: "/admin/dashboard/client-leads", icon: Handshake },
       { title: "Proveedores", href: "/admin/dashboard/providers", icon: Truck },
       { title: "Prospección de proveedores", href: "/admin/dashboard/prospects", icon: Search },
       { title: "Alta de proveedores", href: "/admin/dashboard/provider-onboardings", icon: ClipboardCheck },

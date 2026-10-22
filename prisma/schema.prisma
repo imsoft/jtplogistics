@@ -55,6 +55,8 @@ model User {
   canViewTimeClock  Boolean       @default(false) @map("can_view_time_clock")
   /// Capturar los horarios de los colaboradores. Lo lleva RH.
   canManageSchedules Boolean      @default(false) @map("can_manage_schedules")
+  /// Ver los KPIs de cotizaciones (tasa de cierre, montos, por colaborador).
+  canViewQuoteKpis   Boolean      @default(false) @map("can_view_quote_kpis")
   canViewMessages   Boolean       @default(false) @map("can_view_messages")
   canViewIdeas      Boolean       @default(false) @map("can_view_ideas")
   canViewRoutes     Boolean       @default(false) @map("can_view_routes")
@@ -70,6 +72,10 @@ model User {
   canCreateProviderOnboardings Boolean @default(false) @map("can_create_provider_onboardings")
   canUpdateProviderOnboardings Boolean @default(false) @map("can_update_provider_onboardings")
   canDeleteProviderOnboardings Boolean @default(false) @map("can_delete_provider_onboardings")
+  canViewClientLeads   Boolean @default(false) @map("can_view_client_leads")
+  canCreateClientLeads Boolean @default(false) @map("can_create_client_leads")
+  canUpdateClientLeads Boolean @default(false) @map("can_update_client_leads")
+  canDeleteClientLeads Boolean @default(false) @map("can_delete_client_leads")
   canViewClients    Boolean       @default(false) @map("can_view_clients")
   canViewEmployees  Boolean       @default(false) @map("can_view_employees")
   canViewVendors    Boolean       @default(false) @map("can_view_vendors")
@@ -169,6 +175,9 @@ model User {
   leavesCreated        TimeClockLeave[] @relation("LeaveAuthor")
   prospects            ProviderProspect[] @relation("ProspectAuthor")
   onboardings          ProviderOnboarding[] @relation("OnboardingAuthor")
+  clientLeadsOwned     ClientLead[] @relation("ClientLeadOwner")
+  clientLeadsCreated   ClientLead[] @relation("ClientLeadAuthor")
+  clientLeadActivities ClientLeadActivity[] @relation("ClientLeadActivityAuthor")
 
   /// Usuario que un proveedor (transportista) da de alta para su empresa.
   /// Conserva el rol carrier para entrar al mismo panel, pero trabaja sobre
@@ -385,6 +394,7 @@ model Client {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   clientRoutes ClientRoute[]
+  leads        ClientLead[]
 
   @@map("clients")
 }
@@ -744,6 +754,9 @@ model GeneratedQuote {
   validUntil  DateTime       @map("valid_until")
   rows        Json           @map("rows")
   status      QuoteStatus    @default(enviada) @map("status")
+  /// Por qué se perdió (clave de QUOTE_REJECTION_REASONS). Solo con estado rechazada.
+  rejectionReason String?    @map("rejection_reason")
+  rejectionNote   String?    @map("rejection_note")
   createdById String         @map("created_by_id")
   createdBy   User           @relation(fields: [createdById], references: [id], onDelete: Cascade)
   comments    QuoteComment[]
@@ -774,6 +787,8 @@ model MaritimeQuote {
   client      String      @map("client")
   data        Json        @map("data")
   status      QuoteStatus @default(enviada) @map("status")
+  rejectionReason String? @map("rejection_reason")
+  rejectionNote   String? @map("rejection_note")
   validUntil  DateTime    @map("valid_until")
   createdById String      @map("created_by_id")
   createdBy   User        @relation(fields: [createdById], references: [id], onDelete: Cascade)
@@ -1278,4 +1293,90 @@ model ProviderOnboarding {
 
   @@index([contractStatus])
   @@map("provider_onboardings")
+}
+
+// ---- CRM de clientes ----
+
+/// Etapas del embudo de venta. perdido es una salida, no un avance.
+enum ClientLeadStage {
+  prospecto
+  contactado
+  cotizado
+  negociacion
+  ganado
+  perdido
+}
+
+enum ClientLeadSource {
+  referido
+  llamada
+  sitio_web
+  redes_sociales
+  expo
+  cliente_actual
+  otro
+}
+
+enum ClientLeadActivityType {
+  llamada
+  correo
+  whatsapp
+  reunion
+  visita
+  cotizacion
+  nota
+}
+
+/// Empresa a la que se le quiere vender (prospecto de cliente).
+model ClientLead {
+  id               String            @id @default(cuid()) @map("id")
+  companyName      String            @map("company_name")
+  contactName      String?           @map("contact_name")
+  position         String?           @map("position")
+  phone            String?           @map("phone")
+  email            String?           @map("email")
+  city             String?           @map("city")
+  /// Giro o industria del cliente.
+  industry         String?           @map("industry")
+  source           ClientLeadSource? @map("source")
+  stage            ClientLeadStage   @default(prospecto) @map("stage")
+  /// Venta mensual que se espera si se cierra, en pesos.
+  estimatedMonthly Float?            @map("estimated_monthly")
+  notes            String?           @map("notes")
+  /// Por qué se perdió. Obligatorio al marcarlo perdido.
+  lostReason       String?           @map("lost_reason")
+  /// Próximo seguimiento: qué toca hacer y cuándo.
+  nextAction       String?           @map("next_action")
+  nextFollowUpOn   DateTime?         @db.Date @map("next_follow_up_on")
+  ownerId          String?           @map("owner_id")
+  owner            User?             @relation("ClientLeadOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  /// Cliente del catálogo en el que se convirtió (o al que corresponde).
+  clientId         String?           @map("client_id")
+  client           Client?           @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  createdById      String?           @map("created_by_id")
+  createdBy        User?             @relation("ClientLeadAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  activities       ClientLeadActivity[]
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  @@index([stage])
+  @@index([ownerId])
+  @@index([nextFollowUpOn])
+  @@map("client_leads")
+}
+
+/// Llamada, correo, visita… lo que se hizo con el prospecto, en orden.
+model ClientLeadActivity {
+  id         String                 @id @default(cuid()) @map("id")
+  leadId     String                 @map("lead_id")
+  lead       ClientLead             @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  type       ClientLeadActivityType @map("type")
+  summary    String                 @map("summary")
+  occurredOn DateTime               @db.Date @map("occurred_on")
+  authorId   String?                @map("author_id")
+  author     User?                  @relation("ClientLeadActivityAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt  DateTime               @default(now()) @map("created_at")
+
+  @@index([leadId, occurredOn])
+  @@map("client_lead_activities")
 }

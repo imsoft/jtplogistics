@@ -22,6 +22,7 @@ export const PERMISSION_MODULES = [
   { suffix: "ProviderProspects", label: "Prospección de proveedores" },
   { suffix: "ProviderOnboardings", label: "Alta de proveedores" },
   { suffix: "Clients", label: "Clientes" },
+  { suffix: "ClientLeads", label: "CRM de clientes" },
   { suffix: "Employees", label: "Colaboradores" },
   { suffix: "Vendors", label: "Vendedores" },
   { suffix: "Laptops", label: "Laptops" },
@@ -48,6 +49,7 @@ export const PERMISSION_FIELDS = [
   "canChangeEmployeeEmail",
   "canViewTimeClock",
   "canManageSchedules",
+  "canViewQuoteKpis",
 ];
 
 export const PERMISSION_LABELS: Record<string, string> = Object.fromEntries([
@@ -63,6 +65,7 @@ export const PERMISSION_LABELS: Record<string, string> = Object.fromEntries([
   ["canChangeEmployeeEmail", "Colaboradores: cambiar correo de acceso"],
   ["canViewTimeClock", "Checador: ver el registro de todos"],
   ["canManageSchedules", "Checador: capturar horarios"],
+  ["canViewQuoteKpis", "KPIs de cotizaciones: ver"],
 ]);
 
 /** Todo lo que cuelga de un colaborador: equipo asignado y cuentas de correo. */

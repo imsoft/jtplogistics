@@ -20,6 +20,8 @@ import {
   type QuoteStatusDisplay,
 } from "@/lib/constants/quote-status";
 import { QuoteRowActions } from "@/components/dashboard/quotes/quote-row-actions";
+import { RejectionReasonDialog, type RejectionChoice } from "@/components/dashboard/quotes/rejection-reason-dialog";
+import { QUOTE_REJECTION_LABELS, type QuoteRejectionReason } from "@/lib/quote-rejection";
 
 export interface CrmQuote {
   id: string;
@@ -32,6 +34,8 @@ export interface CrmQuote {
   createdAt: string;
   createdByName: string;
   status: QuoteStatus;
+  /** Por qué se perdió; solo en rechazadas. */
+  rejectionReason?: string | null;
 }
 
 const FILTER_ALL = "all" as const;
@@ -103,6 +107,8 @@ export function QuotesCrmTable({
 }) {
   const [quotes, setQuotes] = useState<CrmQuote[]>(initialQuotes);
   const [filter, setFilter] = useState<FilterValue>(FILTER_ALL);
+  // Rechazar no se aplica de inmediato: primero se pide el motivo.
+  const [rejecting, setRejecting] = useState<CrmQuote | null>(null);
 
   // Conteo por estado mostrado (incluye "vencida" calculada).
   const counts = useMemo(() => {
@@ -121,14 +127,23 @@ export function QuotesCrmTable({
     );
   }, [quotes, filter]);
 
-  async function changeStatus(id: string, status: QuoteStatus) {
+  async function changeStatus(id: string, status: QuoteStatus, rejection?: RejectionChoice) {
+    if (status === "rechazada" && !rejection) {
+      const q = quotes.find((x) => x.id === id);
+      if (q && q.status !== "rechazada") setRejecting(q);
+      return;
+    }
     const prev = quotes;
-    setQuotes((qs) => qs.map((q) => (q.id === id ? { ...q, status } : q)));
+    setQuotes((qs) =>
+      qs.map((q) =>
+        q.id === id ? { ...q, status, rejectionReason: rejection?.rejectionReason ?? null } : q
+      )
+    );
     try {
       const res = await fetch(`${apiEndpoint}/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, ...rejection }),
       });
       if (!res.ok) throw new Error();
       toast.success("Estado actualizado");
@@ -209,6 +224,11 @@ export function QuotesCrmTable({
                     </td>
                     <td className="px-4 py-3">
                       <StatusCell quote={q} onChange={changeStatus} editable={canUpdateStatus} />
+                      {q.status === "rechazada" && q.rejectionReason && (
+                        <span className="text-muted-foreground mt-1 block text-xs">
+                          {QUOTE_REJECTION_LABELS[q.rejectionReason as QuoteRejectionReason] ?? q.rejectionReason}
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground hidden @2xl/table:table-cell">{q.contact || "—"}</td>
                     <td className="px-4 py-3 text-muted-foreground hidden @4xl/table:table-cell">
@@ -249,6 +269,16 @@ export function QuotesCrmTable({
           </div>
         </CardContent>
       </Card>
+
+      <RejectionReasonDialog
+        quoteLabel={rejecting ? `${rejecting.quoteNumber} · ${rejecting.company}` : null}
+        onCancel={() => setRejecting(null)}
+        onConfirm={(choice) => {
+          const id = rejecting!.id;
+          setRejecting(null);
+          void changeStatus(id, "rechazada", choice);
+        }}
+      />
     </div>
   );
 }

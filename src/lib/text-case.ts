@@ -16,6 +16,9 @@ const PRESERVE_CASE_KEYS = new Set(["producttypes", "title", "description", "dep
 
 function shouldSkipLowercaseForKey(key?: string): boolean {
   if (!key) return false;
+  // Los ids de usuario de Better Auth traen mayúsculas: en minúsculas ya no
+  // existen. Aplica a `id` y a cualquier llave camelCase que termine en Id/Ids.
+  if (/^id$|Ids?$/.test(key)) return true;
   const normalizedKey = key.replace(/[^a-z]/gi, "").toLowerCase();
   if (PRESERVE_CASE_KEYS.has(normalizedKey)) return true;
   return SENSITIVE_KEYS.has(normalizedKey);

@@ -26,6 +26,7 @@ export default async function QuotesPage() {
       email: true,
       validUntil: true,
       status: true,
+      rejectionReason: true,
       createdAt: true,
       createdBy: { select: { name: true } },
     },
@@ -40,6 +41,7 @@ export default async function QuotesPage() {
     email: q.email,
     validUntil: q.validUntil.toISOString(),
     status: q.status,
+    rejectionReason: q.rejectionReason,
     createdAt: q.createdAt.toISOString(),
     createdByName: q.createdBy.name,
   }));

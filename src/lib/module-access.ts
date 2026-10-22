@@ -19,21 +19,26 @@ const PREFIX: Record<ModuleAction, string> = {
   delete: "canDelete",
 };
 
+/**
+ * Si una sesión ya abierta tiene permiso sobre otro módulo, sin lanzar. Sirve
+ * para acciones que cruzan módulos (p. ej. convertir un prospecto en cliente).
+ */
+export async function hasModuleAccess(
+  user: { id: string; role?: string | null },
+  suffix: string,
+  action: ModuleAction
+): Promise<boolean> {
+  // Dirección y soporte de TI entran por su rol, como en el resto del sistema.
+  if (user.role === "admin" || user.role === "developer") return true;
+  if (user.role !== "collaborator") return false;
+  const field = `${PREFIX[action]}${suffix}`;
+  const me = await prisma.user.findUnique({ where: { id: user.id }, select: { [field]: true } });
+  return Boolean(me && (me as Record<string, unknown>)[field]);
+}
+
 export async function requireModuleAccess(suffix: string, action: ModuleAction) {
   const session = await requireSession();
-  const { role, id } = session.user;
-
-  // Dirección y soporte de TI entran por su rol, como en el resto del sistema.
-  if (role === "admin" || role === "developer") return session;
-
-  if (role === "collaborator") {
-    const field = `${PREFIX[action]}${suffix}`;
-    const me = await prisma.user.findUnique({
-      where: { id },
-      select: { [field]: true },
-    });
-    if (me && (me as Record<string, unknown>)[field]) return session;
-  }
+  if (await hasModuleAccess(session.user, suffix, action)) return session;
 
   throw new Response(JSON.stringify({ error: "Sin permiso" }), {
     status: 403,

@@ -39,6 +39,10 @@ interface CollaboratorPermissions {
   canCreateProviderOnboardings: boolean;
   canUpdateProviderOnboardings: boolean;
   canDeleteProviderOnboardings: boolean;
+  canViewClientLeads: boolean;
+  canCreateClientLeads: boolean;
+  canUpdateClientLeads: boolean;
+  canDeleteClientLeads: boolean;
   canViewClients: boolean;
   canCreateClients: boolean;
   canUpdateClients: boolean;
@@ -57,6 +61,7 @@ interface CollaboratorPermissions {
   canChangeEmployeeEmail: boolean;
   canViewTimeClock: boolean;
   canManageSchedules: boolean;
+  canViewQuoteKpis: boolean;
   canCreateLaptops: boolean;
   canUpdateLaptops: boolean;
   canDeleteLaptops: boolean;

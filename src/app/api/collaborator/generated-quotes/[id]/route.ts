@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { rejectionUpdate } from "@/lib/quote-rejection";
 import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 import type { Prisma, QuoteStatus } from "@prisma/client";
@@ -90,11 +91,19 @@ export async function PATCH(
       validUntil?: string;
       rows?: Prisma.InputJsonValue[];
       status?: string;
+      rejectionReason?: string;
+      rejectionNote?: string;
     };
 
     if (body.status !== undefined && !QUOTE_STATUS_VALUES.includes(body.status as QuoteStatus)) {
       return Response.json({ error: "Estado inválido" }, { status: 400 });
     }
+
+    // Solo se valida el motivo si el estado cambia o llega un motivo nuevo:
+    // editar una cotización ya rechazada no debe pedirlo otra vez.
+    const statusChanges = body.status !== undefined && body.status !== quote.status;
+    const rejection = rejectionUpdate(statusChanges || body.rejectionReason !== undefined ? body : {});
+    if (!rejection.ok) return Response.json({ error: rejection.error }, { status: 400 });
 
     await prisma.generatedQuote.update({
       where: { id },
@@ -106,6 +115,7 @@ export async function PATCH(
         ...(body.validUntil && { validUntil: new Date(body.validUntil) }),
         ...(body.rows && { rows: body.rows }),
         ...(body.status && { status: body.status as QuoteStatus }),
+        ...rejection.data,
       },
     });
 

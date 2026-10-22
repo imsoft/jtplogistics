@@ -34,6 +34,7 @@ const MODULES = [
   { suffix: "ProviderProspects", label: "Prospección de proveedores" },
   { suffix: "ProviderOnboardings", label: "Alta de proveedores" },
   { suffix: "Clients", label: "Clientes" },
+  { suffix: "ClientLeads", label: "CRM de clientes" },
   { suffix: "Employees", label: "Colaboradores" },
   { suffix: "Vendors", label: "Vendedores" },
   { suffix: "Laptops", label: "Laptops" },
@@ -63,6 +64,8 @@ const PERMISSION_FIELDS = [
   // Marcar lo propio no pide permiso; esto es ver el registro de todos.
   { key: "canViewTimeClock", label: "Checador: ver el registro de todos" },
   { key: "canManageSchedules", label: "Checador: capturar horarios" },
+  // Solo lectura: indicadores de cotizaciones de todo el equipo.
+  { key: "canViewQuoteKpis", label: "KPIs de cotizaciones: ver" },
 ];
 
 const PERM_ICONS: Record<string, React.ElementType> = {

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import {
+  BarChart3,
+  Handshake,
   User as UserIcon,
   Lightbulb,
   MessageSquare,
@@ -43,6 +45,8 @@ interface Permissions {
   canViewProviders: boolean;
   canViewProviderProspects: boolean;
   canViewProviderOnboardings: boolean;
+  canViewClientLeads: boolean;
+  canViewQuoteKpis: boolean;
   canViewClients: boolean;
   canViewEmployees: boolean;
   canUpdateEmployees: boolean;
@@ -79,6 +83,7 @@ const allNavGroups: PermNavGroup[] = [
       { title: "Rutas", href: `${BASE}/routes`, icon: RouteIcon, permission: "canViewRoutes" },
       { title: "Cotizador", href: `${BASE}/quotes`, icon: Calculator, permission: "canViewQuotes" },
       { title: "Cotización marítima", href: `${BASE}/maritime-quotes`, icon: Anchor, permission: "canViewMaritimeQuotes" },
+      { title: "KPIs de cotizaciones", href: `${BASE}/quote-kpis`, icon: BarChart3, permission: "canViewQuoteKpis" },
       { title: "Tipos de unidades", href: `${BASE}/unit-types`, icon: Boxes, permission: "canViewUnitTypes" },
       { title: "Mensajes", href: `${BASE}/messages`, icon: MessageSquare, permission: "canViewMessages" },
       
@@ -95,6 +100,7 @@ const allNavGroups: PermNavGroup[] = [
     label: "Contactos",
     items: [
       { title: "Clientes", href: `${BASE}/clients`, icon: Users, permission: "canViewClients" },
+      { title: "CRM de clientes", href: `${BASE}/client-leads`, icon: Handshake, permission: "canViewClientLeads" },
       { title: "Proveedores", href: `${BASE}/providers`, icon: Truck, permission: "canViewProviders" },
       { title: "Prospección de proveedores", href: `${BASE}/prospects`, icon: Search, permission: "canViewProviderProspects" },
       { title: "Alta de proveedores", href: `${BASE}/provider-onboardings`, icon: ClipboardCheck, permission: "canViewProviderOnboardings" },

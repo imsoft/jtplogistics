@@ -26,6 +26,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { cn, formatMxn } from "@/lib/utils";
+import { RejectionReasonDialog, type RejectionChoice } from "@/components/dashboard/quotes/rejection-reason-dialog";
+import { QUOTE_REJECTION_LABELS, type QuoteRejectionReason } from "@/lib/quote-rejection";
 import {
   QUOTE_STATUS_CONFIG,
   QUOTE_STATUS_OPTIONS,
@@ -42,6 +44,8 @@ export interface CrmMaritimeQuote {
   createdAt: string;
   createdByName: string;
   total: number;
+  /** Por qué se perdió; solo en rechazadas. */
+  rejectionReason?: string | null;
 }
 
 const FILTER_ALL = "all" as const;
@@ -65,6 +69,7 @@ export function MaritimeQuotesCrmTable({
 }) {
   const [quotes, setQuotes] = useState<CrmMaritimeQuote[]>(initialQuotes);
   const [filter, setFilter] = useState<FilterValue>(FILTER_ALL);
+  const [rejecting, setRejecting] = useState<CrmMaritimeQuote | null>(null);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
@@ -80,14 +85,24 @@ export function MaritimeQuotesCrmTable({
     return quotes.filter((q) => getQuoteDisplayStatus(q.status, q.validUntil) === filter);
   }, [quotes, filter]);
 
-  async function changeStatus(id: string, status: QuoteStatus) {
+  async function changeStatus(id: string, status: QuoteStatus, rejection?: RejectionChoice) {
+    // Rechazar no se aplica de inmediato: primero se pide el motivo.
+    if (status === "rechazada" && !rejection) {
+      const q = quotes.find((x) => x.id === id);
+      if (q && q.status !== "rechazada") setRejecting(q);
+      return;
+    }
     const prev = quotes;
-    setQuotes((qs) => qs.map((q) => (q.id === id ? { ...q, status } : q)));
+    setQuotes((qs) =>
+      qs.map((q) =>
+        q.id === id ? { ...q, status, rejectionReason: rejection?.rejectionReason ?? null } : q
+      )
+    );
     try {
       const res = await fetch(`/api/maritime-quotes/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, ...rejection }),
       });
       if (!res.ok) throw new Error();
       toast.success("Estado actualizado");
@@ -201,6 +216,11 @@ export function MaritimeQuotesCrmTable({
                           </DropdownMenuContent>
                         </DropdownMenu>
                         )}
+                        {q.status === "rechazada" && q.rejectionReason && (
+                          <span className="text-muted-foreground mt-1 block text-xs">
+                            {QUOTE_REJECTION_LABELS[q.rejectionReason as QuoteRejectionReason] ?? q.rejectionReason}
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-right font-medium">${formatMxn(q.total)}</td>
                       <td className="px-4 py-3 text-muted-foreground hidden @4xl/table:table-cell">
@@ -271,6 +291,16 @@ export function MaritimeQuotesCrmTable({
           </div>
         </CardContent>
       </Card>
+
+      <RejectionReasonDialog
+        quoteLabel={rejecting ? `${rejecting.reference} · ${rejecting.client}` : null}
+        onCancel={() => setRejecting(null)}
+        onConfirm={(choice) => {
+          const id = rejecting!.id;
+          setRejecting(null);
+          void changeStatus(id, "rechazada", choice);
+        }}
+      />
     </div>
   );
 }

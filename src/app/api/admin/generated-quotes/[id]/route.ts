@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { rejectionUpdate } from "@/lib/quote-rejection";
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
 import type { Prisma, QuoteStatus } from "@prisma/client";
@@ -67,6 +68,8 @@ export function PATCH(
       validUntil?: string;
       rows?: Prisma.InputJsonValue[];
       status?: string;
+      rejectionReason?: string;
+      rejectionNote?: string;
     };
 
     if (body.status !== undefined && !QUOTE_STATUS_VALUES.includes(body.status as QuoteStatus)) {
@@ -75,6 +78,12 @@ export function PATCH(
 
     const quote = await prisma.generatedQuote.findUnique({ where: { id } });
     if (!quote) return Response.json({ error: "No encontrado" }, { status: 404 });
+
+    // Solo se valida el motivo si el estado cambia o llega un motivo nuevo:
+    // editar una cotización ya rechazada no debe pedirlo otra vez.
+    const statusChanges = body.status !== undefined && body.status !== quote.status;
+    const rejection = rejectionUpdate(statusChanges || body.rejectionReason !== undefined ? body : {});
+    if (!rejection.ok) return Response.json({ error: rejection.error }, { status: 400 });
 
     const updated = await prisma.generatedQuote.update({
       where: { id },
@@ -86,6 +95,7 @@ export function PATCH(
         ...(body.validUntil && { validUntil: new Date(body.validUntil) }),
         ...(body.rows && { rows: body.rows }),
         ...(body.status && { status: body.status as QuoteStatus }),
+        ...rejection.data,
       },
     });
 

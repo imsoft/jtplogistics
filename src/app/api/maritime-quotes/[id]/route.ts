@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { rejectionUpdate } from "@/lib/quote-rejection";
 import { prisma } from "@/lib/db";
 import { gateMaritime } from "@/lib/maritime-quote-auth";
 import { QUOTE_STATUS_VALUES } from "@/lib/constants/quote-status";
@@ -72,6 +73,8 @@ export async function PATCH(
       validUntil?: string;
       data?: MaritimeQuoteInput;
       status?: string;
+      rejectionReason?: string;
+      rejectionNote?: string;
     };
 
     // Cambiar solo el estado requiere canUpdate; editar contenido también.
@@ -86,6 +89,12 @@ export async function PATCH(
 
     await assertCanModifyAccepted(session, quote.status);
 
+    // Solo se valida el motivo si el estado cambia o llega un motivo nuevo:
+    // editar una cotización ya rechazada no debe pedirlo otra vez.
+    const statusChanges = body.status !== undefined && body.status !== quote.status;
+    const rejection = rejectionUpdate(statusChanges || body.rejectionReason !== undefined ? body : {});
+    if (!rejection.ok) return Response.json({ error: rejection.error }, { status: 400 });
+
     const updated = await prisma.maritimeQuote.update({
       where: { id },
       data: {
@@ -94,6 +103,7 @@ export async function PATCH(
         ...(body.validUntil && { validUntil: new Date(body.validUntil) }),
         ...(body.data && { data: body.data as unknown as Prisma.InputJsonValue }),
         ...(body.status && { status: body.status as QuoteStatus }),
+        ...rejection.data,
       },
     });
 
