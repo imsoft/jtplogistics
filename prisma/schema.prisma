@@ -76,6 +76,11 @@ model User {
   canCreateClientLeads Boolean @default(false) @map("can_create_client_leads")
   canUpdateClientLeads Boolean @default(false) @map("can_update_client_leads")
   canDeleteClientLeads Boolean @default(false) @map("can_delete_client_leads")
+  /// Administración: cuentas por cobrar y por pagar, bancos y gastos.
+  canViewBilling   Boolean @default(false) @map("can_view_billing")
+  canCreateBilling Boolean @default(false) @map("can_create_billing")
+  canUpdateBilling Boolean @default(false) @map("can_update_billing")
+  canDeleteBilling Boolean @default(false) @map("can_delete_billing")
   canViewClients    Boolean       @default(false) @map("can_view_clients")
   canViewEmployees  Boolean       @default(false) @map("can_view_employees")
   canViewVendors    Boolean       @default(false) @map("can_view_vendors")
@@ -178,6 +183,10 @@ model User {
   clientLeadsOwned     ClientLead[] @relation("ClientLeadOwner")
   clientLeadsCreated   ClientLead[] @relation("ClientLeadAuthor")
   clientLeadActivities ClientLeadActivity[] @relation("ClientLeadActivityAuthor")
+  billingDocuments     BillingDocument[] @relation("BillingDocumentAuthor")
+  billingPayments      BillingPayment[]  @relation("BillingPaymentAuthor")
+  expenses             Expense[]         @relation("ExpenseAuthor")
+  bankMovements        BankMovement[]    @relation("BankMovementAuthor")
 
   /// Usuario que un proveedor (transportista) da de alta para su empresa.
   /// Conserva el rol carrier para entrar al mismo panel, pero trabaja sobre
@@ -398,6 +407,7 @@ model Client {
   updatedAt DateTime @updatedAt @map("updated_at")
   clientRoutes ClientRoute[]
   leads        ClientLead[]
+  billingDocuments BillingDocument[]
 
   @@map("clients")
 }
@@ -1391,4 +1401,166 @@ model ClientLeadActivity {
 
   @@index([leadId, occurredOn])
   @@map("client_lead_activities")
+}
+
+// ---- Administración: cobranza, pagos, bancos y gastos ----
+
+enum Currency {
+  MXN
+  USD
+}
+
+/// Cuenta por cobrar (factura a un cliente) o por pagar (factura de un proveedor).
+enum BillingKind {
+  receivable
+  payable
+}
+
+/// Método de pago del CFDI: una sola exhibición o en parcialidades/diferido.
+enum CfdiPaymentMethod {
+  PUE
+  PPD
+}
+
+/// Factura emitida a un cliente (receivable) o recibida de un proveedor
+/// (payable). El saldo sale de restar sus pagos al total.
+model BillingDocument {
+  id            String            @id @default(cuid()) @map("id")
+  kind          BillingKind       @map("kind")
+  /// Cliente del catálogo (solo cuentas por cobrar).
+  clientId      String?           @map("client_id")
+  client        Client?           @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  /// Nombre de la contraparte tal como va en la factura (cliente o proveedor).
+  partyName     String            @map("party_name")
+  partyRfc      String?           @map("party_rfc")
+  series        String?           @map("series")
+  folio         String            @map("folio")
+  /// Folio fiscal (UUID) del CFDI.
+  uuid          String?           @map("uuid")
+  issueDate     DateTime          @db.Date @map("issue_date")
+  dueDate       DateTime          @db.Date @map("due_date")
+  currency      Currency          @default(MXN) @map("currency")
+  /// Pesos por dólar el día de la factura (1 en pesos).
+  exchangeRate  Float             @default(1) @map("exchange_rate")
+  subtotal      Float             @map("subtotal")
+  ivaRate       Float             @default(0.16) @map("iva_rate")
+  iva           Float             @map("iva")
+  /// Retención de IVA (4 % en autotransporte de carga a personas morales).
+  ivaWithheld   Float             @default(0) @map("iva_withheld")
+  total         Float             @map("total")
+  paymentMethod CfdiPaymentMethod @default(PPD) @map("payment_method")
+  concept       String?           @map("concept")
+  /// ECO o referencia de los embarques que cubre.
+  reference     String?           @map("reference")
+  notes         String?           @map("notes")
+  /// De dónde viene: capturada desde Alegra, manual o timbrada en la plataforma.
+  source        String            @default("manual") @map("source")
+  cancelledAt   DateTime?         @map("cancelled_at")
+  cancelReason  String?           @map("cancel_reason")
+  createdById   String?           @map("created_by_id")
+  createdBy     User?             @relation("BillingDocumentAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  payments      BillingPayment[]
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+
+  @@unique([kind, series, folio, partyName])
+  @@index([kind, dueDate])
+  @@index([clientId])
+  @@map("billing_documents")
+}
+
+/// Cobro o pago aplicado a una factura. Crea su movimiento en el banco.
+model BillingPayment {
+  id            String          @id @default(cuid()) @map("id")
+  documentId    String          @map("document_id")
+  document      BillingDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  paidOn        DateTime        @db.Date @map("paid_on")
+  /// Monto aplicado, en la moneda de la factura.
+  amount        Float           @map("amount")
+  bankAccountId String          @map("bank_account_id")
+  bankAccount   BankAccount     @relation(fields: [bankAccountId], references: [id], onDelete: Restrict)
+  /// Monto que entró o salió de la cuenta, en la moneda de la cuenta.
+  bankAmount    Float           @map("bank_amount")
+  exchangeRate  Float           @default(1) @map("exchange_rate")
+  /// Forma de pago del SAT (03 transferencia, 01 efectivo, 02 cheque…).
+  paymentForm   String?         @map("payment_form")
+  reference     String?         @map("reference")
+  notes         String?         @map("notes")
+  createdById   String?         @map("created_by_id")
+  createdBy     User?           @relation("BillingPaymentAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  movement      BankMovement?
+  createdAt     DateTime        @default(now()) @map("created_at")
+
+  @@index([documentId])
+  @@map("billing_payments")
+}
+
+model BankAccount {
+  id               String           @id @default(cuid()) @map("id")
+  name             String           @map("name")
+  bank             String?          @map("bank")
+  /// Últimos dígitos o CLABE, para identificarla.
+  accountNumber    String?          @map("account_number")
+  currency         Currency         @default(MXN) @map("currency")
+  initialBalance   Float            @default(0) @map("initial_balance")
+  initialBalanceOn DateTime         @db.Date @map("initial_balance_on")
+  active           Boolean          @default(true) @map("active")
+  movements        BankMovement[]
+  payments         BillingPayment[]
+  expenses         Expense[]
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  @@map("bank_accounts")
+}
+
+/// Movimiento de una cuenta: lo crean los cobros, pagos y gastos, o se
+/// captura a mano (comisiones, intereses, traspasos). Positivo entra, negativo sale.
+model BankMovement {
+  id            String          @id @default(cuid()) @map("id")
+  bankAccountId String          @map("bank_account_id")
+  bankAccount   BankAccount     @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
+  date          DateTime        @db.Date @map("date")
+  amount        Float           @map("amount")
+  concept       String          @map("concept")
+  reference     String?         @map("reference")
+  /// Ya se comparó contra el estado de cuenta del banco.
+  reconciled    Boolean         @default(false) @map("reconciled")
+  paymentId     String?         @unique @map("payment_id")
+  payment       BillingPayment? @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  expenseId     String?         @unique @map("expense_id")
+  expense       Expense?        @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  createdById   String?         @map("created_by_id")
+  createdBy     User?           @relation("BankMovementAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt     DateTime        @default(now()) @map("created_at")
+
+  @@index([bankAccountId, date])
+  @@map("bank_movements")
+}
+
+/// Gasto de operación de la empresa (renta, servicios, nómina, casetas…).
+model Expense {
+  id            String       @id @default(cuid()) @map("id")
+  date          DateTime     @db.Date @map("date")
+  category      String       @map("category")
+  providerName  String?      @map("provider_name")
+  description   String       @map("description")
+  currency      Currency     @default(MXN) @map("currency")
+  exchangeRate  Float        @default(1) @map("exchange_rate")
+  subtotal      Float        @map("subtotal")
+  iva           Float        @default(0) @map("iva")
+  total         Float        @map("total")
+  /// Folio fiscal si el gasto tiene factura.
+  uuid          String?      @map("uuid")
+  bankAccountId String?      @map("bank_account_id")
+  bankAccount   BankAccount? @relation(fields: [bankAccountId], references: [id], onDelete: SetNull)
+  notes         String?      @map("notes")
+  createdById   String?      @map("created_by_id")
+  createdBy     User?        @relation("ExpenseAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  movement      BankMovement?
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  @@index([date])
+  @@map("expenses")
 }

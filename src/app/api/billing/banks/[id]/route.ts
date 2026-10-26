@@ -1,0 +1,110 @@
+import { prisma } from "@/lib/db";
+import { logAudit } from "@/lib/audit-log";
+import { r2 } from "@/lib/billing";
+import { failure, num, requireBilling, toDate } from "@/lib/billing-server";
+
+/** GET /api/billing/banks/[id] — cuenta con sus movimientos y saldo corrido. */
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    await requireBilling("view");
+    const { id } = await params;
+    const account = await prisma.bankAccount.findUnique({ where: { id } });
+    if (!account) return Response.json({ error: "No encontrado" }, { status: 404 });
+    const movements = await prisma.bankMovement.findMany({
+      where: { bankAccountId: id },
+      orderBy: [{ date: "asc" }, { createdAt: "asc" }],
+      include: {
+        createdBy: { select: { name: true } },
+        payment: { select: { documentId: true, document: { select: { kind: true } } } },
+        expense: { select: { id: true } },
+      },
+    });
+    let running = account.initialBalance;
+    const rows = movements.map((m) => {
+      running = r2(running + m.amount);
+      return {
+        id: m.id,
+        date: m.date.toISOString().slice(0, 10),
+        amount: m.amount,
+        concept: m.concept,
+        reference: m.reference,
+        reconciled: m.reconciled,
+        balance: running,
+        source: m.paymentId ? (m.payment?.document.kind === "receivable" ? "cobro" : "pago") : m.expenseId ? "gasto" : "manual",
+        documentId: m.payment?.documentId ?? null,
+        documentKind: m.payment?.document.kind ?? null,
+        createdByName: m.createdBy?.name ?? null,
+      };
+    });
+    return Response.json({
+      id: account.id,
+      name: account.name,
+      bank: account.bank,
+      accountNumber: account.accountNumber,
+      currency: account.currency,
+      initialBalance: account.initialBalance,
+      initialBalanceOn: account.initialBalanceOn.toISOString().slice(0, 10),
+      active: account.active,
+      balance: running,
+      movements: rows.reverse(),
+    });
+  } catch (e) {
+    return failure(e, "bank GET");
+  }
+}
+
+/** PATCH /api/billing/banks/[id] — datos de la cuenta (la moneda no cambia si ya tiene movimientos). */
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const session = await requireBilling("update");
+    const { id } = await params;
+    const account = await prisma.bankAccount.findUnique({ where: { id }, include: { _count: { select: { movements: true } } } });
+    if (!account) return Response.json({ error: "No encontrado" }, { status: 404 });
+    const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+    const text = (v: unknown) => (typeof v === "string" ? v.trim() || null : undefined);
+    const cur = String(body.currency ?? "").toUpperCase();
+    const currency = cur === "USD" || cur === "MXN" ? cur : undefined;
+    if (currency && currency !== account.currency && account._count.movements > 0) {
+      return Response.json({ error: "La cuenta ya tiene movimientos: no se puede cambiar la moneda." }, { status: 400 });
+    }
+    const initial = body.initialBalance !== undefined ? num(body.initialBalance) : undefined;
+    if (initial !== undefined && !Number.isFinite(initial)) return Response.json({ error: "El saldo inicial no es válido." }, { status: 400 });
+    const on = typeof body.initialBalanceOn === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.initialBalanceOn) ? body.initialBalanceOn : undefined;
+    const name = text(body.name);
+    if (name === null) return Response.json({ error: "El nombre no puede quedar vacío." }, { status: 400 });
+    await prisma.bankAccount.update({
+      where: { id },
+      data: {
+        ...(name !== undefined && { name }),
+        ...(text(body.bank) !== undefined && { bank: text(body.bank) }),
+        ...(text(body.accountNumber) !== undefined && { accountNumber: text(body.accountNumber) }),
+        ...(currency && { currency }),
+        ...(initial !== undefined && { initialBalance: initial }),
+        ...(on && { initialBalanceOn: toDate(on) }),
+        ...(typeof body.active === "boolean" && { active: body.active }),
+      },
+    });
+    void logAudit({ resource: "bank_account", resourceId: id, resourceLabel: name ?? account.name, action: "updated", userId: session.user.id, userName: session.user.name });
+    return Response.json({ ok: true });
+  } catch (e) {
+    return failure(e, "bank PATCH");
+  }
+}
+
+/** DELETE — solo cuentas sin movimientos; las demás se desactivan. */
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const session = await requireBilling("delete");
+    const { id } = await params;
+    const account = await prisma.bankAccount.findUnique({ where: { id }, include: { _count: { select: { movements: true, payments: true } } } });
+    if (!account) return Response.json({ error: "No encontrado" }, { status: 404 });
+    if (account._count.movements > 0 || account._count.payments > 0) {
+      return Response.json({ error: "La cuenta tiene movimientos: desactívala en lugar de borrarla." }, { status: 400 });
+    }
+    await prisma.bankAccount.delete({ where: { id } });
+    void logAudit({ resource: "bank_account", resourceId: id, resourceLabel: account.name, action: "deleted", userId: session.user.id, userName: session.user.name });
+    return Response.json({ ok: true });
+  } catch (e) {
+    return failure(e, "bank DELETE");
+  }
+}

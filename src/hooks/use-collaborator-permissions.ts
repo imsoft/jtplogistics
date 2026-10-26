@@ -43,6 +43,10 @@ interface CollaboratorPermissions {
   canCreateClientLeads: boolean;
   canUpdateClientLeads: boolean;
   canDeleteClientLeads: boolean;
+  canViewBilling: boolean;
+  canCreateBilling: boolean;
+  canUpdateBilling: boolean;
+  canDeleteBilling: boolean;
   canViewClients: boolean;
   canCreateClients: boolean;
   canUpdateClients: boolean;

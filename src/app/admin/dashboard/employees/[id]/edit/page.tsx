@@ -43,6 +43,7 @@ const MODULES = [
   { suffix: "Tasks", label: "Tareas" },
   { suffix: "Shipments", label: "Embarques" },
   { suffix: "Finances", label: "Finanzas" },
+  { suffix: "Billing", label: "Administración (cobranza, pagos y bancos)" },
   { suffix: "MaritimeQuotes", label: "Cotización marítima" },
   { suffix: "Mural", label: "Mural" },
 ] as const;

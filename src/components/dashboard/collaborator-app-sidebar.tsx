@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 import {
   BarChart3,
+  HandCoins,
+  ReceiptText,
+  Landmark,
+  Wallet,
   Handshake,
   User as UserIcon,
   Lightbulb,
@@ -46,6 +50,7 @@ interface Permissions {
   canViewProviderProspects: boolean;
   canViewProviderOnboardings: boolean;
   canViewClientLeads: boolean;
+  canViewBilling: boolean;
   canViewQuoteKpis: boolean;
   canViewClients: boolean;
   canViewEmployees: boolean;
@@ -94,6 +99,10 @@ const allNavGroups: PermNavGroup[] = [
     items: [
       { title: "Embarques", href: `${BASE}/shipments`, icon: Ship, permission: "canViewShipments" },
       { title: "Finanzas", href: `${BASE}/finances`, icon: DollarSign, permission: "canViewFinances" },
+      { title: "Cuentas por cobrar", href: `${BASE}/billing/receivables`, icon: HandCoins, permission: "canViewBilling" },
+      { title: "Cuentas por pagar", href: `${BASE}/billing/payables`, icon: ReceiptText, permission: "canViewBilling" },
+      { title: "Bancos", href: `${BASE}/billing/banks`, icon: Landmark, permission: "canViewBilling" },
+      { title: "Gastos", href: `${BASE}/billing/expenses`, icon: Wallet, permission: "canViewBilling" },
     ],
   },
   {
