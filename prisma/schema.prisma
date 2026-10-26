@@ -184,6 +184,7 @@ model User {
   clientLeadsCreated   ClientLead[] @relation("ClientLeadAuthor")
   clientLeadActivities ClientLeadActivity[] @relation("ClientLeadActivityAuthor")
   billingDocuments     BillingDocument[] @relation("BillingDocumentAuthor")
+  billingAttachments   BillingAttachment[] @relation("BillingAttachmentAuthor")
   billingPayments      BillingPayment[]  @relation("BillingPaymentAuthor")
   expenses             Expense[]         @relation("ExpenseAuthor")
   bankMovements        BankMovement[]    @relation("BankMovementAuthor")
@@ -1464,6 +1465,8 @@ model BillingDocument {
   iva           Float             @map("iva")
   /// Retención de IVA (4 % en autotransporte de carga a personas morales).
   ivaWithheld   Float             @default(0) @map("iva_withheld")
+  /// Retención de ISR (1.25 % de transportistas en RESICO). Llega del XML.
+  isrWithheld   Float             @default(0) @map("isr_withheld")
   total         Float             @map("total")
   paymentMethod CfdiPaymentMethod @default(PPD) @map("payment_method")
   concept       String?           @map("concept")
@@ -1477,6 +1480,7 @@ model BillingDocument {
   createdById   String?           @map("created_by_id")
   createdBy     User?             @relation("BillingDocumentAuthor", fields: [createdById], references: [id], onDelete: SetNull)
   payments      BillingPayment[]
+  attachments   BillingAttachment[]
   createdAt     DateTime          @default(now()) @map("created_at")
   updatedAt     DateTime          @updatedAt @map("updated_at")
 
@@ -1503,6 +1507,10 @@ model BillingPayment {
   /// Forma de pago del SAT (03 transferencia, 01 efectivo, 02 cheque…).
   paymentForm   String?         @map("payment_form")
   reference     String?         @map("reference")
+  /// Cuando una sola transferencia paga varias facturas: el movimiento de
+  /// banco es uno y los cobros cuelgan de él.
+  batchMovementId String?       @map("batch_movement_id")
+  batchMovement   BankMovement? @relation("BatchPayments", fields: [batchMovementId], references: [id], onDelete: Cascade)
   notes         String?         @map("notes")
   createdById   String?         @map("created_by_id")
   createdBy     User?           @relation("BillingPaymentAuthor", fields: [createdById], references: [id], onDelete: SetNull)
@@ -1510,8 +1518,31 @@ model BillingPayment {
   createdAt     DateTime        @default(now()) @map("created_at")
 
   @@index([documentId])
+  @@index([batchMovementId])
   @@map("billing_payments")
 }
+/// PDF o XML de una factura. El archivo vive en Cloudinary como privado y
+/// solo se descarga a través de la plataforma.
+model BillingAttachment {
+  id          String           @id @default(cuid()) @map("id")
+  /// Vacío mientras se sube y todavía no se guarda la factura.
+  documentId  String?          @map("document_id")
+  document    BillingDocument? @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  /// "xml" o "pdf".
+  kind        String           @map("kind")
+  fileName    String           @map("file_name")
+  size        Int              @map("size")
+  storageId   String           @map("storage_id")
+  /// Lo que se leyó del XML (CFDI): folio, UUID, importes, emisor y receptor.
+  cfdi        Json?            @map("cfdi")
+  createdById String?          @map("created_by_id")
+  createdBy   User?            @relation("BillingAttachmentAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  @@index([documentId])
+  @@map("billing_attachments")
+}
+
 
 model BankAccount {
   id               String           @id @default(cuid()) @map("id")
@@ -1546,6 +1577,7 @@ model BankMovement {
   reconciled    Boolean         @default(false) @map("reconciled")
   paymentId     String?         @unique @map("payment_id")
   payment       BillingPayment? @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  batchPayments BillingPayment[] @relation("BatchPayments")
   expenseId     String?         @unique @map("expense_id")
   expense       Expense?        @relation(fields: [expenseId], references: [id], onDelete: Cascade)
   createdById   String?         @map("created_by_id")

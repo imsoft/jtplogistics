@@ -19,8 +19,54 @@ export interface BillingPaymentRow {
   paymentForm: string | null;
   reference: string | null;
   notes: string | null;
+  batch: { count: number; bankAmount: number } | null;
   createdByName: string | null;
 }
+
+export interface BillingAttachmentRow {
+  id: string;
+  kind: "xml" | "pdf";
+  fileName: string;
+  size: number;
+  createdAt: string;
+  hasCfdi: boolean;
+}
+
+/** Lo que regresa la API al subir un PDF o XML. */
+export interface UploadedAttachment {
+  attachment: BillingAttachmentRow;
+  fields: {
+    partyName: string;
+    partyRfc: string;
+    series: string | null;
+    folio: string | null;
+    uuid: string | null;
+    currency: Currency;
+    exchangeRate: number;
+    subtotal: number;
+    ivaRate: number;
+    iva: number;
+    ivaWithheld: number;
+    isrWithheld: number;
+    total: number;
+    paymentMethod: "PUE" | "PPD";
+  } | null;
+  cfdi: { issueDate: string; concept: string | null; hasCartaPorte: boolean; issuer: { rfc: string; name: string | null }; receiver: { rfc: string; name: string | null } } | null;
+}
+
+/** Sube el PDF o el XML de una factura. Con `documentId` se adjunta de una vez. */
+export async function uploadAttachment(file: File, kind: BillingKind, documentId?: string): Promise<UploadedAttachment> {
+  const body = new FormData();
+  body.append("file", file);
+  body.append("kind", kind);
+  if (documentId) body.append("documentId", documentId);
+  const res = await fetch("/api/billing/attachments", { method: "POST", body });
+  const d = (await res.json().catch(() => ({}))) as UploadedAttachment & { error?: string };
+  if (!res.ok) throw new Error(d.error ?? "No se pudo subir el archivo.");
+  return d;
+}
+
+export const attachmentHref = (id: string) => `/api/billing/attachments/${id}`;
 
 export interface BillingDocument {
   id: string;
@@ -44,8 +90,12 @@ export interface BillingDocument {
   ivaRate: number;
   iva: number;
   ivaWithheld: number;
+  isrWithheld: number;
   total: number;
   paymentMethod: "PUE" | "PPD";
+  attachments: BillingAttachmentRow[];
+  /** Los importes salen del XML adjunto: no se editan a mano. */
+  fromXml: boolean;
   concept: string | null;
   reference: string | null;
   notes: string | null;

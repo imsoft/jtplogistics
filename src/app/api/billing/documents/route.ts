@@ -4,6 +4,7 @@ import { logAudit } from "@/lib/audit-log";
 import { companyDateKey } from "@/lib/time-clock";
 import { BILLING_KIND_LABELS } from "@/lib/billing";
 import { DOC_INCLUDE, docFolio, documentToJson, failure, isBillingKind, readDocumentBody, requireBilling } from "@/lib/billing-server";
+import { cfdiOverrides, pendingAttachments, withCfdiBody } from "@/lib/billing-attachments-server";
 
 /** GET /api/billing/documents?kind=receivable|payable&q= */
 export async function GET(request: Request) {
@@ -38,10 +39,13 @@ export async function POST(request: Request) {
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
     if (!isBillingKind(body.kind)) return Response.json({ error: "Tipo inválido" }, { status: 400 });
     const kind = body.kind;
-    const parsed = readDocumentBody(body);
+    // Con el XML, folio, folio fiscal e importes son los del CFDI.
+    const pending = await pendingAttachments(body.attachmentIds, session.user.id);
+    const parsed = readDocumentBody(withCfdiBody(body, pending.cfdi));
     if (!parsed.ok) return Response.json({ error: parsed.error }, { status: 400 });
     const data = parsed.data;
     if (kind === "payable") data.clientId = null;
+    if (pending.cfdi) Object.assign(data, cfdiOverrides(pending.cfdi, kind), { draft: false });
 
     // Evita capturar dos veces la misma factura (pasa al migrar desde Alegra).
     const dup = !data.folio ? null : await prisma.billingDocument.findFirst({
@@ -60,9 +64,15 @@ export async function POST(request: Request) {
       return Response.json({ error: "Esa factura ya está capturada.", id: (dup ?? dupUuid)!.id }, { status: 409 });
     }
 
-    const created = await prisma.billingDocument.create({
-      data: { ...data, kind, createdById: session.user.id },
-      select: { id: true },
+    const created = await prisma.$transaction(async (tx) => {
+      const doc = await tx.billingDocument.create({
+        data: { ...data, kind, createdById: session.user.id },
+        select: { id: true },
+      });
+      if (pending.ids.length) {
+        await tx.billingAttachment.updateMany({ where: { id: { in: pending.ids }, documentId: null }, data: { documentId: doc.id } });
+      }
+      return doc;
     });
 
     void logAudit({

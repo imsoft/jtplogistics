@@ -3,6 +3,7 @@ import { logAudit } from "@/lib/audit-log";
 import { r2, SETTLED_TOLERANCE } from "@/lib/billing";
 import { cartaPorteSnapshot } from "@/lib/shipment-billing";
 import { loadShipmentBillingContext } from "@/lib/shipment-billing-server";
+import { cfdiOverrides, documentCfdi, removeFile, withCfdiBody } from "@/lib/billing-attachments-server";
 import { DOC_INCLUDE, docFolio, documentToJson, failure, readDocumentBody, requireBilling } from "@/lib/billing-server";
 
 const label = (d: { series: string | null; folio: string | null; partyName: string }) => `${docFolio(d)} · ${d.partyName}`;
@@ -60,8 +61,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       return Response.json({ ok: true });
     }
 
-    const parsed = readDocumentBody(body);
+    // Si tiene su XML, folio, folio fiscal e importes siguen siendo los del CFDI.
+    const cfdi = await documentCfdi(id);
+    const parsed = readDocumentBody(withCfdiBody(body, cfdi));
     if (!parsed.ok) return Response.json({ error: parsed.error }, { status: 400 });
+    if (cfdi) Object.assign(parsed.data, cfdiOverrides(cfdi, doc.kind), { draft: false });
     if (parsed.data.total < paid - SETTLED_TOLERANCE) {
       return Response.json({ error: `El total no puede quedar por debajo de lo ya pagado (${paid.toFixed(2)}).` }, { status: 400 });
     }
@@ -95,7 +99,9 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     if (doc._count.payments > 0) {
       return Response.json({ error: "Tiene pagos registrados: bórralos primero o cancela la factura." }, { status: 400 });
     }
+    const files = await prisma.billingAttachment.findMany({ where: { documentId: id }, select: { storageId: true } });
     await prisma.billingDocument.delete({ where: { id } });
+    await Promise.all(files.map((f) => removeFile(f.storageId)));
     void logAudit({ resource: "billing_document", resourceId: id, resourceLabel: label(doc), action: "deleted", userId: session.user.id, userName: session.user.name });
     return Response.json({ ok: true });
   } catch (e) {

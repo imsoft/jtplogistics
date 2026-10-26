@@ -23,6 +23,7 @@ import {
   type DocumentStatus,
 } from "@/lib/billing";
 import { PaymentDialog } from "./payment-dialog";
+import { BatchPaymentDialog } from "./batch-payment-dialog";
 import {
   StatusBadge,
   folioLabel,
@@ -56,6 +57,9 @@ export function DocumentsView({
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("abiertas");
   const [paying, setPaying] = useState<BillingDocument | null>(null);
+  // Varias facturas del mismo cliente o proveedor que se pagan con una sola transferencia.
+  const [selected, setSelected] = useState<string[]>([]);
+  const [batch, setBatch] = useState<BillingDocument[] | null>(null);
   const accounts = useBankAccounts();
   const today = todayKey();
 
@@ -111,6 +115,13 @@ export function DocumentsView({
   }
 
   const openCount = docs.filter((d) => d.balance > 0 && d.status !== "cancelada").length;
+  const chosen = selected.map((id) => docs.find((d) => d.id === id)).filter((d): d is BillingDocument => Boolean(d));
+  const anchor = chosen[0] ?? null;
+  const payable = (d: BillingDocument) => d.balance > 0 && d.status !== "cancelada" && d.status !== "borrador";
+  const compatible = (d: BillingDocument) =>
+    !anchor || (d.currency === anchor.currency && d.partyName.trim().toLowerCase() === anchor.partyName.trim().toLowerCase());
+  const toggle = (id: string) => setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  const chosenTotal = r2(chosen.reduce((sum, d) => sum + d.balance, 0));
   const chip = (value: Filter, label: string, count: number) => (
     <Button key={value} type="button" size="sm" variant={filter === value ? "secondary" : "outline"} onClick={() => setFilter(value)}>
       {label} ({count})
@@ -171,6 +182,24 @@ export function DocumentsView({
         {chip("todas", "Todas", docs.length)}
       </div>
 
+      {canUpdate && chosen.length > 0 && anchor && (
+        <div className="bg-primary/5 border-primary/30 flex flex-col gap-2 rounded-lg border p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+          <span>
+            {chosen.length} {chosen.length === 1 ? "factura" : "facturas"} de <b>{anchor.partyName}</b> · saldo {money(chosenTotal, anchor.currency)}
+            {chosen.length === 1 && <span className="text-muted-foreground"> · elige otra para pagarlas juntas</span>}
+          </span>
+          <div className="flex gap-2">
+            <Button size="sm" variant="ghost" onClick={() => setSelected([])}>
+              Quitar selección
+            </Button>
+            <Button size="sm" disabled={chosen.length < 2} onClick={() => setBatch(chosen)}>
+              <HandCoins className="size-4" />
+              Registrar {labels.payment.toLowerCase()} de {chosen.length} facturas
+            </Button>
+          </div>
+        </div>
+      )}
+
       {visible.length === 0 ? (
         <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
           {docs.length === 0
@@ -182,6 +211,7 @@ export function DocumentsView({
           <table className="w-full min-w-max text-sm">
             <thead>
               <tr className="bg-muted/40 border-b">
+                {canUpdate && <th className="w-10 px-3 py-2"><span className="sr-only">Elegir</span></th>}
                 <th className="px-4 py-2 text-left font-medium">Folio</th>
                 <th className="px-4 py-2 text-left font-medium">{labels.party}</th>
                 <th className="hidden px-4 py-2 text-left font-medium @6xl/table:table-cell">Fecha</th>
@@ -197,6 +227,21 @@ export function DocumentsView({
                 const late = d.status === "vencida" ? daysOverdue(d.dueDate, today) : 0;
                 return (
                   <tr key={d.id} className="border-b align-top last:border-0">
+                    {canUpdate && (
+                      <td className="px-3 py-3">
+                        {payable(d) && (
+                          <input
+                            type="checkbox"
+                            checked={selected.includes(d.id)}
+                            disabled={!selected.includes(d.id) && !compatible(d)}
+                            onChange={() => toggle(d.id)}
+                            className="accent-primary size-4 disabled:opacity-30"
+                            aria-label={`Elegir ${folioLabel(d)} para pagar junto con otras`}
+                            title={!selected.includes(d.id) && !compatible(d) ? "Solo facturas del mismo cliente o proveedor y en la misma moneda" : undefined}
+                          />
+                        )}
+                      </td>
+                    )}
                     <td className="px-4 py-3">
                       <Link href={`${basePath}/${d.id}`} className="text-primary font-mono text-xs font-medium hover:underline">
                         {folioLabel(d)}
@@ -242,6 +287,17 @@ export function DocumentsView({
           </table>
         </div>
       )}
+
+      <BatchPaymentDialog
+        docs={batch}
+        accounts={accounts ?? []}
+        onClose={() => setBatch(null)}
+        onSaved={() => {
+          setBatch(null);
+          setSelected([]);
+          load();
+        }}
+      />
 
       <PaymentDialog
         doc={paying}

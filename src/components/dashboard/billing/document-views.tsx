@@ -30,6 +30,7 @@ import { BILLING_KIND_LABELS, SAT_PAYMENT_FORMS, type BillingKind } from "@/lib/
 import { DocumentForm, documentToForm, emptyDocumentForm } from "./document-form";
 import { PaymentDialog } from "./payment-dialog";
 import { CartaPorteCard } from "./carta-porte-card";
+import { AttachmentsCard } from "./attachments-card";
 import { StatusBadge, folioLabel, money, shortDay, useBankAccounts, type BillingDocument } from "./billing-shared";
 
 const FORM_LABEL = Object.fromEntries(SAT_PAYMENT_FORMS.map((f) => [f.value, f.label]));
@@ -75,6 +76,7 @@ export function EditDocumentView({ kind, basePath, canDelete }: { kind: BillingK
         <DocumentForm
           kind={kind}
           initialValues={documentToForm(data)}
+          lockedAmounts={data.fromXml ? data : undefined}
           submitLabel="Guardar cambios"
           cancelHref={`${basePath}/${id}`}
           onSubmit={handleSubmit}
@@ -101,7 +103,7 @@ export function DocumentDetailView({
   const [paying, setPaying] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [reason, setReason] = useState("");
-  const [removing, setRemoving] = useState<string | null>(null);
+  const [removing, setRemoving] = useState<BillingDocument["payments"][number] | null>(null);
   const [busy, setBusy] = useState(false);
   const accounts = useBankAccounts();
 
@@ -139,7 +141,8 @@ export function DocumentDetailView({
     try {
       const res = await fetch(`/api/billing/payments/${paymentId}`, { method: "DELETE" });
       if (!res.ok) throw new Error(((await res.json().catch(() => ({}))) as { error?: string }).error ?? "No se pudo borrar.");
-      toast.success("Pago borrado y su movimiento de banco también.");
+      const d = (await res.json().catch(() => ({}))) as { removed?: number };
+      toast.success(d.removed && d.removed > 1 ? `Transferencia borrada: ${d.removed} pagos y su movimiento de banco.` : "Pago borrado y su movimiento de banco también.");
       load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "No se pudo borrar.");
@@ -255,6 +258,7 @@ export function DocumentDetailView({
             <InfoRow label="Subtotal" value={money(doc.subtotal, doc.currency)} />
             <InfoRow label={`IVA ${Math.round(doc.ivaRate * 100)} %`} value={money(doc.iva, doc.currency)} />
             {doc.ivaWithheld > 0 && <InfoRow label="Retención de IVA" value={`-${money(doc.ivaWithheld, doc.currency)}`} />}
+            {doc.isrWithheld > 0 && <InfoRow label="Retención de ISR" value={`-${money(doc.isrWithheld, doc.currency)}`} />}
             <InfoRow label="Total" value={money(doc.total, doc.currency)} />
             {doc.currency === "USD" && <InfoRow label="Tipo de cambio" value={`${doc.exchangeRate} pesos por dólar`} />}
             {!doc.draft && (
@@ -266,6 +270,8 @@ export function DocumentDetailView({
           </CardContent>
         </Card>
       </div>
+
+      <AttachmentsCard doc={doc} canUpdate={canUpdate && !cancelled} onChanged={load} />
 
       {doc.cartaPorte && (
         <CartaPorteCard documentId={doc.id} data={doc.cartaPorte} canRefresh={canUpdate && doc.draft && !cancelled} onRefreshed={load} />
@@ -303,10 +309,17 @@ export function DocumentDetailView({
                       </td>
                       <td className="py-2 pr-4">{p.bankAccountName}</td>
                       <td className="text-muted-foreground py-2 pr-4">{p.paymentForm ? FORM_LABEL[p.paymentForm] ?? p.paymentForm : "—"}</td>
-                      <td className="text-muted-foreground py-2 pr-4">{p.reference ?? "—"}</td>
+                      <td className="text-muted-foreground py-2 pr-4">
+                        {p.reference ?? "—"}
+                        {p.batch && (
+                          <span className="block text-xs">
+                            Transferencia de {money(p.batch.bankAmount, p.bankAccountCurrency)} que pagó {p.batch.count} facturas
+                          </span>
+                        )}
+                      </td>
                       {canDelete && (
                         <td className="py-2">
-                          <Button variant="ghost" size="icon" className="size-7" aria-label="Borrar pago" onClick={() => setRemoving(p.id)}>
+                          <Button variant="ghost" size="icon" className="size-7" aria-label="Borrar pago" onClick={() => setRemoving(p)}>
                             <Trash2 className="text-destructive size-3.5" />
                           </Button>
                         </td>
@@ -355,12 +368,16 @@ export function DocumentDetailView({
       <AlertDialog open={removing !== null} onOpenChange={(o) => !o && setRemoving(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Borrar este pago?</AlertDialogTitle>
-            <AlertDialogDescription>Se quita de la factura y también su movimiento en el banco.</AlertDialogDescription>
+            <AlertDialogTitle>{removing?.batch ? "¿Borrar la transferencia completa?" : "¿Borrar este pago?"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {removing?.batch
+                ? `Este pago fue parte de una transferencia que pagó ${removing.batch.count} facturas. Se borra la transferencia completa: el pago de cada factura y su movimiento en el banco.`
+                : "Se quita de la factura y también su movimiento en el banco."}
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Volver</AlertDialogCancel>
-            <AlertDialogAction onClick={() => removing && removePayment(removing)}>Borrar</AlertDialogAction>
+            <AlertDialogAction onClick={() => removing && removePayment(removing.id)}>Borrar</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

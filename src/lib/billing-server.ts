@@ -31,10 +31,12 @@ export const DOC_INCLUDE = {
     include: {
       bankAccount: { select: { id: true, name: true, currency: true } },
       createdBy: { select: { name: true } },
+      batchMovement: { select: { amount: true, _count: { select: { batchPayments: true } } } },
     },
   },
   createdBy: { select: { name: true } },
   shipment: { select: { eco: true } },
+  attachments: { orderBy: { createdAt: "asc" }, select: { id: true, kind: true, fileName: true, size: true, createdAt: true, cfdi: true } },
 } satisfies Prisma.BillingDocumentInclude;
 
 type DocRow = Prisma.BillingDocumentGetPayload<{ include: typeof DOC_INCLUDE }>;
@@ -70,8 +72,19 @@ export function documentToJson(d: DocRow, todayKey = companyDateKey()) {
     ivaRate: d.ivaRate,
     iva: d.iva,
     ivaWithheld: d.ivaWithheld,
+    isrWithheld: d.isrWithheld,
     total: d.total,
     paymentMethod: d.paymentMethod,
+    attachments: d.attachments.map((a) => ({
+      id: a.id,
+      kind: a.kind as "xml" | "pdf",
+      fileName: a.fileName,
+      size: a.size,
+      createdAt: a.createdAt.toISOString(),
+      hasCfdi: a.cfdi !== null,
+    })),
+    /** Los importes salen del XML: no se editan a mano. */
+    fromXml: d.attachments.some((a) => a.kind === "xml" && a.cfdi !== null),
     concept: d.concept,
     reference: d.reference,
     notes: d.notes,
@@ -95,6 +108,8 @@ export function documentToJson(d: DocRow, todayKey = companyDateKey()) {
       paymentForm: p.paymentForm,
       reference: p.reference,
       notes: p.notes,
+      /** Si fue parte de una transferencia que pagó varias facturas: cuántas y por cuánto. */
+      batch: p.batchMovement ? { count: p.batchMovement._count.batchPayments, bankAmount: Math.abs(p.batchMovement.amount) } : null,
       createdByName: p.createdBy?.name ?? null,
     })),
   };
@@ -172,6 +187,8 @@ export function readDocumentBody(body: Record<string, unknown>):
       ivaRate,
       iva: totals.iva,
       ivaWithheld: totals.ivaWithheld,
+      // La retención de ISR solo llega del XML.
+      isrWithheld: 0,
       total: totals.total,
       paymentMethod: upper(body.paymentMethod) === "PUE" ? "PUE" : "PPD",
       concept: text(body.concept),

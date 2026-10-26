@@ -22,6 +22,7 @@ export interface ReportDocument {
   subtotal: number;
   iva: number;
   ivaWithheld: number;
+  isrWithheld: number;
   total: number;
   paymentMethod: string;
   concept: string | null;

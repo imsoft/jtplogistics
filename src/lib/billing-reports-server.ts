@@ -29,6 +29,7 @@ function docToReport(d: DocRow): ReportDocument {
     subtotal: d.subtotal,
     iva: d.iva,
     ivaWithheld: d.ivaWithheld,
+    isrWithheld: d.isrWithheld,
     total: d.total,
     paymentMethod: d.paymentMethod,
     concept: d.concept,
@@ -74,8 +75,13 @@ export async function statementReport(kind: BillingKind, party: string, from: st
   };
 }
 
-function movementSource(m: { paymentId: string | null; expenseId: string | null; payment: { document: { kind: BillingKind } } | null }): CashMovement["source"] {
-  if (m.payment) return m.payment.document.kind === "receivable" ? "cobro" : "pago";
+function movementSource(m: {
+  expenseId: string | null;
+  payment: { document: { kind: BillingKind } } | null;
+  batchPayments: { document: { kind: BillingKind } }[];
+}): CashMovement["source"] {
+  const doc = m.payment?.document ?? m.batchPayments[0]?.document;
+  if (doc) return doc.kind === "receivable" ? "cobro" : "pago";
   if (m.expenseId) return "gasto";
   return "otro";
 }
@@ -84,6 +90,7 @@ const MOVEMENT_INCLUDE = {
   bankAccount: { select: { name: true, currency: true } },
   payment: { select: { document: { select: { kind: true, partyName: true, series: true, folio: true } } } },
   expense: { select: { category: true, providerName: true } },
+  batchPayments: { take: 1, select: { document: { select: { kind: true } } } },
 } satisfies Prisma.BankMovementInclude;
 
 /** Flujo de efectivo: todas las cuentas, con lo que pasó en el periodo. */

@@ -227,6 +227,7 @@ interface Movement {
   source: "cobro" | "pago" | "gasto" | "manual";
   documentId: string | null;
   documentKind: "receivable" | "payable" | null;
+  batchDocuments: { id: string; kind: "receivable" | "payable"; folio: string }[];
   createdByName: string | null;
 }
 
@@ -383,6 +384,16 @@ export function BankDetailView({
                           </Link>
                         ) : (
                           m.concept
+                        )}
+                        {m.batchDocuments.length > 0 && (
+                          <span className="block text-xs">
+                            {m.batchDocuments.map((d, i) => (
+                              <span key={d.id}>
+                                {i > 0 && " · "}
+                                <Link href={`${billingBase}/${KIND_SLUG[d.kind]}/${d.id}`} className="text-primary hover:underline">{d.folio}</Link>
+                              </span>
+                            ))}
+                          </span>
                         )}
                         {m.reference && <span className="text-muted-foreground block text-xs">Ref. {m.reference}</span>}
                       </td>

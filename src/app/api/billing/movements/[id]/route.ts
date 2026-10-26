@@ -22,9 +22,9 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   try {
     await requireBilling("delete");
     const { id } = await params;
-    const m = await prisma.bankMovement.findUnique({ where: { id } });
+    const m = await prisma.bankMovement.findUnique({ where: { id }, include: { _count: { select: { batchPayments: true } } } });
     if (!m) return Response.json({ error: "No encontrado" }, { status: 404 });
-    if (m.paymentId || m.expenseId) {
+    if (m.paymentId || m.expenseId || m._count.batchPayments > 0) {
       return Response.json({ error: "Este movimiento viene de un cobro, pago o gasto: bórralo desde ahí." }, { status: 400 });
     }
     await prisma.bankMovement.delete({ where: { id } });

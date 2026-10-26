@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { agingBucket, bankAmountFor, computeTotals, daysOverdue, documentStatus, paymentError, toMxn } from "./billing";
+import { agingBucket, bankAmountFor, computeTotals, daysOverdue, documentStatus, paymentError, planBatchPayment, toMxn } from "./billing";
 
 describe("computeTotals", () => {
   it("IVA 16 % y retención 4 % de autotransporte", () => {
@@ -56,5 +56,27 @@ describe("pagos y antigüedad", () => {
     expect(agingBucket("2026-10-30", "2026-10-26")).toBe("al_corriente");
     expect(agingBucket("2026-09-01", "2026-10-26")).toBe("31_60");
     expect(agingBucket("2026-01-01", "2026-10-26")).toBe("90_mas");
+  });
+});
+
+describe("planBatchPayment", () => {
+  const d = (id: string, extra: Partial<Parameters<typeof planBatchPayment>[0][number]> = {}) => ({
+    id, kind: "receivable" as const, partyName: "Aceros", currency: "MXN" as const, total: 1000, paid: 0, draft: false, cancelled: false, ...extra,
+  });
+  it("reparte una transferencia entre varias facturas", () => {
+    const r = planBatchPayment([d("a"), d("b", { paid: 400 })], [{ documentId: "a", amount: 1000 }, { documentId: "b", amount: 600 }], "MXN", 1);
+    expect(r).toMatchObject({ ok: true, kind: "receivable", total: 1600, bankTotal: 1600 });
+  });
+  it("facturas en dólares a una cuenta en pesos", () => {
+    const r = planBatchPayment([d("a", { currency: "USD" }), d("b", { currency: "USD" })], [{ documentId: "a", amount: 100 }, { documentId: "b", amount: 50.5 }], "MXN", 18);
+    expect(r.ok && [r.total, r.bankTotal]).toEqual([150.5, 2709]);
+  });
+  it("rechaza mezclas y montos de más", () => {
+    const one = [{ documentId: "a", amount: 1 }, { documentId: "b", amount: 1 }];
+    expect(planBatchPayment([d("a"), d("b", { partyName: "Otro" })], one, "MXN", 1)).toMatchObject({ ok: false, error: /mismo cliente/ });
+    expect(planBatchPayment([d("a"), d("b", { currency: "USD" })], one, "MXN", 1)).toMatchObject({ ok: false, error: /misma moneda/ });
+    expect(planBatchPayment([d("a"), d("b", { draft: true })], one, "MXN", 1)).toMatchObject({ ok: false, error: /borrador/ });
+    expect(planBatchPayment([d("a"), d("b")], [{ documentId: "a", amount: 1 }], "MXN", 1)).toMatchObject({ ok: false, error: /al menos dos/ });
+    expect(planBatchPayment([d("a"), d("b")], [{ documentId: "a", amount: 1 }, { documentId: "b", amount: 1001 }], "MXN", 1)).toMatchObject({ ok: false, error: /Factura 2/ });
   });
 });

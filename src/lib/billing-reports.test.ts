@@ -17,6 +17,7 @@ function doc(id: string, issueDate: string, total: number, extra: Partial<Report
     subtotal: total,
     iva: 0,
     ivaWithheld: 0,
+    isrWithheld: 0,
     total,
     paymentMethod: "PPD",
     concept: null,

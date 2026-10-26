@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
 import { r2 } from "@/lib/billing";
-import { failure, num, requireBilling, toDate } from "@/lib/billing-server";
+import { failure, num, requireBilling, toDate, docFolio } from "@/lib/billing-server";
 
 /** GET /api/billing/banks/[id] — cuenta con sus movimientos y saldo corrido. */
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -17,6 +17,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
         createdBy: { select: { name: true } },
         payment: { select: { documentId: true, document: { select: { kind: true } } } },
         expense: { select: { id: true } },
+        batchPayments: { select: { document: { select: { id: true, kind: true, series: true, folio: true } } } },
       },
     });
     let running = account.initialBalance;
@@ -30,9 +31,15 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
         reference: m.reference,
         reconciled: m.reconciled,
         balance: running,
-        source: m.paymentId ? (m.payment?.document.kind === "receivable" ? "cobro" : "pago") : m.expenseId ? "gasto" : "manual",
+        source: m.paymentId
+          ? m.payment?.document.kind === "receivable" ? "cobro" : "pago"
+          : m.batchPayments.length
+            ? m.batchPayments[0].document.kind === "receivable" ? "cobro" : "pago"
+            : m.expenseId ? "gasto" : "manual",
         documentId: m.payment?.documentId ?? null,
         documentKind: m.payment?.document.kind ?? null,
+        /** Una transferencia que pagó varias facturas. */
+        batchDocuments: m.batchPayments.map((p) => ({ id: p.document.id, kind: p.document.kind, folio: docFolio(p.document) })),
         createdByName: m.createdBy?.name ?? null,
       };
     });

@@ -85,7 +85,7 @@ export function cashFlowSheets(r: CashFlowReport): ExcelSheet[] {
 export function monthlyExportSheets(r: MonthlyExport): ExcelSheet[] {
   const docSheet = (kind: "receivable" | "payable"): ExcelSheet => ({
     name: kind === "receivable" ? "Facturas emitidas" : "Facturas recibidas",
-    moneyColumns: [8, 9, 10, 11],
+    moneyColumns: [8, 9, 10, 11, 12],
     aoa: [
       [
         "Fecha",
@@ -99,6 +99,7 @@ export function monthlyExportSheets(r: MonthlyExport): ExcelSheet[] {
         "Subtotal",
         "IVA",
         "Retención IVA",
+        "Retención ISR",
         "Total",
         "Tipo de cambio",
         "Método de pago",
@@ -120,6 +121,7 @@ export function monthlyExportSheets(r: MonthlyExport): ExcelSheet[] {
           d.subtotal,
           d.iva,
           d.ivaWithheld,
+          d.isrWithheld,
           d.total,
           d.currency === "USD" ? d.exchangeRate : "",
           d.paymentMethod,

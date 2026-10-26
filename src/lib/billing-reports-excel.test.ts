@@ -4,7 +4,7 @@ import { buildCashFlow, buildStatement, type ReportDocument } from "./billing-re
 
 const doc: ReportDocument = {
   id: "1", kind: "receivable", partyName: "Aceros", partyRfc: "ABA010101AB1", series: "A", folio: "7", uuid: null,
-  issueDate: "2026-10-05", dueDate: "2026-11-04", currency: "MXN", exchangeRate: 1, subtotal: 100, iva: 16, ivaWithheld: 4,
+  issueDate: "2026-10-05", dueDate: "2026-11-04", currency: "MXN", exchangeRate: 1, subtotal: 100, iva: 16, ivaWithheld: 4, isrWithheld: 0,
   total: 112, paymentMethod: "PPD", concept: "Flete", reference: "ECO-1", draft: false, cancelled: false,
 };
 

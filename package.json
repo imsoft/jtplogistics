@@ -53,6 +53,7 @@
     "docx": "^9.9.0",
     "driver.js": "^1.9.0",
     "exceljs": "^4.4.0",
+    "fast-xml-parser": "^5.11.2",
     "lexical": "^0.52.0",
     "lucide-react": "^1.53.0",
     "next": "16.4.2",

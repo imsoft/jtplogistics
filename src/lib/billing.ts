@@ -139,3 +139,50 @@ export function agingBucket(dueDate: string, todayKey: string): AgingBucket {
   if (d <= 90) return "61_90";
   return "90_mas";
 }
+
+/**
+ * Una transferencia que paga varias facturas del mismo cliente o proveedor y
+ * en la misma moneda. Valida cada monto contra su saldo y reparte lo que
+ * entra o sale del banco: un solo movimiento por la suma.
+ */
+export function planBatchPayment(
+  docs: { id: string; kind: BillingKind; partyName: string; currency: Currency; total: number; paid: number; draft: boolean; cancelled: boolean }[],
+  items: { documentId: string; amount: number }[],
+  accountCurrency: Currency,
+  rate: number
+):
+  | { ok: true; kind: BillingKind; currency: Currency; items: { documentId: string; amount: number; bankAmount: number }[]; total: number; bankTotal: number }
+  | { ok: false; error: string } {
+  if (items.length < 2) return { ok: false, error: "Elige al menos dos facturas." };
+  if (new Set(items.map((i) => i.documentId)).size !== items.length) return { ok: false, error: "Una factura viene repetida." };
+  const byId = new Map(docs.map((d) => [d.id, d]));
+  const chosen = items.map((i) => byId.get(i.documentId));
+  if (chosen.some((d) => !d)) return { ok: false, error: "Alguna factura ya no existe." };
+  const list = chosen as NonNullable<(typeof chosen)[number]>[];
+  const [first] = list;
+  if (list.some((d) => d.kind !== first.kind)) return { ok: false, error: "No se pueden mezclar cobros y pagos." };
+  if (list.some((d) => d.currency !== first.currency)) return { ok: false, error: "Todas las facturas deben estar en la misma moneda." };
+  if (list.some((d) => d.partyName.trim().toLowerCase() !== first.partyName.trim().toLowerCase())) {
+    return { ok: false, error: `Todas las facturas deben ser del mismo ${first.kind === "receivable" ? "cliente" : "proveedor"}.` };
+  }
+  if (list.some((d) => d.draft)) return { ok: false, error: "Hay un borrador entre las facturas." };
+  if (list.some((d) => d.cancelled)) return { ok: false, error: "Hay una factura cancelada entre las elegidas." };
+  if (first.currency !== accountCurrency && !(rate > 0)) return { ok: false, error: "Escribe el tipo de cambio del día del pago." };
+
+  const planned: { documentId: string; amount: number; bankAmount: number }[] = [];
+  for (const [i, item] of items.entries()) {
+    const d = list[i];
+    const amount = r2(item.amount);
+    const err = paymentError(amount, r2(d.total - d.paid));
+    if (err) return { ok: false, error: `Factura ${i + 1}: ${err}` };
+    planned.push({ documentId: d.id, amount, bankAmount: bankAmountFor(amount, d.currency, accountCurrency, first.currency === accountCurrency ? 1 : rate) });
+  }
+  return {
+    ok: true,
+    kind: first.kind,
+    currency: first.currency,
+    items: planned,
+    total: r2(planned.reduce((s, p) => s + p.amount, 0)),
+    bankTotal: r2(planned.reduce((s, p) => s + p.bankAmount, 0)),
+  };
+}
