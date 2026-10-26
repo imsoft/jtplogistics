@@ -372,7 +372,11 @@ export function DocumentForm({
           <div className="space-y-2">
             <Label htmlFor="doc-due">Vence</Label>
             <Input id="doc-due" type="date" value={form.dueDate} onChange={(e) => set("dueDate")(e.target.value)} className="w-auto" required />
-            {partyDays != null && <p className="text-muted-foreground text-xs">Crédito del cliente: {partyDays} días.</p>}
+            {partyDays != null && (
+              <p className="text-muted-foreground text-xs">
+                {kind === "receivable" ? "Crédito del cliente" : "Días de pago al transportista"}: {partyDays} días.
+              </p>
+            )}
             <div className="flex flex-wrap gap-1">
               {[15, 30, 45, 60].map((n) => (
                 <Button key={n} type="button" size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => set("dueDate")(addDays(form.issueDate, n))}>

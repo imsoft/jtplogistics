@@ -184,6 +184,9 @@ model User {
   clientLeadsCreated   ClientLead[] @relation("ClientLeadAuthor")
   clientLeadActivities ClientLeadActivity[] @relation("ClientLeadActivityAuthor")
   billingDocuments     BillingDocument[] @relation("BillingDocumentAuthor")
+  /// Días en que JTP le paga al transportista (lo pone JTP, no el transportista).
+  /// Con ellos vence su cuenta por pagar; vacío = 30 días.
+  carrierPaymentDays   Int?              @map("carrier_payment_days")
   billingAttachments   BillingAttachment[] @relation("BillingAttachmentAuthor")
   billingCreditNotes   BillingCreditNote[] @relation("BillingCreditNoteAuthor")
   billingPayments      BillingPayment[]  @relation("BillingPaymentAuthor")

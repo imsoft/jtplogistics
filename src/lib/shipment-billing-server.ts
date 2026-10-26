@@ -51,7 +51,7 @@ export async function loadShipmentBillingContext(id: string) {
     row.legalName
       ? prisma.user.findMany({
           where: { role: "carrier", parentCarrierId: null, profile: { isNot: null } },
-          select: { id: true, profile: { select: { legalName: true, commercialName: true, rfc: true } } },
+          select: { id: true, carrierPaymentDays: true, profile: { select: { legalName: true, commercialName: true, rfc: true } } },
         })
       : [],
     prisma.billingDocument.findMany({
@@ -74,6 +74,7 @@ export async function loadShipmentBillingContext(id: string) {
       legalName: carrierRow.profile.legalName,
       commercialName: carrierRow.profile.commercialName,
       rfc: carrierRow.profile.rfc,
+      paymentDays: carrierRow.carrierPaymentDays,
       vehicles: vehicles as (VehicleData & { id: string })[],
       operators: operators as (OperatorData & { id: string })[],
     };

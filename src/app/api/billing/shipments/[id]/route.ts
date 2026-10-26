@@ -62,8 +62,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
             partyRfc: p.partyRfc,
             clientId: p.clientId,
             issueDate: toDate(today),
-            // La factura al cliente vence según sus días de crédito.
-            dueDate: toDate(addDays(today, kind === "receivable" ? (ctx.client?.creditDays ?? 30) : 30)),
+            // Vence según los días de crédito del cliente o los de pago al transportista.
+            dueDate: toDate(addDays(today, (kind === "receivable" ? ctx.client?.creditDays : ctx.carrier?.paymentDays) ?? 30)),
             currency: "MXN",
             exchangeRate: 1,
             subtotal: p.subtotal,

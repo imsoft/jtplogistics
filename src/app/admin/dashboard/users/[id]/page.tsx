@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { FleetManager } from "@/components/dashboard/fleet/fleet-manager";
+import { CarrierPaymentDays } from "@/components/dashboard/users/carrier-payment-days";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { prisma } from "@/lib/db";
@@ -235,6 +236,10 @@ export default async function UserProfilePage({
 
       {/* Contactos agrupados por persona (clic para ver toda la información) */}
       {user.profile && <ContactPersonsCards persons={contactPersons} />}
+
+      {isCarrier && !user.parentCarrierId && (
+        <CarrierPaymentDays carrierId={user.id} initial={user.carrierPaymentDays} canEdit />
+      )}
 
       {/* Expediente de Carta Porte: unidades y operadores */}
       {isCarrier && !user.parentCarrierId && (

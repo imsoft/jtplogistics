@@ -26,11 +26,12 @@ export async function GET(request: Request) {
       // Solo la cuenta principal de cada transportista (no sus usuarios).
       const carriers = await prisma.user.findMany({
         where: { role: "carrier", offboardedOn: null, parentCarrierId: null },
-        select: { name: true, profile: { select: { legalName: true, commercialName: true, rfc: true } } },
+        select: { name: true, carrierPaymentDays: true, profile: { select: { legalName: true, commercialName: true, rfc: true } } },
       });
       for (const c of carriers) {
         const name = c.profile?.legalName?.trim() || c.profile?.commercialName?.trim() || c.name.trim();
-        list.push({ name, rfc: c.profile?.rfc ?? null, clientId: null });
+        // En cuentas por pagar, los "días de crédito" son los días en que se le paga.
+        list.push({ name, rfc: c.profile?.rfc ?? null, clientId: null, creditDays: c.carrierPaymentDays });
       }
     }
     for (const u of used) list.push({ name: u.partyName, rfc: u.partyRfc, clientId: u.clientId });
@@ -40,7 +41,8 @@ export async function GET(request: Request) {
       if (!key) continue;
       const prev = seen.get(key);
       const clientId = prev?.clientId ?? p.clientId;
-      seen.set(key, { name: prev?.name ?? p.name.trim(), rfc: prev?.rfc ?? p.rfc, clientId, creditDays: clientId ? (creditDays.get(clientId) ?? null) : null });
+      const days = prev?.creditDays ?? p.creditDays ?? (clientId ? (creditDays.get(clientId) ?? null) : null);
+      seen.set(key, { name: prev?.name ?? p.name.trim(), rfc: prev?.rfc ?? p.rfc, clientId, creditDays: days });
     }
     return Response.json([...seen.values()].sort((a, b) => a.name.localeCompare(b.name, "es")));
   } catch (e) {

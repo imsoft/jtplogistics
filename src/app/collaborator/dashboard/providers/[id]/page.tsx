@@ -3,6 +3,7 @@
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { FleetManager } from "@/components/dashboard/fleet/fleet-manager";
+import { CarrierPaymentDays } from "@/components/dashboard/users/carrier-payment-days";
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -58,6 +59,7 @@ interface ProviderData {
   role: string;
   carrierNotes: string | null;
   canEditRoutes: boolean;
+  carrierPaymentDays?: number | null;
   canEditTarget: boolean;
   canAddRoutes: boolean;
   carrierRoutes: CarrierRouteItem[];
@@ -251,6 +253,8 @@ export default function ProviderDetailPage() {
 
       {/* Contactos agrupados por persona */}
       {provider.profile && <ContactPersonsCards persons={contactPersons} />}
+
+      <CarrierPaymentDays carrierId={provider.id} initial={provider.carrierPaymentDays ?? null} canEdit={canManage} />
 
       {/* Expediente de Carta Porte: unidades y operadores */}
       <section className="space-y-2">

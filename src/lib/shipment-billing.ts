@@ -46,6 +46,8 @@ export interface BillingCarrier {
   legalName: string | null;
   commercialName: string | null;
   rfc: string | null;
+  /** Días en que JTP le paga (vacío = 30). */
+  paymentDays?: number | null;
   vehicles: (VehicleData & { id: string })[];
   operators: (OperatorData & { id: string })[];
 }
