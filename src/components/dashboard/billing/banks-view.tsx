@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { ChevronLeft, Landmark, Loader2, Plus, Trash2 } from "lucide-react";
+import { ChevronLeft, FileUp, Landmark, Loader2, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { cn, formatMxnLive } from "@/lib/utils";
 import type { Currency } from "@/lib/billing";
 import { KIND_SLUG, money, shortDay, todayKey, type BankAccountRow } from "./billing-shared";
+import { StatementImportDialog } from "./statement-import-dialog";
 
 /** Cuentas de banco con su saldo y movimientos sin conciliar. */
 export function BanksView({ basePath, canCreate }: { basePath: string; canCreate: boolean }) {
@@ -264,6 +265,7 @@ export function BankDetailView({
   const [error, setError] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [onlyPending, setOnlyPending] = useState(false);
 
   const load = useCallback(() => {
@@ -324,6 +326,12 @@ export function BankDetailView({
             <Button onClick={() => setAdding(true)}>
               <Plus className="size-4" />
               Movimiento
+            </Button>
+          )}
+          {canUpdate && (
+            <Button variant="outline" onClick={() => setImporting(true)}>
+              <FileUp className="size-4" />
+              Importar estado de cuenta
             </Button>
           )}
           {canUpdate && (
@@ -425,6 +433,17 @@ export function BankDetailView({
         onClose={() => setAdding(false)}
         onSaved={() => {
           setAdding(false);
+          load();
+        }}
+      />
+      <StatementImportDialog
+        open={importing}
+        accountId={data.id}
+        currency={data.currency}
+        canCreate={canCreate}
+        onClose={() => setImporting(false)}
+        onApplied={() => {
+          setImporting(false);
           load();
         }}
       />
