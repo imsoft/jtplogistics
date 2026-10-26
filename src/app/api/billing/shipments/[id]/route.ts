@@ -49,10 +49,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     const today = companyDateKey();
     const snapshot = cartaPorteSnapshot(ctx.shipment, ctx.carrier);
-    const created = await prisma.$transaction(
-      kinds.map((kind) => {
+    const created = await prisma.$transaction(async (tx) => {
+      // Con el embarque bloqueado: un doble clic no crea dos borradores.
+      await tx.$queryRaw`SELECT id FROM shipments WHERE id = ${id} FOR UPDATE`;
+      const taken = await tx.billingDocument.count({ where: { shipmentId: id, cancelledAt: null, kind: { in: kinds } } });
+      if (taken > 0) throw Response.json({ error: "Este embarque ya tiene sus borradores." }, { status: 409 });
+      const out = [];
+      for (const kind of kinds) {
         const p = plan[kind].plan!;
-        return prisma.billingDocument.create({
+        out.push(await tx.billingDocument.create({
           data: {
             kind,
             draft: true,
@@ -80,9 +85,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
             createdById: session.user.id,
           },
           select: { id: true, kind: true, partyName: true },
-        });
-      })
-    );
+        }));
+      }
+      return out;
+    });
 
     for (const d of created) {
       void logAudit({

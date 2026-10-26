@@ -2,8 +2,8 @@ import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
 import { requireSession } from "@/lib/auth-server";
 import { hasModuleAccess } from "@/lib/module-access";
-import { BILLING_MODULE, docFolio, failure } from "@/lib/billing-server";
-import { cfdiDocumentFields } from "@/lib/cfdi";
+import { BILLING_MODULE, docFolio, failure, duplicateDocument } from "@/lib/billing-server";
+import { cfdiDocumentFields, cfdiParty } from "@/lib/cfdi";
 import { attachmentToJson, cfdiOverrides, readUpload, storeFile, sweepAbandoned, uuidTaken } from "@/lib/billing-attachments-server";
 
 /**
@@ -45,13 +45,26 @@ export async function POST(request: Request) {
       const dup = await uuidTaken(kind, read.cfdi.uuid, documentId ?? undefined);
       if (dup) return Response.json({ error: "Esa factura (folio fiscal) ya está capturada.", id: dup.id }, { status: 409 });
       if (doc) {
-        const hasXml = await prisma.billingAttachment.count({ where: { documentId: doc.id, kind: "xml" } });
+        if (doc.cancelledAt) return Response.json({ error: "La factura está cancelada." }, { status: 400 });
+        // El XML de una nota de crédito no es el de la factura.
+        const hasXml = await prisma.billingAttachment.count({ where: { documentId: doc.id, kind: "xml", creditNoteId: null } });
         if (hasXml) return Response.json({ error: "Esta factura ya tiene su XML. Bórralo primero si es otro." }, { status: 400 });
+        const party = cfdiParty(read.cfdi, kind);
+        if (doc.partyRfc && party.rfc !== doc.partyRfc.toUpperCase()) {
+          return Response.json({ error: `El XML es de otro RFC (${party.rfc}), no de ${doc.partyRfc}.` }, { status: 400 });
+        }
+        if (await duplicateDocument(kind, { folio: read.cfdi.folio, series: read.cfdi.series, partyName: doc.partyName }, doc.id)) {
+          return Response.json({ error: "Ya hay otra factura con ese folio." }, { status: 409 });
+        }
         const [paid, credited] = await Promise.all([
           prisma.billingPayment.aggregate({ where: { documentId: doc.id }, _sum: { amount: true } }),
           prisma.billingCreditNote.aggregate({ where: { documentId: doc.id }, _sum: { total: true } }),
         ]);
-        if ((paid._sum.amount ?? 0) + (credited._sum.total ?? 0) > read.cfdi.total + 0.01) {
+        const applied = (paid._sum.amount ?? 0) + (credited._sum.total ?? 0);
+        if (applied > 0.01 && read.cfdi.currency !== doc.currency) {
+          return Response.json({ error: `Ya tiene pagos en ${doc.currency}: el XML en ${read.cfdi.currency} no puede cambiarle la moneda.` }, { status: 400 });
+        }
+        if (applied > read.cfdi.total + 0.01) {
           return Response.json({ error: "El total del XML es menor a lo ya pagado de esta factura." }, { status: 400 });
         }
       }

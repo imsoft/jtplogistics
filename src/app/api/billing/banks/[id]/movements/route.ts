@@ -12,8 +12,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   try {
     const session = await requireBilling("create");
     const { id } = await params;
-    const account = await prisma.bankAccount.findUnique({ where: { id }, select: { id: true, name: true } });
+    const account = await prisma.bankAccount.findUnique({ where: { id }, select: { id: true, name: true, active: true } });
     if (!account) return Response.json({ error: "No encontrado" }, { status: 404 });
+    if (!account.active) return Response.json({ error: "Esa cuenta de banco está desactivada." }, { status: 400 });
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
     const date = typeof body.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.date) ? body.date : null;
     const amount = r2(num(body.amount));

@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
 import { companyDateKey } from "@/lib/time-clock";
 import { computeTotals, r2, SETTLED_TOLERANCE } from "@/lib/billing";
-import { APPLIED_SELECT, appliedOf, docFolio, failure, num, requireBilling, toDate } from "@/lib/billing-server";
+import { APPLIED_SELECT, appliedOf, docFolio, failure, lockDocuments, num, requireBilling, toDate } from "@/lib/billing-server";
 import { pendingAttachments } from "@/lib/billing-attachments-server";
 import { cfdiParty } from "@/lib/cfdi";
 
@@ -42,6 +42,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       const issueDate = typeof body.issueDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.issueDate) ? body.issueDate : null;
       if (!issueDate) return Response.json({ error: "Elige la fecha de la nota de crédito." }, { status: 400 });
       if (issueDate > companyDateKey()) return Response.json({ error: "La fecha no puede ser futura." }, { status: 400 });
+      if (issueDate < doc.issueDate.toISOString().slice(0, 10)) {
+        return Response.json({ error: "La nota de crédito no puede ser anterior a la factura." }, { status: 400 });
+      }
       const subtotal = num(body.subtotal);
       if (!Number.isFinite(subtotal) || subtotal <= 0) return Response.json({ error: "Escribe el importe de la nota de crédito." }, { status: 400 });
       // Por omisión, el mismo IVA y la misma retención que la factura.
@@ -70,6 +73,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (!reason || reason.length < 3) return Response.json({ error: "Escribe el motivo: descuento, devolución, bonificación…" }, { status: 400 });
 
     const note = await prisma.$transaction(async (tx) => {
+      const locked = (await lockDocuments(tx, [doc.id])).get(doc.id);
+      if (!locked || locked.cancelled || data.total > r2(locked.total - locked.applied) + SETTLED_TOLERANCE) {
+        throw Response.json({ error: "La factura cambió mientras se registraba la nota. Vuelve a cargarla." }, { status: 409 });
+      }
       const n = await tx.billingCreditNote.create({
         data: {
           documentId: doc.id,

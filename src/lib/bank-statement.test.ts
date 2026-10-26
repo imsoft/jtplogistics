@@ -84,3 +84,11 @@ describe("empate contra la plataforma", () => {
     expect(r.unmatchedLines).toEqual([]);
   });
 });
+
+describe("signo después del símbolo", () => {
+  it("$-1,234.56 y MXN -500 son cargos", () => {
+    expect(parseBankAmount("$-1,234.56")).toBe(-1234.56);
+    expect(parseBankAmount("MXN -500.00")).toBe(-500);
+    expect(parseBankAmount("$ (75.10)")).toBe(-75.1);
+  });
+});

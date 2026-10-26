@@ -4,7 +4,7 @@ import { SETTLED_TOLERANCE } from "@/lib/billing";
 import { cartaPorteSnapshot } from "@/lib/shipment-billing";
 import { loadShipmentBillingContext } from "@/lib/shipment-billing-server";
 import { cfdiOverrides, documentCfdi, removeFile, withCfdiBody } from "@/lib/billing-attachments-server";
-import { DOC_INCLUDE, docFolio, documentToJson, failure, readDocumentBody, requireBilling, APPLIED_SELECT, appliedOf } from "@/lib/billing-server";
+import { DOC_INCLUDE, docFolio, documentToJson, failure, readDocumentBody, requireBilling, APPLIED_SELECT, appliedOf, duplicateDocument, lockDocuments } from "@/lib/billing-server";
 
 const label = (d: { series: string | null; folio: string | null; partyName: string }) => `${docFolio(d)} · ${d.partyName}`;
 
@@ -42,7 +42,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       if (paid > SETTLED_TOLERANCE) {
         return Response.json({ error: "Tiene pagos o notas de crédito: bórralos antes de cancelar la factura." }, { status: 400 });
       }
-      await prisma.billingDocument.update({ where: { id }, data: { cancelledAt: new Date(), cancelReason: reason } });
+      await prisma.$transaction(async (tx) => {
+        // Con la factura bloqueada: un cobro que entrara al mismo tiempo no la deja cancelada con pagos.
+        const locked = (await lockDocuments(tx, [id])).get(id);
+        if (!locked || locked.applied > SETTLED_TOLERANCE) {
+          throw Response.json({ error: "Tiene pagos o notas de crédito: bórralos antes de cancelar la factura." }, { status: 409 });
+        }
+        await tx.billingDocument.update({ where: { id }, data: { cancelledAt: new Date(), cancelReason: reason } });
+      });
       void logAudit({ resource: "billing_document", resourceId: id, resourceLabel: label(doc), action: "updated", userId: session.user.id, userName: session.user.name, changes: [{ field: "cancel", label: "Cancelada", from: null, to: reason }] });
       return Response.json({ ok: true });
     }
@@ -57,6 +64,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       return Response.json({ ok: true, missing: snapshot.missing });
     }
     if (body.reactivate === true) {
+      // Mientras estuvo cancelada pudo capturarse otra con su folio, su folio
+      // fiscal o del mismo embarque: reactivarla la duplicaría.
+      if (await duplicateDocument(doc.kind, doc, id)) {
+        return Response.json({ error: "Ya hay otra factura vigente con ese folio, folio fiscal o del mismo embarque." }, { status: 409 });
+      }
       await prisma.billingDocument.update({ where: { id }, data: { cancelledAt: null, cancelReason: null } });
       void logAudit({ resource: "billing_document", resourceId: id, resourceLabel: label(doc), action: "updated", userId: session.user.id, userName: session.user.name, changes: [{ field: "cancel", label: "Cancelada", from: "sí", to: "no" }] });
       return Response.json({ ok: true });
@@ -67,6 +79,20 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const parsed = readDocumentBody(withCfdiBody(body, cfdi));
     if (!parsed.ok) return Response.json({ error: parsed.error }, { status: 400 });
     if (cfdi) Object.assign(parsed.data, cfdiOverrides(cfdi, doc.kind), { draft: false });
+    // Sin XML (p. ej. se quitó para cambiarlo) pero con importes que vinieron de
+    // uno: si no se tocaron subtotal ni tasas, se conservan tal cual (la
+    // retención de ISR no se puede recalcular desde el formulario).
+    else if (
+      doc.isrWithheld > 0 &&
+      parsed.data.subtotal === doc.subtotal &&
+      parsed.data.ivaRate === doc.ivaRate &&
+      parsed.data.currency === doc.currency
+    ) {
+      Object.assign(parsed.data, { iva: doc.iva, ivaWithheld: doc.ivaWithheld, isrWithheld: doc.isrWithheld, total: doc.total });
+    }
+    if (await duplicateDocument(doc.kind, { ...parsed.data, partyName: parsed.data.partyName }, id)) {
+      return Response.json({ error: "Esa factura ya está capturada (mismo folio o folio fiscal)." }, { status: 409 });
+    }
     if (parsed.data.total < paid - SETTLED_TOLERANCE) {
       return Response.json({ error: `El total no puede quedar por debajo de lo ya pagado (${paid.toFixed(2)}).` }, { status: 400 });
     }
@@ -95,10 +121,10 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   try {
     const session = await requireBilling("delete");
     const { id } = await params;
-    const doc = await prisma.billingDocument.findUnique({ where: { id }, include: { _count: { select: { payments: true } } } });
+    const doc = await prisma.billingDocument.findUnique({ where: { id }, include: { _count: { select: { payments: true, creditNotes: true } } } });
     if (!doc) return Response.json({ error: "No encontrado" }, { status: 404 });
-    if (doc._count.payments > 0) {
-      return Response.json({ error: "Tiene pagos registrados: bórralos primero o cancela la factura." }, { status: 400 });
+    if (doc._count.payments > 0 || doc._count.creditNotes > 0) {
+      return Response.json({ error: "Tiene pagos o notas de crédito: bórralos primero o cancela la factura." }, { status: 400 });
     }
     const files = await prisma.billingAttachment.findMany({ where: { documentId: id }, select: { storageId: true } });
     await prisma.billingDocument.delete({ where: { id } });

@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
 import { companyDateKey } from "@/lib/time-clock";
 import { bankAmountFor, documentStatus, paymentError, r2 } from "@/lib/billing";
-import { failure, num, paymentConcept, requireBilling, toDate, docFolio, APPLIED_SELECT, appliedOf } from "@/lib/billing-server";
+import { failure, num, paymentConcept, requireBilling, toDate, docFolio, APPLIED_SELECT, appliedOf, lockDocuments } from "@/lib/billing-server";
 
 /**
  * POST /api/billing/documents/[id]/payments
@@ -22,11 +22,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const paidOn = typeof body.paidOn === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.paidOn) ? body.paidOn : null;
     if (!paidOn) return Response.json({ error: "Elige la fecha del pago." }, { status: 400 });
     if (paidOn > companyDateKey()) return Response.json({ error: "La fecha del pago no puede ser futura." }, { status: 400 });
+    if (paidOn < doc.issueDate.toISOString().slice(0, 10)) {
+      return Response.json({ error: "La fecha del pago no puede ser anterior a la de la factura." }, { status: 400 });
+    }
 
     const account = typeof body.bankAccountId === "string"
       ? await prisma.bankAccount.findUnique({ where: { id: body.bankAccountId } })
       : null;
     if (!account) return Response.json({ error: "Elige la cuenta de banco." }, { status: 400 });
+    if (!account.active) return Response.json({ error: "Esa cuenta de banco está desactivada." }, { status: 400 });
 
     const { applied } = appliedOf(doc);
     const { balance } = documentStatus({ total: doc.total, paid: applied, dueDate: "9999-12-31", cancelled: false, todayKey: "0000-01-01" });
@@ -44,6 +48,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const text = (v: unknown) => (typeof v === "string" ? v.trim() || null : null);
 
     const payment = await prisma.$transaction(async (tx) => {
+      // Se vuelve a revisar el saldo con la factura bloqueada: otro cobro o una
+      // nota de crédito pudo entrar mientras tanto.
+      const locked = (await lockDocuments(tx, [id])).get(id);
+      if (!locked || locked.cancelled || locked.draft) throw Response.json({ error: "La factura ya no acepta pagos." }, { status: 409 });
+      const lockedErr = paymentError(amount, r2(locked.total - locked.applied));
+      if (lockedErr) throw Response.json({ error: lockedErr }, { status: 409 });
       const p = await tx.billingPayment.create({
         data: {
           documentId: id,

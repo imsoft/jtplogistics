@@ -3,7 +3,7 @@
  * consultas compartidas por las rutas de /api/billing.
  */
 
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireModuleAccess, type ModuleAction } from "@/lib/module-access";
 import { companyDateKey } from "@/lib/time-clock";
@@ -35,6 +35,49 @@ export function appliedOf(d: { payments: { amount: number }[]; creditNotes: { to
   const paid = r2(d.payments.reduce((s, p) => s + p.amount, 0));
   const credited = r2(d.creditNotes.reduce((s, c) => s + c.total, 0));
   return { paid, credited, applied: r2(paid + credited) };
+}
+
+type Tx = Prisma.TransactionClient;
+
+/**
+ * Bloquea las facturas hasta que termine la transacción y devuelve lo que ya
+ * se les aplicó. Dos cobros (o un cobro y una nota de crédito) al mismo tiempo
+ * esperan su turno: el segundo ve el saldo que dejó el primero y no puede
+ * pasarse.
+ */
+export async function lockDocuments(tx: Tx, ids: string[]) {
+  if (ids.length === 0) return new Map<string, { applied: number; cancelled: boolean; draft: boolean; total: number }>();
+  await tx.$queryRaw`SELECT id FROM billing_documents WHERE id IN (${Prisma.join(ids)}) FOR UPDATE`;
+  const docs = await tx.billingDocument.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, total: true, draft: true, cancelledAt: true, ...APPLIED_SELECT },
+  });
+  return new Map(docs.map((d) => [d.id, { applied: appliedOf(d).applied, cancelled: d.cancelledAt !== null, draft: d.draft, total: d.total }]));
+}
+
+/**
+ * Otra factura vigente (no cancelada) que choca con esta: mismo folio y serie
+ * de la misma contraparte, mismo folio fiscal, o la misma del embarque. Se usa
+ * al crear, editar, emitir un borrador y reactivar.
+ */
+export async function duplicateDocument(
+  kind: BillingKind,
+  d: { folio?: string | null; series?: string | null; partyName: string; uuid?: string | null; shipmentId?: string | null },
+  exceptId?: string
+): Promise<string | null> {
+  const not = exceptId ? { id: { not: exceptId } } : {};
+  const or: Prisma.BillingDocumentWhereInput[] = [];
+  if (d.folio) or.push({ folio: d.folio, series: d.series ?? null, partyName: { equals: d.partyName, mode: "insensitive" } });
+  if (d.uuid) or.push({ uuid: d.uuid });
+  if (d.shipmentId) or.push({ shipmentId: d.shipmentId });
+  if (or.length === 0) return null;
+  const hit = await prisma.billingDocument.findFirst({ where: { kind, cancelledAt: null, ...not, OR: or }, select: { id: true } });
+  return hit?.id ?? null;
+}
+
+/** Prisma P2002 (único repetido) → mensaje claro en lugar de un error del servidor. */
+export function isUniqueViolation(e: unknown): boolean {
+  return typeof e === "object" && e !== null && (e as { code?: string }).code === "P2002";
 }
 
 export const DOC_INCLUDE = {
@@ -251,6 +294,9 @@ export function docFolio(d: { series?: string | null; folio?: string | null }) {
 
 export function failure(e: unknown, where: string) {
   if (e instanceof Response) return e;
+  if (isUniqueViolation(e)) {
+    return Response.json({ error: "Ya existe un registro con esos datos (folio o folio fiscal repetido)." }, { status: 409 });
+  }
   console.error(`[billing] ${where}`, e);
   return Response.json({ error: "Error interno del servidor" }, { status: 500 });
 }

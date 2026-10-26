@@ -63,8 +63,10 @@ export function parseBankAmount(v: Cell): number | null {
   if (typeof v === "number") return Number.isFinite(v) ? v : null;
   let s = String(v ?? "").trim();
   if (!s || s === "-") return null;
-  const negative = /^\(.*\)$/.test(s) || s.startsWith("-") || /-$/.test(s);
-  s = s.replace(/[()$\s-]/g, "").replace(/mxn|usd/gi, "");
+  // El signo puede venir antes o después del símbolo o la moneda: "$-1,234.56", "MXN -500".
+  const bare = s.replace(/[$\s]/g, "").replace(/mxn|usd/gi, "");
+  const negative = /^\(.*\)$/.test(bare) || bare.startsWith("-") || /-$/.test(bare);
+  s = bare.replace(/[()-]/g, "");
   // Coma decimal (1.234,56) cuando la coma va al final con dos dígitos.
   if (/,\d{2}$/.test(s) && !/\.\d{2}$/.test(s)) s = s.replace(/\./g, "").replace(",", ".");
   else s = s.replace(/,/g, "");

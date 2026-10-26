@@ -47,6 +47,7 @@ export async function POST(request: Request) {
     const data = parsed.data;
     const account = data.bankAccountId ? await prisma.bankAccount.findUnique({ where: { id: data.bankAccountId } }) : null;
     if (data.bankAccountId && !account) return Response.json({ error: "La cuenta de banco no existe." }, { status: 400 });
+    if (account && !account.active) return Response.json({ error: "Esa cuenta de banco está desactivada." }, { status: 400 });
 
     const created = await prisma.$transaction(async (tx) => {
       const e = await tx.expense.create({ data: { ...data, createdById: session.user.id } });

@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
 import { companyDateKey } from "@/lib/time-clock";
 import { planBatchPayment, r2 } from "@/lib/billing";
-import { APPLIED_SELECT, appliedOf, docFolio, failure, num, requireBilling, toDate } from "@/lib/billing-server";
+import { APPLIED_SELECT, appliedOf, docFolio, failure, lockDocuments, num, requireBilling, toDate } from "@/lib/billing-server";
 
 /**
  * POST /api/billing/payments/batch
@@ -23,6 +23,7 @@ export async function POST(request: Request) {
     if (paidOn > companyDateKey()) return Response.json({ error: "La fecha del pago no puede ser futura." }, { status: 400 });
     const account = typeof body.bankAccountId === "string" ? await prisma.bankAccount.findUnique({ where: { id: body.bankAccountId } }) : null;
     if (!account) return Response.json({ error: "Elige la cuenta de banco." }, { status: 400 });
+    if (!account.active) return Response.json({ error: "Esa cuenta de banco está desactivada." }, { status: 400 });
 
     const items = (Array.isArray(body.items) ? body.items : [])
       .slice(0, 100)
@@ -49,6 +50,9 @@ export async function POST(request: Request) {
       rate
     );
     if (!plan.ok) return Response.json({ error: plan.error }, { status: 400 });
+    if (docs.some((d) => paidOn < d.issueDate.toISOString().slice(0, 10))) {
+      return Response.json({ error: "La fecha del pago no puede ser anterior a la de alguna factura." }, { status: 400 });
+    }
 
     const byId = new Map(docs.map((d) => [d.id, d]));
     const folios = plan.items.map((i) => docFolio(byId.get(i.documentId)!));
@@ -58,6 +62,14 @@ export async function POST(request: Request) {
     const exchangeRate = plan.currency === account.currency ? 1 : rate;
 
     const movement = await prisma.$transaction(async (tx) => {
+      // Con las facturas bloqueadas se vuelve a revisar cada saldo.
+      const locked = await lockDocuments(tx, plan.items.map((i) => i.documentId));
+      for (const i of plan.items) {
+        const d = locked.get(i.documentId);
+        if (!d || d.cancelled || d.draft || i.amount > r2(d.total - d.applied) + 0.01) {
+          throw Response.json({ error: "Alguna factura cambió mientras se registraba el pago. Vuelve a cargar la lista." }, { status: 409 });
+        }
+      }
       const m = await tx.bankMovement.create({
         data: {
           bankAccountId: account.id,
