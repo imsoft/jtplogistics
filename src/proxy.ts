@@ -16,6 +16,7 @@ const RATE_LIMIT_RULES: [string, number, number][] = [
   ["/api/mural/uploads",        20, 60_000],  // subida de imágenes
   ["/api/admin/uploads",        20, 60_000],
   ["/api/collaborator/uploads", 20, 60_000],
+  ["/api/billing/attachments",  20, 60_000],  // PDF y XML de facturas
   ["/api/search",               60, 60_000],  // búsqueda global
 ];
 
