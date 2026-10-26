@@ -73,7 +73,7 @@ export async function GET(request: Request) {
  */
 export async function PUT(request: Request) {
   try {
-    await requireScheduleManager();
+    const session = await requireScheduleManager();
     const body = (await request.json().catch(() => ({}))) as {
       userId?: string;
       days?: { weekday: number; startMinute: number; endMinute: number }[];
@@ -81,6 +81,10 @@ export async function PUT(request: Request) {
 
     if (!body.userId) {
       return Response.json({ error: "Falta el colaborador." }, { status: 400 });
+    }
+    // Quien administra horarios no se quita el suyo (y con él los retardos).
+    if (body.userId === session.user.id) {
+      return Response.json({ error: "Tu propio horario y tus permisos los captura dirección." }, { status: 403 });
     }
 
     const target = await prisma.user.findUnique({

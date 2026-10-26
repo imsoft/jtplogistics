@@ -7,7 +7,7 @@
  */
 
 import type { Prisma, TimeClockMark } from "@prisma/client";
-import { COMPANY_TZ, workDateKey } from "@/lib/time-clock";
+import { COMPANY_TZ, companyDateKey, workDateFromKey } from "@/lib/time-clock";
 import {
   RETARDOS_PER_FALTA,
   expiryFrom,
@@ -160,8 +160,9 @@ async function convertRetardos(tx: Tx, userId: string, workDate: Date): Promise<
 
 /** Hoy como DATE a medianoche UTC, para comparar contra expires_on. */
 export function todayDateOnly(): Date {
-  const now = new Date();
-  return new Date(`${workDateKey(now)}T00:00:00.000Z`);
+  // El día de hoy en México, no en UTC: desde las 18:00 en UTC ya es "mañana"
+  // y los retardos que vencen hoy dejaban de contar seis horas antes.
+  return workDateFromKey(companyDateKey());
 }
 
 /** Retardos y faltas que hoy siguen contando. */

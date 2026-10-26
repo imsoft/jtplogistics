@@ -101,9 +101,13 @@ export function PunchPanel({ variant = "full" }: { variant?: "full" | "compact" 
 
   const load = useCallback(() => {
     fetch("/api/time-clock")
-      .then((r) => r.json())
-      .then((d: State) => setState(d))
-      .catch(() => setError("No se pudo cargar tu jornada."));
+      // Una respuesta de error no es una jornada: tratarla como tal tumbaba la pantalla.
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d: State) => {
+        setError(null);
+        setState(d);
+      })
+      .catch(() => setError("No se pudo cargar tu jornada. Vuelve a intentarlo en un momento."));
   }, []);
 
   useEffect(() => { load(); }, [load]);

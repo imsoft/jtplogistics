@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { deleteBlockedByHistory } from "@/lib/offboarding-server";
 import { encryptSecret } from "@/lib/secret-vault";
 import { adminHandler } from "@/lib/api-handler";
 import { logAudit, diffObjects } from "@/lib/audit-log";
@@ -178,6 +179,8 @@ export function DELETE(
     if (!u || u.role !== "collaborator") {
       return Response.json({ error: "No encontrado" }, { status: 404 });
     }
+    const blocked = await deleteBlockedByHistory(id);
+    if (blocked) return blocked;
     await prisma.user.delete({ where: { id } });
 
     void logAudit({

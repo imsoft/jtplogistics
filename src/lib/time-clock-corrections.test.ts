@@ -106,3 +106,20 @@ describe("marcas efectivas", () => {
     expect(out.map((e) => e.id)).toEqual(["a", "b"]);
   });
 });
+
+describe("correcciones sobre marcas agregadas", () => {
+  it("anular una marca agregada la quita", () => {
+    const out = effectiveMarks([
+      entry({ id: "add1", mark: "clock_out", correctionKind: "add" }),
+      entry({ id: "v", mark: "clock_out", correctionKind: "void", correctionOfId: "add1", createdAt: new Date("2026-09-11T10:00:00Z") }),
+    ]);
+    expect(out).toHaveLength(0);
+  });
+  it("ajustar una marca agregada cambia su hora", () => {
+    const out = effectiveMarks([
+      entry({ id: "add1", mark: "clock_out", markedAt: new Date("2026-09-11T00:00:00Z"), correctionKind: "add" }),
+      entry({ id: "j", mark: "clock_out", markedAt: new Date("2026-09-11T01:00:00Z"), correctionKind: "adjust", correctionOfId: "add1", createdAt: new Date("2026-09-11T10:00:00Z") }),
+    ]);
+    expect(out.map((e) => [e.id, e.markedAt.toISOString()])).toEqual([["add1", "2026-09-11T01:00:00.000Z"]]);
+  });
+});

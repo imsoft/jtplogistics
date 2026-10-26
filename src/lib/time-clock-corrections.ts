@@ -46,9 +46,13 @@ export function effectiveMarks(entries: TimeClockEntry[]): TimeClockEntry[] {
     }
   }
 
-  // Las agregadas no corrigen a nadie: nacen sueltas.
-  for (const c of corrections) {
-    if (c.correctionKind === "add") result.push(c);
+  // Las agregadas no corrigen a nadie: nacen sueltas. Pero dirección sí puede
+  // anularlas o ajustarlas después, igual que a una marca original.
+  for (const added of corrections) {
+    if (added.correctionKind !== "add") continue;
+    const fix = byTarget.get(added.id);
+    if (!fix) result.push(added);
+    else if (fix.correctionKind === "adjust") result.push({ ...added, mark: fix.mark, markedAt: fix.markedAt });
   }
 
   return result.sort((a, b) => a.markedAt.getTime() - b.markedAt.getTime());

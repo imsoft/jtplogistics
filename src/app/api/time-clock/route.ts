@@ -30,6 +30,9 @@ function clientIp(request: Request): string | null {
   return request.headers.get("x-real-ip");
 }
 
+/** Una jornada sin marcas por más de esto se da por terminada (salida olvidada). */
+const MAX_OPEN_SHIFT_HOURS = 16;
+
 /**
  * La jornada abierta del colaborador, si tiene una.
  *
@@ -39,11 +42,16 @@ function clientIp(request: Request): string | null {
  */
 async function openShift(userId: string) {
   const last = await prisma.timeClockEntry.findFirst({
-    where: { userId },
+    // Las anulaciones y ajustes de dirección no son marcas de la persona.
+    where: { userId, OR: [{ correctionKind: null }, { correctionKind: "add" }] },
     orderBy: { markedAt: "desc" },
-    select: { mark: true, workDate: true },
+    select: { mark: true, workDate: true, markedAt: true },
   });
   if (!last || last.mark === "clock_out") return null;
+  // Si olvidó marcar la salida, la jornada no se queda abierta para siempre:
+  // pasadas MAX_OPEN_SHIFT_HOURS sin marcar, la siguiente marca abre jornada
+  // nueva y la anterior queda sin salida para que RH la corrija.
+  if (Date.now() - last.markedAt.getTime() > MAX_OPEN_SHIFT_HOURS * 3_600_000) return null;
   return last;
 }
 

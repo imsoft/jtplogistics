@@ -1,4 +1,5 @@
 import { offboardJson } from "@/lib/offboarding";
+import { deleteBlockedByHistory } from "@/lib/offboarding-server";
 import { prisma } from "@/lib/db";
 import { encryptSecret } from "@/lib/secret-vault";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
@@ -251,6 +252,8 @@ export async function DELETE(
       return Response.json({ error: "No encontrado" }, { status: 404 });
     }
 
+    const blocked = await deleteBlockedByHistory(id);
+    if (blocked) return blocked;
     await prisma.user.delete({ where: { id } });
     void logAudit({
       resource: "employee", resourceId: id, resourceLabel: u.name ?? "",

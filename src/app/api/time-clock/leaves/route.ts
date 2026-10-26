@@ -83,6 +83,11 @@ export async function POST(request: Request) {
     if (!userId || !KINDS.includes(kind)) {
       return Response.json({ error: "Faltan datos del periodo." }, { status: 400 });
     }
+    // Un periodo de vacaciones o home office apaga el juicio del checador: no
+    // se lo pone uno mismo.
+    if (userId === session.user.id) {
+      return Response.json({ error: "Tu propio horario y tus permisos los captura dirección." }, { status: 403 });
+    }
     if (!DATE_RE.test(startDate) || !DATE_RE.test(endDate)) {
       return Response.json({ error: "Elige las dos fechas." }, { status: 400 });
     }
@@ -163,9 +168,12 @@ export async function DELETE(request: Request) {
     const id = new URL(request.url).searchParams.get("id") ?? "";
     const leave = await prisma.timeClockLeave.findUnique({
       where: { id },
-      select: { kind: true, startDate: true, endDate: true, user: { select: { name: true } } },
+      select: { kind: true, startDate: true, endDate: true, userId: true, user: { select: { name: true } } },
     });
     if (!leave) return Response.json({ error: "No encontrado" }, { status: 404 });
+    if (leave.userId === session.user.id) {
+      return Response.json({ error: "Tu propio horario y tus permisos los captura dirección." }, { status: 403 });
+    }
 
     await prisma.timeClockLeave.delete({ where: { id } });
 
