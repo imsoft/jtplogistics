@@ -65,3 +65,21 @@ describe("findFinanceForShipment", () => {
     expect(findFinanceForShipment(shipment({ eco: "NADA" }), [finance()])).toBeNull();
   });
 });
+
+describe("liga embarque ↔ finanzas", () => {
+  it("el registro ligado gana aunque los datos ya no coincidan", () => {
+    const s = shipment({ id: "s1", eco: "ECO-NUEVO" } as Partial<Shipment>);
+    const linked = finance({ id: "f-linked", shipmentId: "s1", eco: "ECO-VIEJO" } as Partial<Finance>);
+    const legacy = finance({ id: "f-legacy", eco: "ECO-NUEVO" });
+    expect(findFinanceForShipment(s, [legacy, linked])?.id).toBe("f-linked");
+  });
+  it("un registro ligado a otro embarque no se toma aunque coincida", () => {
+    const s = shipment({ id: "s1" } as Partial<Shipment>);
+    expect(financeMatchesShipment(finance({ shipmentId: "s2" } as Partial<Finance>), s)).toBe(false);
+    expect(findFinanceForShipment(s, [finance({ shipmentId: "s2" } as Partial<Finance>)])).toBeNull();
+  });
+  it("sin liga, sigue la regla vieja", () => {
+    const s = shipment({ id: "s1" } as Partial<Shipment>);
+    expect(findFinanceForShipment(s, [finance({ shipmentId: null } as Partial<Finance>)])?.id).toBe("f1");
+  });
+});

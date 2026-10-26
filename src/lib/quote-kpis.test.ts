@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeQuoteKpis, monthKey, monthRange, normalizeKey, type KpiQuote } from "./quote-kpis";
+import { computeQuoteKpis, kpiDisplayStatus, monthKey, monthRange, normalizeKey, type KpiQuote } from "./quote-kpis";
 
 const NOW = new Date("2026-10-22T18:00:00Z");
 
@@ -97,5 +97,15 @@ describe("computeQuoteKpis", () => {
       { month: "2026-09", emitted: 1, accepted: 0, quotedAmount: 20000, wonAmount: 0 },
       { month: "2026-10", emitted: 2, accepted: 1, quotedAmount: 40000, wonAmount: 20000 },
     ]);
+  });
+});
+
+describe("vigencia de la cotización (fecha de calendario en México)", () => {
+  it("el día de vigencia todavía no está vencida, ni de noche", () => {
+    const q = { status: "enviada" as const, validUntil: new Date("2026-10-26T00:00:00.000Z") };
+    // 26 oct, 20:00 en Guadalajara = 27 oct 02:00 UTC
+    expect(kpiDisplayStatus(q, new Date("2026-10-27T02:00:00Z"))).toBe("enviada");
+    // 27 oct, 06:30 en Guadalajara
+    expect(kpiDisplayStatus(q, new Date("2026-10-27T12:30:00Z"))).toBe("vencida");
   });
 });

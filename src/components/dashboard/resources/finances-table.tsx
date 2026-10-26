@@ -28,6 +28,8 @@ function fmtDate(iso: string | null) {
     year: "numeric",
     month: "short",
     day: "numeric",
+    // La fecha se guarda a medianoche UTC: en hora de México sería el día anterior.
+    timeZone: "UTC",
   });
 }
 

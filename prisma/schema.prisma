@@ -718,6 +718,7 @@ model Shipment {
   deliveryOutcome String?       @map("delivery_outcome")
   status         ShipmentStatus @default(pending) @map("status")
   billingDocuments BillingDocument[]
+  finance        Finance?
   createdAt      DateTime       @default(now()) @map("created_at")
   updatedAt      DateTime       @updatedAt @map("updated_at")
 
@@ -728,6 +729,10 @@ model Shipment {
 
 model Finance {
   id             String    @id @default(cuid()) @map("id")
+  /// Embarque del que salió este registro (uno por embarque). Los registros
+  /// viejos sin liga se siguen empatando por ECO, cliente, ruta y fechas.
+  shipmentId     String?   @unique @map("shipment_id")
+  shipment       Shipment? @relation(fields: [shipmentId], references: [id], onDelete: SetNull)
   eco            String?   @map("eco")
   client         String?   @map("client")
   origin         String?   @map("origin")

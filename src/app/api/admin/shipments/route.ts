@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
 import { logAudit } from "@/lib/audit-log";
 import { findFinanceForShipment } from "@/lib/finance-shipment-match";
+import { financesForShipments } from "@/lib/shipment-tariffs-server";
 import { readTariffs, canManageTariffs, effectiveTariffs } from "@/lib/shipment-tariffs";
 import { isDeliveryOutcome } from "@/lib/shipment-outcome";
 
@@ -68,69 +69,7 @@ function toJson(s: {
 }
 
 export function GET(request: Request) {
-  return adminHandler(async (session) => {
-    // Backfill de finanzas para embarques cerrados (comportamiento preexistente):
-    // se ejecuta sobre TODOS los cerrados, independiente de la paginación/filtros.
-    const closedShipments = await prisma.shipment.findMany({
-      where: { status: "returned" },
-      orderBy: { createdAt: "desc" },
-    });
-
-    // Cuando un embarque ya está en estado "Cerrado" (returned), aseguramos que exista su registro en finanzas.
-    // Esto cubre también embarques que ya estaban cerrados antes de activar la lógica de transferencia.
-    for (const shipment of closedShipments) {
-      const canDedupByCore =
-        shipment.eco && shipment.client && shipment.origin && shipment.destination;
-
-      if (!canDedupByCore) continue;
-
-      const existing = await prisma.finance.findFirst({
-        where: {
-          eco: shipment.eco,
-          client: shipment.client,
-          origin: shipment.origin,
-          destination: shipment.destination,
-          ...(shipment.pickupDate ? { pickupDate: shipment.pickupDate } : {}),
-          ...(shipment.deliveryDate ? { deliveryDate: shipment.deliveryDate } : {}),
-        },
-        select: { id: true },
-      });
-
-      if (existing) continue;
-
-      const finance = await prisma.finance.create({
-        data: {
-          eco: shipment.eco ?? null,
-          client: shipment.client ?? null,
-          origin: shipment.origin ?? null,
-          destination: shipment.destination ?? null,
-          sale: shipment.sale ?? null,
-          product: shipment.product ?? null,
-          pickupDate: shipment.pickupDate ?? null,
-          deliveryDate: shipment.deliveryDate ?? null,
-          legalName: shipment.legalName ?? null,
-          cost: shipment.cost ?? null,
-          operatorName: shipment.operatorName ?? null,
-          truck: shipment.truck ?? null,
-          trailer: shipment.trailer ?? null,
-          unit: shipment.unit ?? null,
-          phone: shipment.phone ?? null,
-          comments: shipment.comments ?? null,
-          incident: shipment.incident ?? null,
-          incidentType: shipment.incidentType ?? null,
-        },
-      });
-
-      void logAudit({
-        resource: "finance",
-        resourceId: finance.id,
-        resourceLabel: `${finance.eco ?? ""} – ${finance.origin ?? ""} → ${finance.destination ?? ""}`.trim(),
-        action: "created",
-        userId: session.user.id,
-        userName: session.user.name,
-      });
-    }
-
+  return adminHandler(async () => {
     const { searchParams } = new URL(request.url);
     const all = searchParams.get("all") === "1";
     const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
@@ -180,7 +119,7 @@ export function GET(request: Request) {
     ]);
 
     // La tarifa se captura en el embarque; los registros viejos la traen de Finanzas.
-    const finances = await prisma.finance.findMany({ orderBy: { createdAt: "desc" } });
+    const finances = await financesForShipments(shipments);
 
     return Response.json({
       data: shipments.map((s) => ({ ...toJson(s), ...effectiveTariffs(s, findFinanceForShipment(s, finances)) })),

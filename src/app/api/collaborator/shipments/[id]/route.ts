@@ -4,7 +4,7 @@ import { logAudit, diffObjects } from "@/lib/audit-log";
 import { shipmentLockReason, LOCK_TEXT } from "@/lib/shipment-lock";
 import { readTariffs, isTariffOnlyBody, canManageTariffs } from "@/lib/shipment-tariffs";
 import { outcomeAfterStatus } from "@/lib/shipment-outcome";
-import { syncFinanceTariffs } from "@/lib/shipment-tariffs-server";
+import { syncShipmentFinance } from "@/lib/shipment-tariffs-server";
 
 function toJson(s: {
   id: string;
@@ -147,10 +147,6 @@ export async function PATCH(
     const shipment = await prisma.shipment.findUnique({ where: { id } });
     if (!shipment) return Response.json({ error: "No encontrado" }, { status: 404 });
 
-    const nextStatus =
-      status !== undefined && status && VALID_STATUSES.includes(status as (typeof VALID_STATUSES)[number])
-        ? (status as (typeof VALID_STATUSES)[number])
-        : shipment.status;
 
     // Regla: cuando el embarque está cerrado, no se permite modificar nada más a menos
     // que el usuario haya confirmado con su correo (_confirmedEmail === session.user.email).
@@ -195,58 +191,12 @@ export async function PATCH(
       data.deliveryOutcome = outcomeAfterStatus(data.status as string, shipment.deliveryOutcome);
     }
 
-    // Si el embarque acaba de pasar a "Cerrado", se crea automáticamente el registro en finanzas.
-    const isClosingNow = shipment.status !== SHIPMENT_CLOSED_STATUS && nextStatus === SHIPMENT_CLOSED_STATUS;
-    if (isClosingNow) {
-      const merged = { ...shipment, ...data } as typeof shipment;
-
-      const canDedup =
-        merged.eco &&
-        merged.client &&
-        merged.origin &&
-        merged.destination &&
-        merged.pickupDate &&
-        merged.deliveryDate;
-
-      let existing: { id: string } | null = null;
-      if (canDedup) {
-        existing = await prisma.finance.findFirst({
-          where: {
-            eco: merged.eco,
-            client: merged.client,
-            origin: merged.origin,
-            destination: merged.destination,
-            pickupDate: merged.pickupDate,
-            deliveryDate: merged.deliveryDate,
-          },
-          select: { id: true },
-        });
-      }
-
-      if (!existing) {
-        const finance = await prisma.finance.create({
-          data: {
-            eco: merged.eco ?? null,
-            client: merged.client ?? null,
-            origin: merged.origin ?? null,
-            destination: merged.destination ?? null,
-            sale: merged.sale ?? null,
-            product: merged.product ?? null,
-            pickupDate: merged.pickupDate ?? null,
-            deliveryDate: merged.deliveryDate ?? null,
-            legalName: merged.legalName ?? null,
-            cost: merged.cost ?? null,
-            operatorName: merged.operatorName ?? null,
-            truck: merged.truck ?? null,
-            trailer: merged.trailer ?? null,
-            unit: merged.unit ?? null,
-            phone: merged.phone ?? null,
-            comments: merged.comments ?? null,
-            incident: merged.incident ?? null,
-            incidentType: merged.incidentType ?? null,
-          },
-        });
-
+    const updated = await prisma.shipment.update({ where: { id }, data });
+    // Un solo registro de finanzas por embarque: se crea al cerrarlo y se
+    // actualiza si se edita cerrado o se reabre y se vuelve a cerrar.
+    if (touchesTariffs || updated.status === SHIPMENT_CLOSED_STATUS || shipment.status === SHIPMENT_CLOSED_STATUS) {
+      const finance = await syncShipmentFinance(updated, SHIPMENT_CLOSED_STATUS);
+      if (finance) {
         void logAudit({
           resource: "finance",
           resourceId: finance.id,
@@ -257,9 +207,6 @@ export async function PATCH(
         });
       }
     }
-
-    const updated = await prisma.shipment.update({ where: { id }, data });
-    if (touchesTariffs) await syncFinanceTariffs(updated);
 
     const changes = diffObjects(
       shipment as unknown as Record<string, unknown>,

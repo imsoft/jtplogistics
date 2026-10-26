@@ -15,6 +15,8 @@
  *    gastos de importación), así que cuenta en el embudo pero no en montos.
  */
 
+import { validityPassed } from "@/lib/constants/quote-status";
+
 export type KpiQuoteStatus = "borrador" | "enviada" | "negociacion" | "aceptada" | "rechazada";
 export type KpiDisplayStatus = KpiQuoteStatus | "vencida";
 export type KpiQuoteKind = "terrestre" | "maritima";
@@ -43,11 +45,7 @@ export const KPI_TIME_ZONE = "America/Mexico_City";
 
 /** Mismo criterio que getQuoteDisplayStatus, con "ahora" explícito. */
 export function kpiDisplayStatus(q: Pick<KpiQuote, "status" | "validUntil">, now: Date): KpiDisplayStatus {
-  if (q.status === "enviada" || q.status === "negociacion") {
-    const limit = new Date(q.validUntil);
-    limit.setHours(23, 59, 59, 999);
-    if (limit.getTime() < now.getTime()) return "vencida";
-  }
+  if ((q.status === "enviada" || q.status === "negociacion") && validityPassed(q.validUntil, now)) return "vencida";
   return q.status;
 }
 

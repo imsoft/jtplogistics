@@ -5,6 +5,8 @@ import type { Finance, Shipment } from "@prisma/client";
  * eco, cliente, origen, destino; y fechas solo si el embarque las tiene.
  */
 export function financeMatchesShipment(f: Finance, s: Shipment): boolean {
+  // Ligado: es de su embarque y de ningún otro, aunque coincidan los datos.
+  if (f.shipmentId) return f.shipmentId === s.id;
   if (f.eco !== s.eco || f.client !== s.client || f.origin !== s.origin || f.destination !== s.destination) {
     return false;
   }
@@ -26,8 +28,6 @@ export function findFinanceForShipment(
   shipment: Shipment,
   finances: Finance[]
 ): Finance | null {
-  for (const f of finances) {
-    if (financeMatchesShipment(f, shipment)) return f;
-  }
-  return null;
+  // Primero el ligado al embarque; si no hay, el más reciente que coincida.
+  return (shipment.id ? finances.find((f) => f.shipmentId === shipment.id) : undefined) ?? finances.find((f) => financeMatchesShipment(f, shipment)) ?? null;
 }

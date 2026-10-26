@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 import { logAudit } from "@/lib/audit-log";
 import { findFinanceForShipment } from "@/lib/finance-shipment-match";
+import { financesForShipments } from "@/lib/shipment-tariffs-server";
 import { readTariffs, canManageTariffs, effectiveTariffs } from "@/lib/shipment-tariffs";
 import { isDeliveryOutcome } from "@/lib/shipment-outcome";
 
@@ -128,7 +129,7 @@ export async function GET(request: Request) {
 
     // La tarifa de venta es de Finanzas: solo viaja a quien puede verlas.
     const finances = me.canViewFinances
-      ? await prisma.finance.findMany({ orderBy: { createdAt: "desc" } })
+      ? await financesForShipments(shipments)
       : null;
 
     return Response.json({

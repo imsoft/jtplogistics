@@ -28,6 +28,21 @@ export const QUOTE_STATUS_VALUES: QuoteStatus[] = QUOTE_STATUS_OPTIONS.map(
   (o) => o.value
 );
 
+/** "YYYY-MM-DD" de hoy en la zona de la empresa (Guadalajara). */
+function mexicoDateKey(now: Date) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Mexico_City", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+}
+
+/**
+ * Si ya pasó la vigencia. La vigencia es una fecha de calendario guardada a
+ * medianoche UTC: se compara como fecha contra el día de hoy en México (vence
+ * al terminar ese día), no con la hora del navegador o del servidor.
+ */
+export function validityPassed(validUntil: string | Date, now: Date): boolean {
+  const iso = typeof validUntil === "string" ? validUntil : validUntil.toISOString();
+  return iso.slice(0, 10) < mexicoDateKey(now);
+}
+
 /**
  * Devuelve el estado a mostrar: si una cotización enviada o en negociación ya
  * pasó su vigencia, se muestra como "vencida". Los estados aceptada/rechazada
@@ -37,11 +52,6 @@ export function getQuoteDisplayStatus(
   status: QuoteStatus,
   validUntil: string | Date
 ): QuoteStatusDisplay {
-  if (status === "enviada" || status === "negociacion") {
-    const limit = new Date(validUntil);
-    // Vence al terminar el día de vigencia (comparación por fecha, no hora).
-    limit.setHours(23, 59, 59, 999);
-    if (limit.getTime() < Date.now()) return "vencida";
-  }
+  if ((status === "enviada" || status === "negociacion") && validityPassed(validUntil, new Date())) return "vencida";
   return status;
 }
