@@ -34,6 +34,7 @@ export function ClientForm({
   const [taxRegime, setTaxRegime] = useState(initialValues.taxRegime ?? "");
   const [fiscalZip, setFiscalZip] = useState(initialValues.fiscalZip ?? "");
   const [cfdiUse, setCfdiUse] = useState(initialValues.cfdiUse ?? "G03");
+  const [creditDays, setCreditDays] = useState(initialValues.creditDays != null ? String(initialValues.creditDays) : "");
   const [email, setEmail] = useState(initialValues.email ?? "");
   const [phone, setPhone] = useState(initialValues.phone ?? "");
   const [address, setAddress] = useState(initialValues.address ?? "");
@@ -66,6 +67,7 @@ export function ClientForm({
       taxRegime,
       fiscalZip,
       cfdiUse,
+      creditDays,
       email,
       phone,
       address,
@@ -121,6 +123,17 @@ export function ClientForm({
               <Label>Uso del CFDI</Label>
               <AppSelect value={cfdiUse} onValueChange={setCfdiUse} options={CFDI_USES} className="w-full" />
               <p className="text-muted-foreground text-xs">El que pide el cliente. Para fletes casi siempre es G03, gastos en general.</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="client-creditDays">Días de crédito</Label>
+              <Input
+                id="client-creditDays"
+                inputMode="numeric"
+                maxLength={3}
+                value={creditDays}
+                onChange={(e) => setCreditDays(e.target.value.replace(/\D/g, ""))}
+              />
+              <p className="text-muted-foreground text-xs">Con ellos se calcula cuándo vence cada factura. Vacío: 30 días.</p>
             </div>
           </div>
         </div>

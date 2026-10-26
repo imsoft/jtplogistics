@@ -94,6 +94,7 @@ export default function CollaboratorClientProfilePage() {
             <InfoRow label="Régimen fiscal" value={labelOf(TAX_REGIMES, client.taxRegime)} />
             <InfoRow label="CP fiscal" value={client.fiscalZip ?? null} />
             <InfoRow label="Uso del CFDI" value={labelOf(CFDI_USES, client.cfdiUse)} />
+            <InfoRow label="Días de crédito" value={client.creditDays != null ? `${client.creditDays} días` : "Sin definir (30 días)"} />
             {missingFiscalData(client).length > 0 && (
               <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">
                 Para facturarle falta: {missingFiscalData(client).join(", ")}.

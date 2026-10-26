@@ -411,6 +411,8 @@ model Client {
   taxRegime String?  @map("tax_regime")
   fiscalZip String?  @map("fiscal_zip")
   cfdiUse   String?  @map("cfdi_use")
+  /// Días de crédito: con ellos se calcula el vencimiento de sus facturas.
+  creditDays Int?    @map("credit_days")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   clientRoutes ClientRoute[]

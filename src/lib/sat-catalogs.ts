@@ -111,9 +111,9 @@ export function normalizeRfc(v: string) {
  * capturan poco a poco), pero si viene tiene que ser válido.
  */
 export function readClientFiscal(body: Record<string, unknown>):
-  | { ok: true; data: { rfc?: string | null; taxRegime?: string | null; fiscalZip?: string | null; cfdiUse?: string | null } }
+  | { ok: true; data: { rfc?: string | null; taxRegime?: string | null; fiscalZip?: string | null; cfdiUse?: string | null; creditDays?: number | null } }
   | { ok: false; error: string } {
-  const data: { rfc?: string | null; taxRegime?: string | null; fiscalZip?: string | null; cfdiUse?: string | null } = {};
+  const data: { rfc?: string | null; taxRegime?: string | null; fiscalZip?: string | null; cfdiUse?: string | null; creditDays?: number | null } = {};
   const str = (k: string) => (body[k] === undefined ? undefined : typeof body[k] === "string" ? (body[k] as string).trim() : "");
 
   const rfc = str("rfc");
@@ -136,6 +136,15 @@ export function readClientFiscal(body: Record<string, unknown>):
   if (use !== undefined) {
     if (use && !has(CFDI_USES, use)) return { ok: false, error: "El uso del CFDI no es válido." };
     data.cfdiUse = use || null;
+  }
+  // Días de crédito: vacío = sin definir (las facturas vencen a 30 días por omisión).
+  if (body.creditDays !== undefined) {
+    const raw = body.creditDays === null ? "" : String(body.creditDays).trim();
+    const days = raw === "" ? null : Number(raw);
+    if (days !== null && !(Number.isInteger(days) && days >= 0 && days <= 365)) {
+      return { ok: false, error: "Los días de crédito deben ser un número entero de 0 a 365." };
+    }
+    data.creditDays = days;
   }
   return { ok: true, data };
 }

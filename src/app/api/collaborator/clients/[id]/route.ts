@@ -5,7 +5,7 @@ import { parseClientProductTypes } from "@/lib/parse-client-product-types";
 import { logAudit, diffObjects } from "@/lib/audit-log";
 
 const CLIENT_LABELS: Record<string, string> = {
-  name: "Nombre", legalName: "Razón social", rfc: "RFC", taxRegime: "Régimen fiscal", fiscalZip: "CP fiscal", cfdiUse: "Uso del CFDI", email: "Correo",
+  name: "Nombre", legalName: "Razón social", rfc: "RFC", taxRegime: "Régimen fiscal", fiscalZip: "CP fiscal", cfdiUse: "Uso del CFDI", creditDays: "Días de crédito", email: "Correo",
   contactName: "Nombre de contacto", position: "Puesto",
   phone: "Teléfono", address: "Dirección", notes: "Notas",
   detentionConditions: "Condiciones de estadías", productTypes: "Tipos de producto",
@@ -21,6 +21,7 @@ function toJson(c: {
   taxRegime?: string | null;
   fiscalZip?: string | null;
   cfdiUse?: string | null;
+  creditDays?: number | null;
   email: string | null;
   phone: string | null;
   address: string | null;
@@ -39,6 +40,7 @@ function toJson(c: {
     taxRegime: c.taxRegime ?? null,
     fiscalZip: c.fiscalZip ?? null,
     cfdiUse: c.cfdiUse ?? null,
+    creditDays: c.creditDays ?? null,
     email: c.email,
     phone: c.phone,
     address: c.address,

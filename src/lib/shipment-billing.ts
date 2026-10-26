@@ -38,6 +38,7 @@ export interface BillingClient {
   taxRegime: string | null;
   fiscalZip: string | null;
   cfdiUse: string | null;
+  creditDays?: number | null;
 }
 
 export interface BillingCarrier {

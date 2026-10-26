@@ -14,10 +14,14 @@ export async function GET(request: Request) {
       distinct: ["partyName"],
       select: { partyName: true, partyRfc: true, clientId: true },
     });
-    const list: { name: string; rfc: string | null; clientId: string | null }[] = [];
+    const list: { name: string; rfc: string | null; clientId: string | null; creditDays?: number | null }[] = [];
+    const creditDays = new Map<string, number | null>();
     if (kind === "receivable") {
-      const clients = await prisma.client.findMany({ select: { id: true, name: true, legalName: true, rfc: true }, orderBy: { name: "asc" } });
-      for (const c of clients) list.push({ name: c.legalName?.trim() || c.name, rfc: c.rfc, clientId: c.id });
+      const clients = await prisma.client.findMany({ select: { id: true, name: true, legalName: true, rfc: true, creditDays: true }, orderBy: { name: "asc" } });
+      for (const c of clients) {
+        creditDays.set(c.id, c.creditDays);
+        list.push({ name: c.legalName?.trim() || c.name, rfc: c.rfc, clientId: c.id, creditDays: c.creditDays });
+      }
     } else {
       // Solo la cuenta principal de cada transportista (no sus usuarios).
       const carriers = await prisma.user.findMany({
@@ -35,7 +39,8 @@ export async function GET(request: Request) {
       const key = p.name.trim().toLowerCase();
       if (!key) continue;
       const prev = seen.get(key);
-      seen.set(key, { name: prev?.name ?? p.name.trim(), rfc: prev?.rfc ?? p.rfc, clientId: prev?.clientId ?? p.clientId });
+      const clientId = prev?.clientId ?? p.clientId;
+      seen.set(key, { name: prev?.name ?? p.name.trim(), rfc: prev?.rfc ?? p.rfc, clientId, creditDays: clientId ? (creditDays.get(clientId) ?? null) : null });
     }
     return Response.json([...seen.values()].sort((a, b) => a.name.localeCompare(b.name, "es")));
   } catch (e) {

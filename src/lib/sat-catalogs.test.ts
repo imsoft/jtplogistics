@@ -30,3 +30,14 @@ describe("listo para facturar", () => {
     expect(missingFiscalData({ ...c, taxRegime: null, fiscalZip: null })).toEqual(["régimen fiscal", "código postal fiscal"]);
   });
 });
+
+describe("días de crédito del cliente", () => {
+  it("entero de 0 a 365; vacío = sin definir", () => {
+    expect(readClientFiscal({ creditDays: "45" })).toEqual({ ok: true, data: { creditDays: 45 } });
+    expect(readClientFiscal({ creditDays: "" })).toEqual({ ok: true, data: { creditDays: null } });
+    expect(readClientFiscal({ creditDays: "0" })).toEqual({ ok: true, data: { creditDays: 0 } });
+    expect(readClientFiscal({}).ok && "creditDays" in (readClientFiscal({}) as { data: object }).data).toBe(false);
+    expect(readClientFiscal({ creditDays: "400" }).ok).toBe(false);
+    expect(readClientFiscal({ creditDays: "1.5" }).ok).toBe(false);
+  });
+});

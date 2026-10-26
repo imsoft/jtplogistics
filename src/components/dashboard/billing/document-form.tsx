@@ -151,7 +151,7 @@ export function DocumentForm({
   const labels = BILLING_KIND_LABELS[kind];
   const [form, setForm] = useState(initialValues);
   const [error, setError] = useState<string | null>(null);
-  const [parties, setParties] = useState<{ name: string; rfc: string | null; clientId: string | null }[]>([]);
+  const [parties, setParties] = useState<{ name: string; rfc: string | null; clientId: string | null; creditDays?: number | null }[]>([]);
   // Archivos subidos mientras se captura; se ligan a la factura al guardarla.
   const [files, setFiles] = useState<BillingAttachmentRow[]>([]);
   const [xml, setXml] = useState<NonNullable<UploadedAttachment["fields"]> | null>(null);
@@ -168,6 +168,9 @@ export function DocumentForm({
 
   const set = <K extends keyof DocumentFormData>(key: K) => (value: DocumentFormData[K]) => setForm((f) => ({ ...f, [key]: value }));
 
+  // Los días de crédito del cliente elegido: con ellos se calcula el vencimiento.
+  const partyDays = parties.find((p) => p.name.toLowerCase() === form.partyName.trim().toLowerCase())?.creditDays ?? null;
+
   function onPartyChange(name: string) {
     const match = parties.find((p) => p.name.toLowerCase() === name.trim().toLowerCase());
     setForm((f) => ({
@@ -175,7 +178,12 @@ export function DocumentForm({
       partyName: name,
       clientId: match?.clientId ?? "",
       partyRfc: match?.rfc && !f.partyRfc ? match.rfc : f.partyRfc,
+      ...(match?.creditDays != null && { dueDate: addDays(f.issueDate, match.creditDays) }),
     }));
+  }
+
+  function onIssueDateChange(issueDate: string) {
+    setForm((f) => ({ ...f, issueDate, ...(partyDays != null && issueDate && { dueDate: addDays(issueDate, partyDays) }) }));
   }
 
   async function onFiles(list: FileList | null) {
@@ -215,7 +223,7 @@ export function DocumentForm({
       folio: f.folio ?? "",
       uuid: f.uuid ?? "",
       issueDate: cfdi.issueDate,
-      dueDate: prev.dueDate < cfdi.issueDate ? addDays(cfdi.issueDate, 30) : prev.dueDate,
+      dueDate: addDays(cfdi.issueDate, known?.creditDays ?? 30),
       currency: f.currency,
       exchangeRate: f.currency === "USD" ? String(f.exchangeRate) : "",
       subtotal: formatMxn(f.subtotal),
@@ -359,11 +367,12 @@ export function DocumentForm({
           </div>
           <div className="space-y-2">
             <Label htmlFor="doc-issue">Fecha de la factura</Label>
-            <Input id="doc-issue" type="date" value={form.issueDate} onChange={(e) => set("issueDate")(e.target.value)} className="w-auto" required disabled={fromXml} />
+            <Input id="doc-issue" type="date" value={form.issueDate} onChange={(e) => onIssueDateChange(e.target.value)} className="w-auto" required disabled={fromXml} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="doc-due">Vence</Label>
             <Input id="doc-due" type="date" value={form.dueDate} onChange={(e) => set("dueDate")(e.target.value)} className="w-auto" required />
+            {partyDays != null && <p className="text-muted-foreground text-xs">Crédito del cliente: {partyDays} días.</p>}
             <div className="flex flex-wrap gap-1">
               {[15, 30, 45, 60].map((n) => (
                 <Button key={n} type="button" size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => set("dueDate")(addDays(form.issueDate, n))}>

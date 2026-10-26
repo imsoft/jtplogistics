@@ -9,6 +9,8 @@ export interface Client {
   taxRegime?: string | null;
   fiscalZip?: string | null;
   cfdiUse?: string | null;
+  /** Días de crédito para calcular el vencimiento de sus facturas. */
+  creditDays?: number | null;
   email: string | null;
   phone: string | null;
   address: string | null;
@@ -27,6 +29,7 @@ export interface ClientFormData {
   taxRegime: string;
   fiscalZip: string;
   cfdiUse: string;
+  creditDays: string;
   email: string;
   phone: string;
   address: string;

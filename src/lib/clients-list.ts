@@ -30,6 +30,7 @@ export function clientToJson(c: {
   taxRegime?: string | null;
   fiscalZip?: string | null;
   cfdiUse?: string | null;
+  creditDays?: number | null;
   email: string | null;
   phone: string | null;
   address: string | null;
@@ -48,6 +49,7 @@ export function clientToJson(c: {
     taxRegime: c.taxRegime ?? null,
     fiscalZip: c.fiscalZip ?? null,
     cfdiUse: c.cfdiUse ?? null,
+    creditDays: c.creditDays ?? null,
     email: c.email,
     phone: c.phone,
     address: c.address,

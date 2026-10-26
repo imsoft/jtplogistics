@@ -46,7 +46,7 @@ export async function loadShipmentBillingContext(id: string) {
   // importar mayúsculas ni acentos.
   const [clients, carriers, documents] = await Promise.all([
     row.client
-      ? prisma.client.findMany({ select: { id: true, name: true, legalName: true, rfc: true, taxRegime: true, fiscalZip: true, cfdiUse: true } })
+      ? prisma.client.findMany({ select: { id: true, name: true, legalName: true, rfc: true, taxRegime: true, fiscalZip: true, cfdiUse: true, creditDays: true } })
       : [],
     row.legalName
       ? prisma.user.findMany({
