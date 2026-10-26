@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { CFDI_USES, TAX_REGIMES, labelOf, missingFiscalData } from "@/lib/sat-catalogs";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, Pencil } from "lucide-react";
@@ -87,6 +88,14 @@ export default function ClientProfilePage() {
         <CardContent className="px-4 pb-4 space-y-4">
           {/* RFC — ancho completo, justo bajo el título */}
           <InfoRow label="RFC" value={client.rfc} />
+          <InfoRow label="Régimen fiscal" value={labelOf(TAX_REGIMES, client.taxRegime)} />
+          <InfoRow label="CP fiscal" value={client.fiscalZip ?? null} />
+          <InfoRow label="Uso del CFDI" value={labelOf(CFDI_USES, client.cfdiUse)} />
+          {missingFiscalData(client).length > 0 && (
+            <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              Para facturarle falta: {missingFiscalData(client).join(", ")}.
+            </p>
+          )}
           <div className="border-t" />
           <div className="grid grid-cols-1 sm:grid-cols-2 sm:divide-x">
             <div className="sm:pr-6">

@@ -2,6 +2,7 @@
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { FleetManager } from "@/components/dashboard/fleet/fleet-manager";
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -250,6 +251,12 @@ export default function ProviderDetailPage() {
 
       {/* Contactos agrupados por persona */}
       {provider.profile && <ContactPersonsCards persons={contactPersons} />}
+
+      {/* Expediente de Carta Porte: unidades y operadores */}
+      <section className="space-y-2">
+        <h2 className="text-muted-foreground text-sm font-semibold tracking-wider uppercase">Expediente de Carta Porte</h2>
+        <FleetManager carrierId={provider.id} compact />
+      </section>
 
       {/* Notas del transportista */}
       <Card>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
+import { FleetManager } from "@/components/dashboard/fleet/fleet-manager";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { prisma } from "@/lib/db";
@@ -234,6 +235,14 @@ export default async function UserProfilePage({
 
       {/* Contactos agrupados por persona (clic para ver toda la información) */}
       {user.profile && <ContactPersonsCards persons={contactPersons} />}
+
+      {/* Expediente de Carta Porte: unidades y operadores */}
+      {isCarrier && !user.parentCarrierId && (
+        <section className="space-y-2">
+          <h2 className="text-muted-foreground text-sm font-semibold tracking-wider uppercase">Expediente de Carta Porte</h2>
+          <FleetManager carrierId={id} compact />
+        </section>
+      )}
 
       {/* Usuarios de la empresa — solo lectura para JTP */}
       {isCarrier && !user.parentCarrierId && (

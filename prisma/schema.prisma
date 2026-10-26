@@ -195,6 +195,8 @@ model User {
   parentCarrierId      String?   @map("parent_carrier_id")
   parentCarrier        User?     @relation("CarrierMembers", fields: [parentCarrierId], references: [id], onDelete: Cascade)
   carrierMembers       User[]    @relation("CarrierMembers")
+  fleetVehicles        CarrierVehicle[]  @relation("CarrierFleet")
+  fleetOperators       CarrierOperator[] @relation("CarrierOperators")
   /// Lo que el principal le permite. El principal no usa estas columnas: lo
   /// puede todo en su empresa.
   memberCanViewRates   Boolean   @default(false) @map("member_can_view_rates")
@@ -403,6 +405,10 @@ model Client {
   notes     String?  @map("notes")
   detentionConditions String? @map("detention_conditions")
   productTypes String[] @default([]) @map("product_types")
+  /// Datos para facturar (CFDI 4.0), tal como vienen en su constancia de situación fiscal.
+  taxRegime String?  @map("tax_regime")
+  fiscalZip String?  @map("fiscal_zip")
+  cfdiUse   String?  @map("cfdi_use")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   clientRoutes ClientRoute[]
@@ -1563,4 +1569,55 @@ model Expense {
 
   @@index([date])
   @@map("expenses")
+}
+
+// ---- Expediente de Carta Porte del transportista ----
+
+/// Tracto o camión (motriz) o remolque del transportista, con lo que pide la
+/// Carta Porte 3.1 en el nodo Autotransporte.
+model CarrierVehicle {
+  id             String   @id @default(cuid()) @map("id")
+  carrierId      String   @map("carrier_id")
+  carrier        User     @relation("CarrierFleet", fields: [carrierId], references: [id], onDelete: Cascade)
+  /// "motriz" (tracto o camión) o "remolque".
+  kind           String   @map("kind")
+  /// Número económico o nombre con el que lo identifican.
+  label          String?  @map("label")
+  plates         String   @map("plates")
+  year           Int?     @map("year")
+  /// c_ConfigAutotransporte (solo motriz).
+  vehicleConfig  String?  @map("vehicle_config")
+  /// c_TipoPermiso y número del permiso de la SCT (solo motriz).
+  sctPermitType  String?  @map("sct_permit_type")
+  sctPermitNumber String? @map("sct_permit_number")
+  /// Peso bruto vehicular en toneladas (solo motriz).
+  grossWeightTons Float?  @map("gross_weight_tons")
+  /// Seguro de responsabilidad civil (solo motriz).
+  insurer        String?  @map("insurer")
+  policyNumber   String?  @map("policy_number")
+  /// c_SubTipoRem (solo remolque).
+  trailerSubtype String?  @map("trailer_subtype")
+  active         Boolean  @default(true) @map("active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([carrierId])
+  @@map("carrier_vehicles")
+}
+
+/// Operador (chofer) del transportista: la Carta Porte pide su RFC y licencia.
+model CarrierOperator {
+  id            String   @id @default(cuid()) @map("id")
+  carrierId     String   @map("carrier_id")
+  carrier       User     @relation("CarrierOperators", fields: [carrierId], references: [id], onDelete: Cascade)
+  name          String   @map("name")
+  rfc           String?  @map("rfc")
+  licenseNumber String?  @map("license_number")
+  phone         String?  @map("phone")
+  active        Boolean  @default(true) @map("active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@index([carrierId])
+  @@map("carrier_operators")
 }

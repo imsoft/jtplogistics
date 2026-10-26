@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormActions } from "@/components/ui/form-actions";
 import { Label } from "@/components/ui/label";
+import { AppSelect } from "@/components/ui/app-select";
+import { CFDI_USES, TAX_REGIMES } from "@/lib/sat-catalogs";
 import type { Client, ClientFormData } from "@/types/client.types";
 
 interface ClientFormProps {
@@ -29,6 +31,9 @@ export function ClientForm({
   const [position, setPosition] = useState(initialValues.position ?? "");
   const [legalName, setLegalName] = useState(initialValues.legalName ?? "");
   const [rfc, setRfc] = useState(initialValues.rfc ?? "");
+  const [taxRegime, setTaxRegime] = useState(initialValues.taxRegime ?? "");
+  const [fiscalZip, setFiscalZip] = useState(initialValues.fiscalZip ?? "");
+  const [cfdiUse, setCfdiUse] = useState(initialValues.cfdiUse ?? "G03");
   const [email, setEmail] = useState(initialValues.email ?? "");
   const [phone, setPhone] = useState(initialValues.phone ?? "");
   const [address, setAddress] = useState(initialValues.address ?? "");
@@ -58,6 +63,9 @@ export function ClientForm({
       position,
       legalName,
       rfc,
+      taxRegime,
+      fiscalZip,
+      cfdiUse,
       email,
       phone,
       address,
@@ -86,6 +94,35 @@ export function ClientForm({
             value={rfc}
             onChange={(e) => setRfc(e.target.value)}
           />
+        </div>
+        <div className="space-y-3 rounded-lg border p-4 sm:col-span-2">
+          <div>
+            <p className="text-sm font-semibold">Datos para facturar</p>
+            <p className="text-muted-foreground text-xs">
+              Tal como vienen en la constancia de situación fiscal del cliente. Sin ellos no se le puede timbrar factura (CFDI 4.0).
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="space-y-2 sm:col-span-2">
+              <Label>Régimen fiscal</Label>
+              <AppSelect value={taxRegime} onValueChange={setTaxRegime} options={TAX_REGIMES} className="w-full" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="client-fiscalZip">Código postal fiscal</Label>
+              <Input
+                id="client-fiscalZip"
+                inputMode="numeric"
+                maxLength={5}
+                value={fiscalZip}
+                onChange={(e) => setFiscalZip(e.target.value.replace(/\D/g, ""))}
+              />
+            </div>
+            <div className="space-y-2 sm:col-span-3">
+              <Label>Uso del CFDI</Label>
+              <AppSelect value={cfdiUse} onValueChange={setCfdiUse} options={CFDI_USES} className="w-full" />
+              <p className="text-muted-foreground text-xs">El que pide el cliente. Para fletes casi siempre es G03, gastos en general.</p>
+            </div>
+          </div>
         </div>
         <div className="space-y-2">
           <Label htmlFor="client-contactName">Nombre de contacto</Label>

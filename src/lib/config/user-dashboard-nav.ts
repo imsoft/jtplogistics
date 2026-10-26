@@ -5,6 +5,7 @@ import {
   Truck,
   MessageSquare,
   Lightbulb,
+  ClipboardList,
 } from "lucide-react";
 
 export interface UserDashboardNavItem {
@@ -23,6 +24,11 @@ export const userDashboardNavItems: UserDashboardNavItem[] = [
     title: "Tipos de unidades",
     href: "/carrier/dashboard/unit-types",
     icon: Truck,
+  },
+  {
+    title: "Unidades y operadores",
+    href: "/carrier/dashboard/fleet",
+    icon: ClipboardList,
   },
   {
     title: "Sugerencias",

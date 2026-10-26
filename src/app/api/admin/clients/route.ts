@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { readClientFiscal } from "@/lib/sat-catalogs";
 import { adminHandler } from "@/lib/api-handler";
 import { logAudit } from "@/lib/audit-log";
 import { parseClientProductTypes } from "@/lib/parse-client-product-types";
@@ -14,7 +15,7 @@ export function GET(request: Request) {
 export function POST(request: Request) {
   return adminHandler(async (session) => {
     const body = await request.json();
-    const { name, contactName, position, legalName, rfc, email, phone, address, notes, detentionConditions, productTypes } = body as {
+    const { name, contactName, position, legalName, email, phone, address, notes, detentionConditions, productTypes } = body as {
       name: string;
       contactName?: string;
       position?: string;
@@ -32,13 +33,16 @@ export function POST(request: Request) {
       return Response.json({ error: "El nombre es requerido" }, { status: 400 });
     }
 
+    const fiscal = readClientFiscal(body as Record<string, unknown>);
+    if (!fiscal.ok) return Response.json({ error: fiscal.error }, { status: 400 });
+
     const client = await prisma.client.create({
       data: {
         name: String(name).trim(),
         contactName: contactName?.trim() || null,
         position: position?.trim() || null,
         legalName: legalName?.trim() || null,
-        rfc: rfc?.trim() || null,
+        ...fiscal.data,
         email: email?.trim() || null,
         phone: phone?.trim() || null,
         address: address?.trim() || null,

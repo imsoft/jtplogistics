@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { readClientFiscal } from "@/lib/sat-catalogs";
 import { adminHandler } from "@/lib/api-handler";
 import { logAudit, diffObjects } from "@/lib/audit-log";
 import { parseClientProductTypes } from "@/lib/parse-client-product-types";
@@ -10,6 +11,9 @@ function toJson(c: {
   position?: string | null;
   legalName: string | null;
   rfc: string | null;
+  taxRegime?: string | null;
+  fiscalZip?: string | null;
+  cfdiUse?: string | null;
   email: string | null;
   phone: string | null;
   address: string | null;
@@ -25,6 +29,9 @@ function toJson(c: {
     position: c.position ?? null,
     legalName: c.legalName,
     rfc: c.rfc,
+    taxRegime: c.taxRegime ?? null,
+    fiscalZip: c.fiscalZip ?? null,
+    cfdiUse: c.cfdiUse ?? null,
     email: c.email,
     phone: c.phone,
     address: c.address,
@@ -48,7 +55,7 @@ export function GET(
 }
 
 const CLIENT_LABELS: Record<string, string> = {
-  name: "Nombre", legalName: "Razón social", rfc: "RFC", email: "Correo",
+  name: "Nombre", legalName: "Razón social", rfc: "RFC", taxRegime: "Régimen fiscal", fiscalZip: "CP fiscal", cfdiUse: "Uso del CFDI", email: "Correo",
   contactName: "Nombre de contacto",
   position: "Puesto",
   phone: "Teléfono", address: "Dirección", notes: "Notas", detentionConditions: "Condiciones de estadías",
@@ -62,7 +69,7 @@ export function PATCH(
   return adminHandler(async (session) => {
     const { id } = await params;
     const body = await request.json();
-    const { name, contactName, position, legalName, rfc, email, phone, address, notes, detentionConditions, productTypes } = body as {
+    const { name, contactName, position, legalName, email, phone, address, notes, detentionConditions, productTypes } = body as {
       name?: string;
       contactName?: string | null;
       position?: string | null;
@@ -79,6 +86,8 @@ export function PATCH(
     const client = await prisma.client.findUnique({ where: { id } });
     if (!client) return Response.json({ error: "No encontrado" }, { status: 404 });
 
+    const fiscal = readClientFiscal(body as Record<string, unknown>);
+    if (!fiscal.ok) return Response.json({ error: fiscal.error }, { status: 400 });
     if (name !== undefined && !String(name).trim()) {
       return Response.json({ error: "El nombre es requerido" }, { status: 400 });
     }
@@ -90,7 +99,7 @@ export function PATCH(
         ...(contactName !== undefined && { contactName: contactName?.trim() || null }),
         ...(position !== undefined && { position: position?.trim() || null }),
         ...(legalName !== undefined && { legalName: legalName?.trim() || null }),
-        ...(rfc !== undefined && { rfc: rfc?.trim() || null }),
+        ...fiscal.data,
         ...(email !== undefined && { email: email?.trim() || null }),
         ...(phone !== undefined && { phone: phone?.trim() || null }),
         ...(address !== undefined && { address: address?.trim() || null }),

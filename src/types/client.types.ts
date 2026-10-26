@@ -5,6 +5,10 @@ export interface Client {
   position: string | null;
   legalName: string | null;
   rfc: string | null;
+  /** Datos para facturar (CFDI 4.0). */
+  taxRegime?: string | null;
+  fiscalZip?: string | null;
+  cfdiUse?: string | null;
   email: string | null;
   phone: string | null;
   address: string | null;
@@ -20,6 +24,9 @@ export interface ClientFormData {
   position: string;
   legalName: string;
   rfc: string;
+  taxRegime: string;
+  fiscalZip: string;
+  cfdiUse: string;
   email: string;
   phone: string;
   address: string;

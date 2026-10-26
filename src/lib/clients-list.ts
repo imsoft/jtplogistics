@@ -27,6 +27,9 @@ export function clientToJson(c: {
   position?: string | null;
   legalName: string | null;
   rfc: string | null;
+  taxRegime?: string | null;
+  fiscalZip?: string | null;
+  cfdiUse?: string | null;
   email: string | null;
   phone: string | null;
   address: string | null;
@@ -42,6 +45,9 @@ export function clientToJson(c: {
     position: c.position ?? null,
     legalName: c.legalName,
     rfc: c.rfc,
+    taxRegime: c.taxRegime ?? null,
+    fiscalZip: c.fiscalZip ?? null,
+    cfdiUse: c.cfdiUse ?? null,
     email: c.email,
     phone: c.phone,
     address: c.address,
