@@ -1,4 +1,6 @@
 import { getCelebrations } from "@/lib/mural-celebrations-query";
+import { escapeHtml } from "@/lib/email-layout";
+import { cronUnauthorized } from "@/lib/cron-auth";
 import { startOfUtcDay } from "@/lib/mural-celebrations";
 import { sendCelebrationGreetings } from "@/lib/celebration-notify";
 import { broadcastMural } from "@/lib/mural-notify";
@@ -19,13 +21,8 @@ export const dynamic = "force-dynamic";
  * Se protege con CRON_SECRET.
  */
 export async function GET(request: Request) {
-  const secret = process.env.CRON_SECRET;
-  if (secret) {
-    const auth = request.headers.get("authorization");
-    if (auth !== `Bearer ${secret}`) {
-      return Response.json({ error: "No autorizado" }, { status: 401 });
-    }
-  }
+  const denied = cronUnauthorized(request);
+  if (denied) return denied;
 
   try {
     const { searchParams } = new URL(request.url);
@@ -42,8 +39,8 @@ export async function GET(request: Request) {
 
     const lines = celebrations.map((c) =>
       c.kind === "birthday"
-        ? `🎂 <strong>${c.name}</strong> cumple años hoy${c.years ? ` (${c.years})` : ""}.`
-        : `🎉 <strong>${c.name}</strong> cumple ${c.years ?? 1} ${
+        ? `🎂 <strong>${escapeHtml(c.name)}</strong> cumple años hoy${c.years ? ` (${c.years})` : ""}.`
+        : `🎉 <strong>${escapeHtml(c.name)}</strong> cumple ${c.years ?? 1} ${
             (c.years ?? 1) === 1 ? "año" : "años"
           } en JTP Logistics.`
     );

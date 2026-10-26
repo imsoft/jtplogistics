@@ -1,5 +1,6 @@
 import { getSession } from "@/lib/auth-server";
 import { prisma } from "@/lib/db";
+import { hasModuleAccess } from "@/lib/module-access";
 
 // GET /api/messages/conversations
 // Solo staff (collaborator/admin): lista de todos los carriers con su último mensaje
@@ -13,6 +14,10 @@ export async function GET() {
     const { role } = session.user as { role: string };
     if (role !== "admin" && role !== "collaborator") {
       return Response.json({ error: "Prohibido" }, { status: 403 });
+    }
+    // Igual que /api/messages: el colaborador necesita el permiso de Mensajes.
+    if (!(await hasModuleAccess(session.user, "Messages", "view"))) {
+      return Response.json({ error: "Sin permiso" }, { status: 403 });
     }
 
     // Todos los carriers

@@ -33,13 +33,14 @@ export const auth = betterAuth({
     enabled: true,
     revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
-      // Quien está dado de baja no recibe el enlace: con él podría ponerse una
-      // contraseña nueva. No se avisa de nada, igual que con un correo inexistente.
+      // Quien está dado de baja (colaborador) o sin acceso (usuario de un
+      // transportista) no recibe el enlace: con él podría ponerse una contraseña
+      // nueva y volver a entrar. No se avisa de nada, igual que con un correo inexistente.
       const row = await prisma.user.findUnique({
         where: { id: user.id },
-        select: { offboardedOn: true },
+        select: { offboardedOn: true, memberRevokedAt: true },
       });
-      if (row?.offboardedOn) return;
+      if (row?.offboardedOn || row?.memberRevokedAt) return;
       const { subject, html, text } = buildPasswordResetEmail({
         name: user.name,
         url,
@@ -88,11 +89,16 @@ export const auth = betterAuth({
         before: async (session) => {
           const row = await prisma.user.findUnique({
             where: { id: session.userId },
-            select: { offboardedOn: true },
+            select: { offboardedOn: true, memberRevokedAt: true },
           });
           if (row?.offboardedOn) {
             throw new APIError("FORBIDDEN", {
               message: "Tu acceso a la plataforma fue dado de baja. Contacta a Recursos Humanos.",
+            });
+          }
+          if (row?.memberRevokedAt) {
+            throw new APIError("FORBIDDEN", {
+              message: "Tu empresa te quitó el acceso a la plataforma. Pídeselo a su usuario principal.",
             });
           }
         },

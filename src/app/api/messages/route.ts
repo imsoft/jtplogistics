@@ -179,12 +179,17 @@ export async function POST(request: NextRequest) {
         body: text.slice(0, 80),
         href: `/admin/dashboard/messages?carrierId=${carrierId}`,
       });
-      void notifyRole("collaborator", {
-        type: "new_message",
-        title: `Mensaje de ${userName}`,
-        body: text.slice(0, 80),
-        href: `/collaborator/dashboard/messages?carrierId=${carrierId}`,
-      });
+      // Solo a quien puede ver los mensajes: el aviso trae un extracto.
+      void notifyRole(
+        "collaborator",
+        {
+          type: "new_message",
+          title: `Mensaje de ${userName}`,
+          body: text.slice(0, 80),
+          href: `/collaborator/dashboard/messages?carrierId=${carrierId}`,
+        },
+        { canViewMessages: true }
+      );
     } else {
       // Staff escribe → avisar a la empresa: al principal y a sus usuarios
       // con permiso de mensajes.

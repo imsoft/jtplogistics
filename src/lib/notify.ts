@@ -2,6 +2,7 @@
  * Server-side helper to create in-app notifications.
  * Fire-and-forget: errors are logged but never thrown.
  */
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 
 interface NotifyInput {
@@ -22,14 +23,18 @@ export async function notify(input: NotifyInput | NotifyInput[]) {
   }
 }
 
-/** Notifica a todos los usuarios con el rol indicado. */
+/**
+ * Notifica a los usuarios activos con el rol indicado. `where` acota más,
+ * p. ej. solo los colaboradores con el permiso del módulo.
+ */
 export async function notifyRole(
   role: string,
-  data: Omit<NotifyInput, "userId">
+  data: Omit<NotifyInput, "userId">,
+  where: Prisma.UserWhereInput = {}
 ) {
   try {
     const users = await prisma.user.findMany({
-      where: { role: role as never },
+      where: { ...where, role: role as never, offboardedOn: null },
       select: { id: true },
     });
     await notify(users.map((u) => ({ ...data, userId: u.id })));

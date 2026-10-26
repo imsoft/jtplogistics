@@ -20,9 +20,24 @@ const RATE_LIMIT_RULES: [string, number, number][] = [
   ["/api/search",               60, 60_000],  // búsqueda global
 ];
 
-/** Límite genérico para el resto de la API, como red de seguridad. */
+/**
+ * Límite genérico para el resto de la API, como red de seguridad. Se cuenta
+ * por sesión: toda la oficina sale a internet con la misma IP y, contado por
+ * IP, unas cuantas personas trabajando a la vez se quedaban sin servicio.
+ * Por IP queda un tope más alto contra abusos sin sesión.
+ */
 const DEFAULT_API_LIMIT = 300;
 const DEFAULT_API_WINDOW = 60_000;
+const IP_API_LIMIT = 1200;
+
+/** Cookie de sesión de Better Auth (con prefijo __Secure- en HTTPS). */
+function sessionKey(request: NextRequest): string | null {
+  const token =
+    request.cookies.get("__Secure-better-auth.session_token")?.value ??
+    request.cookies.get("better-auth.session_token")?.value;
+  // Solo la parte del token (antes de la firma) y acotada: es una llave de conteo.
+  return token ? token.split(".")[0].slice(0, 64) : null;
+}
 
 function clientIp(request: NextRequest): string {
   return (
@@ -107,9 +122,13 @@ export function proxy(request: NextRequest) {
     const rule = RATE_LIMIT_RULES.find(([path]) => pathname.startsWith(path));
     const limit = rule ? rule[1] : DEFAULT_API_LIMIT;
     const windowMs = rule ? rule[2] : DEFAULT_API_WINDOW;
-    const key = `${clientIp(request)}:${rule ? rule[0] : "api"}`;
+    const ip = clientIp(request);
+    const session = rule ? null : sessionKey(request);
+    const limited = session
+      ? isRateLimited(`ip:${ip}:api`, IP_API_LIMIT, windowMs) || isRateLimited(`s:${session}:api`, limit, windowMs)
+      : isRateLimited(`${ip}:${rule ? rule[0] : "api"}`, limit, windowMs);
 
-    if (isRateLimited(key, limit, windowMs)) {
+    if (limited) {
       return new NextResponse(
         JSON.stringify({ error: "Demasiadas solicitudes. Intenta más tarde." }),
         { status: 429, headers: { "Content-Type": "application/json" } }

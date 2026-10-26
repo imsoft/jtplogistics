@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { escapeHtml } from "@/lib/email-layout";
 import { muralHandler } from "@/lib/mural-auth";
 import { broadcastMural } from "@/lib/mural-notify";
 import { logAudit } from "@/lib/audit-log";
@@ -100,9 +101,9 @@ export function POST(request: Request) {
       emailParagraphs: [
         `Se publicó <strong>${kind.toLowerCase()}</strong> en el mural de JTP Logistics.`,
         `<strong>Fecha:</strong> ${range}`,
-        ...(entry.location ? [`<strong>Lugar:</strong> ${entry.location}`] : []),
-        ...(entry.subject ? [`<strong>Colaborador:</strong> ${entry.subject.name}`] : []),
-        ...(entry.description ? [entry.description] : []),
+        ...(entry.location ? [`<strong>Lugar:</strong> ${escapeHtml(entry.location)}`] : []),
+        ...(entry.subject ? [`<strong>Colaborador:</strong> ${escapeHtml(entry.subject.name)}`] : []),
+        ...(entry.description ? [escapeHtml(entry.description)] : []),
       ],
       excludeUserId: session.user.id,
     });

@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { readCarrierRates } from "@/lib/carrier-rates";
 import { prisma } from "@/lib/db";
 import { requireCarrierAccount } from "@/lib/carrier-account";
 import { sendEmail } from "@/lib/email";
@@ -112,14 +113,28 @@ export async function PUT(request: NextRequest) {
     // los candados de JTP son de la empresa; la bitácora, de quien lo hizo.
     const { carrierId, userId, session } = await requireCarrierAccount("editRates");
 
-    const body: { routeId: string; unitType: string; carrierTarget: number | null; carrierWeeklyVolume: number | null }[] = await request.json();
+    const raw: unknown = await request.json().catch(() => null);
+    // Se guarda una página (un tipo de unidad) a la vez.
+    const pageUnitType =
+      request.nextUrl.searchParams.get("unitType") ??
+      (Array.isArray(raw) && typeof raw[0]?.unitType === "string" ? (raw[0].unitType as string) : "");
+    const parsed = readCarrierRates(raw, pageUnitType);
+    if (!parsed.ok) return Response.json({ error: parsed.error }, { status: 400 });
+    const body = parsed.items;
 
-    if (!Array.isArray(body)) {
-      return Response.json({ error: "El cuerpo debe ser un arreglo" }, { status: 400 });
+    // Las rutas tienen que existir y ofrecer ese tipo de unidad.
+    const routes = body.length
+      ? await prisma.route.findMany({
+          where: { id: { in: body.map((b) => b.routeId) } },
+          select: { id: true, status: true, unitType: true, unitTargets: { select: { unitType: true } } },
+        })
+      : [];
+    const routeById = new Map(routes.map((r) => [r.id, r]));
+    for (const item of body) {
+      const route = routeById.get(item.routeId);
+      const offers = route && (route.unitType === item.unitType || route.unitTargets.some((u) => u.unitType === item.unitType));
+      if (!route || !offers) return Response.json({ error: "Alguna ruta ya no existe o no es de ese tipo de unidad." }, { status: 400 });
     }
-
-    // All items should have the same unitType (saving from one page)
-    const pageUnitType = request.nextUrl.searchParams.get("unitType") ?? body[0]?.unitType ?? "";
 
     const userRecord = await prisma.user.findUnique({
       where: { id: carrierId },
@@ -143,6 +158,11 @@ export async function PUT(request: NextRequest) {
       (item) => item.route.status === "active" && !incomingKeys.has(`${item.routeId}:${item.unitType}`)
     );
     const toUpdate = body.filter((item) => existingMap.has(`${item.routeId}:${item.unitType}`));
+
+    // Las rutas nuevas solo pueden ser de las que JTP tiene activas.
+    if (toCreate.some((item) => routeById.get(item.routeId)?.status !== "active")) {
+      return Response.json({ error: "Esa ruta ya no está disponible." }, { status: 400 });
+    }
 
     // Check permissions for deletions
     const unauthorizedDeletes = toDelete.filter((item) => !canEditGlobally && !item.editUnlockApproved);
@@ -201,6 +221,10 @@ export async function PUT(request: NextRequest) {
         }
         continue;
       }
+      // Sin cambios no se toca: así tampoco se gasta el desbloqueo aprobado.
+      if ((prev.carrierTarget ?? null) === (item.carrierTarget ?? null) && (prev.carrierWeeklyVolume ?? null) === (item.carrierWeeklyVolume ?? null)) {
+        continue;
+      }
       ops.push(
         prisma.carrierRoute.update({
           where: { id: prev.id },
@@ -215,9 +239,9 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    if (ops.length > 0) {
-      await prisma.$transaction(ops);
-    }
+    // Guardar sin cambios no avisa a pricing ni cierra la edición.
+    if (ops.length === 0) return Response.json({ ok: true, unchanged: true });
+    await prisma.$transaction(ops);
 
     // Notificación a pricing
     void notifyPricing(carrierId, body);

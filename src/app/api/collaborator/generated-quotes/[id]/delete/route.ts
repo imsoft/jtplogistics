@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
+import { assertCanModifyAccepted } from "@/lib/quote-accepted";
 
 export async function DELETE(
   _req: NextRequest,
@@ -22,7 +23,7 @@ export async function DELETE(
 
     const quote = await prisma.generatedQuote.findUnique({
       where: { id },
-      select: { createdById: true },
+      select: { createdById: true, status: true },
     });
 
     if (!quote) {
@@ -32,6 +33,7 @@ export async function DELETE(
     if (quote.createdById !== session.user.id) {
       return Response.json({ error: "Sin permiso" }, { status: 403 });
     }
+    await assertCanModifyAccepted(session, quote.status);
 
     await prisma.generatedQuote.delete({ where: { id } });
 

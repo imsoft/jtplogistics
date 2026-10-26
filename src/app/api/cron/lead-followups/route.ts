@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { cronUnauthorized } from "@/lib/cron-auth";
 import { notify } from "@/lib/notify";
 import { companyDateKey } from "@/lib/time-clock";
 import { dashboardPrefix } from "@/lib/mural-notify";
@@ -13,10 +14,8 @@ export const dynamic = "force-dynamic";
  * Se protege con CRON_SECRET.
  */
 export async function GET(request: Request) {
-  const secret = process.env.CRON_SECRET;
-  if (secret && request.headers.get("authorization") !== `Bearer ${secret}`) {
-    return Response.json({ error: "No autorizado" }, { status: 401 });
-  }
+  const denied = cronUnauthorized(request);
+  if (denied) return denied;
 
   try {
     const today = companyDateKey();

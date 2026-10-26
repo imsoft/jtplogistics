@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth-server";
 import { normalizeSearch } from "@/lib/search";
+import { hasModuleAccess } from "@/lib/module-access";
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,6 +17,12 @@ export async function GET(request: NextRequest) {
     }
 
     const routePrefix = role === "admin" ? "/admin/dashboard" : "/collaborator/dashboard";
+
+    // Cada bloque solo sale si quien busca puede ver ese módulo (dirección ve todo).
+    const [canRoutes, canProviders, canEmployees, canClients, canVendors] = await Promise.all(
+      ["Routes", "Providers", "Employees", "Clients", "Vendors"].map((m) => hasModuleAccess(session.user, m, "view"))
+    );
+    const none = <T,>(): Promise<T[]> => Promise.resolve([]);
 
     const q = request.nextUrl.searchParams.get("q")?.trim() ?? "";
     if (q.length < 2) return Response.json([]);
@@ -47,42 +54,52 @@ export async function GET(request: NextRequest) {
 
     const [routes, carriers, employees, clients, vendors] = await Promise.all([
       // Rutas: each word must match origin OR destination
-      prisma.route.findMany({
-        where: { AND: allWordsMatch(["origin", "destination"]) },
-        take: 15,
-        select: { id: true, origin: true, destination: true, status: true },
-      }),
+      canRoutes
+        ? prisma.route.findMany({
+            where: { AND: allWordsMatch(["origin", "destination"]) },
+            take: 15,
+            select: { id: true, origin: true, destination: true, status: true },
+          })
+        : none<{ id: string; origin: string; destination: string; status: string }>(),
 
       // Transportistas: each word must match name OR email
-      prisma.user.findMany({
-        where: { role: "carrier", parentCarrierId: null, AND: allWordsMatch(["name", "email"]) },
-        take: 10,
-        select: { id: true, name: true, email: true },
-      }),
+      canProviders
+        ? prisma.user.findMany({
+            where: { role: "carrier", parentCarrierId: null, AND: allWordsMatch(["name", "email"]) },
+            take: 10,
+            select: { id: true, name: true, email: true },
+          })
+        : none<{ id: string; name: string; email: string }>(),
 
       // Empleados / colaboradores
-      prisma.user.findMany({
-        where: {
-          role: { in: ["collaborator", "developer"] },
-          AND: allWordsMatch(["name", "email"]),
-        },
-        take: 10,
-        select: { id: true, name: true, email: true, role: true },
-      }),
+      canEmployees
+        ? prisma.user.findMany({
+            where: {
+              role: { in: ["collaborator", "developer"] },
+              AND: allWordsMatch(["name", "email"]),
+            },
+            take: 10,
+            select: { id: true, name: true, email: true, role: true },
+          })
+        : none<{ id: string; name: string; email: string; role: string }>(),
 
       // Clientes: each word must match name, legalName OR email
-      prisma.client.findMany({
-        where: { AND: allWordsMatch(["name", "legalName", "email"]) },
-        take: 10,
-        select: { id: true, name: true, email: true },
-      }),
+      canClients
+        ? prisma.client.findMany({
+            where: { AND: allWordsMatch(["name", "legalName", "email"]) },
+            take: 10,
+            select: { id: true, name: true, email: true },
+          })
+        : none<{ id: string; name: string; email: string | null }>(),
 
       // Vendedores
-      prisma.user.findMany({
-        where: { role: "vendor", AND: allWordsMatch(["name", "email"]) },
-        take: 10,
-        select: { id: true, name: true, email: true },
-      }),
+      canVendors
+        ? prisma.user.findMany({
+            where: { role: "vendor", AND: allWordsMatch(["name", "email"]) },
+            take: 10,
+            select: { id: true, name: true, email: true },
+          })
+        : none<{ id: string; name: string; email: string }>(),
     ]);
 
     const results = [
@@ -98,28 +115,28 @@ export async function GET(request: NextRequest) {
         id: u.id,
         label: u.name,
         sublabel: u.email ?? "",
-        href: `/admin/dashboard/users/${u.id}`,
+        href: role === "admin" ? `/admin/dashboard/users/${u.id}` : `${routePrefix}/providers/${u.id}`,
       })),
       ...employees.map((u) => ({
         type: "employee" as const,
         id: u.id,
         label: u.name,
         sublabel: u.email ?? "",
-        href: `/admin/dashboard/employees/${u.id}`,
+        href: `${routePrefix}/employees/${u.id}`,
       })),
       ...clients.map((c) => ({
         type: "client" as const,
         id: c.id,
         label: c.name,
         sublabel: c.email ?? "",
-        href: `/admin/dashboard/clients/${c.id}`,
+        href: `${routePrefix}/clients/${c.id}`,
       })),
       ...vendors.map((u) => ({
         type: "vendor" as const,
         id: u.id,
         label: u.name,
         sublabel: u.email ?? "",
-        href: `/admin/dashboard/vendors/${u.id}`,
+        href: `${routePrefix}/vendors/${u.id}`,
       })),
     ];
 

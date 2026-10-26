@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { assertCanModifyAccepted } from "@/lib/quote-accepted";
 import { rejectionUpdate } from "@/lib/quote-rejection";
 import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
@@ -82,6 +83,7 @@ export async function PATCH(
     if (quote.createdById !== session.user.id) {
       return Response.json({ error: "Sin permiso" }, { status: 403 });
     }
+    await assertCanModifyAccepted(session, quote.status);
 
     const body = (await request.json()) as {
       company?: string;

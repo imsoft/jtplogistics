@@ -66,7 +66,11 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     if (!member) return Response.json({ error: "No encontrado" }, { status: 404 });
 
     await prisma.$transaction([
-      prisma.user.update({ where: { id }, data: { memberRevokedAt: new Date() } }),
+      // Los permisos también se apagan: si de algún modo volviera a entrar, no podría hacer nada.
+      prisma.user.update({
+        where: { id },
+        data: { memberRevokedAt: new Date(), ...Object.fromEntries(CARRIER_MEMBER_PERMISSIONS.map((p) => [p.key, false])) },
+      }),
       prisma.account.deleteMany({ where: { userId: id, providerId: "credential" } }),
       prisma.session.deleteMany({ where: { userId: id } }),
     ]);

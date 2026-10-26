@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { escapeHtml } from "@/lib/email-layout";
 import { muralHandler } from "@/lib/mural-auth";
 import { broadcastMural } from "@/lib/mural-notify";
 import { logAudit } from "@/lib/audit-log";
@@ -68,7 +69,7 @@ export function POST(request: Request) {
         emailHeading: post.title,
         emailParagraphs: [
           "Se publicó una nueva noticia en el mural de JTP Logistics.",
-          ...(post.excerpt ? [post.excerpt] : []),
+          ...(post.excerpt ? [escapeHtml(post.excerpt)] : []),
         ],
         emailCta: "Leer la publicación",
         excludeUserId: session.user.id,

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { gateMaritime } from "@/lib/maritime-quote-auth";
 import { QUOTE_STATUS_VALUES } from "@/lib/constants/quote-status";
 import { logAudit, diffObjects } from "@/lib/audit-log";
+import { assertCanModifyAccepted } from "@/lib/quote-accepted";
 import type { Prisma, QuoteStatus } from "@prisma/client";
 import type { MaritimeQuoteInput } from "@/lib/maritime-quote";
 
@@ -13,28 +14,6 @@ const FIELD_LABELS: Record<string, string> = {
   validUntil: "Vigencia",
   status: "Estado",
 };
-
-/**
- * Una cotización aceptada queda bloqueada: solo el admin, o un colaborador al
- * que el admin le dio el permiso canEditAcceptedQuotes, puede editarla o eliminarla.
- * Lanza Response 403 si no tiene permiso.
- */
-async function assertCanModifyAccepted(
-  session: { user: { id: string; role?: string } },
-  status: QuoteStatus
-) {
-  if (status !== "aceptada" || session.user.role !== "collaborator") return;
-  const me = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { canEditAcceptedQuotes: true },
-  });
-  if (!me?.canEditAcceptedQuotes) {
-    throw Response.json(
-      { error: "Esta cotización ya fue aceptada. Solicita al administrador permiso para modificarla." },
-      { status: 403 }
-    );
-  }
-}
 
 export async function GET(
   _req: Request,
