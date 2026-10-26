@@ -16,6 +16,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { prisma } from "@/lib/db";
 import { requireAdminPage } from "@/lib/auth-server";
 import { StatCard, fmtInt, fmtMxn } from "@/components/dashboard/home/stat-card";
+import { BillingOverviewCard } from "@/components/dashboard/home/billing-overview-card";
+import { loadBillingOverview } from "@/lib/billing-overview-server";
 
 export const metadata = {
   title: "Dashboard | JTP Logistics",
@@ -65,6 +67,7 @@ export default async function DashboardPage() {
     openTasks,
     pendingSuggestions,
     financeMonth,
+    billing,
   ] = await Promise.all([
     prisma.route.count(),
     prisma.route.count({ where: { status: "active" } }),
@@ -81,6 +84,7 @@ export default async function DashboardPage() {
       _count: { _all: true },
       where: { createdAt: { gte: startOfMonth } },
     }),
+    loadBillingOverview(),
   ]);
 
   const roleCount = (role: string) =>
@@ -199,6 +203,8 @@ export default async function DashboardPage() {
           href="/admin/dashboard/employees"
         />
       </div>
+
+      {billing && <BillingOverviewCard data={billing} base="/admin" />}
 
       {/* Finanzas del mes */}
       <Card>

@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard, fmtInt, fmtMxn } from "@/components/dashboard/home/stat-card";
+import { BillingOverviewCard } from "@/components/dashboard/home/billing-overview-card";
+import { loadBillingOverview } from "@/lib/billing-overview-server";
 import { PunchPanel } from "@/components/dashboard/time-clock/punch-panel";
 import { requireCollaboratorPage } from "@/lib/auth-server";
 import { prisma } from "@/lib/db";
@@ -64,6 +66,7 @@ export default async function CollaboratorDashboard() {
       canViewLaptops: true,
       canViewPhones: true,
       canViewMaintenance: true,
+      canViewBilling: true,
     },
   });
 
@@ -94,6 +97,7 @@ export default async function CollaboratorDashboard() {
     maintenanceUpcoming,
     myTickets,
     muralUpcoming,
+    billing,
   ] = await Promise.all([
     when(user?.canViewQuotes, () => prisma.generatedQuote.count({ where: { createdById: userId } }), 0),
     when(
@@ -176,6 +180,7 @@ export default async function CollaboratorDashboard() {
         subject: { name: string } | null;
       }[]
     ),
+    when(user?.canViewBilling, () => loadBillingOverview(), null),
   ]);
 
   const monthSale = financeMonth?._sum.sale ?? 0;
@@ -330,6 +335,8 @@ export default async function CollaboratorDashboard() {
           accent={myTickets > 0}
         />
       </div>
+
+      {billing && <BillingOverviewCard data={billing} base="/collaborator" />}
 
       {user?.canViewFinances && (
         <Card>
