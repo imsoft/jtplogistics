@@ -7,6 +7,7 @@ import {
   ReceiptText,
   Landmark,
   Wallet,
+  FileBarChart,
   Handshake,
   User as UserIcon,
   Lightbulb,
@@ -103,6 +104,7 @@ const allNavGroups: PermNavGroup[] = [
       { title: "Cuentas por pagar", href: `${BASE}/billing/payables`, icon: ReceiptText, permission: "canViewBilling" },
       { title: "Bancos", href: `${BASE}/billing/banks`, icon: Landmark, permission: "canViewBilling" },
       { title: "Gastos", href: `${BASE}/billing/expenses`, icon: Wallet, permission: "canViewBilling" },
+      { title: "Reportes de administración", href: `${BASE}/billing/reports`, icon: FileBarChart, permission: "canViewBilling" },
     ],
   },
   {

@@ -1,0 +1,173 @@
+/**
+ * Reportes de Administración, lado servidor: las consultas que alimentan el
+ * estado de cuenta, el flujo de efectivo y la exportación mensual.
+ */
+
+import type { Prisma } from "@prisma/client";
+import { prisma } from "@/lib/db";
+import { toDate } from "@/lib/billing-server";
+import type { BillingKind } from "@/lib/billing";
+import { buildCashFlow, buildStatement, type CashMovement, type ReportDocument, type ReportPayment } from "@/lib/billing-reports";
+
+const day = (d: Date) => d.toISOString().slice(0, 10);
+
+type DocRow = Prisma.BillingDocumentGetPayload<object>;
+
+function docToReport(d: DocRow): ReportDocument {
+  return {
+    id: d.id,
+    kind: d.kind,
+    partyName: d.partyName,
+    partyRfc: d.partyRfc,
+    series: d.series,
+    folio: d.folio,
+    uuid: d.uuid,
+    issueDate: day(d.issueDate),
+    dueDate: day(d.dueDate),
+    currency: d.currency,
+    exchangeRate: d.exchangeRate,
+    subtotal: d.subtotal,
+    iva: d.iva,
+    ivaWithheld: d.ivaWithheld,
+    total: d.total,
+    paymentMethod: d.paymentMethod,
+    concept: d.concept,
+    reference: d.reference,
+    draft: d.draft,
+    cancelled: d.cancelledAt !== null,
+  };
+}
+
+const PAYMENT_INCLUDE = { bankAccount: { select: { name: true, currency: true } } } satisfies Prisma.BillingPaymentInclude;
+
+function paymentToReport(p: Prisma.BillingPaymentGetPayload<{ include: typeof PAYMENT_INCLUDE }>): ReportPayment {
+  return {
+    id: p.id,
+    documentId: p.documentId,
+    paidOn: day(p.paidOn),
+    amount: p.amount,
+    bankAccountName: p.bankAccount.name,
+    bankAccountCurrency: p.bankAccount.currency,
+    bankAmount: p.bankAmount,
+    exchangeRate: p.exchangeRate,
+    paymentForm: p.paymentForm,
+    reference: p.reference,
+  };
+}
+
+/** Estado de cuenta de un cliente (por cobrar) o proveedor (por pagar). */
+export async function statementReport(kind: BillingKind, party: string, from: string, to: string) {
+  const docs = await prisma.billingDocument.findMany({
+    where: { kind, partyName: { equals: party.trim(), mode: "insensitive" } },
+    orderBy: { issueDate: "asc" },
+  });
+  const payments = docs.length
+    ? await prisma.billingPayment.findMany({ where: { documentId: { in: docs.map((d) => d.id) } }, include: PAYMENT_INCLUDE })
+    : [];
+  const rfc = docs.find((d) => d.partyRfc)?.partyRfc ?? null;
+  return {
+    kind,
+    party: { name: docs[0]?.partyName ?? party.trim(), rfc },
+    from,
+    to,
+    currencies: buildStatement(docs.map(docToReport), payments.map(paymentToReport), from, to),
+  };
+}
+
+function movementSource(m: { paymentId: string | null; expenseId: string | null; payment: { document: { kind: BillingKind } } | null }): CashMovement["source"] {
+  if (m.payment) return m.payment.document.kind === "receivable" ? "cobro" : "pago";
+  if (m.expenseId) return "gasto";
+  return "otro";
+}
+
+const MOVEMENT_INCLUDE = {
+  bankAccount: { select: { name: true, currency: true } },
+  payment: { select: { document: { select: { kind: true, partyName: true, series: true, folio: true } } } },
+  expense: { select: { category: true, providerName: true } },
+} satisfies Prisma.BankMovementInclude;
+
+/** Flujo de efectivo: todas las cuentas, con lo que pasó en el periodo. */
+export async function cashFlowReport(from: string, to: string) {
+  const [accounts, movements] = await Promise.all([
+    prisma.bankAccount.findMany({ orderBy: [{ currency: "asc" }, { name: "asc" }] }),
+    prisma.bankMovement.findMany({ where: { date: { lte: toDate(to) } }, include: MOVEMENT_INCLUDE }),
+  ]);
+  return {
+    from,
+    to,
+    currencies: buildCashFlow(
+      accounts.map((a) => ({ id: a.id, name: a.name, bank: a.bank, currency: a.currency, initialBalance: a.initialBalance })),
+      movements.map((m) => ({
+        bankAccountId: m.bankAccountId,
+        date: day(m.date),
+        amount: m.amount,
+        concept: m.concept,
+        reference: m.reference,
+        source: movementSource(m),
+        expenseCategory: m.expense?.category ?? null,
+      })),
+      from,
+      to
+    ),
+  };
+}
+
+/**
+ * Exportación para el contador: lo que pasó en el periodo, renglón por
+ * renglón. Las facturas van por fecha de emisión (los borradores no son
+ * facturas y no se incluyen); cobros, pagos, movimientos y gastos por su fecha.
+ */
+export async function monthlyExport(from: string, to: string) {
+  const range = { gte: toDate(from), lte: toDate(to) };
+  const [documents, payments, movements, expenses] = await Promise.all([
+    prisma.billingDocument.findMany({ where: { draft: false, issueDate: range }, orderBy: [{ kind: "asc" }, { issueDate: "asc" }] }),
+    prisma.billingPayment.findMany({
+      where: { paidOn: range },
+      include: { ...PAYMENT_INCLUDE, document: { select: { kind: true, partyName: true, partyRfc: true, series: true, folio: true, uuid: true, currency: true } } },
+      orderBy: { paidOn: "asc" },
+    }),
+    prisma.bankMovement.findMany({ where: { date: range }, include: MOVEMENT_INCLUDE, orderBy: [{ date: "asc" }, { createdAt: "asc" }] }),
+    prisma.expense.findMany({ where: { date: range }, include: { bankAccount: { select: { name: true } } }, orderBy: { date: "asc" } }),
+  ]);
+  return {
+    from,
+    to,
+    documents: documents.map(docToReport),
+    payments: payments.map((p) => ({
+      ...paymentToReport(p),
+      kind: p.document.kind,
+      partyName: p.document.partyName,
+      partyRfc: p.document.partyRfc,
+      folio: p.document.folio ? [p.document.series, p.document.folio].filter(Boolean).join("-") : "Borrador",
+      uuid: p.document.uuid,
+      documentCurrency: p.document.currency,
+    })),
+    movements: movements.map((m) => ({
+      date: day(m.date),
+      bankAccountName: m.bankAccount.name,
+      currency: m.bankAccount.currency,
+      amount: m.amount,
+      concept: m.concept,
+      reference: m.reference,
+      source: movementSource(m),
+      reconciled: m.reconciled,
+    })),
+    expenses: expenses.map((e) => ({
+      date: day(e.date),
+      category: e.category,
+      providerName: e.providerName,
+      description: e.description,
+      currency: e.currency,
+      exchangeRate: e.exchangeRate,
+      subtotal: e.subtotal,
+      iva: e.iva,
+      total: e.total,
+      uuid: e.uuid,
+      bankAccountName: e.bankAccount?.name ?? null,
+    })),
+  };
+}
+
+export type StatementReport = Awaited<ReturnType<typeof statementReport>>;
+export type CashFlowReport = Awaited<ReturnType<typeof cashFlowReport>>;
+export type MonthlyExport = Awaited<ReturnType<typeof monthlyExport>>;

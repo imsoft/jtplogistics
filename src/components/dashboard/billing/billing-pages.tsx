@@ -10,6 +10,7 @@ import { DocumentsView } from "./documents-view";
 import { DocumentDetailView, EditDocumentView, NewDocumentView } from "./document-views";
 import { BankDetailView, BanksView } from "./banks-view";
 import { ExpensesView } from "./expenses-view";
+import { ReportsView } from "./reports-view";
 
 type Panel = "admin" | "collaborator";
 
@@ -114,6 +115,20 @@ export function ExpensesPage({ panel }: { panel: Panel }) {
         <p className="text-muted-foreground text-sm">Gastos de operación de la empresa, por mes y por categoría.</p>
       </div>
       {perms.canView ? <ExpensesView canCreate={perms.canCreate} canUpdate={perms.canUpdate} canDelete={perms.canDelete} /> : <NoAccess />}
+    </div>
+  );
+}
+
+export function ReportsPage({ panel }: { panel: Panel }) {
+  const perms = useBillingPerms(panel);
+  if (!perms.isLoaded) return <DashboardHomeSkeleton />;
+  return (
+    <div className="min-w-0 space-y-4 sm:space-y-6">
+      <div>
+        <h1 className="page-heading">Reportes</h1>
+        <p className="text-muted-foreground text-sm">Estados de cuenta, flujo de efectivo y el Excel del mes para el contador.</p>
+      </div>
+      {perms.canView ? <ReportsView /> : <NoAccess />}
     </div>
   );
 }

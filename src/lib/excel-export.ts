@@ -50,6 +50,14 @@ function columnWidth(aoa: ExcelCell[][], index: number): number {
   return Math.min(Math.max(longest + 2, 10), 60);
 }
 
+/** Una hoja: renglones (el primero son los encabezados) y qué columnas son dinero. */
+export interface ExcelSheet {
+  name: string;
+  aoa: ExcelCell[][];
+  /** Índices de columnas con importes: se les da formato de moneda. */
+  moneyColumns?: number[];
+}
+
 /**
  * Genera un .xlsx y lo descarga en el navegador.
  *
@@ -62,20 +70,30 @@ export async function downloadXlsxFromAoa(
   aoa: ExcelCell[][]
 ): Promise<void> {
   if (aoa.length === 0) return;
+  await downloadXlsxWorkbook(filename, [{ name: sheetName, aoa }]);
+}
 
+/** Varias hojas en un mismo archivo (la exportación para el contador). */
+export async function downloadXlsxWorkbook(filename: string, sheets: ExcelSheet[]): Promise<void> {
   const ExcelJS = (await import("exceljs")).default;
 
   const workbook = new ExcelJS.Workbook();
   workbook.created = new Date();
-  // Excel no admite más de 31 caracteres ni ciertos símbolos en el nombre de hoja.
-  const safeName = (sheetName || "Datos").replace(/[\\/*?:[\]]/g, "").slice(0, 31);
-  const sheet = workbook.addWorksheet(safeName || "Datos");
+  const used = new Set<string>();
+  for (const { name, aoa, moneyColumns = [] } of sheets) {
+    // Excel no admite más de 31 caracteres ni ciertos símbolos en el nombre de hoja.
+    let safeName = (name || "Datos").replace(/[\\/*?:[\]]/g, "").slice(0, 31) || "Datos";
+    while (used.has(safeName)) safeName = `${safeName.slice(0, 28)} ${used.size}`;
+    used.add(safeName);
+    const sheet = workbook.addWorksheet(safeName);
 
-  sheet.addRows(aoa.map((row) => row.map((cell) => cell ?? "")));
+    sheet.addRows(aoa.map((row) => row.map((cell) => cell ?? "")));
 
-  const [headers = []] = aoa;
-  sheet.columns = headers.map((_, i) => ({ width: columnWidth(aoa, i) }));
-  sheet.getRow(1).font = { bold: true };
+    const [headers = []] = aoa;
+    sheet.columns = headers.map((_, i) => ({ width: columnWidth(aoa, i) }));
+    sheet.getRow(1).font = { bold: true };
+    for (const i of moneyColumns) sheet.getColumn(i + 1).numFmt = "#,##0.00";
+  }
 
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], {

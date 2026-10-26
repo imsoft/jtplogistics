@@ -24,7 +24,7 @@ import { ScrollText } from "lucide-react";
 import { Ship } from "lucide-react";
 import { Anchor } from "lucide-react";
 import { DollarSign } from "lucide-react";
-import { BarChart3, Handshake, HandCoins, ReceiptText, Landmark, Wallet } from "lucide-react";
+import { BarChart3, Handshake, HandCoins, ReceiptText, Landmark, Wallet, FileBarChart } from "lucide-react";
 import { AlertTriangle, Inbox, TrendingUp, Network, StarIcon, LayoutPanelTop, MailCheck, LifeBuoy } from "lucide-react";
 
 export interface DashboardNavItem {
@@ -72,6 +72,7 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
       { title: "Cuentas por pagar", href: "/admin/dashboard/billing/payables", icon: ReceiptText },
       { title: "Bancos", href: "/admin/dashboard/billing/banks", icon: Landmark },
       { title: "Gastos", href: "/admin/dashboard/billing/expenses", icon: Wallet },
+      { title: "Reportes de administración", href: "/admin/dashboard/billing/reports", icon: FileBarChart },
     ],
   },
   {
