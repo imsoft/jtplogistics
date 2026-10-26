@@ -29,6 +29,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { BILLING_KIND_LABELS, SAT_PAYMENT_FORMS, type BillingKind } from "@/lib/billing";
 import { DocumentForm, documentToForm, emptyDocumentForm } from "./document-form";
 import { PaymentDialog } from "./payment-dialog";
+import { CartaPorteCard } from "./carta-porte-card";
 import { StatusBadge, folioLabel, money, shortDay, useBankAccounts, type BillingDocument } from "./billing-shared";
 
 const FORM_LABEL = Object.fromEntries(SAT_PAYMENT_FORMS.map((f) => [f.value, f.label]));
@@ -60,7 +61,7 @@ export function EditDocumentView({ kind, basePath, canDelete }: { kind: BillingK
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
       <ResourceEditHeader
-        title={data ? `Factura ${folioLabel(data)}` : "Factura"}
+        title={data ? (data.draft ? "Borrador" : `Factura ${folioLabel(data)}`) : "Factura"}
         description={data?.partyName ?? ""}
         backHref={`${basePath}/${id}`}
         backLabel="Volver a la factura"
@@ -152,6 +153,7 @@ export function DocumentDetailView({
   if (!doc) return <ResourceDetailSkeleton />;
   const labels = BILLING_KIND_LABELS[doc.kind];
   const cancelled = doc.status === "cancelada";
+  const shipmentsHref = basePath.startsWith("/admin") ? "/admin/dashboard/shipments" : "/collaborator/dashboard/shipments";
 
   return (
     <div className="min-w-0 space-y-6">
@@ -163,7 +165,7 @@ export function DocumentDetailView({
             </Link>
           </Button>
           <div className="min-w-0">
-            <h1 className="page-heading truncate">Factura {folioLabel(doc)}</h1>
+            <h1 className="page-heading truncate">{doc.draft ? "Borrador" : `Factura ${folioLabel(doc)}`}</h1>
             <div className="mt-1 flex flex-wrap items-center gap-2">
               <StatusBadge status={doc.status} />
               <span className="text-muted-foreground truncate text-sm">{doc.partyName}</span>
@@ -191,15 +193,26 @@ export function DocumentDetailView({
                 </Button>
               )
             )}
-            <Button variant="outline" asChild>
+            <Button variant={doc.draft ? "default" : "outline"} asChild>
               <Link href={`${basePath}/${doc.id}/edit`}>
                 <Pencil className="size-4" />
-                Editar
+                {doc.draft ? (doc.kind === "receivable" ? "Registrar factura emitida" : "Registrar factura recibida") : "Editar"}
               </Link>
             </Button>
           </div>
         )}
       </div>
+
+      {doc.draft && !cancelled && (
+        <div className="rounded-lg border border-violet-500/40 bg-violet-500/5 p-4 text-sm">
+          <p className="font-medium">Todavía no es factura</p>
+          <p className="text-muted-foreground">
+            {doc.kind === "receivable"
+              ? "Se armó desde el embarque. Emite la factura y registra aquí su folio: hasta entonces no cuenta en el saldo por cobrar."
+              : "Se armó desde el embarque. Cuando el transportista mande su factura, registra aquí su folio: hasta entonces no cuenta en el saldo por pagar."}
+          </p>
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
@@ -215,7 +228,20 @@ export function DocumentDetailView({
             <InfoRow label="Método de pago" value={doc.paymentMethod === "PUE" ? "PUE · Una sola exhibición" : "PPD · Parcialidades o diferido"} />
             <InfoRow label="Concepto" value={doc.concept} />
             <InfoRow label="Referencia" value={doc.reference} />
-            <InfoRow label="Origen" value={doc.source === "alegra" ? "Capturada desde Alegra" : "Capturada en la plataforma"} />
+            {doc.shipmentId && (
+              <InfoRow
+                label="Embarque"
+                value={
+                  <Link href={`${shipmentsHref}/${doc.shipmentId}`} className="text-primary hover:underline">
+                    {doc.shipmentEco ? `ECO ${doc.shipmentEco}` : "Ver embarque"}
+                  </Link>
+                }
+              />
+            )}
+            <InfoRow
+              label="Origen"
+              value={doc.source === "alegra" ? "Capturada desde Alegra" : doc.source === "shipment" ? "Armada desde el embarque" : "Capturada en la plataforma"}
+            />
             {cancelled && <InfoRow label="Motivo de cancelación" value={doc.cancelReason} />}
             {doc.notes && <InfoRow label="Notas" value={doc.notes} />}
           </CardContent>
@@ -231,11 +257,19 @@ export function DocumentDetailView({
             {doc.ivaWithheld > 0 && <InfoRow label="Retención de IVA" value={`-${money(doc.ivaWithheld, doc.currency)}`} />}
             <InfoRow label="Total" value={money(doc.total, doc.currency)} />
             {doc.currency === "USD" && <InfoRow label="Tipo de cambio" value={`${doc.exchangeRate} pesos por dólar`} />}
-            <InfoRow label={doc.kind === "receivable" ? "Cobrado" : "Pagado"} value={money(doc.paid, doc.currency)} />
-            <InfoRow label="Saldo" value={money(doc.balance, doc.currency)} />
+            {!doc.draft && (
+              <>
+                <InfoRow label={doc.kind === "receivable" ? "Cobrado" : "Pagado"} value={money(doc.paid, doc.currency)} />
+                <InfoRow label="Saldo" value={money(doc.balance, doc.currency)} />
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
+
+      {doc.cartaPorte && (
+        <CartaPorteCard documentId={doc.id} data={doc.cartaPorte} canRefresh={canUpdate && doc.draft && !cancelled} onRefreshed={load} />
+      )}
 
       <Card>
         <CardHeader className="pb-2">

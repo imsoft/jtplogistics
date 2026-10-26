@@ -7,7 +7,7 @@
 
 export type Currency = "MXN" | "USD";
 export type BillingKind = "receivable" | "payable";
-export type DocumentStatus = "pendiente" | "parcial" | "pagada" | "vencida" | "cancelada";
+export type DocumentStatus = "borrador" | "pendiente" | "parcial" | "pagada" | "vencida" | "cancelada";
 
 /** Redondeo a centavos. */
 export const r2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
@@ -21,6 +21,7 @@ export const BILLING_KIND_LABELS: Record<BillingKind, { plural: string; singular
 };
 
 export const DOCUMENT_STATUS: Record<DocumentStatus, { label: string; badgeClass: string }> = {
+  borrador: { label: "Borrador", badgeClass: "bg-violet-100 text-violet-800" },
   pendiente: { label: "Pendiente", badgeClass: "bg-blue-100 text-blue-800" },
   parcial: { label: "Pago parcial", badgeClass: "bg-amber-100 text-amber-800" },
   pagada: { label: "Pagada", badgeClass: "bg-green-100 text-green-800" },
@@ -77,10 +78,13 @@ export function documentStatus(input: {
   paid: number;
   dueDate: string;
   cancelled: boolean;
+  /** Borrador: todavía no es factura, así que no hay saldo que cobrar o pagar. */
+  draft?: boolean;
   todayKey: string;
 }): { status: DocumentStatus; balance: number } {
   const balance = r2(input.total - input.paid);
   if (input.cancelled) return { status: "cancelada", balance: 0 };
+  if (input.draft) return { status: "borrador", balance: 0 };
   if (balance <= SETTLED_TOLERANCE) return { status: "pagada", balance: 0 };
   if (input.dueDate < input.todayKey) return { status: "vencida", balance };
   if (input.paid > SETTLED_TOLERANCE) return { status: "parcial", balance };

@@ -710,6 +710,7 @@ model Shipment {
   /// calificación de transportistas lo necesita.
   deliveryOutcome String?       @map("delivery_outcome")
   status         ShipmentStatus @default(pending) @map("status")
+  billingDocuments BillingDocument[]
   createdAt      DateTime       @default(now()) @map("created_at")
   updatedAt      DateTime       @updatedAt @map("updated_at")
 
@@ -1440,7 +1441,17 @@ model BillingDocument {
   partyName     String            @map("party_name")
   partyRfc      String?           @map("party_rfc")
   series        String?           @map("series")
-  folio         String            @map("folio")
+  /// Vacío mientras es borrador: el folio llega al emitir la factura.
+  folio         String?           @map("folio")
+  /// Borrador armado desde un embarque: todavía no es factura, no cuenta en
+  /// saldos ni acepta pagos.
+  draft         Boolean           @default(false) @map("draft")
+  /// Embarque del que salió (facturar desde el embarque).
+  shipmentId    String?           @map("shipment_id")
+  shipment      Shipment?         @relation(fields: [shipmentId], references: [id], onDelete: SetNull)
+  /// Foto de los datos de Carta Porte al armar el borrador (ruta, transportista,
+  /// unidad y operador). Para el timbrado, cuando haya PAC.
+  cartaPorte    Json?             @map("carta_porte")
   /// Folio fiscal (UUID) del CFDI.
   uuid          String?           @map("uuid")
   issueDate     DateTime          @db.Date @map("issue_date")
@@ -1472,6 +1483,7 @@ model BillingDocument {
   @@unique([kind, series, folio, partyName])
   @@index([kind, dueDate])
   @@index([clientId])
+  @@index([shipmentId])
   @@map("billing_documents")
 }
 

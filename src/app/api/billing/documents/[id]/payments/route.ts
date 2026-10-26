@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
 import { companyDateKey } from "@/lib/time-clock";
 import { bankAmountFor, documentStatus, paymentError, r2 } from "@/lib/billing";
-import { failure, num, paymentConcept, requireBilling, toDate } from "@/lib/billing-server";
+import { failure, num, paymentConcept, requireBilling, toDate, docFolio } from "@/lib/billing-server";
 
 /**
  * POST /api/billing/documents/[id]/payments
@@ -16,6 +16,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const doc = await prisma.billingDocument.findUnique({ where: { id }, include: { payments: { select: { amount: true } } } });
     if (!doc) return Response.json({ error: "No encontrado" }, { status: 404 });
     if (doc.cancelledAt) return Response.json({ error: "La factura está cancelada." }, { status: 400 });
+    if (doc.draft) return Response.json({ error: "Es un borrador: primero registra la factura emitida con su folio." }, { status: 400 });
 
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
     const paidOn = typeof body.paidOn === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.paidOn) ? body.paidOn : null;
@@ -74,7 +75,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     void logAudit({
       resource: "billing_document",
       resourceId: id,
-      resourceLabel: `${[doc.series, doc.folio].filter(Boolean).join("-")} · ${doc.partyName}`,
+      resourceLabel: `${docFolio(doc)} · ${doc.partyName}`,
       action: "updated",
       userId: session.user.id,
       userName: session.user.name,

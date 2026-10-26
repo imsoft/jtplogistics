@@ -165,7 +165,7 @@ export function DocumentsView({
 
       <div className="flex flex-wrap gap-2">
         {chip("abiertas", "Con saldo", openCount)}
-        {(["vencida", "parcial", "pendiente", "pagada", "cancelada"] as DocumentStatus[]).map((s) =>
+        {(["vencida", "parcial", "pendiente", "pagada", "borrador", "cancelada"] as DocumentStatus[]).map((s) =>
           chip(s, DOCUMENT_STATUS[s].label, summary.counts.get(s) ?? 0)
         )}
         {chip("todas", "Todas", docs.length)}
@@ -202,6 +202,7 @@ export function DocumentsView({
                         {folioLabel(d)}
                       </Link>
                       {d.source === "alegra" && <span className="text-muted-foreground block text-[11px]">De Alegra</span>}
+                      {d.shipmentEco && <span className="text-muted-foreground block text-[11px]">ECO {d.shipmentEco}</span>}
                     </td>
                     <td className="px-4 py-3">
                       <span className="block max-w-64 truncate font-medium" title={d.partyName}>{d.partyName}</span>

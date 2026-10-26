@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
 import { companyDateKey } from "@/lib/time-clock";
 import { BILLING_KIND_LABELS } from "@/lib/billing";
-import { DOC_INCLUDE, documentToJson, failure, isBillingKind, readDocumentBody, requireBilling } from "@/lib/billing-server";
+import { DOC_INCLUDE, docFolio, documentToJson, failure, isBillingKind, readDocumentBody, requireBilling } from "@/lib/billing-server";
 
 /** GET /api/billing/documents?kind=receivable|payable&q= */
 export async function GET(request: Request) {
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     if (kind === "payable") data.clientId = null;
 
     // Evita capturar dos veces la misma factura (pasa al migrar desde Alegra).
-    const dup = await prisma.billingDocument.findFirst({
+    const dup = !data.folio ? null : await prisma.billingDocument.findFirst({
       where: {
         kind,
         folio: data.folio,
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
     void logAudit({
       resource: "billing_document",
       resourceId: created.id,
-      resourceLabel: `${BILLING_KIND_LABELS[kind].singular} ${[data.series, data.folio].filter(Boolean).join("-")} · ${data.partyName}`,
+      resourceLabel: `${BILLING_KIND_LABELS[kind].singular} ${docFolio({ series: data.series ?? null, folio: data.folio ?? null })} · ${data.partyName}`,
       action: "created",
       userId: session.user.id,
       userName: session.user.name,

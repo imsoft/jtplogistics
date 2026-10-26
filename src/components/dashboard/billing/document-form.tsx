@@ -15,6 +15,8 @@ import { BILLING_KIND_LABELS, IVA_WITHHOLDING_OPTIONS, computeTotals, type Billi
 import { money, todayKey, type BillingDocument } from "./billing-shared";
 
 export interface DocumentFormData {
+  /** Borrador armado desde un embarque: el folio llega al emitir la factura. */
+  draft: boolean;
   fromAlegra: boolean;
   partyName: string;
   partyRfc: string;
@@ -50,6 +52,7 @@ function addDays(key: string, days: number) {
 export function emptyDocumentForm(kind: BillingKind): DocumentFormData {
   const today = todayKey();
   return {
+    draft: false,
     fromAlegra: true,
     partyName: "",
     partyRfc: "",
@@ -77,12 +80,13 @@ export function documentToForm(d: BillingDocument): DocumentFormData {
     Math.abs(Number(o.value) - withholdingRate) < Math.abs(Number(best.value) - withholdingRate) ? o : best
   );
   return {
+    draft: d.draft,
     fromAlegra: d.source === "alegra",
     partyName: d.partyName,
     partyRfc: d.partyRfc ?? "",
     clientId: d.clientId ?? "",
     series: d.series ?? "",
-    folio: d.folio,
+    folio: d.folio ?? "",
     uuid: d.uuid ?? "",
     issueDate: d.issueDate,
     dueDate: d.dueDate,
@@ -102,6 +106,7 @@ export function documentToForm(d: BillingDocument): DocumentFormData {
 function toPayload(kind: BillingKind, f: DocumentFormData) {
   return {
     kind,
+    draft: f.draft,
     source: f.fromAlegra ? "alegra" : "manual",
     partyName: f.partyName.trim(),
     partyRfc: f.partyRfc.trim(),
@@ -168,19 +173,36 @@ export function DocumentForm({
     return computeTotals({ subtotal, ivaRate: Number(form.ivaRate), withholdingRate: Number(form.withholdingRate) });
   }, [form.subtotal, form.ivaRate, form.withholdingRate]);
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  // Un borrador se puede guardar tal cual o registrarse ya como factura emitida.
+  const startedAsDraft = initialValues.draft;
+
+  function submit(asDraft: boolean) {
     if (!form.partyName.trim()) return setError(`Escribe el ${labels.party.toLowerCase()}.`);
-    if (!form.folio.trim()) return setError("Escribe el folio de la factura.");
+    if (!asDraft && !form.folio.trim()) return setError("Escribe el folio de la factura.");
     if (!totals || totals.subtotal <= 0) return setError("Escribe el subtotal.");
     if (form.dueDate < form.issueDate) return setError("El vencimiento no puede ser antes de la fecha de la factura.");
     if (form.currency === "USD" && !(Number(form.exchangeRate) > 0)) return setError("Escribe el tipo de cambio.");
     setError(null);
-    onSubmit(toPayload(kind, form));
+    onSubmit(toPayload(kind, { ...form, draft: asDraft }));
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    submit(form.draft);
   }
 
   return (
     <form onSubmit={handleSubmit} className="min-w-0 space-y-6">
+      {startedAsDraft && (
+        <div className="rounded-lg border border-violet-500/40 bg-violet-500/5 p-4 text-sm">
+          <p className="font-medium">Borrador</p>
+          <p className="text-muted-foreground">
+            {kind === "receivable"
+              ? "Cuando emitas la factura, escribe su folio y su folio fiscal y presiona «Registrar factura emitida». Mientras sea borrador no cuenta en el saldo."
+              : "Cuando el transportista mande su factura, escribe su folio y su folio fiscal y presiona «Registrar factura recibida». Mientras sea borrador no cuenta en el saldo."}
+          </p>
+        </div>
+      )}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">{labels.party} y folio</CardTitle>
@@ -212,7 +234,7 @@ export function DocumentForm({
           </div>
           <div className="space-y-2">
             <Label htmlFor="doc-folio">Folio</Label>
-            <Input id="doc-folio" value={form.folio} onChange={(e) => set("folio")(e.target.value)} required />
+            <Input id="doc-folio" value={form.folio} onChange={(e) => set("folio")(e.target.value)} required={!startedAsDraft} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="doc-uuid">Folio fiscal (UUID)</Label>
@@ -331,10 +353,22 @@ export function DocumentForm({
         <Button type="button" variant="outline" asChild>
           <Link href={cancelHref}>Cancelar</Link>
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting && <Loader2 className="size-4 animate-spin" />}
-          {submitLabel}
-        </Button>
+        {startedAsDraft ? (
+          <>
+            <Button type="button" variant="outline" disabled={isSubmitting} onClick={() => submit(true)}>
+              Guardar borrador
+            </Button>
+            <Button type="button" disabled={isSubmitting} onClick={() => submit(false)}>
+              {isSubmitting && <Loader2 className="size-4 animate-spin" />}
+              {kind === "receivable" ? "Registrar factura emitida" : "Registrar factura recibida"}
+            </Button>
+          </>
+        ) : (
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting && <Loader2 className="size-4 animate-spin" />}
+            {submitLabel}
+          </Button>
+        )}
       </div>
     </form>
   );

@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn, formatMxn } from "@/lib/utils";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 import { DOCUMENT_STATUS, type BillingKind, type Currency, type DocumentStatus } from "@/lib/billing";
+import type { CartaPorteSnapshot } from "@/lib/shipment-billing";
 
 export interface BillingPaymentRow {
   id: string;
@@ -28,7 +29,12 @@ export interface BillingDocument {
   partyName: string;
   partyRfc: string | null;
   series: string | null;
-  folio: string;
+  /** Vacío mientras es borrador. */
+  folio: string | null;
+  draft: boolean;
+  shipmentId: string | null;
+  shipmentEco: string | null;
+  cartaPorte: CartaPorteSnapshot | null;
   uuid: string | null;
   issueDate: string;
   dueDate: string;
@@ -72,8 +78,8 @@ export function money(n: number, currency: Currency) {
   return `${n < 0 ? "-" : ""}$${formatMxn(Math.abs(n))} ${currency}`;
 }
 
-export function folioLabel(d: { series: string | null; folio: string }) {
-  return [d.series, d.folio].filter(Boolean).join("-");
+export function folioLabel(d: { series: string | null; folio: string | null }) {
+  return d.folio ? [d.series, d.folio].filter(Boolean).join("-") : "Borrador";
 }
 
 export function shortDay(iso: string) {

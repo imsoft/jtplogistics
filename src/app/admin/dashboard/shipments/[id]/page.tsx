@@ -16,6 +16,7 @@ import { formatMxn, formatPhone } from "@/lib/utils";
 import { getIncidentTypeLabel } from "@/lib/incident-type-label";
 import { SHIPMENT_STATUS_CONFIG } from "@/components/dashboard/resources/shipments-table";
 import { ShipmentTimeline } from "@/components/dashboard/resources/shipment-timeline";
+import { ShipmentBillingCard } from "@/components/dashboard/billing/shipment-billing-card";
 import type { Shipment } from "@/types/shipment.types";
 import { ResourceDetailSkeleton } from "@/components/ui/skeletons";
 
@@ -174,6 +175,8 @@ export default function ShipmentProfilePage() {
           </CardContent>
         </Card>
       )}
+
+      <ShipmentBillingCard shipmentId={shipment.id} panel="admin" />
 
       <ShipmentTimeline shipmentId={shipment.id} />
     </div>

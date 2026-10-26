@@ -8,6 +8,7 @@ import { prisma } from "@/lib/db";
 import { requireModuleAccess, type ModuleAction } from "@/lib/module-access";
 import { companyDateKey } from "@/lib/time-clock";
 import { computeTotals, documentStatus, r2, type BillingKind, type Currency } from "@/lib/billing";
+import type { CartaPorteSnapshot } from "@/lib/shipment-billing";
 
 /** Sufijo de los permisos: canView/Create/Update/DeleteBilling. */
 export const BILLING_MODULE = "Billing";
@@ -33,6 +34,7 @@ export const DOC_INCLUDE = {
     },
   },
   createdBy: { select: { name: true } },
+  shipment: { select: { eco: true } },
 } satisfies Prisma.BillingDocumentInclude;
 
 type DocRow = Prisma.BillingDocumentGetPayload<{ include: typeof DOC_INCLUDE }>;
@@ -44,6 +46,7 @@ export function documentToJson(d: DocRow, todayKey = companyDateKey()) {
     paid,
     dueDate: day(d.dueDate)!,
     cancelled: d.cancelledAt !== null,
+    draft: d.draft,
     todayKey,
   });
   return {
@@ -54,6 +57,10 @@ export function documentToJson(d: DocRow, todayKey = companyDateKey()) {
     partyRfc: d.partyRfc,
     series: d.series,
     folio: d.folio,
+    draft: d.draft,
+    shipmentId: d.shipmentId,
+    shipmentEco: d.shipment?.eco ?? null,
+    cartaPorte: (d.cartaPorte ?? null) as CartaPorteSnapshot | null,
     uuid: d.uuid,
     issueDate: day(d.issueDate)!,
     dueDate: day(d.dueDate)!,
@@ -117,6 +124,8 @@ export function readDocumentBody(body: Record<string, unknown>):
   | { ok: false; error: string } {
   const partyName = text(body.partyName);
   const folio = text(body.folio);
+  // Un borrador todavía no tiene folio: lo recibe al emitirse la factura.
+  const draft = body.draft === true;
   const issueDate = typeof body.issueDate === "string" && DATE_RE.test(body.issueDate) ? body.issueDate : null;
   const dueDate = typeof body.dueDate === "string" && DATE_RE.test(body.dueDate) ? body.dueDate : null;
   // Los formularios pasan el texto a minúsculas: se comparan sin importar mayúsculas.
@@ -127,7 +136,7 @@ export function readDocumentBody(body: Record<string, unknown>):
   const withholdingRate = body.withholdingRate === undefined || body.withholdingRate === "" ? 0 : num(body.withholdingRate);
 
   if (!partyName) return { ok: false, error: "Escribe el nombre del cliente o proveedor." };
-  if (!folio) return { ok: false, error: "Escribe el folio de la factura." };
+  if (!folio && !draft) return { ok: false, error: "Escribe el folio de la factura." };
   if (!issueDate) return { ok: false, error: "Elige la fecha de la factura." };
   if (!dueDate) return { ok: false, error: "Elige la fecha de vencimiento." };
   if (dueDate < issueDate) return { ok: false, error: "El vencimiento no puede ser antes de la fecha de la factura." };
@@ -152,7 +161,8 @@ export function readDocumentBody(body: Record<string, unknown>):
       partyRfc: text(body.partyRfc)?.toUpperCase() ?? null,
       clientId: text(body.clientId),
       series: text(body.series)?.toUpperCase() ?? null,
-      folio: folio.toUpperCase(),
+      folio: folio?.toUpperCase() ?? null,
+      draft,
       uuid,
       issueDate: toDate(issueDate),
       dueDate: toDate(dueDate),
@@ -183,9 +193,14 @@ export async function bankBalances(): Promise<Map<string, number>> {
 }
 
 /** Concepto del movimiento bancario que deja un cobro o pago. */
-export function paymentConcept(kind: BillingKind, doc: { series: string | null; folio: string; partyName: string }) {
-  const folio = [doc.series, doc.folio].filter(Boolean).join("-");
+export function paymentConcept(kind: BillingKind, doc: { series: string | null; folio: string | null; partyName: string }) {
+  const folio = docFolio(doc);
   return `${kind === "receivable" ? "Cobro" : "Pago"} factura ${folio} · ${doc.partyName}`;
+}
+
+/** "A-123", o "Borrador" mientras no tiene folio. */
+export function docFolio(d: { series?: string | null; folio?: string | null }) {
+  return d.folio ? [d.series, d.folio].filter(Boolean).join("-") : "Borrador";
 }
 
 export function failure(e: unknown, where: string) {

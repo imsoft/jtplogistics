@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
-import { failure, requireBilling } from "@/lib/billing-server";
+import { docFolio, failure, requireBilling } from "@/lib/billing-server";
 
 /** DELETE /api/billing/payments/[id] — quita el pago y su movimiento de banco. */
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -13,7 +13,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     void logAudit({
       resource: "billing_document",
       resourceId: p.documentId,
-      resourceLabel: `${[p.document.series, p.document.folio].filter(Boolean).join("-")} · ${p.document.partyName}`,
+      resourceLabel: `${docFolio(p.document)} · ${p.document.partyName}`,
       action: "updated",
       userId: session.user.id,
       userName: session.user.name,

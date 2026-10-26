@@ -1,10 +1,11 @@
 import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
 import { r2, SETTLED_TOLERANCE } from "@/lib/billing";
-import { DOC_INCLUDE, documentToJson, failure, readDocumentBody, requireBilling } from "@/lib/billing-server";
+import { cartaPorteSnapshot } from "@/lib/shipment-billing";
+import { loadShipmentBillingContext } from "@/lib/shipment-billing-server";
+import { DOC_INCLUDE, docFolio, documentToJson, failure, readDocumentBody, requireBilling } from "@/lib/billing-server";
 
-const label = (d: { series: string | null; folio: string; partyName: string }) =>
-  `${[d.series, d.folio].filter(Boolean).join("-")} · ${d.partyName}`;
+const label = (d: { series: string | null; folio: string | null; partyName: string }) => `${docFolio(d)} · ${d.partyName}`;
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -43,6 +44,16 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       void logAudit({ resource: "billing_document", resourceId: id, resourceLabel: label(doc), action: "updated", userId: session.user.id, userName: session.user.name, changes: [{ field: "cancel", label: "Cancelada", from: null, to: reason }] });
       return Response.json({ ok: true });
     }
+    if (body.refreshCartaPorte === true) {
+      if (!doc.draft || !doc.shipmentId || doc.kind !== "receivable") {
+        return Response.json({ error: "Solo se actualiza en el borrador de una factura al cliente que salió de un embarque." }, { status: 400 });
+      }
+      const ctx = await loadShipmentBillingContext(doc.shipmentId);
+      if (!ctx) return Response.json({ error: "El embarque ya no existe." }, { status: 404 });
+      const snapshot = cartaPorteSnapshot(ctx.shipment, ctx.carrier);
+      await prisma.billingDocument.update({ where: { id }, data: { cartaPorte: JSON.parse(JSON.stringify(snapshot)) } });
+      return Response.json({ ok: true, missing: snapshot.missing });
+    }
     if (body.reactivate === true) {
       await prisma.billingDocument.update({ where: { id }, data: { cancelledAt: null, cancelReason: null } });
       void logAudit({ resource: "billing_document", resourceId: id, resourceLabel: label(doc), action: "updated", userId: session.user.id, userName: session.user.name, changes: [{ field: "cancel", label: "Cancelada", from: "sí", to: "no" }] });
@@ -54,10 +65,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (parsed.data.total < paid - SETTLED_TOLERANCE) {
       return Response.json({ error: `El total no puede quedar por debajo de lo ya pagado (${paid.toFixed(2)}).` }, { status: 400 });
     }
+    if (paid > SETTLED_TOLERANCE && parsed.data.draft) {
+      return Response.json({ error: "Ya tiene pagos: no puede volver a ser borrador." }, { status: 400 });
+    }
     if (paid > SETTLED_TOLERANCE && parsed.data.currency !== doc.currency) {
       return Response.json({ error: "Ya tiene pagos: no se puede cambiar la moneda." }, { status: 400 });
     }
-    const data = { ...parsed.data, ...(doc.kind === "payable" && { clientId: null }) };
+    const data = {
+      ...parsed.data,
+      ...(doc.kind === "payable" && { clientId: null }),
+      // La que salió de un embarque lo sigue diciendo aunque se edite.
+      ...(doc.source === "shipment" && parsed.data.source !== "alegra" && { source: "shipment" }),
+    };
     const updated = await prisma.billingDocument.update({ where: { id }, data, include: DOC_INCLUDE });
     void logAudit({ resource: "billing_document", resourceId: id, resourceLabel: label(updated), action: "updated", userId: session.user.id, userName: session.user.name });
     return Response.json(documentToJson(updated));
