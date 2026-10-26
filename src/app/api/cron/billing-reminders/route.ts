@@ -4,6 +4,7 @@ import { companyDateKey } from "@/lib/time-clock";
 import { dashboardPrefix } from "@/lib/mural-notify";
 import { r2 } from "@/lib/billing";
 import { buildDigest, digestMessages, isWeekday } from "@/lib/billing-reminders";
+import { APPLIED_SELECT, appliedOf } from "@/lib/billing-server";
 
 export const dynamic = "force-dynamic";
 
@@ -26,14 +27,14 @@ export async function GET(request: Request) {
 
     const docs = await prisma.billingDocument.findMany({
       where: { draft: false, cancelledAt: null },
-      select: { kind: true, dueDate: true, currency: true, total: true, payments: { select: { amount: true } } },
+      select: { kind: true, dueDate: true, currency: true, total: true, ...APPLIED_SELECT },
     });
     const digest = buildDigest(
       docs.map((d) => ({
         kind: d.kind,
         dueDate: d.dueDate.toISOString().slice(0, 10),
         currency: d.currency,
-        balance: r2(d.total - d.payments.reduce((s, p) => s + p.amount, 0)),
+        balance: r2(d.total - appliedOf(d).applied),
       })),
       today
     );

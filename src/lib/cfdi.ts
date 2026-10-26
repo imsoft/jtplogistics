@@ -33,6 +33,8 @@ export interface CfdiData {
   receiver: { rfc: string; name: string | null };
   concept: string | null;
   hasCartaPorte: boolean;
+  /** Folios fiscales de los CFDI relacionados (la factura a la que aplica una nota de crédito). */
+  related: string[];
 }
 
 const parser = new XMLParser({
@@ -93,6 +95,11 @@ export function parseCfdi(xml: string): { ok: true; data: CfdiData } | { ok: fal
   const descriptions = conceptos.map((x) => str(x.Descripcion)).filter((x): x is string => Boolean(x));
   const concept = descriptions.length ? descriptions.slice(0, 3).join(" · ").slice(0, 300) : null;
 
+  const related = list(c.CfdiRelacionados as Node | Node[] | undefined)
+    .flatMap((g) => list(g.CfdiRelacionado as Node | Node[] | undefined))
+    .map((r) => str(r.UUID)?.toUpperCase())
+    .filter((u): u is string => Boolean(u));
+
   const fecha = str(c.Fecha) ?? "";
   if (!/^\d{4}-\d{2}-\d{2}/.test(fecha)) return { ok: false, error: "El XML no trae una fecha válida." };
 
@@ -119,6 +126,7 @@ export function parseCfdi(xml: string): { ok: true; data: CfdiData } | { ok: fal
       receiver: { rfc: receiverRfc.toUpperCase(), name: str(receptor.Nombre) },
       concept,
       hasCartaPorte,
+      related,
     },
   };
 }
@@ -127,7 +135,9 @@ export function parseCfdi(xml: string): { ok: true; data: CfdiData } | { ok: fal
  * Si el CFDI sirve para esta lista: solo facturas de ingreso (tipo I). Las
  * notas de crédito, los complementos de pago y los traslados van aparte.
  */
-export function cfdiKindError(data: CfdiData): string | null {
+export function cfdiKindError(data: CfdiData, expected: "I" | "E" = "I"): string | null {
+  if (data.type === expected) return null;
+  if (expected === "E") return "Este XML no es una nota de crédito (tipo E).";
   if (data.type === "I") return null;
   if (data.type === "E") return "Es una nota de crédito (tipo E), no una factura.";
   if (data.type === "P") return "Es un complemento de pago (tipo P), no una factura.";

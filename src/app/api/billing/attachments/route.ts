@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   try {
     const session = await requireSession();
     const canCreate = await hasModuleAccess(session.user, BILLING_MODULE, "create");
-    const canUpdate = canCreate || (await hasModuleAccess(session.user, BILLING_MODULE, "update"));
+    const canUpdate = await hasModuleAccess(session.user, BILLING_MODULE, "update");
 
     const form = await request.formData();
     const file = form.get("file");
@@ -30,19 +30,28 @@ export async function POST(request: Request) {
     const doc = documentId ? await prisma.billingDocument.findUnique({ where: { id: documentId } }) : null;
     if (documentId && !doc) return Response.json({ error: "La factura no existe." }, { status: 404 });
     const kind = doc?.kind ?? (form.get("kind") === "payable" ? "payable" : "receivable");
+    // El PDF o XML de una nota de crédito: se sube suelto y se liga al guardarla.
+    const forCreditNote = form.get("purpose") === "credit_note";
+    if (forCreditNote && !canUpdate) return Response.json({ error: "Sin permiso" }, { status: 403 });
 
     const bytes = Buffer.from(await file.arrayBuffer());
-    const read = readUpload(file.name, bytes);
+    const read = readUpload(file.name, bytes, forCreditNote ? "E" : "I");
     if (!read.ok) return Response.json({ error: read.error }, { status: 400 });
 
-    if (read.kind === "xml") {
+    if (read.kind === "xml" && forCreditNote) {
+      const dup = read.cfdi.uuid ? await prisma.billingCreditNote.findFirst({ where: { uuid: read.cfdi.uuid }, select: { id: true } }) : null;
+      if (dup) return Response.json({ error: "Esa nota de crédito ya está registrada." }, { status: 409 });
+    } else if (read.kind === "xml") {
       const dup = await uuidTaken(kind, read.cfdi.uuid, documentId ?? undefined);
       if (dup) return Response.json({ error: "Esa factura (folio fiscal) ya está capturada.", id: dup.id }, { status: 409 });
       if (doc) {
         const hasXml = await prisma.billingAttachment.count({ where: { documentId: doc.id, kind: "xml" } });
         if (hasXml) return Response.json({ error: "Esta factura ya tiene su XML. Bórralo primero si es otro." }, { status: 400 });
-        const paid = await prisma.billingPayment.aggregate({ where: { documentId: doc.id }, _sum: { amount: true } });
-        if ((paid._sum.amount ?? 0) > read.cfdi.total + 0.01) {
+        const [paid, credited] = await Promise.all([
+          prisma.billingPayment.aggregate({ where: { documentId: doc.id }, _sum: { amount: true } }),
+          prisma.billingCreditNote.aggregate({ where: { documentId: doc.id }, _sum: { total: true } }),
+        ]);
+        if ((paid._sum.amount ?? 0) + (credited._sum.total ?? 0) > read.cfdi.total + 0.01) {
           return Response.json({ error: "El total del XML es menor a lo ya pagado de esta factura." }, { status: 400 });
         }
       }
@@ -53,7 +62,7 @@ export async function POST(request: Request) {
     const attachment = await prisma.$transaction(async (tx) => {
       const a = await tx.billingAttachment.create({
         data: {
-          documentId: doc?.id ?? null,
+          documentId: forCreditNote ? null : (doc?.id ?? null),
           kind: read.kind,
           fileName: file.name.slice(0, 200) || `factura.${read.kind}`,
           size: bytes.length,
@@ -62,11 +71,11 @@ export async function POST(request: Request) {
           createdById: session.user.id,
         },
       });
-      if (doc && cfdi) await tx.billingDocument.update({ where: { id: doc.id }, data: { ...cfdiOverrides(cfdi, kind), draft: false } });
+      if (doc && cfdi && !forCreditNote) await tx.billingDocument.update({ where: { id: doc.id }, data: { ...cfdiOverrides(cfdi, kind), draft: false } });
       return a;
     });
 
-    if (doc) {
+    if (doc && !forCreditNote) {
       void logAudit({
         resource: "billing_document",
         resourceId: doc.id,

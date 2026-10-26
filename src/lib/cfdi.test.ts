@@ -67,6 +67,20 @@ describe("parseCfdi", () => {
     expect(r.ok && [r.data.subtotal, r.data.currency, r.data.exchangeRate]).toEqual([900, "USD", 18.5]);
   });
 
+  it("nota de crédito: tipo E con la factura relacionada", () => {
+    const xml = CARRIER_XML.replace('TipoDeComprobante="I"', 'TipoDeComprobante="E"').replace(
+      "<cfdi:Emisor",
+      '<cfdi:CfdiRelacionados TipoRelacion="01"><cfdi:CfdiRelacionado UUID="aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"/></cfdi:CfdiRelacionados><cfdi:Emisor'
+    );
+    const r = parseCfdi(xml);
+    if (!r.ok) throw new Error(r.error);
+    expect(r.data.related).toEqual(["AAAAAAAA-BBBB-4CCC-8DDD-EEEEEEEEEEEE"]);
+    expect(cfdiKindError(r.data, "E")).toBeNull();
+    expect(cfdiKindError(r.data)).toMatch(/nota de crédito/);
+    const factura = parseCfdi(CARRIER_XML);
+    expect(factura.ok && cfdiKindError(factura.data, "E")).toMatch(/no es una nota de crédito/);
+  });
+
   it("rechaza lo que no es factura de ingreso", () => {
     expect(parseCfdi("no es xml <<")).toMatchObject({ ok: false });
     expect(parseCfdi("<root/>")).toEqual({ ok: false, error: "El XML no es una factura (CFDI)." });

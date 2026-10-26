@@ -21,8 +21,11 @@ const FOLDER = "billing";
 
 export type AttachmentKind = "xml" | "pdf";
 
-/** Revisa el archivo por su contenido, no por el nombre que trae. */
-export function readUpload(name: string, bytes: Buffer):
+/**
+ * Revisa el archivo por su contenido, no por el nombre que trae. El XML tiene
+ * que ser del tipo esperado: factura de ingreso (I) o nota de crédito (E).
+ */
+export function readUpload(name: string, bytes: Buffer, expected: "I" | "E" = "I"):
   | { ok: true; kind: "pdf" }
   | { ok: true; kind: "xml"; cfdi: CfdiData }
   | { ok: false; error: string } {
@@ -32,7 +35,7 @@ export function readUpload(name: string, bytes: Buffer):
   if (/\.xml$/i.test(name) || bytes.subarray(0, 64).toString("utf8").trimStart().startsWith("<")) {
     const parsed = parseCfdi(bytes.toString("utf8"));
     if (!parsed.ok) return parsed;
-    const kindError = cfdiKindError(parsed.data);
+    const kindError = cfdiKindError(parsed.data, expected);
     if (kindError) return { ok: false, error: kindError };
     return { ok: true, kind: "xml", cfdi: parsed.data };
   }
@@ -121,6 +124,7 @@ export function withCfdiBody(body: Record<string, unknown>, cfdi: CfdiData | nul
     currency: cfdi.currency,
     exchangeRate: cfdi.exchangeRate,
     subtotal: cfdi.subtotal,
+    concept: typeof body.concept === "string" && body.concept.trim() ? body.concept : (cfdi.concept ?? ""),
     draft: false,
   };
 }
@@ -128,7 +132,7 @@ export function withCfdiBody(body: Record<string, unknown>, cfdi: CfdiData | nul
 /** El CFDI del XML adjunto a una factura, si tiene. */
 export async function documentCfdi(documentId: string): Promise<CfdiData | null> {
   const rows = await prisma.billingAttachment.findMany({
-    where: { documentId, kind: "xml" },
+    where: { documentId, kind: "xml", creditNoteId: null },
     orderBy: { createdAt: "desc" },
     select: { cfdi: true },
   });
@@ -139,15 +143,17 @@ export async function documentCfdi(documentId: string): Promise<CfdiData | null>
  * Los adjuntos que se subieron mientras se capturaba la factura (todavía sin
  * factura) y que son de quien la guarda. Devuelve el CFDI si entre ellos va un XML.
  */
-export async function pendingAttachments(ids: unknown, userId: string) {
+export async function pendingAttachments(ids: unknown, userId: string, expected: "I" | "E" = "I") {
   const list = Array.isArray(ids) ? ids.filter((x): x is string => typeof x === "string").slice(0, 10) : [];
   if (list.length === 0) return { ids: [] as string[], cfdi: null as CfdiData | null };
   const rows = await prisma.billingAttachment.findMany({
     where: { id: { in: list }, documentId: null, createdById: userId },
     select: { id: true, kind: true, cfdi: true },
   });
-  const xml = rows.find((r) => r.kind === "xml" && r.cfdi);
-  return { ids: rows.map((r) => r.id), cfdi: (xml?.cfdi as CfdiData | undefined) ?? null };
+  // Un XML de otro tipo (p. ej. una nota de crédito) no se liga aquí.
+  const usable = rows.filter((r) => r.kind !== "xml" || (r.cfdi as CfdiData | null)?.type === expected);
+  const xml = usable.find((r) => r.kind === "xml" && r.cfdi);
+  return { ids: usable.map((r) => r.id), cfdi: (xml?.cfdi as CfdiData | undefined) ?? null };
 }
 
 /** Otra factura (no cancelada) con el mismo folio fiscal. */

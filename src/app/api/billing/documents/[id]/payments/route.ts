@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
 import { companyDateKey } from "@/lib/time-clock";
 import { bankAmountFor, documentStatus, paymentError, r2 } from "@/lib/billing";
-import { failure, num, paymentConcept, requireBilling, toDate, docFolio } from "@/lib/billing-server";
+import { failure, num, paymentConcept, requireBilling, toDate, docFolio, APPLIED_SELECT, appliedOf } from "@/lib/billing-server";
 
 /**
  * POST /api/billing/documents/[id]/payments
@@ -13,7 +13,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   try {
     const session = await requireBilling("update");
     const { id } = await params;
-    const doc = await prisma.billingDocument.findUnique({ where: { id }, include: { payments: { select: { amount: true } } } });
+    const doc = await prisma.billingDocument.findUnique({ where: { id }, include: APPLIED_SELECT });
     if (!doc) return Response.json({ error: "No encontrado" }, { status: 404 });
     if (doc.cancelledAt) return Response.json({ error: "La factura está cancelada." }, { status: 400 });
     if (doc.draft) return Response.json({ error: "Es un borrador: primero registra la factura emitida con su folio." }, { status: 400 });
@@ -28,8 +28,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       : null;
     if (!account) return Response.json({ error: "Elige la cuenta de banco." }, { status: 400 });
 
-    const paid = r2(doc.payments.reduce((s, p) => s + p.amount, 0));
-    const { balance } = documentStatus({ total: doc.total, paid, dueDate: "9999-12-31", cancelled: false, todayKey: "0000-01-01" });
+    const { applied } = appliedOf(doc);
+    const { balance } = documentStatus({ total: doc.total, paid: applied, dueDate: "9999-12-31", cancelled: false, todayKey: "0000-01-01" });
     const amount = r2(num(body.amount));
     const err = paymentError(amount, balance);
     if (err) return Response.json({ error: err }, { status: 400 });

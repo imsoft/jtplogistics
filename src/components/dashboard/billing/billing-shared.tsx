@@ -30,6 +30,23 @@ export interface BillingAttachmentRow {
   size: number;
   createdAt: string;
   hasCfdi: boolean;
+  /** Es el archivo de una nota de crédito, no de la factura. */
+  creditNoteId?: string | null;
+}
+
+export interface BillingCreditNoteRow {
+  id: string;
+  issueDate: string;
+  series: string | null;
+  folio: string | null;
+  uuid: string | null;
+  subtotal: number;
+  iva: number;
+  ivaWithheld: number;
+  isrWithheld: number;
+  total: number;
+  reason: string;
+  createdByName: string | null;
 }
 
 /** Lo que regresa la API al subir un PDF o XML. */
@@ -51,14 +68,27 @@ export interface UploadedAttachment {
     total: number;
     paymentMethod: "PUE" | "PPD";
   } | null;
-  cfdi: { issueDate: string; concept: string | null; hasCartaPorte: boolean; issuer: { rfc: string; name: string | null }; receiver: { rfc: string; name: string | null } } | null;
+  cfdi: {
+    issueDate: string;
+    concept: string | null;
+    hasCartaPorte: boolean;
+    issuer: { rfc: string; name: string | null };
+    receiver: { rfc: string; name: string | null };
+    related: string[];
+  } | null;
 }
 
 /** Sube el PDF o el XML de una factura. Con `documentId` se adjunta de una vez. */
-export async function uploadAttachment(file: File, kind: BillingKind, documentId?: string): Promise<UploadedAttachment> {
+export async function uploadAttachment(
+  file: File,
+  kind: BillingKind,
+  documentId?: string,
+  purpose: "invoice" | "credit_note" = "invoice"
+): Promise<UploadedAttachment> {
   const body = new FormData();
   body.append("file", file);
   body.append("kind", kind);
+  body.append("purpose", purpose);
   if (documentId) body.append("documentId", documentId);
   const res = await fetch("/api/billing/attachments", { method: "POST", body });
   const d = (await res.json().catch(() => ({}))) as UploadedAttachment & { error?: string };
@@ -96,6 +126,8 @@ export interface BillingDocument {
   attachments: BillingAttachmentRow[];
   /** Los importes salen del XML adjunto: no se editan a mano. */
   fromXml: boolean;
+  credited: number;
+  creditNotes: BillingCreditNoteRow[];
   concept: string | null;
   reference: string | null;
   notes: string | null;

@@ -31,6 +31,7 @@ import { DocumentForm, documentToForm, emptyDocumentForm } from "./document-form
 import { PaymentDialog } from "./payment-dialog";
 import { CartaPorteCard } from "./carta-porte-card";
 import { AttachmentsCard } from "./attachments-card";
+import { CreditNotesCard } from "./credit-notes-card";
 import { StatusBadge, folioLabel, money, shortDay, useBankAccounts, type BillingDocument } from "./billing-shared";
 
 const FORM_LABEL = Object.fromEntries(SAT_PAYMENT_FORMS.map((f) => [f.value, f.label]));
@@ -189,7 +190,7 @@ export function DocumentDetailView({
                 Reactivar
               </Button>
             ) : (
-              doc.payments.length === 0 && (
+              doc.payments.length === 0 && doc.creditNotes.length === 0 && (
                 <Button variant="outline" onClick={() => { setReason(""); setCancelling(true); }}>
                   <Ban className="size-4" />
                   Cancelar factura
@@ -264,12 +265,15 @@ export function DocumentDetailView({
             {!doc.draft && (
               <>
                 <InfoRow label={doc.kind === "receivable" ? "Cobrado" : "Pagado"} value={money(doc.paid, doc.currency)} />
+                {doc.credited > 0 && <InfoRow label="Notas de crédito" value={`-${money(doc.credited, doc.currency)}`} />}
                 <InfoRow label="Saldo" value={money(doc.balance, doc.currency)} />
               </>
             )}
           </CardContent>
         </Card>
       </div>
+
+      <CreditNotesCard doc={doc} canUpdate={canUpdate} canDelete={canDelete} onChanged={load} />
 
       <AttachmentsCard doc={doc} canUpdate={canUpdate && !cancelled} onChanged={load} />
 

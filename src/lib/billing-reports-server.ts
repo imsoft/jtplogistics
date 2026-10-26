@@ -7,7 +7,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { toDate } from "@/lib/billing-server";
 import type { BillingKind } from "@/lib/billing";
-import { buildCashFlow, buildStatement, type CashMovement, type ReportDocument, type ReportPayment } from "@/lib/billing-reports";
+import { buildCashFlow, buildStatement, type CashMovement, type ReportCredit, type ReportDocument, type ReportPayment } from "@/lib/billing-reports";
 
 const day = (d: Date) => d.toISOString().slice(0, 10);
 
@@ -39,6 +39,10 @@ function docToReport(d: DocRow): ReportDocument {
   };
 }
 
+function creditToReport(c: Prisma.BillingCreditNoteGetPayload<object>): ReportCredit {
+  return { id: c.id, documentId: c.documentId, issueDate: day(c.issueDate), series: c.series, folio: c.folio, total: c.total, reason: c.reason };
+}
+
 const PAYMENT_INCLUDE = { bankAccount: { select: { name: true, currency: true } } } satisfies Prisma.BillingPaymentInclude;
 
 function paymentToReport(p: Prisma.BillingPaymentGetPayload<{ include: typeof PAYMENT_INCLUDE }>): ReportPayment {
@@ -65,13 +69,14 @@ export async function statementReport(kind: BillingKind, party: string, from: st
   const payments = docs.length
     ? await prisma.billingPayment.findMany({ where: { documentId: { in: docs.map((d) => d.id) } }, include: PAYMENT_INCLUDE })
     : [];
+  const credits = docs.length ? await prisma.billingCreditNote.findMany({ where: { documentId: { in: docs.map((d) => d.id) } } }) : [];
   const rfc = docs.find((d) => d.partyRfc)?.partyRfc ?? null;
   return {
     kind,
     party: { name: docs[0]?.partyName ?? party.trim(), rfc },
     from,
     to,
-    currencies: buildStatement(docs.map(docToReport), payments.map(paymentToReport), from, to),
+    currencies: buildStatement(docs.map(docToReport), payments.map(paymentToReport), from, to, credits.map(creditToReport)),
   };
 }
 
@@ -126,7 +131,7 @@ export async function cashFlowReport(from: string, to: string) {
  */
 export async function monthlyExport(from: string, to: string) {
   const range = { gte: toDate(from), lte: toDate(to) };
-  const [documents, payments, movements, expenses] = await Promise.all([
+  const [documents, payments, movements, expenses, creditNotes] = await Promise.all([
     prisma.billingDocument.findMany({ where: { draft: false, issueDate: range }, orderBy: [{ kind: "asc" }, { issueDate: "asc" }] }),
     prisma.billingPayment.findMany({
       where: { paidOn: range },
@@ -135,6 +140,11 @@ export async function monthlyExport(from: string, to: string) {
     }),
     prisma.bankMovement.findMany({ where: { date: range }, include: MOVEMENT_INCLUDE, orderBy: [{ date: "asc" }, { createdAt: "asc" }] }),
     prisma.expense.findMany({ where: { date: range }, include: { bankAccount: { select: { name: true } } }, orderBy: { date: "asc" } }),
+    prisma.billingCreditNote.findMany({
+      where: { issueDate: range },
+      include: { document: { select: { kind: true, partyName: true, partyRfc: true, series: true, folio: true, uuid: true, currency: true } } },
+      orderBy: { issueDate: "asc" },
+    }),
   ]);
   return {
     from,
@@ -158,6 +168,24 @@ export async function monthlyExport(from: string, to: string) {
       reference: m.reference,
       source: movementSource(m),
       reconciled: m.reconciled,
+    })),
+    creditNotes: creditNotes.map((c) => ({
+      issueDate: day(c.issueDate),
+      kind: c.document.kind,
+      partyName: c.document.partyName,
+      partyRfc: c.document.partyRfc,
+      series: c.series,
+      folio: c.folio,
+      uuid: c.uuid,
+      invoiceFolio: c.document.folio ? [c.document.series, c.document.folio].filter(Boolean).join("-") : "Borrador",
+      invoiceUuid: c.document.uuid,
+      currency: c.document.currency,
+      subtotal: c.subtotal,
+      iva: c.iva,
+      ivaWithheld: c.ivaWithheld,
+      isrWithheld: c.isrWithheld,
+      total: c.total,
+      reason: c.reason,
     })),
     expenses: expenses.map((e) => ({
       date: day(e.date),

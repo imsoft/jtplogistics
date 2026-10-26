@@ -56,6 +56,14 @@ describe("buildStatement", () => {
     expect(usd).toMatchObject({ currency: "USD", opening: 0, closing: 50 });
   });
 
+  it("una nota de crédito baja el saldo como abono", () => {
+    const credits = [{ id: "n1", documentId: "2", issueDate: "2026-10-20", series: "NC", folio: "1", total: 100, reason: "Descuento" }];
+    const [mxn] = buildStatement(docs, payments, "2026-10-01", "2026-10-31", credits);
+    expect(mxn.lines.at(-1)).toEqual({ date: "2026-10-20", type: "nota", folio: "A-2", concept: "Nota de crédito NC-1 · Descuento", charge: 0, credit: 100, balance: 200 });
+    expect(mxn.closing).toBe(200);
+    expect(mxn.open[0].balance).toBe(200);
+  });
+
   it("sin facturas hasta el corte no hay estado", () => {
     expect(buildStatement(docs, payments, "2020-01-01", "2020-01-31")).toEqual([]);
   });

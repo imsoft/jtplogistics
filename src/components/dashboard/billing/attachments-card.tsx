@@ -17,7 +17,8 @@ const kb = (n: number) => (n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024)
 export function AttachmentsCard({ doc, canUpdate, onChanged }: { doc: BillingDocument; canUpdate: boolean; onChanged: () => void }) {
   const [busy, setBusy] = useState(false);
   const [removing, setRemoving] = useState<{ id: string; fileName: string; kind: string } | null>(null);
-  const hasXml = doc.attachments.some((a) => a.kind === "xml");
+  // El XML de una nota de crédito no cuenta: la factura puede seguir sin el suyo.
+  const hasXml = doc.attachments.some((a) => a.kind === "xml" && !a.creditNoteId);
 
   async function onFiles(list: FileList | null) {
     if (!list?.length) return;
@@ -83,7 +84,10 @@ export function AttachmentsCard({ doc, canUpdate, onChanged }: { doc: BillingDoc
                 <div className="flex min-w-0 items-center gap-2">
                   <FileText className="text-muted-foreground size-4 shrink-0" />
                   <span className="truncate" title={a.fileName}>{a.fileName}</span>
-                  <span className="text-muted-foreground shrink-0 text-xs uppercase">{a.kind} · {kb(a.size)}</span>
+                  <span className="text-muted-foreground shrink-0 text-xs uppercase">
+                    {a.kind} · {kb(a.size)}
+                    {a.creditNoteId && " · nota de crédito"}
+                  </span>
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
                   <Button variant="ghost" size="icon" className="size-7" asChild>

@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
 import { companyDateKey } from "@/lib/time-clock";
 import { planBatchPayment, r2 } from "@/lib/billing";
-import { docFolio, failure, num, requireBilling, toDate } from "@/lib/billing-server";
+import { APPLIED_SELECT, appliedOf, docFolio, failure, num, requireBilling, toDate } from "@/lib/billing-server";
 
 /**
  * POST /api/billing/payments/batch
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       .map((i) => ({ documentId: typeof i.documentId === "string" ? i.documentId : "", amount: num(i.amount) }));
     const docs = await prisma.billingDocument.findMany({
       where: { id: { in: items.map((i) => i.documentId) } },
-      include: { payments: { select: { amount: true } } },
+      include: APPLIED_SELECT,
     });
     const rate = num(body.exchangeRate);
     const plan = planBatchPayment(
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
         partyName: d.partyName,
         currency: d.currency,
         total: d.total,
-        paid: r2(d.payments.reduce((s, p) => s + p.amount, 0)),
+        paid: appliedOf(d).applied,
         draft: d.draft,
         cancelled: d.cancelledAt !== null,
       })),

@@ -185,6 +185,7 @@ model User {
   clientLeadActivities ClientLeadActivity[] @relation("ClientLeadActivityAuthor")
   billingDocuments     BillingDocument[] @relation("BillingDocumentAuthor")
   billingAttachments   BillingAttachment[] @relation("BillingAttachmentAuthor")
+  billingCreditNotes   BillingCreditNote[] @relation("BillingCreditNoteAuthor")
   billingPayments      BillingPayment[]  @relation("BillingPaymentAuthor")
   expenses             Expense[]         @relation("ExpenseAuthor")
   bankMovements        BankMovement[]    @relation("BankMovementAuthor")
@@ -1480,6 +1481,7 @@ model BillingDocument {
   createdById   String?           @map("created_by_id")
   createdBy     User?             @relation("BillingDocumentAuthor", fields: [createdById], references: [id], onDelete: SetNull)
   payments      BillingPayment[]
+  creditNotes   BillingCreditNote[]
   attachments   BillingAttachment[]
   createdAt     DateTime          @default(now()) @map("created_at")
   updatedAt     DateTime          @updatedAt @map("updated_at")
@@ -1521,6 +1523,32 @@ model BillingPayment {
   @@index([batchMovementId])
   @@map("billing_payments")
 }
+/// Nota de crédito (CFDI de egreso) sobre una factura: baja su saldo sin
+/// mover el banco (descuento, devolución, bonificación).
+model BillingCreditNote {
+  id          String              @id @default(cuid()) @map("id")
+  documentId  String              @map("document_id")
+  document    BillingDocument     @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  issueDate   DateTime            @db.Date @map("issue_date")
+  series      String?             @map("series")
+  folio       String?             @map("folio")
+  uuid        String?             @map("uuid")
+  subtotal    Float               @map("subtotal")
+  iva         Float               @default(0) @map("iva")
+  ivaWithheld Float               @default(0) @map("iva_withheld")
+  isrWithheld Float               @default(0) @map("isr_withheld")
+  /// Lo que se le quita al saldo de la factura, en su moneda.
+  total       Float               @map("total")
+  reason      String              @map("reason")
+  attachments BillingAttachment[]
+  createdById String?             @map("created_by_id")
+  createdBy   User?               @relation("BillingCreditNoteAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime            @default(now()) @map("created_at")
+
+  @@index([documentId])
+  @@map("billing_credit_notes")
+}
+
 /// PDF o XML de una factura. El archivo vive en Cloudinary como privado y
 /// solo se descarga a través de la plataforma.
 model BillingAttachment {
@@ -1535,6 +1563,9 @@ model BillingAttachment {
   storageId   String           @map("storage_id")
   /// Lo que se leyó del XML (CFDI): folio, UUID, importes, emisor y receptor.
   cfdi        Json?            @map("cfdi")
+  /// Si es el PDF o XML de una nota de crédito (y no de la factura misma).
+  creditNoteId String?           @map("credit_note_id")
+  creditNote   BillingCreditNote? @relation(fields: [creditNoteId], references: [id], onDelete: Cascade)
   createdById String?          @map("created_by_id")
   createdBy   User?            @relation("BillingAttachmentAuthor", fields: [createdById], references: [id], onDelete: SetNull)
   createdAt   DateTime         @default(now()) @map("created_at")

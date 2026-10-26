@@ -25,6 +25,18 @@ export function isBillingKind(v: unknown): v is BillingKind {
 
 const day = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : null);
 
+/** Lo que baja el saldo de una factura: cobros o pagos y notas de crédito. */
+export const APPLIED_SELECT = {
+  payments: { select: { amount: true } },
+  creditNotes: { select: { total: true } },
+} satisfies Prisma.BillingDocumentInclude;
+
+export function appliedOf(d: { payments: { amount: number }[]; creditNotes: { total: number }[] }) {
+  const paid = r2(d.payments.reduce((s, p) => s + p.amount, 0));
+  const credited = r2(d.creditNotes.reduce((s, c) => s + c.total, 0));
+  return { paid, credited, applied: r2(paid + credited) };
+}
+
 export const DOC_INCLUDE = {
   payments: {
     orderBy: [{ paidOn: "asc" }, { createdAt: "asc" }],
@@ -36,16 +48,17 @@ export const DOC_INCLUDE = {
   },
   createdBy: { select: { name: true } },
   shipment: { select: { eco: true } },
-  attachments: { orderBy: { createdAt: "asc" }, select: { id: true, kind: true, fileName: true, size: true, createdAt: true, cfdi: true } },
+  attachments: { orderBy: { createdAt: "asc" }, select: { id: true, kind: true, fileName: true, size: true, createdAt: true, cfdi: true, creditNoteId: true } },
+  creditNotes: { orderBy: [{ issueDate: "asc" }, { createdAt: "asc" }], include: { createdBy: { select: { name: true } } } },
 } satisfies Prisma.BillingDocumentInclude;
 
 type DocRow = Prisma.BillingDocumentGetPayload<{ include: typeof DOC_INCLUDE }>;
 
 export function documentToJson(d: DocRow, todayKey = companyDateKey()) {
-  const paid = r2(d.payments.reduce((s, p) => s + p.amount, 0));
+  const { paid, credited, applied } = appliedOf(d);
   const { status, balance } = documentStatus({
     total: d.total,
-    paid,
+    paid: applied,
     dueDate: day(d.dueDate)!,
     cancelled: d.cancelledAt !== null,
     draft: d.draft,
@@ -82,9 +95,25 @@ export function documentToJson(d: DocRow, todayKey = companyDateKey()) {
       size: a.size,
       createdAt: a.createdAt.toISOString(),
       hasCfdi: a.cfdi !== null,
+      creditNoteId: a.creditNoteId,
     })),
     /** Los importes salen del XML: no se editan a mano. */
-    fromXml: d.attachments.some((a) => a.kind === "xml" && a.cfdi !== null),
+    fromXml: d.attachments.some((a) => a.kind === "xml" && a.cfdi !== null && !a.creditNoteId),
+    credited,
+    creditNotes: d.creditNotes.map((c) => ({
+      id: c.id,
+      issueDate: day(c.issueDate)!,
+      series: c.series,
+      folio: c.folio,
+      uuid: c.uuid,
+      subtotal: c.subtotal,
+      iva: c.iva,
+      ivaWithheld: c.ivaWithheld,
+      isrWithheld: c.isrWithheld,
+      total: c.total,
+      reason: c.reason,
+      createdByName: c.createdBy?.name ?? null,
+    })),
     concept: d.concept,
     reference: d.reference,
     notes: d.notes,

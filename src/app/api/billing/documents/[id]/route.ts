@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
-import { r2, SETTLED_TOLERANCE } from "@/lib/billing";
+import { SETTLED_TOLERANCE } from "@/lib/billing";
 import { cartaPorteSnapshot } from "@/lib/shipment-billing";
 import { loadShipmentBillingContext } from "@/lib/shipment-billing-server";
 import { cfdiOverrides, documentCfdi, removeFile, withCfdiBody } from "@/lib/billing-attachments-server";
-import { DOC_INCLUDE, docFolio, documentToJson, failure, readDocumentBody, requireBilling } from "@/lib/billing-server";
+import { DOC_INCLUDE, docFolio, documentToJson, failure, readDocumentBody, requireBilling, APPLIED_SELECT, appliedOf } from "@/lib/billing-server";
 
 const label = (d: { series: string | null; folio: string | null; partyName: string }) => `${docFolio(d)} · ${d.partyName}`;
 
@@ -30,16 +30,17 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   try {
     const session = await requireBilling("update");
     const { id } = await params;
-    const doc = await prisma.billingDocument.findUnique({ where: { id }, include: { payments: { select: { amount: true } } } });
+    const doc = await prisma.billingDocument.findUnique({ where: { id }, include: APPLIED_SELECT });
     if (!doc) return Response.json({ error: "No encontrado" }, { status: 404 });
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
-    const paid = r2(doc.payments.reduce((s, p) => s + p.amount, 0));
+    // Cobros y notas de crédito: lo que ya se le aplicó a la factura.
+    const paid = appliedOf(doc).applied;
 
     if (body.cancel === true) {
       const reason = typeof body.cancelReason === "string" ? body.cancelReason.trim() : "";
       if (reason.length < 3) return Response.json({ error: "Escribe por qué se cancela." }, { status: 400 });
       if (paid > SETTLED_TOLERANCE) {
-        return Response.json({ error: "Tiene pagos registrados: bórralos antes de cancelar la factura." }, { status: 400 });
+        return Response.json({ error: "Tiene pagos o notas de crédito: bórralos antes de cancelar la factura." }, { status: 400 });
       }
       await prisma.billingDocument.update({ where: { id }, data: { cancelledAt: new Date(), cancelReason: reason } });
       void logAudit({ resource: "billing_document", resourceId: id, resourceLabel: label(doc), action: "updated", userId: session.user.id, userName: session.user.name, changes: [{ field: "cancel", label: "Cancelada", from: null, to: reason }] });

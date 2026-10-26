@@ -44,6 +44,16 @@ export interface ReportPayment {
   reference: string | null;
 }
 
+export interface ReportCredit {
+  id: string;
+  documentId: string;
+  issueDate: string;
+  series: string | null;
+  folio: string | null;
+  total: number;
+  reason: string;
+}
+
 const folioOf = (d: { series: string | null; folio: string | null }) =>
   d.folio ? [d.series, d.folio].filter(Boolean).join("-") : "Borrador";
 
@@ -54,7 +64,7 @@ const counts = (d: ReportDocument) => !d.draft && !d.cancelled;
 
 export interface StatementLine {
   date: string;
-  type: "factura" | "pago";
+  type: "factura" | "pago" | "nota";
   folio: string;
   concept: string;
   /** Lo que aumenta el saldo (la factura). */
@@ -92,11 +102,14 @@ export function buildStatement(
   docs: ReportDocument[],
   payments: ReportPayment[],
   from: string,
-  to: string
+  to: string,
+  credits: ReportCredit[] = []
 ): CurrencyStatement[] {
   const valid = docs.filter(counts);
   const byId = new Map(valid.map((d) => [d.id, d]));
-  const pays = payments.filter((p) => byId.has(p.documentId));
+  // Una nota de crédito baja el saldo igual que un cobro: se trata como abono.
+  const pays: ReportPayment[] = payments.filter((p) => byId.has(p.documentId));
+  const notes = credits.filter((c) => byId.has(c.documentId));
   const label = (k: BillingKind) => (k === "receivable" ? "Cobro" : "Pago");
 
   const result: CurrencyStatement[] = [];
@@ -104,10 +117,12 @@ export function buildStatement(
     const cDocs = valid.filter((d) => d.currency === currency && d.issueDate <= to);
     if (cDocs.length === 0) continue;
     const cPays = pays.filter((p) => byId.get(p.documentId)!.currency === currency && p.paidOn <= to);
+    const cNotes = notes.filter((c) => byId.get(c.documentId)!.currency === currency && c.issueDate <= to);
 
     const opening = r2(
       cDocs.filter((d) => d.issueDate < from).reduce((s, d) => s + d.total, 0) -
-        cPays.filter((p) => p.paidOn < from).reduce((s, p) => s + p.amount, 0)
+        cPays.filter((p) => p.paidOn < from).reduce((s, p) => s + p.amount, 0) -
+        cNotes.filter((c) => c.issueDate < from).reduce((s, c) => s + c.total, 0)
     );
 
     type Raw = Omit<StatementLine, "balance"> & { order: number };
@@ -137,6 +152,17 @@ export function buildStatement(
             order: 1,
           };
         }),
+      ...cNotes
+        .filter((c) => c.issueDate >= from)
+        .map((c) => ({
+          date: c.issueDate,
+          type: "nota" as const,
+          folio: folioOf(byId.get(c.documentId)!),
+          concept: `Nota de crédito${c.folio ? ` ${folioOf(c)}` : ""} · ${c.reason}`,
+          charge: 0,
+          credit: c.total,
+          order: 1,
+        })),
     ].sort((a, b) => a.date.localeCompare(b.date) || a.order - b.order);
 
     let running = opening;
@@ -147,6 +173,7 @@ export function buildStatement(
 
     const paidById = new Map<string, number>();
     for (const p of cPays) paidById.set(p.documentId, r2((paidById.get(p.documentId) ?? 0) + p.amount));
+    for (const c of cNotes) paidById.set(c.documentId, r2((paidById.get(c.documentId) ?? 0) + c.total));
     const open = cDocs
       .map((d) => ({
         folio: folioOf(d),

@@ -43,8 +43,8 @@ describe("hojas de Excel", () => {
   });
 
   it("exportación mensual: una hoja por tema", () => {
-    const sheets = monthlyExportSheets({ from: "2026-10-01", to: "2026-10-31", documents: [doc, { ...doc, id: "2", kind: "payable", cancelled: true }], payments: [], movements: [], expenses: [] });
-    expect(sheets.map((s) => s.name)).toEqual(["Facturas emitidas", "Facturas recibidas", "Cobros", "Pagos", "Movimientos bancarios", "Gastos"]);
+    const sheets = monthlyExportSheets({ from: "2026-10-01", to: "2026-10-31", documents: [doc, { ...doc, id: "2", kind: "payable", cancelled: true }], payments: [], movements: [], creditNotes: [], expenses: [] });
+    expect(sheets.map((s) => s.name)).toEqual(["Facturas emitidas", "Facturas recibidas", "Cobros", "Pagos", "Notas de crédito", "Movimientos bancarios", "Gastos"]);
     expect(sheets[0].aoa).toHaveLength(2);
     expect(sheets[1].aoa[1].at(-1)).toBe("Cancelada");
   });
