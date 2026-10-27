@@ -122,7 +122,7 @@ function DocChip({
     >
       {/* La X del Excel es una palomita; N/A, una raya; pendiente, un círculo vacío. */}
       {status === "received" ? (
-        <Check className="size-3 stroke-[3]" aria-hidden />
+        <Check className="size-3 stroke-3" aria-hidden />
       ) : status === "not_applicable" ? (
         <Minus className="size-3" aria-hidden />
       ) : (
