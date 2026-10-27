@@ -13,7 +13,6 @@ type ActiveRoute = {
   id: string;
   origin: string;
   destination: string;
-  target: number | null;
   unitType: string;
 };
 
@@ -23,27 +22,21 @@ async function fetchRoutes(): Promise<{ routes: ActiveRoute[] }> {
   return res.json();
 }
 
-async function fetchTargets(routeId: string): Promise<{ targets: number[] }> {
-  const res = await fetch(`/api/vendor/carrier-quotes?routeId=${routeId}`);
-  if (!res.ok) return { targets: [] };
-  return res.json();
-}
+type Summary = { venta: number; monto: number; comision: number };
 
-function computeStats(targets: number[]) {
-  if (targets.length === 0) return null;
-  const avg = targets.reduce((a, b) => a + b, 0) / targets.length;
-  const venta = avg * 1.25;
-  const monto = venta * 1.16;
-  const comision = monto * 0.03;
-  return { avg, venta, monto, comision };
+/** El resumen llega calculado: el vendedor no ve los targets de los transportistas. */
+async function fetchSummary(routeId: string): Promise<Summary | null> {
+  const res = await fetch(`/api/vendor/carrier-quotes?routeId=${routeId}`);
+  if (!res.ok) return null;
+  return ((await res.json()) as { summary: Summary | null }).summary;
 }
 
 export function VendorQuotesTable() {
   const [routes, setRoutes] = useState<ActiveRoute[]>([]);
   const [unitTypes, setUnitTypes] = useState<{ value: string; label: string }[]>([]);
-  const [targets, setTargets] = useState<number[]>([]);
+  const [stats, setStats] = useState<Summary | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isLoadingTargets, setIsLoadingTargets] = useState(false);
+  const [isLoadingSummary, setIsLoadingSummary] = useState(false);
 
   const [selectedUnitType, setSelectedUnitType] = useState<string>("");
   const [selectedOrigin, setSelectedOrigin] = useState<string | null>(null);
@@ -90,7 +83,7 @@ export function VendorQuotesTable() {
   const sameCity = (a: string, b: string) =>
     a.trim().toLowerCase() === b.trim().toLowerCase();
 
-  // Solo hay resumen de targets si el trayecto coincide con una ruta registrada.
+  // Solo hay resumen si el trayecto coincide con una ruta registrada.
   const selectedRoute = useMemo(
     () =>
       hasCityPair
@@ -112,27 +105,26 @@ export function VendorQuotesTable() {
 
   useEffect(() => {
     if (!selectedRouteId) {
-      setTargets([]);
+      setStats(null);
       return;
     }
-    setIsLoadingTargets(true);
-    fetchTargets(selectedRouteId).then((data) => {
-      setTargets(data.targets ?? []);
-      setIsLoadingTargets(false);
+    setIsLoadingSummary(true);
+    fetchSummary(selectedRouteId).then((summary) => {
+      setStats(summary);
+      setIsLoadingSummary(false);
     });
   }, [selectedRouteId]);
 
   function handleUnitTypeChange(value: string) {
     setSelectedUnitType(value);
-    setTargets([]);
+    setStats(null);
   }
 
   function handleOriginChange(value: string | null) {
     setSelectedOrigin(value);
-    setTargets([]);
+    setStats(null);
   }
 
-  const stats = useMemo(() => computeStats(targets), [targets]);
 
   if (!isLoaded) {
     return <DataTableSkeleton />;
@@ -175,9 +167,9 @@ export function VendorQuotesTable() {
       ) : !selectedRouteId ? (
         <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
           Este trayecto todavía no está dado de alta como ruta, por lo que no hay
-          targets para calcular el resumen.
+          precios para calcular el resumen.
         </p>
-      ) : isLoadingTargets ? (
+      ) : isLoadingSummary ? (
         <DataTableSkeleton />
       ) : stats === null ? (
         <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
@@ -187,7 +179,7 @@ export function VendorQuotesTable() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Resumen de targets
+              Resumen
             </CardTitle>
           </CardHeader>
           <CardContent>

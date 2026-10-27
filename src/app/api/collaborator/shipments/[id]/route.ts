@@ -149,8 +149,10 @@ export async function PATCH(
 
 
     // Regla: cuando el embarque está cerrado, no se permite modificar nada más a menos
-    // que el usuario haya confirmado con su correo (_confirmedEmail === session.user.email).
+    // que dirección lo desbloquee confirmando su correo (_confirmedEmail === session.user.email).
+    // El colaborador no desbloquea: decisión del cliente.
     const emailConfirmed =
+      session.user.role === "admin" &&
       typeof _confirmedEmail === "string" &&
       _confirmedEmail.toLowerCase() === session.user.email.toLowerCase();
 
@@ -160,7 +162,12 @@ export async function PATCH(
     const tariffOnly = canTariffs && isTariffOnlyBody(body as Record<string, unknown>);
     if (lock && !emailConfirmed && !tariffOnly) {
       return Response.json(
-        { error: `${LOCK_TEXT[lock].title}: no se puede modificar. Confirma tu correo electrónico para editar.` },
+        {
+          error:
+            session.user.role === "admin"
+              ? `${LOCK_TEXT[lock].title}: no se puede modificar. Confirma tu correo electrónico para editar.`
+              : `${LOCK_TEXT[lock].title}: solo dirección puede desbloquearlo.`,
+        },
         { status: 403 },
       );
     }

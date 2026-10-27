@@ -181,9 +181,9 @@ export function StatusBadge({ status }: { status: DocumentStatus }) {
  * Qué puede hacer quien mira. Dirección y soporte de TI todo; el colaborador
  * según su permiso de Administración. La API valida de nuevo.
  */
-export function useBillingPerms(panel: "admin" | "collaborator") {
+export function useBillingPerms(panel: "admin" | "collaborator" | "developer") {
   const { permissions, isLoaded } = useCollaboratorPermissions();
-  if (panel === "admin") return { isLoaded: true, canView: true, canCreate: true, canUpdate: true, canDelete: true };
+  if (panel === "admin" || panel === "developer") return { isLoaded: true, canView: true, canCreate: true, canUpdate: true, canDelete: true };
   return {
     isLoaded,
     canView: Boolean(permissions?.canViewBilling),

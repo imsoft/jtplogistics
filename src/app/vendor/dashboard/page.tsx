@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Calculator, FileText, Handshake, LifeBuoy, MessageCircle, Users } from "lucide-react";
+import { Calculator, FileText, Handshake, LifeBuoy, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard, fmtInt } from "@/components/dashboard/home/stat-card";
@@ -33,7 +33,7 @@ export default async function VendorDashboardPage() {
     year: "numeric",
   }).format(now);
 
-  const [quotesTotal, quotesMonth, quotesByStatus, collaborators, openTickets, latestQuotes] =
+  const [quotesTotal, quotesMonth, quotesByStatus, openTickets, latestQuotes] =
     await Promise.all([
       prisma.generatedQuote.count({ where: { createdById: userId } }),
       prisma.generatedQuote.count({
@@ -43,9 +43,6 @@ export default async function VendorDashboardPage() {
         by: ["status"],
         _count: { _all: true },
         where: { createdById: userId },
-      }),
-      prisma.user.count({
-        where: { role: "collaborator", employeeProfile: { ownerUserId: userId } },
       }),
       prisma.supportTicket.count({
         where: { reporterId: userId, status: { in: ["open", "in_progress"] } },
@@ -112,13 +109,6 @@ export default async function VendorDashboardPage() {
           hint="cerradas a tu favor"
           icon={<Handshake className="size-5" />}
           href="/vendor/dashboard/generated-quotes"
-        />
-        <StatCard
-          label="Mis colaboradores"
-          value={fmtInt(collaborators)}
-          hint="registrados por tu equipo"
-          icon={<Users className="size-5" />}
-          href="/vendor/dashboard/collaborators"
         />
         <StatCard
           label="Reportes de equipo"

@@ -157,7 +157,12 @@ export function DocumentDetailView({
   if (!doc) return <ResourceDetailSkeleton />;
   const labels = BILLING_KIND_LABELS[doc.kind];
   const cancelled = doc.status === "cancelada";
-  const shipmentsHref = basePath.startsWith("/admin") ? "/admin/dashboard/shipments" : "/collaborator/dashboard/shipments";
+  // El panel de soporte de TI no tiene embarques: ahí el ECO va sin liga.
+  const shipmentsHref = basePath.startsWith("/admin")
+    ? "/admin/dashboard/shipments"
+    : basePath.startsWith("/collaborator")
+      ? "/collaborator/dashboard/shipments"
+      : null;
 
   return (
     <div className="min-w-0 space-y-6">
@@ -236,9 +241,13 @@ export function DocumentDetailView({
               <InfoRow
                 label="Embarque"
                 value={
-                  <Link href={`${shipmentsHref}/${doc.shipmentId}`} className="text-primary hover:underline">
-                    {doc.shipmentEco ? `ECO ${doc.shipmentEco}` : "Ver embarque"}
-                  </Link>
+                  shipmentsHref ? (
+                    <Link href={`${shipmentsHref}/${doc.shipmentId}`} className="text-primary hover:underline">
+                      {doc.shipmentEco ? `ECO ${doc.shipmentEco}` : "Ver embarque"}
+                    </Link>
+                  ) : (
+                    doc.shipmentEco ? `ECO ${doc.shipmentEco}` : "Sí"
+                  )
                 }
               />
             )}

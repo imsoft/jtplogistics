@@ -1,12 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { FormSkeleton } from "@/components/ui/skeletons";
 import { useParams } from "next/navigation";
 import { LockKeyhole } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { ResourceEditHeader } from "@/components/dashboard/resources/resource-edit-header";
 import { LOCK_TEXT, shipmentLockReason } from "@/lib/shipment-lock";
 import { ShipmentForm } from "@/components/dashboard/resources/shipment-form";
@@ -24,34 +20,6 @@ export default function EditCollaboratorShipmentPage() {
       redirectHref: `/collaborator/dashboard/shipments/${id}`,
       deleteRedirectHref: "/collaborator/dashboard/shipments",
     });
-
-  const [isUnlocked, setIsUnlocked] = useState(false);
-  const [unlockEmail, setUnlockEmail] = useState("");
-  const [unlockError, setUnlockError] = useState("");
-  const [isUnlocking, setIsUnlocking] = useState(false);
-
-  async function handleUnlock(e: React.FormEvent) {
-    e.preventDefault();
-    setIsUnlocking(true);
-    setUnlockError("");
-    try {
-      const res = await fetch("/api/profile");
-      const profile = await res.json() as { email?: string };
-      if (profile.email?.toLowerCase() === unlockEmail.trim().toLowerCase()) {
-        setIsUnlocked(true);
-      } else {
-        setUnlockError("El correo no coincide con tu cuenta.");
-      }
-    } catch {
-      setUnlockError("No se pudo verificar. Intenta de nuevo.");
-    } finally {
-      setIsUnlocking(false);
-    }
-  }
-
-  async function handleSubmitWithConfirmation(formData: unknown) {
-    await handleSubmit({ ...(formData as object), _confirmedEmail: unlockEmail.trim().toLowerCase() });
-  }
 
   if (!isLoaded) return <FormSkeleton />;
 
@@ -80,7 +48,7 @@ export default function EditCollaboratorShipmentPage() {
       <div className="w-full min-w-0">
         {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
 
-        {isClosed && !isUnlocked && (
+        {isClosed && (
           <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-5">
             <div className="mb-3 flex items-center gap-2">
               <LockKeyhole className="size-4 shrink-0 text-amber-600" />
@@ -88,30 +56,11 @@ export default function EditCollaboratorShipmentPage() {
                 {lockText?.title}
               </p>
             </div>
-            <p className="mb-4 text-sm text-amber-700">
-              {lockText?.body}
+            {/* El colaborador no desbloquea: solo dirección (admin) o soporte de TI. */}
+            <p className="text-sm text-amber-700">
+              Solo dirección puede desbloquearlo.
+              {permissions?.canViewFinances ? " Las tarifas sí se pueden capturar abajo." : ""}
             </p>
-            <form onSubmit={handleUnlock} className="flex flex-col gap-3 sm:flex-row sm:items-end">
-              <div className="flex-1 space-y-1.5">
-                <Label htmlFor="unlock-email" className="text-xs text-amber-800">
-                  Correo electrónico
-                </Label>
-                <Input
-                  id="unlock-email"
-                  type="email"
-                  value={unlockEmail}
-                  onChange={(e) => { setUnlockEmail(e.target.value); setUnlockError(""); }}
-                  className="bg-white"
-                  autoFocus
-                />
-              </div>
-              <Button type="submit" disabled={!unlockEmail.trim() || isUnlocking} className="sm:self-end">
-                {isUnlocking ? "Verificando…" : "Desbloquear"}
-              </Button>
-            </form>
-            {unlockError && (
-              <p className="mt-2 text-xs text-destructive">{unlockError}</p>
-            )}
           </div>
         )}
 
@@ -121,9 +70,8 @@ export default function EditCollaboratorShipmentPage() {
             initialValues={shipment}
             submitLabel="Guardar cambios"
             cancelHref={`/collaborator/dashboard/shipments/${id}`}
-            onSubmit={isClosed ? handleSubmitWithConfirmation : handleSubmit}
+            onSubmit={handleSubmit}
             isSubmitting={isSubmitting}
-            unlocked={isUnlocked}
             showTariffs={permissions?.canViewFinances ?? false}
           />
         )}

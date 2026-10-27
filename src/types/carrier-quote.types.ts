@@ -11,7 +11,8 @@ export interface ActiveRoute {
   destination: string;
   destinationState: string | null;
   unitType: string;
-  target: number | null;
+  /** No llega al vendedor: él no ve targets. */
+  target?: number | null;
   status?: RouteStatus;
 }
 
@@ -28,6 +29,9 @@ export interface CarrierQuote {
 export interface CarrierQuotesResponse {
   routes: ActiveRoute[];
   carriers: CarrierQuote[];
+  /** Vista del vendedor: sin transportistas ni costos, solo el precio sugerido. */
+  restricted?: boolean;
+  suggestedPrice?: number | null;
 }
 
 export interface QuoteRow {

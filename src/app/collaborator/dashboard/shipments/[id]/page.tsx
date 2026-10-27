@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { InfoRow } from "@/components/dashboard/users/info-row";
-import { LOCK_TEXT, shipmentLockReason } from "@/lib/shipment-lock";
+import { shipmentLockReason } from "@/lib/shipment-lock";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { useUnitTypes } from "@/hooks/use-unit-types";
 import { useIncidentTypes } from "@/hooks/use-incident-types";
@@ -57,7 +57,6 @@ export default function CollaboratorShipmentProfilePage() {
   const title = [shipment.eco, shipment.origin, shipment.destination].filter(Boolean).join(" – ") || "Embarque";
 
   const lock = shipmentLockReason(shipment);
-  const lockText = lock ? LOCK_TEXT[lock] : null;
 
   return (
     <div className="min-w-0 space-y-6">
@@ -86,12 +85,13 @@ export default function CollaboratorShipmentProfilePage() {
             )}
           </div>
         </div>
-        {permissions?.canUpdateShipments && (
+        {/* Bloqueado, el colaborador solo entra a capturar tarifas: desbloquear es de dirección. */}
+        {permissions?.canUpdateShipments && (!lock || permissions.canViewFinances) && (
           <div className="flex items-center gap-2 shrink-0">
             <Button asChild>
               <Link href={`/collaborator/dashboard/shipments/${shipment.id}/edit`}>
                 <Pencil className="size-4" />
-                {lockText ? lockText.button : "Editar"}
+                {lock ? "Capturar tarifas" : "Editar"}
               </Link>
             </Button>
           </div>

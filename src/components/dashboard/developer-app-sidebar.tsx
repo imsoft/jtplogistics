@@ -1,6 +1,6 @@
 "use client";
 
-import { User as UserIcon, ClipboardList, Wrench, LifeBuoy, UserRound } from "lucide-react";
+import { User as UserIcon, ClipboardList, Wrench, LifeBuoy, UserRound, HandCoins, ReceiptText, Landmark, Wallet, FileBarChart } from "lucide-react";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 
 const developerNavItems = [
@@ -18,6 +18,31 @@ const developerNavItems = [
     title: "Colaboradores",
     href: "/developer/dashboard/employees",
     icon: UserRound,
+  },
+  {
+    title: "Cuentas por cobrar",
+    href: "/developer/dashboard/billing/receivables",
+    icon: HandCoins,
+  },
+  {
+    title: "Cuentas por pagar",
+    href: "/developer/dashboard/billing/payables",
+    icon: ReceiptText,
+  },
+  {
+    title: "Bancos",
+    href: "/developer/dashboard/billing/banks",
+    icon: Landmark,
+  },
+  {
+    title: "Gastos",
+    href: "/developer/dashboard/billing/expenses",
+    icon: Wallet,
+  },
+  {
+    title: "Reportes de administración",
+    href: "/developer/dashboard/billing/reports",
+    icon: FileBarChart,
   },
   {
     title: "Mis tareas",

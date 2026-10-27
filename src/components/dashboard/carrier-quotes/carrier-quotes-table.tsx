@@ -33,6 +33,7 @@ import type { ActiveRoute, CarrierQuote, CarrierQuotesResponse, QuoteRow } from 
 import type { QuoteTermsJson } from "./quote-pdf";
 import { formatMxn } from "@/lib/utils";
 import { fuzzyMatch } from "@/lib/search";
+import { QUOTE_MARKUP } from "@/lib/vendor-pricing";
 
 // ── types ────────────────────────────────────────────────────────────────────
 
@@ -95,7 +96,7 @@ function errorText(e: unknown): string {
 }
 
 /** Margen de JTP sobre el costo: el precio sugerido es el costo más un 30%. */
-const MARKUP = 1.3;
+const MARKUP = QUOTE_MARKUP;
 
 function computeStats(quotes: CarrierQuote[]) {
   const targets = quotes.map((q) => q.carrierTarget).filter((t): t is number => t != null && !Number.isNaN(t));
@@ -132,6 +133,10 @@ export function CarrierQuotesTable({
   const [carriers, setCarriers] = useState<CarrierQuote[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoadingCarriers, setIsLoadingCarriers] = useState(false);
+  // Vista del vendedor: el endpoint no manda transportistas ni costos, solo el
+  // precio sugerido de la ruta elegida.
+  const [restricted, setRestricted] = useState(false);
+  const [serverSuggested, setServerSuggested] = useState<number | null>(null);
   const [unitTypes, setUnitTypes] = useState<UnitTypeOption[]>([]);
   const [currentUser, setCurrentUser] = useState<{ name: string; position: string | null } | null>(null);
   const [selectedUnitType, setSelectedUnitType] = useState("");
@@ -177,6 +182,7 @@ export function CarrierQuotesTable({
       fetch("/api/profile").then((r) => (r.ok ? r.json() : null)),
     ]);
     setRoutes(data.routes);
+    setRestricted(data.restricted === true);
     setUnitTypes(utRes);
     if (profileRes) {
       setCurrentUser({
@@ -234,10 +240,12 @@ export function CarrierQuotesTable({
   useEffect(() => {
     setFinalPrice(null);
     setManualCost(null);
+    setServerSuggested(null);
     if (!selectedRouteId) { setCarriers([]); return; }
     setIsLoadingCarriers(true);
     fetchQuotes(apiEndpoint, selectedRouteId).then((data) => {
       setCarriers(data.carriers);
+      setServerSuggested(data.suggestedPrice ?? null);
       setIsLoadingCarriers(false);
     });
   }, [selectedRouteId, apiEndpoint]);
@@ -284,10 +292,13 @@ export function CarrierQuotesTable({
    *   3. el costo que capture quien cotiza, para trayectos que aún no son ruta.
    * Sin ninguno de los tres no hay margen que calcular.
    */
-  const priceBase = stats.avg ?? routeTarget ?? manualCost;
-  const baseSource: "carriers" | "route" | "manual" | null =
-    stats.avg != null ? "carriers" : routeTarget != null ? "route" : manualCost != null ? "manual" : null;
-  const suggestedPrice = priceBase != null ? priceBase * MARKUP : null;
+  // El vendedor no ve el costo de una ruta registrada: el sugerido llega hecho.
+  const serverPriced = restricted && selectedRouteId != null;
+  const priceBase = serverPriced ? null : stats.avg ?? routeTarget ?? manualCost;
+  const baseSource: "carriers" | "route" | "manual" | "server" | null = serverPriced
+    ? "server"
+    : stats.avg != null ? "carriers" : routeTarget != null ? "route" : manualCost != null ? "manual" : null;
+  const suggestedPrice = serverPriced ? serverSuggested : priceBase != null ? priceBase * MARKUP : null;
 
   const filteredCarriers = useMemo(() => {
     let r = carriers;
@@ -593,14 +604,18 @@ export function CarrierQuotesTable({
             className="w-full"
           />
         </div>
-        <div className="space-y-2">
-          <Label className="text-xs font-medium">Buscar</Label>
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} disabled={!selectedRouteId} />
-        </div>
-        <div className="space-y-2">
-          <Label className="text-xs font-medium">Target vs. ruta</Label>
-          <AppSelect value={filterPrice} onValueChange={(v) => setFilterPrice(v || "all")} options={[{value: "all", label: "Todos"}, {value: "below", label: "Por debajo del target"}, {value: "above", label: "Por encima del target"}]} disabled={!selectedRouteId || routeTarget == null} className="w-full" />
-        </div>
+        {!restricted && (
+          <>
+            <div className="space-y-2">
+              <Label className="text-xs font-medium">Buscar</Label>
+              <Input value={search} onChange={(e) => setSearch(e.target.value)} disabled={!selectedRouteId} />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-medium">Target vs. ruta</Label>
+              <AppSelect value={filterPrice} onValueChange={(v) => setFilterPrice(v || "all")} options={[{value: "all", label: "Todos"}, {value: "below", label: "Por debajo del target"}, {value: "above", label: "Por encima del target"}]} disabled={!selectedRouteId || routeTarget == null} className="w-full" />
+            </div>
+          </>
+        )}
         <div className="space-y-2">
           <Label className="invisible text-xs font-medium">_</Label>
           <Button type="button" variant="outline" onClick={handleClear} className="w-full">Limpiar</Button>
@@ -626,7 +641,7 @@ export function CarrierQuotesTable({
       ) : (
         <div className="space-y-4">
           {selectedRouteId ? (
-            isLoadingCarriers ? (
+            restricted ? null : isLoadingCarriers ? (
               <DataTableSkeleton rows={4} />
             ) : carriers.length === 0 ? (
               <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
@@ -655,7 +670,7 @@ export function CarrierQuotesTable({
               <div className="grid gap-4 sm:grid-cols-3">
                 {/* Costo: el promedio de los transportistas, el target de la ruta
                     o, si no hay nada, el que se capture aquí. */}
-                {baseSource === "carriers" ? (
+                {baseSource === "server" ? null : baseSource === "carriers" ? (
                   <div className="rounded-lg bg-muted/50 p-4">
                     <p className="text-muted-foreground text-xs font-medium">Promedio</p>
                     <p className="text-lg font-semibold">${formatMxn(stats.avg!)}</p>
@@ -692,9 +707,15 @@ export function CarrierQuotesTable({
                     {suggestedPrice != null ? `$${formatMxn(suggestedPrice)}` : "—"}
                   </p>
                   <p className="text-muted-foreground mt-0.5 text-[10px]">
-                    {suggestedPrice != null
-                      ? `Costo + ${Math.round((MARKUP - 1) * 100)}%`
-                      : "Captura el costo"}
+                    {baseSource === "server"
+                      ? isLoadingCarriers
+                        ? ""
+                        : suggestedPrice != null
+                          ? "Con los precios de los transportistas"
+                          : "Sin precio de referencia: captura el precio final"
+                      : suggestedPrice != null
+                        ? `Costo + ${Math.round((MARKUP - 1) * 100)}%`
+                        : "Captura el costo"}
                   </p>
                 </div>
 

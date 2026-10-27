@@ -12,7 +12,7 @@ import { BankDetailView, BanksView } from "./banks-view";
 import { ExpensesView } from "./expenses-view";
 import { ReportsView } from "./reports-view";
 
-type Panel = "admin" | "collaborator";
+type Panel = "admin" | "collaborator" | "developer";
 
 const SLUG_TO_KIND: Record<string, BillingKind> = { receivables: "receivable", payables: "payable" };
 const base = (panel: Panel) => `/${panel}/dashboard/billing`;

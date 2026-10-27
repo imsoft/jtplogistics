@@ -1,7 +1,13 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireVendedor } from "@/lib/auth-server";
+import { suggestedQuotePrice, vendorCommissionSummary } from "@/lib/vendor-pricing";
 
+/**
+ * Cotizador del vendedor. No ve targets (de los transportistas ni de la ruta)
+ * ni los datos de contacto de los transportistas: solo las rutas y, al elegir
+ * una, el precio sugerido y el resumen de su comisión ya calculados.
+ */
 export async function GET(request: NextRequest) {
   try {
     await requireVendedor();
@@ -17,7 +23,6 @@ export async function GET(request: NextRequest) {
         origin: true,
         destination: true,
         destinationState: true,
-        target: true,
         status: true,
         unitType: true,
       },
@@ -25,45 +30,22 @@ export async function GET(request: NextRequest) {
     });
 
     if (!routeId) {
-      return Response.json({ routes, carriers: [], targets: [] });
+      return Response.json({ routes, carriers: [], restricted: true, suggestedPrice: null, summary: null });
     }
 
-    const carrierRoutes = await prisma.carrierRoute.findMany({
-      where: { routeId },
-      include: {
-        carrier: {
-          select: {
-            name: true,
-            email: true,
-            profile: {
-              select: {
-                commercialName: true,
-                contacts: { select: { type: true, value: true }, where: { type: "phone" } },
-              },
-            },
-          },
-        },
-      },
-      orderBy: { carrierTarget: "asc" },
+    const [route, carrierRoutes] = await Promise.all([
+      prisma.route.findUnique({ where: { id: routeId }, select: { target: true } }),
+      prisma.carrierRoute.findMany({ where: { routeId, carrierTarget: { not: null } }, select: { carrierTarget: true } }),
+    ]);
+    const targets = carrierRoutes.map((cr) => cr.carrierTarget).filter((t): t is number => t != null);
+
+    return Response.json({
+      routes,
+      carriers: [],
+      restricted: true,
+      suggestedPrice: suggestedQuotePrice(targets, route?.target ?? null),
+      summary: vendorCommissionSummary(targets),
     });
-
-    const carriers = carrierRoutes.map((cr) => ({
-      id: cr.id,
-      carrierId: cr.carrierId,
-      name: cr.carrier.name,
-      email: cr.carrier.email,
-      company: cr.carrier.profile?.commercialName ?? null,
-      phone: cr.carrier.profile?.contacts[0]?.value ?? null,
-      carrierTarget: cr.carrierTarget ?? null,
-    }));
-
-    // `targets` alimenta el resumen de comisión del vendedor, que solo necesita
-    // los importes sueltos.
-    const targets = carriers
-      .map((c) => c.carrierTarget)
-      .filter((t): t is number => t != null);
-
-    return Response.json({ routes, carriers, targets });
   } catch (e) {
     if (e instanceof Response) return e;
     console.error(e);
