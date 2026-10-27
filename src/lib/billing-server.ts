@@ -81,10 +81,10 @@ export async function duplicateDocument(
  * esto: traer todas las facturas con todos sus pagos crecía con cada factura.
  */
 export async function openDocumentBalances(): Promise<
-  { kind: BillingKind; currency: Currency; dueDate: string; balance: number; draft: boolean }[]
+  { id: string; kind: BillingKind; currency: Currency; dueDate: string; balance: number; draft: boolean }[]
 > {
-  const rows = await prisma.$queryRaw<{ kind: string; currency: string; due_date: Date; balance: number; draft: boolean }[]>`
-    SELECT d.kind::text AS kind, d.currency::text AS currency, d.due_date, d.draft,
+  const rows = await prisma.$queryRaw<{ id: string; kind: string; currency: string; due_date: Date; balance: number; draft: boolean }[]>`
+    SELECT d.id, d.kind::text AS kind, d.currency::text AS currency, d.due_date, d.draft,
            (d.total - COALESCE(p.paid, 0) - COALESCE(c.credited, 0))::float8 AS balance
     FROM billing_documents d
     LEFT JOIN (SELECT document_id, SUM(amount) AS paid FROM billing_payments GROUP BY document_id) p ON p.document_id = d.id
@@ -92,6 +92,7 @@ export async function openDocumentBalances(): Promise<
     WHERE d.cancelled_at IS NULL
       AND (d.draft OR d.total - COALESCE(p.paid, 0) - COALESCE(c.credited, 0) > ${SETTLED_TOLERANCE})`;
   return rows.map((r) => ({
+    id: r.id,
     kind: r.kind as BillingKind,
     currency: r.currency as Currency,
     dueDate: r.due_date.toISOString().slice(0, 10),

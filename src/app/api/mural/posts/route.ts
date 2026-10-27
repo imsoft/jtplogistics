@@ -13,7 +13,7 @@ export function GET(request: Request) {
   return muralHandler("canViewMural", async (session) => {
     const { searchParams } = new URL(request.url);
     const limitParam = Number(searchParams.get("limit"));
-    const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(limitParam, 100) : undefined;
+    const limit = Number.isFinite(limitParam) && limitParam >= 1 ? Math.min(Math.floor(limitParam), 100) : undefined;
 
     // Los borradores solo los ve quien puede editar el mural.
     const canSeeDrafts =

@@ -117,6 +117,7 @@ export function MaintenanceReportPdf({
         </View>
 
         <View style={s.header} fixed>
+          {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf no tiene alt */}
           <Image src={logoUrl} style={s.logo} />
           <View style={s.headerRight}>
             <Text style={s.headerTitle}>Reporte de mantenimientos</Text>
@@ -206,6 +207,7 @@ export function MaintenanceReportPdf({
                   {fotos.length > 0 ? (
                     <View style={s.photos}>
                       {fotos.map((p, i) => (
+                        // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf no tiene alt
                         <Image key={i} src={thumb(p.url)} style={s.photo} />
                       ))}
                     </View>

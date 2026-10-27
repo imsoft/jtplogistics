@@ -64,7 +64,6 @@ export default function FinancesAnalyticsPage() {
   }, []);
 
   const topRoutes = data?.routeMargins.slice(0, MAX_ROUTES) ?? [];
-  const bottomRoutes = data?.routeMargins.slice(-10).reverse() ?? [];
   const legalCounts = data?.legalNameCounts ?? [];
 
   // Rutas con datos de margen (solo las que tienen sale o cost)

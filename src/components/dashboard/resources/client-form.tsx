@@ -29,7 +29,7 @@ export function ClientForm({
   const [name, setName] = useState(initialValues.name ?? "");
   const [contactName, setContactName] = useState(initialValues.contactName ?? "");
   const [position, setPosition] = useState(initialValues.position ?? "");
-  const [legalName, setLegalName] = useState(initialValues.legalName ?? "");
+  const legalName = initialValues.legalName ?? "";
   const [rfc, setRfc] = useState(initialValues.rfc ?? "");
   const [taxRegime, setTaxRegime] = useState(initialValues.taxRegime ?? "");
   const [fiscalZip, setFiscalZip] = useState(initialValues.fiscalZip ?? "");

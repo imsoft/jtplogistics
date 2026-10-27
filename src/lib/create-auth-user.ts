@@ -4,6 +4,7 @@
  */
 
 import { hashPassword } from "better-auth/crypto";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 
 /** Error con un mensaje pensado para mostrarse a quien da de alta al usuario. */
@@ -20,10 +21,13 @@ export async function createAuthUser({
   name,
   email,
   password,
+  extra,
 }: {
   name: string;
   email: string;
   password: string;
+  /** Rol y demás campos desde el alta: así nunca existe a medias con el rol por defecto. */
+  extra?: Omit<Prisma.UserUncheckedCreateInput, "id" | "name" | "email" | "emailVerified" | "createdAt" | "updatedAt">;
 }): Promise<{ id: string }> {
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
@@ -34,30 +38,33 @@ export async function createAuthUser({
   const userId = crypto.randomUUID();
   const hashed = await hashPassword(password);
 
-  await prisma.user.create({
-    data: {
-      id: userId,
-      name,
-      email,
-      emailVerified: false,
-      createdAt: now,
-      updatedAt: now,
-    },
-  });
-
-  await prisma.account.create({
-    data: {
-      id: crypto.randomUUID(),
-      // Better Auth busca la credencial por accountId === id del usuario (desde
-      // la 1.7 es obligatorio). Antes iba el correo, y al actualizar nadie pudo entrar.
-      accountId: userId,
-      providerId: "credential",
-      userId,
-      password: hashed,
-      createdAt: now,
-      updatedAt: now,
-    },
-  });
+  // Usuario y credencial juntos: si algo falla no queda una cuenta sin contraseña.
+  await prisma.$transaction([
+    prisma.user.create({
+      data: {
+        ...extra,
+        id: userId,
+        name,
+        email,
+        emailVerified: false,
+        createdAt: now,
+        updatedAt: now,
+      },
+    }),
+    prisma.account.create({
+      data: {
+        id: crypto.randomUUID(),
+        // Better Auth busca la credencial por accountId === id del usuario (desde
+        // la 1.7 es obligatorio). Antes iba el correo, y al actualizar nadie pudo entrar.
+        accountId: userId,
+        providerId: "credential",
+        userId,
+        password: hashed,
+        createdAt: now,
+        updatedAt: now,
+      },
+    }),
+  ]);
 
   return { id: userId };
 }

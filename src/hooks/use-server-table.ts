@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { SortingState, OnChangeFn } from "@tanstack/react-table";
 
 interface ServerTablePage<T> {
@@ -75,9 +75,7 @@ export function useServerTable<T>({
   const [isFetching, setIsFetching] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
 
-  // Acceso estable a los filtros sin meter su identidad en las dependencias.
-  const filtersRef = useRef(filters);
-  filtersRef.current = filters;
+  // Los filtros cuentan por su contenido, no por su identidad.
   const filtersKey = JSON.stringify(filters ?? {});
 
   // Debounce de la búsqueda.
@@ -99,7 +97,7 @@ export function useServerTable<T>({
         params.set("sortBy", sorting[0].id);
         params.set("sortDir", sorting[0].desc ? "desc" : "asc");
       }
-      for (const [k, v] of Object.entries(filtersRef.current ?? {})) {
+      for (const [k, v] of Object.entries(JSON.parse(filtersKey) as Record<string, string | undefined>)) {
         if (v) params.set(k, v);
       }
       if (extra) {
@@ -108,7 +106,6 @@ export function useServerTable<T>({
         }
       }
       return params.toString();
-      // filtersKey representa el contenido de filtersRef.current (estable por valor).
     },
     [debouncedSearch, sorting, filtersKey]
   );

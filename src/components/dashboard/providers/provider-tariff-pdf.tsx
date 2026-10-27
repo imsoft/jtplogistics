@@ -119,6 +119,7 @@ export function ProviderTariffPdf({ data, logoUrl, termsJson, issuerName, issuer
         </View>
 
         <View style={s.header}>
+          {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf no tiene alt */}
           <Image src={logoUrl} style={s.logo} />
           <View style={s.headerRight}>
             <Text style={s.headerLine}>{formatIssueDate(today)}</Text>

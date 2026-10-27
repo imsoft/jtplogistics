@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { readPaging } from "@/lib/paging";
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
 
@@ -6,8 +7,7 @@ import { adminHandler } from "@/lib/api-handler";
 export function GET(request: NextRequest) {
   return adminHandler(async () => {
     const routeId = request.nextUrl.searchParams.get("routeId") ?? undefined;
-    const skip = Number(request.nextUrl.searchParams.get("skip") ?? "0");
-    const take = Math.min(Number(request.nextUrl.searchParams.get("take") ?? "50"), 100);
+    const { skip, take } = readPaging(request.nextUrl.searchParams);
 
     const [logs, total] = await Promise.all([
       prisma.routeLog.findMany({

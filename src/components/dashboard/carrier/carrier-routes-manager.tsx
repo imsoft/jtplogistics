@@ -111,7 +111,6 @@ export function CarrierRoutesManager({
   const { unitType } = useParams<{ unitType: string }>();
   const router = useRouter();
   const [allRoutes, setAllRoutes] = useState<CarrierRouteRow[]>([]);
-  const [canEditTarget, setCanEditTarget] = useState(false);
   const [canEditRoutes, setCanEditRoutes] = useState(false);
   const [canAddRoutes, setCanAddRoutes] = useState(false);
   const [canCapture, setCanCapture] = useState(true);
@@ -161,7 +160,6 @@ export function CarrierRoutesManager({
 
   const loadRoutes = useCallback(async () => {
     const data = await fetchCarrierRoutes();
-    setCanEditTarget(data.canEditTarget);
     setCanEditRoutes(data.canEditRoutes);
     setCanAddRoutes(data.canAddRoutes);
     setCanCapture(data.canCapture !== false);

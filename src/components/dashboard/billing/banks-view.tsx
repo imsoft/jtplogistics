@@ -243,6 +243,9 @@ interface AccountDetail {
   active: boolean;
   balance: number;
   movements: Movement[];
+  /** Desde cuándo se muestran los movimientos (null = todo el historial). */
+  since: string | null;
+  olderUnreconciled: number;
 }
 
 /** Movimientos de una cuenta con saldo corrido y conciliación contra el estado de cuenta. */
@@ -267,16 +270,17 @@ export function BankDetailView({
   const [editing, setEditing] = useState(false);
   const [importing, setImporting] = useState(false);
   const [onlyPending, setOnlyPending] = useState(false);
+  const [fullHistory, setFullHistory] = useState(false);
 
   const load = useCallback(() => {
-    fetch(`/api/billing/banks/${id}`)
+    fetch(`/api/billing/banks/${id}${fullHistory ? "?history=all" : ""}`)
       .then(async (r) => {
         if (!r.ok) throw new Error("No se pudo cargar la cuenta.");
         return r.json();
       })
       .then((d: AccountDetail) => setData(d))
       .catch((e: Error) => setError(e.message));
-  }, [id]);
+  }, [id, fullHistory]);
   useEffect(() => {
     load();
   }, [load]);
@@ -351,9 +355,20 @@ export function BankDetailView({
           </div>
         </CardHeader>
         <CardContent>
+          {data.since && (
+            <p className="text-muted-foreground mb-3 text-xs">
+              Se muestran los movimientos desde el {shortDay(data.since)}; lo anterior ya va sumado en el saldo.
+              {data.olderUnreconciled > 0 && ` Hay ${data.olderUnreconciled} anterior${data.olderUnreconciled === 1 ? "" : "es"} sin conciliar.`}{" "}
+              <button type="button" className="text-primary underline-offset-4 hover:underline" onClick={() => setFullHistory(true)}>
+                Ver todo el historial
+              </button>
+            </p>
+          )}
           {rows.length === 0 ? (
             <p className="text-muted-foreground text-sm">
-              {data.movements.length === 0
+              {data.movements.length === 0 && data.since
+                ? "Sin movimientos en los últimos meses."
+                : data.movements.length === 0
                 ? "Todavía no hay movimientos. Los cobros, pagos y gastos que usen esta cuenta aparecen aquí solos."
                 : "Todos los movimientos están conciliados."}
             </p>

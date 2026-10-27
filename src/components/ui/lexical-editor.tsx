@@ -16,7 +16,6 @@ import {
   UNDO_COMMAND,
   REDO_COMMAND,
   type EditorState,
-  type LexicalEditor as LexicalEditorInstance,
 } from "lexical";
 import { $setBlocksType } from "@lexical/selection";
 import { HeadingNode, $createHeadingNode } from "@lexical/rich-text";
@@ -124,7 +123,7 @@ const theme = {
 };
 
 export function LexicalEditor({ value, onChange, minHeight = 300, className }: LexicalEditorProps) {
-  function handleChange(state: EditorState, _editor: LexicalEditorInstance) {
+  function handleChange(state: EditorState) {
     onChange(JSON.stringify(state.toJSON()));
   }
 

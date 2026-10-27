@@ -1,6 +1,5 @@
 import { ResourceListPage } from "@/components/dashboard/resources/resource-list-page";
 import { ClientsTable } from "@/components/dashboard/resources/clients-table";
-import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 
 export const metadata = {
   title: "Clientes | JTP Logistics",

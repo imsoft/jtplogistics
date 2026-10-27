@@ -3,10 +3,18 @@ import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
 import { companyDateKey } from "@/lib/time-clock";
 import { BILLING_KIND_LABELS } from "@/lib/billing";
-import { DOC_INCLUDE, docFolio, documentToJson, failure, isBillingKind, readDocumentBody, requireBilling } from "@/lib/billing-server";
+import { DOC_INCLUDE, docFolio, documentToJson, failure, isBillingKind, openDocumentBalances, readDocumentBody, requireBilling } from "@/lib/billing-server";
 import { cfdiOverrides, pendingAttachments, withCfdiBody } from "@/lib/billing-attachments-server";
 
-/** GET /api/billing/documents?kind=receivable|payable&q= */
+/** Ventana de la lista por omisión: lo abierto siempre, lo saldado de estos meses. */
+const RECENT_MONTHS = 6;
+
+/**
+ * GET /api/billing/documents?kind=receivable|payable&q=&history=all
+ * Sin `history=all`: todas las facturas con saldo (y borradores) más las de
+ * los últimos meses. El saldo y la antigüedad salen completos; lo viejo y
+ * ya saldado se pide aparte para no cargar años de historial cada vez.
+ */
 export async function GET(request: Request) {
   try {
     await requireBilling("view");
@@ -15,11 +23,21 @@ export async function GET(request: Request) {
     if (!isBillingKind(kind)) return Response.json({ error: "Tipo inválido" }, { status: 400 });
     const q = (searchParams.get("q") ?? "").trim();
     const where: Prisma.BillingDocumentWhereInput = { kind };
+    const and: Prisma.BillingDocumentWhereInput[] = [];
     if (q) {
-      where.OR = (["partyName", "partyRfc", "folio", "series", "uuid", "concept", "reference"] as const).map((f) => ({
-        [f]: { contains: q, mode: "insensitive" as Prisma.QueryMode },
-      }));
+      and.push({
+        OR: (["partyName", "partyRfc", "folio", "series", "uuid", "concept", "reference"] as const).map((f) => ({
+          [f]: { contains: q, mode: "insensitive" as Prisma.QueryMode },
+        })),
+      });
     }
+    if (searchParams.get("history") !== "all") {
+      const since = new Date();
+      since.setUTCMonth(since.getUTCMonth() - RECENT_MONTHS);
+      const open = (await openDocumentBalances()).filter((d) => d.kind === kind).map((d) => d.id);
+      and.push({ OR: [{ id: { in: open } }, { issueDate: { gte: since } }] });
+    }
+    if (and.length) where.AND = and;
     const docs = await prisma.billingDocument.findMany({
       where,
       orderBy: [{ issueDate: "desc" }, { createdAt: "desc" }],

@@ -7,7 +7,7 @@ export function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return adminHandler(async (_session) => {
+  return adminHandler(async () => {
     const { id } = await params;
     const u = await prisma.user.findUnique({
       where: { id },

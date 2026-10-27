@@ -249,7 +249,15 @@ export async function PUT(request: NextRequest) {
     await prisma.$transaction(ops);
 
     // Notificación a pricing
-    void notifyPricing(carrierId, body);
+    // A pricing le interesa lo que cambió, no toda la página.
+    const changed = [
+      ...toCreate,
+      ...toUpdate.filter((item) => {
+        const prev = existingMap.get(`${item.routeId}:${item.unitType}`)!;
+        return (prev.carrierTarget ?? null) !== (item.carrierTarget ?? null) || (prev.carrierWeeklyVolume ?? null) !== (item.carrierWeeklyVolume ?? null);
+      }),
+    ];
+    if (changed.length > 0) void notifyPricing(carrierId, changed);
 
     // Tras guardar: se bloquea editar lo ya guardado (targets y desmarcar).
     await prisma.user.update({

@@ -10,7 +10,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await requireModuleAccess("Quotes", "view");
+    await requireModuleAccess("Quotes", "view");
     const { id } = await params;
 
     const comments = await prisma.quoteComment.findMany({

@@ -30,7 +30,7 @@ export function POST(request: Request) {
 
     let userId: string;
     try {
-      const created = await createAuthUser({ name, email, password });
+      const created = await createAuthUser({ name, email, password, extra: { role: "vendor" } });
       userId = created.id;
     } catch (e) {
       return Response.json({ error: e instanceof Error ? e.message : "No se pudo crear el usuario" }, { status: 400 });

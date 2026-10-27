@@ -85,13 +85,16 @@ export function GET() {
         inTransit: 0, withIncident: 0, total: 0,
       };
 
-      entry.total += 1;
-      // Un embarque cerrado cuenta con el resultado que tuvo su entrega.
+      // Un embarque cerrado cuenta con el resultado que tuvo su entrega. Si se
+      // cerró antes de que se guardara ese resultado, no se sabe cómo llegó:
+      // se deja fuera en lugar de contarlo "en tránsito" y bajarle la nota.
       const st = ratingStatus(s.status, s.deliveryOutcome);
+      if (st === "returned") continue;
+      entry.total += 1;
       if (st === "delivered") entry.delivered += 1;
       else if (st === "delivered_with_delay") entry.deliveredWithDelay += 1;
       else if (st === "not_delivered") entry.notDelivered += 1;
-      else entry.inTransit += 1; // pending, at_risk, returned treated as in-transit for scoring
+      else entry.inTransit += 1; // pending o at_risk: todavía en camino
 
       if (hasIncident(s.incident)) entry.withIncident += 1;
 

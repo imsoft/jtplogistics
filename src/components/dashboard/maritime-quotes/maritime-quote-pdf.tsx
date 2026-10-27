@@ -115,6 +115,7 @@ export function MaritimeQuotePdf({ input, computed, logoUrl }: Props) {
     <Document title={`Cotizacion-Maritima-${input.reference}`}>
       <Page size="A4" style={s.page}>
         <View style={s.header}>
+          {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf no tiene alt */}
           <Image src={logoUrl} style={s.logo} />
         </View>
 

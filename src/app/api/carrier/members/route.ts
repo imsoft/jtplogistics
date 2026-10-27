@@ -95,12 +95,13 @@ export async function POST(request: Request) {
       await applyPasswordReset(existing.id, email, password);
       memberId = existing.id;
     } else {
-      const created = await createAuthUser({ name, email, password });
-      // createAuthUser deja el rol por defecto de la tabla, que es el del
-      // personal interno: hay que fijarlo a transportista de inmediato.
-      await prisma.user.update({
-        where: { id: created.id },
-        data: { role: "carrier", parentCarrierId: carrierId, ...permissions },
+      // Nace ya como usuario de la empresa: el rol por defecto de la tabla es
+      // el del personal interno y no debe existir ni un instante con él.
+      const created = await createAuthUser({
+        name,
+        email,
+        password,
+        extra: { role: "carrier", parentCarrierId: carrierId, ...permissions },
       });
       memberId = created.id;
     }

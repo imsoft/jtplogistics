@@ -12,12 +12,6 @@ import { DataTableSkeleton } from "@/components/ui/skeletons";
 
 const ALL = "all";
 
-const STATUS_BADGE: Record<TaskStatus, string> = {
-  pending: "bg-yellow-100 text-yellow-800",
-  in_progress: "bg-blue-100 text-blue-800",
-  completed: "bg-green-100 text-green-800",
-};
-
 export function DeveloperTasksTable() {
   const { data: tasks, isLoaded, error } = useAdminFetch<Task>(
     "/api/developer/tasks",

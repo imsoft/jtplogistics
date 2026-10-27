@@ -77,11 +77,10 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, equipmentCode, phoneNumber, password, imei, serialNumber, brand, model, color, observations, maintenanceProvider, imageUrl, imagePublicId, assignedToId, emailAccountId } = body as {
+    const { name, equipmentCode, phoneNumber, imei, serialNumber, brand, model, color, observations, maintenanceProvider, imageUrl, imagePublicId, assignedToId, emailAccountId } = body as {
       name: string;
       equipmentCode?: string;
       phoneNumber?: string;
-      password?: string;
       imei?: string;
       serialNumber?: string;
       brand?: string;

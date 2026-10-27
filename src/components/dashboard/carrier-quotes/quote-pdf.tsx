@@ -83,6 +83,7 @@ function formatValidUntilEs(iso: string): string {
 function PageHeader({ logoUrl, date }: { logoUrl: string; date: string }) {
   return (
     <View style={s.header} fixed>
+      {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf no tiene alt */}
       <Image src={logoUrl} style={s.logo} />
       <Text style={s.headerDate}>{date}</Text>
     </View>

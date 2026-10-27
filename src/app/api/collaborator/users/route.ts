@@ -1,8 +1,7 @@
-import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   try {
     const session = await requireCollaboratorOrAdmin();
 

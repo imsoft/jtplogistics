@@ -99,9 +99,19 @@ export async function GET(request: Request) {
     }
 
     if (q) {
-      where.OR = SEARCH_FIELDS.map((field) => ({
-        [field]: { contains: q, mode: "insensitive" as Prisma.QueryMode },
-      })) as Prisma.ShipmentWhereInput[];
+      // Tipos de incidencia y de unidad se guardan por clave: también se busca
+      // por el nombre que ve la gente ("Retraso en carga", "Tortón").
+      const [incidentTypes, unitTypes] = await Promise.all([
+        prisma.incidentTypeDef.findMany({ where: { name: { contains: q, mode: "insensitive" } }, select: { value: true } }),
+        prisma.unitTypeDef.findMany({ where: { name: { contains: q, mode: "insensitive" } }, select: { value: true } }),
+      ]);
+      where.OR = [
+        ...(SEARCH_FIELDS.map((field) => ({
+          [field]: { contains: q, mode: "insensitive" as Prisma.QueryMode },
+        })) as Prisma.ShipmentWhereInput[]),
+        ...(incidentTypes.length ? [{ incidentType: { in: incidentTypes.map((t) => t.value) } }] : []),
+        ...(unitTypes.length ? [{ unit: { in: unitTypes.map((t) => t.value) } }] : []),
+      ];
     }
 
     const pickup: Prisma.DateTimeNullableFilter = {};

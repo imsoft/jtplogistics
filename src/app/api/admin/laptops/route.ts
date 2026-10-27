@@ -4,7 +4,7 @@ import { adminHandler } from "@/lib/api-handler";
 import { logAudit } from "@/lib/audit-log";
 
 export function GET() {
-  return adminHandler(async (session) => {
+  return adminHandler(async () => {
     const laptops = await prisma.laptop.findMany({
       orderBy: { createdAt: "desc" },
       include: {

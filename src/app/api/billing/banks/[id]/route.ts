@@ -3,15 +3,32 @@ import { logAudit } from "@/lib/audit-log";
 import { r2 } from "@/lib/billing";
 import { failure, num, requireBilling, toDate, docFolio } from "@/lib/billing-server";
 
-/** GET /api/billing/banks/[id] — cuenta con sus movimientos y saldo corrido. */
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+/** Movimientos que se muestran por omisión; lo anterior entra ya sumado al saldo. */
+const RECENT_MONTHS = 6;
+
+/**
+ * GET /api/billing/banks/[id]?history=all — cuenta con sus movimientos y saldo
+ * corrido. Sin `history=all` solo trae los últimos meses: el saldo de antes se
+ * suma en la base de datos para que el saldo corrido siga cuadrando.
+ */
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     await requireBilling("view");
     const { id } = await params;
     const account = await prisma.bankAccount.findUnique({ where: { id } });
     if (!account) return Response.json({ error: "No encontrado" }, { status: 404 });
+    const all = new URL(request.url).searchParams.get("history") === "all";
+    const since = new Date();
+    since.setUTCMonth(since.getUTCMonth() - RECENT_MONTHS);
+    since.setUTCHours(0, 0, 0, 0);
+    const [prior, olderUnreconciled] = all
+      ? [null, 0]
+      : await Promise.all([
+          prisma.bankMovement.aggregate({ where: { bankAccountId: id, date: { lt: since } }, _sum: { amount: true } }),
+          prisma.bankMovement.count({ where: { bankAccountId: id, date: { lt: since }, reconciled: false } }),
+        ]);
     const movements = await prisma.bankMovement.findMany({
-      where: { bankAccountId: id },
+      where: { bankAccountId: id, ...(all ? {} : { date: { gte: since } }) },
       orderBy: [{ date: "asc" }, { createdAt: "asc" }],
       include: {
         createdBy: { select: { name: true } },
@@ -20,7 +37,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
         batchPayments: { select: { document: { select: { id: true, kind: true, series: true, folio: true } } } },
       },
     });
-    let running = account.initialBalance;
+    let running = r2(account.initialBalance + (prior?._sum.amount ?? 0));
     const rows = movements.map((m) => {
       running = r2(running + m.amount);
       return {
@@ -54,6 +71,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       active: account.active,
       balance: running,
       movements: rows.reverse(),
+      /** Desde cuándo se muestran (null = todo el historial). */
+      since: all ? null : since.toISOString().slice(0, 10),
+      /** Movimientos sin conciliar anteriores a la ventana. */
+      olderUnreconciled,
     });
   } catch (e) {
     return failure(e, "bank GET");

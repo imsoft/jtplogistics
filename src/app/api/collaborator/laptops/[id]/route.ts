@@ -83,10 +83,9 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, equipmentCode, password, serialNumber, equipmentType, brand, model, color, accessories, generalState, software, observations, maintenanceProvider, imageUrl, imagePublicId, assignedToId, emailAccountId } = body as {
+    const { name, equipmentCode, serialNumber, equipmentType, brand, model, color, accessories, generalState, software, observations, maintenanceProvider, imageUrl, imagePublicId, assignedToId, emailAccountId } = body as {
       name?: string;
       equipmentCode?: string;
-      password?: string;
       serialNumber?: string;
       equipmentType?: string;
       brand?: string;

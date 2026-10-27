@@ -13,7 +13,6 @@ interface PendingRequest {
 }
 
 export function CarrierRouteUnlockRequests({
-  carrierId,
   initialRequests,
 }: {
   carrierId: string;

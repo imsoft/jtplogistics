@@ -43,7 +43,6 @@ function cityLabel(v: string): string {
 export function CityCombobox({
   id,
   label,
-  placeholder = "",
   value,
   onValueChange,
   name,

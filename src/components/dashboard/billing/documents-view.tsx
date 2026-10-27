@@ -60,15 +60,17 @@ export function DocumentsView({
   // Varias facturas del mismo cliente o proveedor que se pagan con una sola transferencia.
   const [selected, setSelected] = useState<string[]>([]);
   const [batch, setBatch] = useState<BillingDocument[] | null>(null);
+  // Por omisión: lo abierto y los últimos meses. El historial completo, a petición.
+  const [fullHistory, setFullHistory] = useState(false);
   const accounts = useBankAccounts();
   const today = todayKey();
 
   const load = useCallback(() => {
-    fetch(`/api/billing/documents?kind=${kind}`)
+    fetch(`/api/billing/documents?kind=${kind}${fullHistory ? "&history=all" : ""}`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d: BillingDocument[]) => setDocs(d))
       .catch(() => setDocs([]));
-  }, [kind]);
+  }, [kind, fullHistory]);
 
   useEffect(() => {
     load();
@@ -181,6 +183,15 @@ export function DocumentsView({
         )}
         {chip("todas", "Todas", docs.length)}
       </div>
+
+      {!fullHistory && (
+        <p className="text-muted-foreground text-xs">
+          Se muestran todas las facturas con saldo y las de los últimos 6 meses.{" "}
+          <button type="button" className="text-primary font-medium hover:underline" onClick={() => setFullHistory(true)}>
+            Ver todo el historial
+          </button>
+        </p>
+      )}
 
       {canUpdate && chosen.length > 0 && anchor && (
         <div className="bg-primary/5 border-primary/30 flex flex-col gap-2 rounded-lg border p-3 text-sm sm:flex-row sm:items-center sm:justify-between">

@@ -88,10 +88,9 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
-    const { type, email, password, assigneeIds } = body as {
+    const { type, email, assigneeIds } = body as {
       type?: string;
       email?: string;
-      password?: string;
       assigneeIds?: string[];
     };
 
