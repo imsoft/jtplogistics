@@ -3,9 +3,8 @@ import { cronUnauthorized, ranRecently } from "@/lib/cron-auth";
 import { notify } from "@/lib/notify";
 import { companyDateKey } from "@/lib/time-clock";
 import { dashboardPrefix } from "@/lib/mural-notify";
-import { r2 } from "@/lib/billing";
 import { buildDigest, digestMessages, isWeekday } from "@/lib/billing-reminders";
-import { APPLIED_SELECT, appliedOf } from "@/lib/billing-server";
+import { openDocumentBalances } from "@/lib/billing-server";
 
 export const dynamic = "force-dynamic";
 
@@ -25,19 +24,8 @@ export async function GET(request: Request) {
     if (!isWeekday(today)) return Response.json({ skipped: "fin de semana" });
     if (await ranRecently("billing_reminder")) return Response.json({ skipped: "ya se envió hoy" });
 
-    const docs = await prisma.billingDocument.findMany({
-      where: { draft: false, cancelledAt: null },
-      select: { kind: true, dueDate: true, currency: true, total: true, ...APPLIED_SELECT },
-    });
-    const digest = buildDigest(
-      docs.map((d) => ({
-        kind: d.kind,
-        dueDate: d.dueDate.toISOString().slice(0, 10),
-        currency: d.currency,
-        balance: r2(d.total - appliedOf(d).applied),
-      })),
-      today
-    );
+    const docs = await openDocumentBalances();
+    const digest = buildDigest(docs.filter((d) => !d.draft), today);
     const messages = digestMessages(digest);
     if (messages.length === 0) return Response.json({ notified: 0 });
 

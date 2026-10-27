@@ -100,15 +100,19 @@ const MOVEMENT_INCLUDE = {
 
 /** Flujo de efectivo: todas las cuentas, con lo que pasó en el periodo. */
 export async function cashFlowReport(from: string, to: string) {
-  const [accounts, movements] = await Promise.all([
+  // Lo anterior al periodo solo hace falta sumado (saldo inicial): no se trae
+  // movimiento por movimiento.
+  const [accounts, prior, movements] = await Promise.all([
     prisma.bankAccount.findMany({ orderBy: [{ currency: "asc" }, { name: "asc" }] }),
-    prisma.bankMovement.findMany({ where: { date: { lte: toDate(to) } }, include: MOVEMENT_INCLUDE }),
+    prisma.bankMovement.groupBy({ by: ["bankAccountId"], where: { date: { lt: toDate(from) } }, _sum: { amount: true } }),
+    prisma.bankMovement.findMany({ where: { date: { gte: toDate(from), lte: toDate(to) } }, include: MOVEMENT_INCLUDE }),
   ]);
+  const priorSum = new Map(prior.map((p) => [p.bankAccountId, p._sum.amount ?? 0]));
   return {
     from,
     to,
     currencies: buildCashFlow(
-      accounts.map((a) => ({ id: a.id, name: a.name, bank: a.bank, currency: a.currency, initialBalance: a.initialBalance })),
+      accounts.map((a) => ({ id: a.id, name: a.name, bank: a.bank, currency: a.currency, initialBalance: a.initialBalance + (priorSum.get(a.id) ?? 0) })),
       movements.map((m) => ({
         bankAccountId: m.bankAccountId,
         date: day(m.date),

@@ -22,3 +22,8 @@ overrides:
   # (la base es Postgres); deepmerge-ts solo corre en la CLI.
   mysql2: '>=3.23.1'
   deepmerge-ts: '>=8.0.0'
+  # zod 4 < 4.6.6 (dentro de better-auth) y fast-uri < 3.1.9 (CLI de Prisma):
+  # avisos de seguridad. zod 3 queda como está: lo usan otras librerías y el
+  # aviso de memoria es de la rama 4.
+  'zod@>=4.0.0 <4.6.6': '^4.6.6'
+  fast-uri: '^3.1.9'

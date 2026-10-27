@@ -7,7 +7,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireModuleAccess, type ModuleAction } from "@/lib/module-access";
 import { companyDateKey } from "@/lib/time-clock";
-import { computeTotals, documentStatus, r2, type BillingKind, type Currency } from "@/lib/billing";
+import { SETTLED_TOLERANCE, computeTotals, documentStatus, r2, type BillingKind, type Currency } from "@/lib/billing";
 import type { CartaPorteSnapshot } from "@/lib/shipment-billing";
 
 /** Sufijo de los permisos: canView/Create/Update/DeleteBilling. */
@@ -73,6 +73,31 @@ export async function duplicateDocument(
   if (or.length === 0) return null;
   const hit = await prisma.billingDocument.findFirst({ where: { kind, cancelledAt: null, ...not, OR: or }, select: { id: true } });
   return hit?.id ?? null;
+}
+
+/**
+ * Facturas vigentes con saldo (y borradores), con el saldo ya calculado por la
+ * base de datos. El resumen del inicio y el recordatorio diario solo necesitan
+ * esto: traer todas las facturas con todos sus pagos crecía con cada factura.
+ */
+export async function openDocumentBalances(): Promise<
+  { kind: BillingKind; currency: Currency; dueDate: string; balance: number; draft: boolean }[]
+> {
+  const rows = await prisma.$queryRaw<{ kind: string; currency: string; due_date: Date; balance: number; draft: boolean }[]>`
+    SELECT d.kind::text AS kind, d.currency::text AS currency, d.due_date, d.draft,
+           (d.total - COALESCE(p.paid, 0) - COALESCE(c.credited, 0))::float8 AS balance
+    FROM billing_documents d
+    LEFT JOIN (SELECT document_id, SUM(amount) AS paid FROM billing_payments GROUP BY document_id) p ON p.document_id = d.id
+    LEFT JOIN (SELECT document_id, SUM(total) AS credited FROM billing_credit_notes GROUP BY document_id) c ON c.document_id = d.id
+    WHERE d.cancelled_at IS NULL
+      AND (d.draft OR d.total - COALESCE(p.paid, 0) - COALESCE(c.credited, 0) > ${SETTLED_TOLERANCE})`;
+  return rows.map((r) => ({
+    kind: r.kind as BillingKind,
+    currency: r.currency as Currency,
+    dueDate: r.due_date.toISOString().slice(0, 10),
+    balance: r2(Number(r.balance)),
+    draft: r.draft,
+  }));
 }
 
 /** Prisma P2002 (único repetido) → mensaje claro en lugar de un error del servidor. */
