@@ -84,3 +84,9 @@ describe("coincidencias y borradores", () => {
     expect(documentStatus({ total: 100, paid: 0, dueDate: "2020-01-01", cancelled: false, draft: true, todayKey: "2026-10-26" })).toEqual({ status: "borrador", balance: 0 });
   });
 });
+
+describe("transportista con correo para desambiguar", () => {
+  it("'Nombre (correo)' empata con el nombre", () => {
+    expect(carrierMatches("Transportes Pérez (pedro@x.com)", { legalName: "Transportes Perez", commercialName: null })).toBe(true);
+  });
+});

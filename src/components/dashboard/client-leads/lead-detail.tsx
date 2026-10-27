@@ -443,7 +443,13 @@ function ConvertDialog({
         body: JSON.stringify(clientId ? { clientId } : {}),
       });
       if (!res.ok) {
-        const d = (await res.json().catch(() => ({}))) as { error?: string };
+        const d = (await res.json().catch(() => ({}))) as { error?: string; code?: string; clientId?: string };
+        // Ya estaba en el catálogo: se ofrece ligarlo en un clic.
+        if (d.code === "CLIENT_EXISTS" && d.clientId) {
+          const existingId = d.clientId;
+          toast.error(d.error ?? "Ese cliente ya existe.", { action: { label: "Ligarlo", onClick: () => void convert(existingId) } });
+          return;
+        }
         throw new Error(d.error ?? "No se pudo convertir.");
       }
       toast.success(clientId ? "Prospecto ligado al cliente." : "Cliente dado de alta.");

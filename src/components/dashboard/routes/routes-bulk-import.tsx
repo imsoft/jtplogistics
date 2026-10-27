@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { AppSelect } from "@/components/ui/app-select";
+import { useUnitTypes } from "@/hooks/use-unit-types";
+import { normalizeSearch } from "@/lib/search";
 
 const UNIT_TYPE_MAP: Record<string, string> = {
   "14CJ SENC 48 FT": "caja_seca",
@@ -97,7 +99,20 @@ function parseCity(raw: string): string {
   return CITY_ALIASES[titleCase.toLowerCase()] ?? titleCase;
 }
 
-function parseInput(text: string): ImportRoute[] {
+/**
+ * El tipo de unidad del archivo: primero los alias de los reportes, luego el
+ * catálogo por nombre o clave (sin acentos ni mayúsculas). Si no se encuentra
+ * queda marcado como desconocido: el servidor lo rechaza en lugar de guardarlo
+ * como "caja seca".
+ */
+function matchUnitType(raw: string, catalog: { value: string; label: string }[]): string | null {
+  if (UNIT_TYPE_MAP[raw]) return UNIT_TYPE_MAP[raw];
+  const key = normalizeSearch(raw);
+  const slug = key.replace(/\s+/g, "_");
+  return catalog.find((u) => normalizeSearch(u.label) === key || u.value === slug)?.value ?? null;
+}
+
+function parseInput(text: string, catalog: { value: string; label: string }[]): ImportRoute[] {
   const lines = text
     .trim()
     .split("\n")
@@ -127,7 +142,7 @@ function parseInput(text: string): ImportRoute[] {
 
     if (!rawUnitType || !rawOrigin || !rawDestination) continue;
 
-    const mappedUnitType = UNIT_TYPE_MAP[rawUnitType] ?? null;
+    const mappedUnitType = matchUnitType(rawUnitType, catalog);
     const unitType = mappedUnitType ?? rawUnitType.toLowerCase().replace(/\s+/g, "_");
     const origin = parseCity(rawOrigin);
     const destination = parseCity(rawDestination);
@@ -148,6 +163,8 @@ function parseInput(text: string): ImportRoute[] {
 }
 
 export function RoutesBulkImport() {
+  const unitTypes = useUnitTypes();
+  const unitLabel = (value: string) => unitTypes.find((u) => u.value === value)?.label ?? UNIT_TYPE_LABELS[value] ?? value;
   const [inputText, setInputText] = useState("");
   const [routes, setRoutes] = useState<ImportRoute[]>([]);
   const [isParsed, setIsParsed] = useState(false);
@@ -167,7 +184,7 @@ export function RoutesBulkImport() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleParse() {
-    setRoutes(parseInput(inputText));
+    setRoutes(parseInput(inputText, unitTypes));
     setIsParsed(true);
     setImportDone(false);
   }
@@ -267,7 +284,7 @@ export function RoutesBulkImport() {
             <div key={raw} className="flex items-center gap-2">
               <code className="rounded bg-muted px-1 py-0.5 font-mono">{raw}</code>
               <span>→</span>
-              <span className="font-medium text-foreground">{UNIT_TYPE_LABELS[val] ?? val}</span>
+              <span className="font-medium text-foreground">{unitLabel(val)}</span>
             </div>
           ))}
         </div>
@@ -411,7 +428,7 @@ export function RoutesBulkImport() {
                             : undefined
                         }
                       >
-                        {UNIT_TYPE_LABELS[route.unitType] ?? route.unitType}
+                        {unitLabel(route.unitType)}
                         {route.hasUnknownUnitType && (
                           <AlertCircle className="ml-1 size-3 text-yellow-500" />
                         )}

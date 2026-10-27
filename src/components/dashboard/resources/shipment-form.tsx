@@ -96,24 +96,37 @@ export function ShipmentForm({
   const incidentTypes = useIncidentTypes();
 
   useEffect(() => {
+    // El colaborador toma rutas y clientes de un endpoint propio de Embarques:
+    // con /api/routes y la lista de clientes necesitaba además esos permisos y
+    // el formulario se quedaba sin origen, destino ni cliente.
+    if (scope === "collaborator") {
+      fetch("/api/collaborator/shipment-options")
+        .then((r) => (r.ok ? r.json() : { routes: [], clients: [] }))
+        .then((d: { routes?: Route[]; clients?: Client[] }) => {
+          setRoutes(Array.isArray(d.routes) ? d.routes : []);
+          setClients(Array.isArray(d.clients) ? d.clients : []);
+        })
+        .catch(() => {
+          setRoutes([]);
+          setClients([]);
+        });
+      return;
+    }
     fetch("/api/routes")
       .then((r) => (r.ok ? r.json() : []))
       .then((data: unknown) => {
         setRoutes(Array.isArray(data) ? (data as Route[]) : []);
       })
       .catch(() => setRoutes([]));
-  }, []);
-
-  useEffect(() => {
     fetch(clientsEndpoint)
       .then((r) => (r.ok ? r.json() : { data: [] }))
       .then((res: unknown) => {
-        // El endpoint admin responde { data: [...] }; el de colaborador responde un arreglo directo.
+        // El endpoint admin responde { data: [...] }.
         const arr = Array.isArray(res) ? res : (res as { data?: unknown })?.data;
         setClients(Array.isArray(arr) ? (arr as Client[]) : []);
       })
       .catch(() => setClients([]));
-  }, [clientsEndpoint]);
+  }, [scope, clientsEndpoint]);
 
   useEffect(() => {
     fetch(carriersEndpoint)
@@ -154,16 +167,20 @@ export function ShipmentForm({
     const names = clients.map((c) => c.name).filter(Boolean);
     const unique = [...new Set(names)].sort((a, b) => a.localeCompare(b, "es"));
     const current = client.trim();
-    if (current && !unique.includes(current)) return [current, ...unique];
+    // El guardado pasa el texto a minúsculas: se compara sin mayúsculas para
+    // no duplicar la opción ni dejar el campo vacío al editar.
+    if (current && !unique.some((n) => n.toLowerCase() === current.toLowerCase())) return [current, ...unique];
     return unique;
   }, [clients, client]);
+  const clientValue = clientOptions.find((n) => n.toLowerCase() === client.trim().toLowerCase()) ?? client;
 
   const carrierOptions = useMemo(() => {
     const base = carrierProviderSelectOptions(carriers);
     const current = legalName.trim();
-    if (current && !base.includes(current)) return [current, ...base];
+    if (current && !base.some((n) => n.toLowerCase() === current.toLowerCase())) return [current, ...base];
     return base;
   }, [carriers, legalName]);
+  const carrierValue = carrierOptions.find((n) => n.toLowerCase() === legalName.trim().toLowerCase()) ?? legalName;
 
   const unitOptions = useMemo(() => {
     const u = unit.trim();
@@ -282,7 +299,7 @@ export function ShipmentForm({
         <div className="space-y-2">
           <Label htmlFor="shipment-client">Cliente</Label>
           <AppSelect
-            value={client}
+            value={clientValue}
             onValueChange={setClient}
             options={clientOptions.map((clientName) => ({value: clientName, label: clientName}))}
             disabled={isClosed || clientOptions.length === 0}
@@ -338,7 +355,7 @@ export function ShipmentForm({
         <div className="space-y-2 sm:col-span-2 lg:col-span-2">
           <Label htmlFor="shipment-legalName">Proveedor (transportista)</Label>
           <AppSelect
-            value={legalName}
+            value={carrierValue}
             onValueChange={setLegalName}
             options={carrierOptions.map((name) => ({value: name, label: name}))}
             disabled={isClosed || carrierOptions.length === 0}

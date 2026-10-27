@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { unitTypeInUse } from "@/lib/unit-type-usage";
 import { prisma } from "@/lib/db";
 import { gateUnitTypes } from "@/lib/unit-type-auth";
 import { logAudit } from "@/lib/audit-log";
@@ -54,12 +55,11 @@ export async function DELETE(
     const { id } = await params;
 
     const existing = await prisma.unitTypeDef.findUnique({ where: { id } });
+    if (!existing) return Response.json({ error: "No encontrado" }, { status: 404 });
 
-    const inUse = await prisma.route.findFirst({
-      where: { unitType: existing?.value ?? "" },
-    });
+    const inUse = await unitTypeInUse(existing.value);
     if (inUse) {
-      return Response.json({ error: "No se puede eliminar: hay rutas usando este tipo de unidad." }, { status: 409 });
+      return Response.json({ error: `No se puede eliminar: ${inUse}.` }, { status: 409 });
     }
 
     await prisma.unitTypeDef.delete({ where: { id } });

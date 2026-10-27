@@ -73,11 +73,16 @@ export async function POST(request: NextRequest) {
       select: { value: true },
     });
     const validSet = new Set(validUnitTypes.map((u) => u.value));
+    // Un tipo de unidad que no está en el catálogo se rechaza: antes se
+    // cambiaba en silencio por "caja seca" y la carga masiva lo daba por bueno.
+    const unknownTypes = normalizedUnitTargets.filter((item) => !validSet.has(item.unitType)).map((item) => item.unitType);
+    if (unknownTypes.length > 0) {
+      return Response.json({ error: `Tipo de unidad desconocido: ${[...new Set(unknownTypes)].join(", ")}.`, code: "UNKNOWN_UNIT_TYPE" }, { status: 400 });
+    }
+    const invalidTarget = normalizedUnitTargets.find((item) => item.target !== null && !(Number.isFinite(item.target) && item.target >= 0));
+    if (invalidTarget) return Response.json({ error: "El target debe ser un monto válido." }, { status: 400 });
     const unitTargets = normalizedUnitTargets
-      .map((item) => ({
-        unitType: validSet.has(item.unitType) ? item.unitType : "caja_seca",
-        target: item.target,
-      }))
+      .map((item) => ({ unitType: item.unitType, target: item.target }))
       .filter((item, index, arr) => arr.findIndex((x) => x.unitType === item.unitType) === index);
     const status: RouteStatus = VALID_STATUSES.includes(body.status) ? body.status : "pending";
 

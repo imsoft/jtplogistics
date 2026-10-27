@@ -18,31 +18,60 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (lead.clientId) return Response.json({ clientId: lead.clientId });
 
     const body = (await request.json().catch(() => ({}))) as { clientId?: unknown };
-    let clientId: string;
+    const linkTo = typeof body.clientId === "string" && body.clientId ? body.clientId : null;
 
-    if (typeof body.clientId === "string" && body.clientId) {
-      const existing = await prisma.client.findUnique({ where: { id: body.clientId }, select: { id: true } });
+    if (linkTo) {
+      const existing = await prisma.client.findUnique({ where: { id: linkTo }, select: { id: true } });
       if (!existing) return Response.json({ error: "Ese cliente no existe." }, { status: 400 });
-      clientId = existing.id;
     } else {
       if (!(await hasModuleAccess(session.user, "Clients", "create"))) {
         return Response.json({ error: "Necesitas permiso para crear clientes." }, { status: 403 });
       }
-      const client = await prisma.client.create({
-        data: {
-          name: lead.companyName,
-          contactName: lead.contactName,
-          position: lead.position,
-          email: lead.email,
-          phone: lead.phone,
-          notes: lead.notes,
-        },
-        select: { id: true },
+      // Si ya está en el catálogo, se liga en lugar de duplicarlo.
+      const sameName = await prisma.client.findFirst({
+        where: { OR: [{ name: { equals: lead.companyName, mode: "insensitive" } }, { legalName: { equals: lead.companyName, mode: "insensitive" } }] },
+        select: { id: true, name: true },
       });
-      clientId = client.id;
+      if (sameName) {
+        return Response.json(
+          { error: `Ya existe el cliente "${sameName.name}". Lígalo en lugar de crear otro.`, clientId: sameName.id, code: "CLIENT_EXISTS" },
+          { status: 409 }
+        );
+      }
+    }
+
+    // Con el prospecto bloqueado: un doble clic no crea dos clientes.
+    const result = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM client_leads WHERE id = ${id} FOR UPDATE`;
+      const fresh = await tx.clientLead.findUnique({ where: { id }, select: { clientId: true } });
+      if (fresh?.clientId) return { clientId: fresh.clientId, created: false };
+      const clientId = linkTo
+        ? linkTo
+        : (
+            await tx.client.create({
+              data: {
+                name: lead.companyName,
+                contactName: lead.contactName,
+                position: lead.position,
+                email: lead.email,
+                phone: lead.phone,
+                notes: lead.notes,
+              },
+              select: { id: true },
+            })
+          ).id;
+      await tx.clientLead.update({ where: { id }, data: { clientId, stage: "ganado" } });
+      return { clientId, created: !linkTo };
+    });
+    if (!result.created && !linkTo && result.clientId) {
+      // Otra petición ya lo había convertido.
+      return Response.json({ clientId: result.clientId });
+    }
+    const clientId = result.clientId;
+    if (result.created) {
       void logAudit({
         resource: "client",
-        resourceId: client.id,
+        resourceId: clientId,
         resourceLabel: lead.companyName,
         action: "created",
         userId: session.user.id,
@@ -50,8 +79,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         changes: [{ field: "origin", label: "Origen", from: null, to: "CRM de clientes" }],
       });
     }
-
-    await prisma.clientLead.update({ where: { id }, data: { clientId, stage: "ganado" } });
 
     void logAudit({
       resource: "client_lead",

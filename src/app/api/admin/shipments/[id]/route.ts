@@ -214,6 +214,10 @@ export function DELETE(
         { status: 403 },
       );
     }
+    // Registrado sin incidencias: se consulta como perfil y tampoco se elimina.
+    if (shipmentLockReason(shipment) === "no_incident") {
+      return Response.json({ error: "Este embarque quedó registrado sin incidencias y no se puede eliminar." }, { status: 403 });
+    }
     await prisma.shipment.delete({ where: { id } });
     void logAudit({
       resource: "shipment",

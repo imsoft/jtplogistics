@@ -214,7 +214,9 @@ export function planShipmentBilling(
 
 /** Si el transportista del embarque (texto libre) es este proveedor. */
 export function carrierMatches(shipmentLegalName: string | null, c: { legalName: string | null; commercialName: string | null }) {
-  return same(shipmentLegalName, c.legalName) || same(shipmentLegalName, c.commercialName);
+  // Si dos transportistas se llaman igual, el embarque guarda "Nombre (correo)".
+  const name = shipmentLegalName?.replace(/\s*\([^()\s]+@[^()\s]+\)\s*$/, "") ?? null;
+  return same(name, c.legalName) || same(name, c.commercialName);
 }
 
 /** Si el cliente del embarque (texto libre) es este cliente del catálogo. */

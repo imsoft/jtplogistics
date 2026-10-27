@@ -82,11 +82,16 @@ export async function PATCH(
       select: { value: true },
     });
     const validSet = new Set(validUnitTypes.map((u) => u.value));
+    // Un tipo de unidad que no está en el catálogo se rechaza: antes se
+    // cambiaba en silencio por "caja seca" y la carga masiva lo daba por bueno.
+    const unknownTypes = normalizedUnitTargets.filter((item) => !validSet.has(item.unitType)).map((item) => item.unitType);
+    if (unknownTypes.length > 0) {
+      return Response.json({ error: `Tipo de unidad desconocido: ${[...new Set(unknownTypes)].join(", ")}.`, code: "UNKNOWN_UNIT_TYPE" }, { status: 400 });
+    }
+    const invalidTarget = normalizedUnitTargets.find((item) => item.target !== null && !(Number.isFinite(item.target) && item.target >= 0));
+    if (invalidTarget) return Response.json({ error: "El target debe ser un monto válido." }, { status: 400 });
     const unitTargets = normalizedUnitTargets
-      .map((item) => ({
-        unitType: validSet.has(item.unitType) ? item.unitType : "caja_seca",
-        target: item.target,
-      }))
+      .map((item) => ({ unitType: item.unitType, target: item.target }))
       .filter((item, index, arr) => arr.findIndex((x) => x.unitType === item.unitType) === index);
     const status: RouteStatus | undefined = VALID_STATUSES.includes(body.status) ? body.status : undefined;
 
@@ -107,7 +112,25 @@ export async function PATCH(
     if (status !== undefined) updateData.status = status;
 
     // Snapshot antes del cambio para el diff
-    const before = await prisma.route.findUnique({ where: { id } });
+    const before = await prisma.route.findUnique({ where: { id }, include: { unitTargets: true } });
+
+    // Igual que al crear: no puede quedar otra ruta con el mismo origen,
+    // destino y tipo de unidad.
+    if (before && (origin !== undefined || destination !== undefined || unitTargets.length > 0)) {
+      const finalOrigin = (origin ?? before.origin) as string;
+      const finalDestination = (destination ?? before.destination) as string;
+      const finalTypes = unitTargets.length > 0
+        ? unitTargets.map((u) => u.unitType)
+        : before.unitTargets.length > 0 ? before.unitTargets.map((u) => u.unitType) : [before.unitType];
+      const others = await prisma.route.findMany({
+        where: { id: { not: id }, origin: { equals: finalOrigin, mode: "insensitive" }, destination: { equals: finalDestination, mode: "insensitive" } },
+        include: { unitTargets: true },
+      });
+      const clash = others.some((r) => (r.unitTargets.length > 0 ? r.unitTargets.map((u) => u.unitType) : [r.unitType]).some((t) => finalTypes.includes(t)));
+      if (clash) {
+        return Response.json({ error: `Ya existe la ruta ${finalOrigin} → ${finalDestination} para uno de esos tipos de unidad.`, code: "ROUTE_EXISTS" }, { status: 409 });
+      }
+    }
 
     const dataPatch: Record<string, unknown> = { ...updateData };
     if (unitTargets.length > 0) {
