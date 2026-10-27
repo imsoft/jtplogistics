@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { prisma } from "@/lib/db";
 import { escapeHtml } from "@/lib/email-layout";
 import { muralHandler } from "@/lib/mural-auth";
@@ -90,7 +91,7 @@ export function POST(request: Request) {
     const kind = entryKindLabel(entry.type);
     const range = formatDateRange(entry.startDate, entry.endDate);
 
-    void broadcastMural({
+    after(() => broadcastMural({
       type: `mural_${entry.type}`,
       title: `${kind}: ${entry.title}`,
       body: range,
@@ -106,7 +107,7 @@ export function POST(request: Request) {
         ...(entry.description ? [escapeHtml(entry.description)] : []),
       ],
       excludeUserId: session.user.id,
-    });
+    }));
 
     void logAudit({
       resource: "mural_entry",

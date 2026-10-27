@@ -49,7 +49,9 @@ export const auth = betterAuth({
     },
   },
   session: {
-    cookieCache: { enabled: true, maxAge: 5 * 60 },
+    // La caché evita ir a la BD en cada petición, pero mientras dura una
+    // sesión borrada (baja, quitar acceso) sigue valiendo: 1 minuto como máximo.
+    cookieCache: { enabled: true, maxAge: 60 },
     // Sin esto se queda con el default de la librería. Explícito: la sesión
     // caduca a los 7 días y se renueva si hay actividad después de 1 día.
     expiresIn: 60 * 60 * 24 * 7,

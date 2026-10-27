@@ -108,6 +108,10 @@ export async function PUT(request: Request) {
         d.endMinute < 1440
     );
 
+    if (new Set(days.map((d) => d.weekday)).size !== days.length) {
+      return Response.json({ error: "Un día de la semana viene repetido." }, { status: 400 });
+    }
+
     // Borrar y reescribir: son siete renglones, no vale la pena diferenciar.
     await prisma.$transaction([
       prisma.workSchedule.deleteMany({ where: { userId: body.userId } }),

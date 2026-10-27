@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { cronUnauthorized } from "@/lib/cron-auth";
+import { cronUnauthorized, ranRecently } from "@/lib/cron-auth";
 import { notify } from "@/lib/notify";
 import { companyDateKey } from "@/lib/time-clock";
 import { dashboardPrefix } from "@/lib/mural-notify";
@@ -18,6 +18,7 @@ export async function GET(request: Request) {
   if (denied) return denied;
 
   try {
+    if (await ranRecently("client_lead_followup")) return Response.json({ skipped: "ya se envió hoy" });
     const today = companyDateKey();
     const leads = await prisma.clientLead.findMany({
       where: {

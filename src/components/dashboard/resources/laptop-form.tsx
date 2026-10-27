@@ -29,7 +29,8 @@ export function LaptopForm({
   isSubmitting = false,
   scope = "admin",
 }: LaptopFormProps) {
-  const employeeEndpoint = scope === "collaborator" ? "/api/collaborator/employees" : "/api/admin/employees";
+  // El directorio mínimo: basta el permiso del equipo, no el de Colaboradores.
+  const employeeEndpoint = scope === "collaborator" ? "/api/collaborator/people" : "/api/admin/employees";
   const emailEndpoint = scope === "collaborator" ? "/api/collaborator/emails" : "/api/admin/emails";
   const uploadEndpoint = scope === "collaborator" ? "/api/collaborator/uploads" : "/api/admin/uploads";
   const [name, setName] = useState(initialValues.name ?? "");

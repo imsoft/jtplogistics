@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { effectiveMarks } from "@/lib/time-clock-corrections";
 import { requireSession } from "@/lib/auth-server";
 import { workDateKey } from "@/lib/time-clock";
 
@@ -22,19 +23,13 @@ export async function GET(request: Request) {
     since.setUTCDate(since.getUTCDate() - days);
     since.setUTCHours(0, 0, 0, 0);
 
-    const entries = await prisma.timeClockEntry.findMany({
+    const rows = await prisma.timeClockEntry.findMany({
       where: { userId: session.user.id, workDate: { gte: since } },
       orderBy: [{ workDate: "desc" }, { markedAt: "asc" }],
-      select: {
-        id: true,
-        mark: true,
-        markedAt: true,
-        workDate: true,
-        distanceM: true,
-        geoStatus: true,
-        reason: true,
-      },
     });
+    // Con las correcciones de dirección aplicadas, jornada por jornada.
+    const dayKeys = [...new Set(rows.map((r) => workDateKey(r.workDate)))];
+    const entries = dayKeys.flatMap((d) => effectiveMarks(rows.filter((r) => workDateKey(r.workDate) === d)));
 
     // Agrupadas por jornada para que la pantalla no tenga que reordenar nada.
     const byDay = new Map<string, typeof entries>();

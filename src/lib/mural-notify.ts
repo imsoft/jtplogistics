@@ -63,6 +63,9 @@ export interface MuralBroadcast {
  * Notifica al mural completo: crea la notificación en el dashboard de cada
  * persona y, si `sendEmail` es true, le manda el correo correspondiente.
  */
+/** Pausa entre correos de un aviso masivo (Resend: ~2 por segundo). */
+const EMAIL_PACE_MS = 600;
+
 export async function broadcastMural(input: MuralBroadcast): Promise<void> {
   try {
     const audience = (await getMuralAudience()).filter(
@@ -88,10 +91,14 @@ export async function broadcastMural(input: MuralBroadcast): Promise<void> {
     const heading = input.emailHeading ?? input.title;
     const ctaLabel = input.emailCta ?? "Ver en el mural";
 
-    const results = await Promise.allSettled(
-      audience.map((u) => {
-        const href = base ? `${base}${dashboardPrefix(u.role)}${input.path}` : "";
-        return sendEmail({
+    // De a uno y con pausa: Resend acepta pocas peticiones por segundo y,
+    // mandándolos todos de golpe, la mayoría regresaba rechazada.
+    let failed = 0;
+    for (const [i, u] of audience.entries()) {
+      if (i > 0) await new Promise((r) => setTimeout(r, EMAIL_PACE_MS));
+      const href = base ? `${base}${dashboardPrefix(u.role)}${input.path}` : "";
+      try {
+        await sendEmail({
           to: u.email,
           subject: input.emailSubject ?? input.title,
           html: brandedEmail({
@@ -112,10 +119,11 @@ export async function broadcastMural(input: MuralBroadcast): Promise<void> {
             "JTP Logistics",
           ].join("\n"),
         });
-      })
-    );
+      } catch {
+        failed++;
+      }
+    }
 
-    const failed = results.filter((r) => r.status === "rejected").length;
     if (failed > 0) {
       console.error(`[mural-notify] ${failed}/${audience.length} correos fallaron`);
     }

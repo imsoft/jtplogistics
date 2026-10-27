@@ -28,7 +28,7 @@ export function EmployeeMultiSelect({
   // al colaborador, y ese error se intentaba recorrer como lista: tronaba la
   // pantalla de editar correos.
   const pathname = usePathname();
-  const endpoint = pathname?.startsWith("/collaborator") ? "/api/collaborator/employees" : "/api/admin/employees";
+  const endpoint = pathname?.startsWith("/collaborator") ? "/api/collaborator/people" : "/api/admin/employees";
 
   useEffect(() => {
     fetch(endpoint)

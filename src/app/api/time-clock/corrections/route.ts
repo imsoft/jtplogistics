@@ -50,13 +50,20 @@ export function POST(request: Request) {
       mark = body.mark as TimeClockMark;
       markedAt = new Date(String(body.markedAt ?? ""));
 
-      if (!userId || !workDateKeyIn || !MARKS.includes(mark) || Number.isNaN(markedAt.getTime())) {
+      if (!userId || !/^\d{4}-\d{2}-\d{2}$/.test(workDateKeyIn) || !MARKS.includes(mark) || Number.isNaN(markedAt.getTime())) {
         return Response.json(
           { error: "Faltan datos para agregar la marca." },
           { status: 400 }
         );
       }
+      const person = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
+      if (!person || person.role !== "collaborator") return Response.json({ error: "Colaborador no encontrado." }, { status: 404 });
       workDate = workDateFromKey(workDateKeyIn);
+      // La hora tiene que caer en esa jornada (o en la madrugada siguiente, para turnos nocturnos).
+      const hoursFromStart = (markedAt.getTime() - workDate.getTime()) / 3_600_000;
+      if (hoursFromStart < 0 || hoursFromStart > 36) {
+        return Response.json({ error: "La hora de la marca no corresponde a esa jornada." }, { status: 400 });
+      }
     } else {
       const entryId = String(body.entryId ?? "");
       const original = await prisma.timeClockEntry.findUnique({

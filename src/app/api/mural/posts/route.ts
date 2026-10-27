@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { prisma } from "@/lib/db";
 import { escapeHtml } from "@/lib/email-layout";
 import { muralHandler } from "@/lib/mural-auth";
@@ -59,7 +60,7 @@ export function POST(request: Request) {
     });
 
     if (isPublished) {
-      void broadcastMural({
+      after(() => broadcastMural({
         type: "mural_post",
         title: `Nueva publicación: ${post.title}`,
         body: post.excerpt ?? undefined,
@@ -73,7 +74,7 @@ export function POST(request: Request) {
         ],
         emailCta: "Leer la publicación",
         excludeUserId: session.user.id,
-      });
+      }));
     }
 
     void logAudit({

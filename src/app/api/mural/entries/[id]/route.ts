@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { prisma } from "@/lib/db";
 import { muralHandler } from "@/lib/mural-auth";
 import { broadcastMural } from "@/lib/mural-notify";
@@ -122,7 +123,7 @@ export function PATCH(request: Request, { params }: { params: Promise<{ id: stri
       const range = formatDateRange(entry.startDate, entry.endDate);
       const movedDate = relevant.some((c) => c.field === "startDate" || c.field === "endDate");
 
-      void broadcastMural({
+      after(() => broadcastMural({
         type: `mural_${entry.type}_updated`,
         title: `Cambio en ${kind.toLowerCase()}: ${entry.title}`,
         body: movedDate ? `Nueva fecha: ${range}` : range,
@@ -141,7 +142,7 @@ export function PATCH(request: Request, { params }: { params: Promise<{ id: stri
           }`,
         ],
         excludeUserId: session.user.id,
-      });
+      }));
     }
 
     void logAudit({
@@ -174,7 +175,7 @@ export function DELETE(_req: Request, { params }: { params: Promise<{ id: string
       const kind = entryKindLabel(entry.type);
       const range = formatDateRange(entry.startDate, entry.endDate);
 
-      void broadcastMural({
+      after(() => broadcastMural({
         type: `mural_${entry.type}_cancelled`,
         title: `Se canceló ${kind.toLowerCase()}: ${entry.title}`,
         body: range,
@@ -188,7 +189,7 @@ export function DELETE(_req: Request, { params }: { params: Promise<{ id: string
           ...(entry.location ? [`<strong>Lugar:</strong> ${escapeHtml(entry.location)}`] : []),
         ],
         excludeUserId: session.user.id,
-      });
+      }));
     }
 
     void logAudit({

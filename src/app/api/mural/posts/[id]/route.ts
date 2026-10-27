@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { prisma } from "@/lib/db";
 import { escapeHtml } from "@/lib/email-layout";
 import { muralHandler } from "@/lib/mural-auth";
@@ -72,7 +73,7 @@ export function PATCH(request: Request, { params }: { params: Promise<{ id: stri
     const post = await prisma.muralPost.update({ where: { id }, data, include: INCLUDE });
 
     if (nowPublished) {
-      void broadcastMural({
+      after(() => broadcastMural({
         type: "mural_post",
         title: `Nueva publicación: ${post.title}`,
         body: post.excerpt ?? undefined,
@@ -86,7 +87,7 @@ export function PATCH(request: Request, { params }: { params: Promise<{ id: stri
         ],
         emailCta: "Leer la publicación",
         excludeUserId: session.user.id,
-      });
+      }));
     }
 
     void logAudit({

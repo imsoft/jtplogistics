@@ -1,4 +1,5 @@
 import type { GeoStatus, TimeClockMark } from "@prisma/client";
+import { effectiveMarks } from "@/lib/time-clock-corrections";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/auth-server";
 import {
@@ -73,25 +74,25 @@ export async function GET() {
     const shift = await openShift(userId);
     const workDate = shift ? shift.workDate : workDateFromKey(companyDateKey());
 
-    const [entries, schedule, counts] = await Promise.all([
-      prisma.timeClockEntry.findMany({
-        where: { userId, workDate },
-        orderBy: { markedAt: "asc" },
-        select: {
-          id: true,
-          mark: true,
-          markedAt: true,
-          distanceM: true,
-          geoStatus: true,
-          reason: true,
-        },
-      }),
+    const [rawEntries, schedule, counts] = await Promise.all([
+      prisma.timeClockEntry.findMany({ where: { userId, workDate }, orderBy: { markedAt: "asc" } }),
       prisma.workSchedule.findUnique({
         where: { userId_weekday: { userId, weekday: weekdayOf(workDate) } },
         select: { startMinute: true, endMinute: true },
       }),
       liveCounts(prisma, userId),
     ]);
+
+    // Con las correcciones de dirección ya aplicadas: la persona ve sus marcas
+    // como quedaron, no la original y la corrección una junto a otra.
+    const entries = effectiveMarks(rawEntries).map((e) => ({
+      id: e.id,
+      mark: e.mark,
+      markedAt: e.markedAt,
+      distanceM: e.distanceM,
+      geoStatus: e.geoStatus,
+      reason: e.reason,
+    }));
 
     const [holiday, leave] = await Promise.all([
       prisma.holiday.findUnique({ where: { date: workDate }, select: { name: true } }),

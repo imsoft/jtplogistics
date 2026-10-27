@@ -1,6 +1,6 @@
 import { getCelebrations } from "@/lib/mural-celebrations-query";
 import { escapeHtml } from "@/lib/email-layout";
-import { cronUnauthorized } from "@/lib/cron-auth";
+import { cronUnauthorized, ranRecently } from "@/lib/cron-auth";
 import { startOfUtcDay } from "@/lib/mural-celebrations";
 import { sendCelebrationGreetings } from "@/lib/celebration-notify";
 import { broadcastMural } from "@/lib/mural-notify";
@@ -28,6 +28,11 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     // `date` permite probar las celebraciones de un día concreto.
     const today = parseMuralDate(searchParams.get("date")) ?? startOfUtcDay(new Date());
+
+    // Una corrida por día: un reintento no vuelve a felicitar ni a avisar.
+    if (!searchParams.get("date") && (await ranRecently("mural_celebrations"))) {
+      return Response.json({ skipped: "ya se envió hoy" });
+    }
 
     const celebrations = await getCelebrations(today, today);
     if (celebrations.length === 0) {
