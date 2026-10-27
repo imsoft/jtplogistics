@@ -4,6 +4,7 @@ import { Document, Page, Text, View, Image, StyleSheet } from "@react-pdf/render
 import { renderLexicalContent } from "@/lib/utils/lexical-to-pdf";
 import type { ProviderTariffData } from "@/types/provider-tariff.types";
 import { BRAND as COLORS } from "@/lib/email-layout";
+import { pdfSentence, pdfTitle, pdfUpper } from "@/lib/pdf-text-case";
 
 // La estructura del machote autorizado con los colores de la plataforma:
 // azul para las cabeceras y azul claro para las filas de tarifas.
@@ -73,21 +74,20 @@ const MONTHS = [
 ];
 const DAYS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
 
-/** "MARTES 28 DE JULIO DE 2026, GUADALAJARA, JALISCO" */
+// Formato oración como la cotización: el proveedor y las firmas van en
+// mayúsculas; lo demás, con mayúscula solo donde la lleva.
+
+/** "Martes 28 de julio de 2026, Guadalajara, Jalisco" */
 function formatIssueDate(date: Date): string {
-  return `${DAYS[date.getDay()]} ${date.getDate()} de ${MONTHS[date.getMonth()]} de ${date.getFullYear()}, Guadalajara, Jalisco`.toUpperCase();
+  const day = DAYS[date.getDay()];
+  return `${day[0].toUpperCase()}${day.slice(1)} ${date.getDate()} de ${MONTHS[date.getMonth()]} de ${date.getFullYear()}, Guadalajara, Jalisco`;
 }
 
-/** "VIGENCIA: 31 DE DICIEMBRE DE 2026" a partir de "YYYY-MM-DD". */
+/** "Vigencia: 31 de diciembre de 2026" a partir de "YYYY-MM-DD". */
 function formatValidUntil(iso: string): string {
   const [y, m, d] = iso.split("-").map(Number);
   if (!y || !m || !d) return "";
-  return `Vigencia: ${d} de ${MONTHS[m - 1]} de ${y}`.toUpperCase();
-}
-
-/** El machote va todo en mayúsculas, igual que el resto de la interfaz. */
-function upper(value: string | null | undefined): string {
-  return (value ?? "").toUpperCase();
+  return `Vigencia: ${d} de ${MONTHS[m - 1]} de ${y}`;
 }
 
 /** "$10,500". El IVA ya se aclara en los términos, no en cada renglón. */
@@ -134,11 +134,11 @@ export function ProviderTariffPdf({ data, logoUrl, termsJson, issuerName, issuer
 
         <View style={s.infoRow}>
           <Text style={s.infoLabel}>Razón social:</Text>
-          <Text style={s.infoValue}>{upper(data.legalName)}</Text>
+          <Text style={s.infoValue}>{pdfUpper(data.legalName)}</Text>
         </View>
         <View style={s.infoRow}>
           <Text style={s.infoLabel}>Contacto:</Text>
-          <Text style={s.infoValue}>{upper(data.contact)}</Text>
+          <Text style={s.infoValue}>{pdfTitle(data.contact)}</Text>
         </View>
         {data.phone ? (
           <View style={s.infoRow}>
@@ -161,38 +161,38 @@ export function ProviderTariffPdf({ data, logoUrl, termsJson, issuerName, issuer
 
         <View>
           <View style={s.tableHead}>
-            <Text style={[s.th, s.colOrigin]}>ORIGEN</Text>
-            <Text style={[s.th, s.colDestination]}>DESTINO</Text>
-            <Text style={[s.th, s.colCost]}>COSTO</Text>
-            <Text style={[s.th, s.colUnit]}>UNIDAD</Text>
-            <Text style={[s.th, s.colTerms]}>TERMINO Y CONDICION</Text>
+            <Text style={[s.th, s.colOrigin]}>Origen</Text>
+            <Text style={[s.th, s.colDestination]}>Destino</Text>
+            <Text style={[s.th, s.colCost]}>Costo</Text>
+            <Text style={[s.th, s.colUnit]}>Unidad</Text>
+            <Text style={[s.th, s.colTerms]}>Término y condición</Text>
           </View>
           {data.rows.map((row, i) => (
             <View key={i} style={s.row} wrap={false}>
-              <Text style={[s.td, s.colOrigin]}>{upper(row.origin)}</Text>
-              <Text style={[s.td, s.colDestination]}>{upper(row.destination)}</Text>
+              <Text style={[s.td, s.colOrigin]}>{pdfTitle(row.origin)}</Text>
+              <Text style={[s.td, s.colDestination]}>{pdfTitle(row.destination)}</Text>
               <Text style={[s.td, s.colCost]}>{formatCost(row.cost)}</Text>
-              <Text style={[s.td, s.colUnit]}>{upper(row.unitLabel)}</Text>
-              <Text style={[s.td, s.colTerms]}>{upper(row.terms)}</Text>
+              <Text style={[s.td, s.colUnit]}>{pdfSentence(row.unitLabel)}</Text>
+              <Text style={[s.td, s.colTerms]}>{pdfSentence(row.terms)}</Text>
             </View>
           ))}
         </View>
 
-        <Text style={s.termsTitle}>TERMINOS Y CONDICIONES</Text>
-        {renderLexicalContent(termsJson, lexStyles)}
+        <Text style={s.termsTitle}>Términos y condiciones</Text>
+        {renderLexicalContent(termsJson, lexStyles, { sentenceCase: true })}
 
         {/* Sin wrap={false} las líneas se quedan en una página y los nombres
             saltan a la siguiente, dejando el documento sin firmar. */}
         <View style={s.sigBlock} wrap={false}>
           <View style={s.sigColumn}>
             <View style={s.sigLine} />
-            {issuerName ? <Text style={s.sigName}>{upper(issuerName)}</Text> : null}
-            {issuerPosition ? <Text style={s.sigRole}>{upper(issuerPosition)}</Text> : null}
+            {issuerName ? <Text style={s.sigName}>{pdfUpper(issuerName)}</Text> : null}
+            {issuerPosition ? <Text style={s.sigRole}>{pdfSentence(issuerPosition)}</Text> : null}
           </View>
           <View style={s.sigColumn}>
             <View style={s.sigLine} />
-            <Text style={s.sigName}>{upper(data.contact)}</Text>
-            <Text style={s.sigRole}>{upper(data.legalName)}</Text>
+            <Text style={s.sigName}>{pdfUpper(data.contact)}</Text>
+            <Text style={s.sigRole}>{pdfUpper(data.legalName)}</Text>
           </View>
         </View>
       </Page>
