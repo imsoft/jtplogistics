@@ -37,19 +37,26 @@ export async function PATCH(
           editUnlockRequested: false,
         },
       }),
-      prisma.notification.create({
-        data: {
-          userId: carrierRoute.carrier.id,
-          type: "carrier_unlock_response",
-          title: approved ? "Edición de ruta aprobada" : "Solicitud de edición rechazada",
-          body: approved
-            ? `Tu solicitud para editar la ruta ${routeLabel} fue aprobada. Ya puedes modificarla.`
-            : `Tu solicitud para editar la ruta ${routeLabel} fue rechazada.`,
-          href: `/carrier/dashboard/unit-types/${carrierRoute.unitType}`,
-          read: false,
-        },
-      }),
     ]);
+
+    // Avisa a la empresa: al principal y a sus usuarios que capturan tarifas
+    // (cualquiera de ellos pudo haber pedido el desbloqueo).
+    const members = await prisma.user.findMany({
+      where: { parentCarrierId: carrierRoute.carrier.id, memberCanEditRates: true, memberRevokedAt: null },
+      select: { id: true },
+    });
+    await prisma.notification.createMany({
+      data: [carrierRoute.carrier.id, ...members.map((m) => m.id)].map((userId) => ({
+        userId,
+        type: "carrier_unlock_response",
+        title: approved ? "Edición de ruta aprobada" : "Solicitud de edición rechazada",
+        body: approved
+          ? `Tu solicitud para editar la ruta ${routeLabel} fue aprobada. Ya puedes modificarla.`
+          : `Tu solicitud para editar la ruta ${routeLabel} fue rechazada.`,
+        href: `/carrier/dashboard/unit-types/${carrierRoute.unitType}`,
+        read: false,
+      })),
+    });
 
     void logAudit({
       resource: "carrier_route_unlock",

@@ -30,7 +30,7 @@ export async function GET() {
       }),
       prisma.user.findUnique({
         where: { id: carrierId },
-        select: { canEditTarget: true, canEditRoutes: true },
+        select: { canEditTarget: true, canEditRoutes: true, canAddRoutes: true },
       }),
     ]);
 
@@ -73,7 +73,7 @@ export async function GET() {
       canCapture: can.editRates,
       canEditTarget: userRecord?.canEditTarget ?? false,
       canEditRoutes: userRecord?.canEditRoutes ?? false,
-      canAddRoutes: true,
+      canAddRoutes: userRecord?.canAddRoutes ?? true,
       routes: routes.map((r) => {
         // Nunca exponer targets de JTP al transportista (información confidencial).
         const unitTargets =
@@ -138,7 +138,7 @@ export async function PUT(request: NextRequest) {
 
     const userRecord = await prisma.user.findUnique({
       where: { id: carrierId },
-      select: { canEditTarget: true, canEditRoutes: true },
+      select: { canEditTarget: true, canEditRoutes: true, canAddRoutes: true },
     });
 
     const existingRoutes = await prisma.carrierRoute.findMany({
@@ -158,6 +158,11 @@ export async function PUT(request: NextRequest) {
       (item) => item.route.status === "active" && !incomingKeys.has(`${item.routeId}:${item.unitType}`)
     );
     const toUpdate = body.filter((item) => existingMap.has(`${item.routeId}:${item.unitType}`));
+
+    // JTP puede cerrarle al transportista la opción de agregar rutas nuevas.
+    if (toCreate.length > 0 && userRecord && !userRecord.canAddRoutes) {
+      return Response.json({ error: "JTP no tiene abierta la opción de agregar rutas nuevas para tu empresa." }, { status: 403 });
+    }
 
     // Las rutas nuevas solo pueden ser de las que JTP tiene activas.
     if (toCreate.some((item) => routeById.get(item.routeId)?.status !== "active")) {

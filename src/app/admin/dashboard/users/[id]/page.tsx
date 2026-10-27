@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { safeBackHref } from "@/lib/safe-back-href";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { FleetManager } from "@/components/dashboard/fleet/fleet-manager";
@@ -69,7 +70,7 @@ export default async function UserProfilePage({
   await requireAdminPage();
   const { id } = await params;
   const { from } = await searchParams;
-  const backHref = from ? decodeURIComponent(from) : "/admin/dashboard/users";
+  const backHref = safeBackHref(from, "/admin/dashboard/users");
 
   const user = await prisma.user.findUnique({
     where: { id },

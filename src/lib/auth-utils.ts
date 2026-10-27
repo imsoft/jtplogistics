@@ -21,7 +21,9 @@ export function getAuthBaseUrl(): string {
  * Includes base URL, localhost, Vercel deployment URL and BETTER_AUTH_TRUSTED_ORIGINS.
  */
 export function getTrustedOrigins(): string[] {
-  const origins: string[] = [getAuthBaseUrl(), "http://localhost:3000"];
+  const origins: string[] = [getAuthBaseUrl()];
+  // localhost solo fuera de producción en Vercel (local y previews).
+  if (process.env.VERCEL_ENV !== "production") origins.push("http://localhost:3000");
 
   if (process.env.VERCEL_URL) {
     origins.push(`https://${process.env.VERCEL_URL}`);

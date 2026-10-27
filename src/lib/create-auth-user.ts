@@ -6,6 +6,16 @@
 import { hashPassword } from "better-auth/crypto";
 import { prisma } from "@/lib/db";
 
+/** Error con un mensaje pensado para mostrarse a quien da de alta al usuario. */
+export class CreateUserError extends Error {}
+
+/** El mensaje que se puede mostrar: el nuestro, o uno genérico (nunca el de la BD). */
+export function createUserErrorMessage(e: unknown): string {
+  if (e instanceof CreateUserError) return e.message;
+  console.error("[createAuthUser]", e);
+  return "No se pudo crear el usuario.";
+}
+
 export async function createAuthUser({
   name,
   email,
@@ -17,7 +27,7 @@ export async function createAuthUser({
 }): Promise<{ id: string }> {
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
-    throw new Error("El correo ya está registrado");
+    throw new CreateUserError("El correo ya está registrado");
   }
 
   const now = new Date();

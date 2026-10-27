@@ -16,7 +16,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const access = await requireFleetAccess(current.carrierId, "edit");
     if (access.carrierId !== current.carrierId) return Response.json({ error: "No encontrado" }, { status: 404 });
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
-    const parsed = readOperatorBody(body);
+    // Lo que no venga en el cuerpo se queda como estaba (cambio parcial).
+    const merged = { ...(current as unknown as Record<string, unknown>), ...body };
+    const parsed = readOperatorBody(merged);
     if (!parsed.ok) return Response.json({ error: parsed.error }, { status: 400 });
     await prisma.carrierOperator.update({ where: { id }, data: parsed.data });
     void logAudit({ resource: "fleet_operator", resourceId: id, resourceLabel: `Operador ${parsed.data.name}`, action: "updated", userId: access.userId, userName: access.userName });

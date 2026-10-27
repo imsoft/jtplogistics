@@ -51,6 +51,16 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const holdError = validateHold({ onHold, holdReason });
     if (holdError) return Response.json({ error: holdError }, { status: 400 });
 
+    // Igual que al crear: un prospecto solo puede estar en un alta, y tiene que existir.
+    if (prospectId && prospectId !== current.prospectId) {
+      const [taken, prospect] = await Promise.all([
+        prisma.providerOnboarding.findUnique({ where: { prospectId }, select: { id: true } }),
+        prisma.providerProspect.findUnique({ where: { id: prospectId }, select: { id: true } }),
+      ]);
+      if (!prospect) return Response.json({ error: "Ese prospecto no existe." }, { status: 400 });
+      if (taken && taken.id !== id) return Response.json({ error: "Ese prospecto ya tiene un alta en proceso.", id: taken.id }, { status: 409 });
+    }
+
     const nextDocs = Object.fromEntries(ONBOARDING_DOCS.map((d) => [d.key, docs[d.key] ?? current[d.key]])) as DocRecord;
     const currentCompleted = current.completedOn ? current.completedOn.toISOString().slice(0, 10) : null;
     const requestedCompleted = dates.completedOn === undefined ? currentCompleted : dates.completedOn ? dates.completedOn.toISOString().slice(0, 10) : null;

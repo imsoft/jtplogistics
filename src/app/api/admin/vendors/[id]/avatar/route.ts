@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { validateImageUpload } from "@/lib/upload-validation";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-server";
 import { uploadToCloudinary } from "@/lib/cloudinary";
@@ -18,15 +19,10 @@ export async function POST(
     }
 
     const formData = await request.formData();
-    const file = formData.get("file") as File | null;
-
-    if (!file || !(file instanceof File) || file.size === 0) {
-      return Response.json({ error: "Se requiere un archivo de imagen." }, { status: 400 });
-    }
-
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const base64 = `data:${file.type};base64,${buffer.toString("base64")}`;
+    // Tipo y tamaño revisados por contenido, no por lo que dice el navegador.
+    const validation = await validateImageUpload(formData.get("file"));
+    if (!validation.ok) return Response.json({ error: validation.error }, { status: validation.status });
+    const base64 = validation.dataUri;
 
     const safeName = (u.name ?? "user").replace(/[^a-zA-Z0-9]/g, "");
     const folder = `Profile Pictures/${safeName}${id}`;
@@ -52,6 +48,6 @@ export async function POST(
     if (e instanceof Response) return e;
     const message = e instanceof Error ? e.message : String(e);
     console.error("[vendors/avatar]", message);
-    return Response.json({ error: `Error al subir la imagen: ${message}` }, { status: 500 });
+    return Response.json({ error: "No se pudo subir la imagen. Intenta de nuevo." }, { status: 500 });
   }
 }

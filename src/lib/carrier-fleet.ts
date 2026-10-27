@@ -34,6 +34,8 @@ export interface OperatorData {
 }
 
 const has = (list: { value: string }[], v: string) => list.some((o) => o.value === v);
+/** "false" (texto) también es no: Boolean("false") daba sí. */
+const readActive = (v: unknown) => !(v === false || v === "false" || v === 0 || v === "0");
 const text = (v: unknown) => (typeof v === "string" ? v.trim() || null : null);
 
 /** Placas sin espacios ni guiones y en mayúsculas, como las pide el SAT. */
@@ -67,7 +69,7 @@ export function readVehicleBody(body: Record<string, unknown>, currentYear: numb
     insurer: null,
     policyNumber: null,
     trailerSubtype: null,
-    active: body.active === undefined ? true : Boolean(body.active),
+    active: readActive(body.active),
   };
 
   if (kind === "motriz") {
@@ -111,7 +113,7 @@ export function readOperatorBody(body: Record<string, unknown>):
       rfc,
       licenseNumber: text(body.licenseNumber)?.toUpperCase() ?? null,
       phone: text(body.phone),
-      active: body.active === undefined ? true : Boolean(body.active),
+      active: readActive(body.active),
     },
   };
 }

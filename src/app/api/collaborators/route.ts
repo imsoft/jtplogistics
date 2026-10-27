@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 // usuarios con el rol collaborator —el del personal interno de JTP—, un
 // proveedor podía darle a quien quisiera acceso al panel interno.
 import { requireVendedor } from "@/lib/auth-server";
-import { createAuthUser } from "@/lib/create-auth-user";
+import { createAuthUser, createUserErrorMessage } from "@/lib/create-auth-user";
 import { logAudit } from "@/lib/audit-log";
 
 export async function GET() {
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
       const created = await createAuthUser({ name, email, password });
       userId = created.id;
     } catch (e) {
-      return Response.json({ error: e instanceof Error ? e.message : "No se pudo crear el usuario" }, { status: 400 });
+      return Response.json({ error: createUserErrorMessage(e) }, { status: 400 });
     }
 
     await prisma.user.update({

@@ -36,7 +36,9 @@ const MAGIC_BYTES: Array<{ mime: string; check: (b: Buffer) => boolean }> = [
   },
 ];
 
-export const MAX_UPLOAD_BYTES = 8 * 1024 * 1024; // 8 MB
+// Vercel rechaza cuerpos de más de 4.5 MB antes de llegar a la ruta, con un
+// error genérico: el tope queda abajo para que el aviso sea el nuestro.
+export const MAX_UPLOAD_BYTES = 4 * 1024 * 1024; // 4 MB
 
 export type UploadValidationResult =
   | { ok: true; buffer: Buffer; dataUri: string }

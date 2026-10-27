@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
-import { createAuthUser } from "@/lib/create-auth-user";
+import { createAuthUser, createUserErrorMessage } from "@/lib/create-auth-user";
 import { logAudit } from "@/lib/audit-log";
 import { employeeListWhere, serializeEmployeeRow } from "@/lib/employees";
 
@@ -42,7 +42,7 @@ export function POST(request: Request) {
       const created = await createAuthUser({ name, email, password });
       userId = created.id;
     } catch (e) {
-      return Response.json({ error: e instanceof Error ? e.message : "No se pudo crear el usuario" }, { status: 400 });
+      return Response.json({ error: createUserErrorMessage(e) }, { status: 400 });
     }
 
     await prisma.user.update({

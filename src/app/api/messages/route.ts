@@ -153,8 +153,12 @@ export async function POST(request: NextRequest) {
     // Verify carrier exists
     const carrier = await prisma.user.findUnique({
       where: { id: carrierId },
-      select: { id: true, role: true },
+      select: { id: true, role: true, parentCarrierId: true },
     });
+
+    // La conversación es de la empresa (su usuario principal): escribirle a un
+    // usuario agregado dejaba un hilo que nadie veía.
+    if (carrier?.parentCarrierId) carrierId = carrier.parentCarrierId;
 
     if (!carrier || carrier.role !== "carrier") {
       return Response.json({ error: "Transportista no encontrado" }, { status: 404 });

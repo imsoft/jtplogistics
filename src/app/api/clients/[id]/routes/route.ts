@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireModuleAccess } from "@/lib/module-access";
+import { hasModuleAccess, requireModuleAccess } from "@/lib/module-access";
 import { logAudit } from "@/lib/audit-log";
 import { routeCreatorName } from "@/lib/api/route-utils";
 
@@ -24,7 +24,7 @@ function fail(e: unknown, where: string) {
 // ?idsOnly=false →  AssignedRoute[]           (para las vistas de detalle/edición)
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireModuleAccess(MODULE, "view");
+    const session = await requireModuleAccess(MODULE, "view");
     const { id } = await params;
     const sp = req.nextUrl.searchParams;
 
@@ -88,6 +88,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       orderBy: { createdAt: "asc" },
     });
 
+    const canSeeTargets = await hasModuleAccess(session.user, "Routes", "view");
     return Response.json(
       clientRoutes.map((cr) => ({
         id: cr.route.id,
@@ -96,7 +97,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         destination: cr.route.destination,
         destinationState: cr.route.destinationState,
         unitType: cr.unitType || cr.route.unitTargets[0]?.unitType || cr.route.unitType,
-        unitTargets: cr.route.unitTargets,
+        // El target de JTP es de Rutas: con solo Clientes se ve el tipo de unidad, no el precio.
+        unitTargets: canSeeTargets ? cr.route.unitTargets : cr.route.unitTargets.map((u) => ({ unitType: u.unitType, target: null })),
         status: cr.route.status,
         target: cr.target ?? null,
         weeklyVolume: cr.weeklyVolume ?? null,

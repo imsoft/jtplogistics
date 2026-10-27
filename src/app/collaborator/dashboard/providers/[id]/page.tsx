@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { safeBackHref } from "@/lib/safe-back-href";
 import Link from "next/link";
 import { FleetManager } from "@/components/dashboard/fleet/fleet-manager";
 import { CarrierPaymentDays } from "@/components/dashboard/users/carrier-payment-days";
@@ -86,7 +87,7 @@ export default function ProviderDetailPage() {
   const hasRedirected = useRef(false);
 
   const from = searchParams.get("from");
-  const backHref = from ? decodeURIComponent(from) : "/collaborator/dashboard/providers";
+  const backHref = safeBackHref(from, "/collaborator/dashboard/providers");
 
   useEffect(() => {
     if (permissionsLoaded && !permissions?.canViewProviders && !hasRedirected.current) {

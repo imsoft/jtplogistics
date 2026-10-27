@@ -48,11 +48,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Mark as requested
-    await prisma.carrierRoute.update({
-      where: { id: carrierRoute.id },
+    // Ya pedida (y sin respuesta): no se vuelve a avisar. Antes cada clic
+    // mandaba otro correo a dirección y a pricing.
+    if (carrierRoute.editUnlockRequested || carrierRoute.editUnlockApproved) {
+      return Response.json({ ok: true, alreadyRequested: true });
+    }
+
+    // Se marca solo si nadie la marcó en paralelo: así el aviso sale una vez.
+    const marked = await prisma.carrierRoute.updateMany({
+      where: { id: carrierRoute.id, editUnlockRequested: false },
       data: { editUnlockRequested: true },
     });
+    if (marked.count === 0) return Response.json({ ok: true, alreadyRequested: true });
 
     // Se avisa a todo el que puede autorizar: dirección y los colaboradores
     // con permiso de editar proveedores (pricing). Cada quien recibe el enlace

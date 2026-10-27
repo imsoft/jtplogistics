@@ -64,6 +64,10 @@ async function openShift(userId: string) {
 export async function GET() {
   try {
     const session = await requireSession();
+    // El checador es del personal de JTP: transportistas y vendedores no checan.
+    if (!["collaborator", "admin", "developer"].includes(session.user.role ?? "")) {
+      return Response.json({ error: "Sin permiso" }, { status: 403 });
+    }
     const userId = session.user.id;
 
     const shift = await openShift(userId);
@@ -150,6 +154,10 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const session = await requireSession();
+    // El checador es del personal de JTP: transportistas y vendedores no checan.
+    if (!["collaborator", "admin", "developer"].includes(session.user.role ?? "")) {
+      return Response.json({ error: "Sin permiso" }, { status: 403 });
+    }
     const userId = session.user.id;
 
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;

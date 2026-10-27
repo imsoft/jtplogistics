@@ -57,6 +57,10 @@ export async function POST(request: NextRequest) {
     if (body.pdfBase64.length > MAX_PDF_BASE64) {
       return Response.json({ error: "El PDF es demasiado grande para enviarlo." }, { status: 400 });
     }
+    // Solo sale un PDF: el adjunto no puede ser cualquier archivo.
+    if (!Buffer.from(body.pdfBase64.slice(0, 16), "base64").toString("latin1").startsWith("%PDF-")) {
+      return Response.json({ error: "El adjunto no es un PDF." }, { status: 400 });
+    }
 
     const profile = await prisma.user.findUnique({
       where: { id: session.user.id },
@@ -111,7 +115,8 @@ export async function POST(request: NextRequest) {
     // guardada (se mandó desde una nueva sin descargar), no hay nada que mover.
     try {
       await prisma.generatedQuote.updateMany({
-        where: { quoteNumber: body.quoteNumber, status: "borrador" },
+        // Solo las propias: el folio no basta para mover la de otra persona.
+        where: { quoteNumber: body.quoteNumber, status: "borrador", createdById: session.user.id },
         data: { status: "enviada" },
       });
     } catch (e) {
@@ -132,7 +137,6 @@ export async function POST(request: NextRequest) {
   } catch (e) {
     if (e instanceof Response) return e;
     console.error("[quotes/send]", e);
-    const message = e instanceof Error ? e.message : "Error interno del servidor";
-    return Response.json({ error: message }, { status: 500 });
+    return Response.json({ error: "No se pudo enviar el correo. Intenta de nuevo en un momento." }, { status: 500 });
   }
 }

@@ -1,7 +1,7 @@
 import { employeeListWhere, serializeEmployeeRow } from "@/lib/employees";
 import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
-import { createAuthUser } from "@/lib/create-auth-user";
+import { createAuthUser, createUserErrorMessage } from "@/lib/create-auth-user";
 import { logAudit } from "@/lib/audit-log";
 
 export async function GET(request: Request) {
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
       userId = created.id;
     } catch (e) {
       return Response.json(
-        { error: e instanceof Error ? e.message : "No se pudo crear el usuario" },
+        { error: createUserErrorMessage(e) },
         { status: 400 }
       );
     }

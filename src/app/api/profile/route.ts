@@ -111,8 +111,23 @@ export async function PATCH(request: NextRequest) {
     const legalName = body.legalName != null ? String(body.legalName).trim() || null : undefined;
     const rfc = body.rfc != null ? String(body.rfc).trim().toUpperCase() || null : undefined;
     const address = body.address != null ? String(body.address).trim() || null : undefined;
-    const contacts: { type: "phone" | "email"; value: string; label?: string; position?: string; personName?: string }[] =
-      Array.isArray(body.contacts) ? body.contacts : [];
+    if (birthDate && Number.isNaN(birthDate.getTime())) {
+      return Response.json({ error: "La fecha de nacimiento no es válida." }, { status: 400 });
+    }
+    // Los contactos solo se reemplazan si vienen: un guardado parcial (p. ej.
+    // solo el nombre) no debe dejar a la empresa sin contactos.
+    const replaceContacts = Array.isArray(body.contacts);
+    const rawContacts: unknown[] = replaceContacts ? body.contacts : [];
+    if (rawContacts.length > 50) return Response.json({ error: "Demasiados contactos." }, { status: 400 });
+    const text = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+    const contacts: { type: "phone" | "email"; value: string; label?: string; position?: string; personName?: string }[] = [];
+    for (const raw of rawContacts) {
+      const c = (raw ?? {}) as Record<string, unknown>;
+      if (c.type !== "phone" && c.type !== "email") return Response.json({ error: "Tipo de contacto no válido." }, { status: 400 });
+      const value = text(c.value, 200);
+      if (!value) continue;
+      contacts.push({ type: c.type, value, label: text(c.label, 60), position: text(c.position, 100), personName: text(c.personName, 120) });
+    }
 
     const abuse = validateCarrierProfilePayload({
       name,
@@ -180,21 +195,21 @@ export async function PATCH(request: NextRequest) {
       },
     });
 
-    // Replace contacts: delete all then recreate
-    await prisma.contact.deleteMany({ where: { profileId: profile.id } });
-    if (contacts.length > 0) {
-      await prisma.contact.createMany({
-        data: contacts
-          .filter((c) => c.value.trim())
-          .map((c) => ({
+    // Se reemplazan juntos: si algo falla, no se quedan borrados.
+    if (replaceContacts) {
+      await prisma.$transaction([
+        prisma.contact.deleteMany({ where: { profileId: profile.id } }),
+        prisma.contact.createMany({
+          data: contacts.map((c) => ({
             profileId: profile.id,
             type: c.type,
-            value: c.value.trim(),
-            label: c.label?.trim() || null,
-            position: c.position?.trim() || null,
-            personName: c.personName?.trim() || null,
+            value: c.value,
+            label: c.label || null,
+            position: c.position || null,
+            personName: c.personName || null,
           })),
-      });
+        }),
+      ]);
     }
 
     const updatedContacts = await prisma.contact.findMany({
