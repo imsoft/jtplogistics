@@ -244,7 +244,7 @@ export function TimeClockLog({ canCorrect = false }: { canCorrect?: boolean }) {
                     ))}
                   </td>
                   <td className="text-muted-foreground px-4 py-2.5 tabular-nums">
-                    {row.workDate}
+                    <span className="whitespace-nowrap">{row.workDate}</span>
                     {row.leave && (
                       <span className="text-foreground bg-muted mt-1 block w-fit rounded px-1.5 py-0.5 text-xs font-medium">
                         {LEAVE_LABELS[row.leave as LeaveKind] ?? row.leave}

@@ -237,14 +237,14 @@ export function ProspectsTable({
         </p>
       ) : (
         <div className="@container/table w-full overflow-x-auto rounded-md border">
-          <table className="w-full min-w-max text-sm">
+          <table className="w-full min-w-max text-sm md:min-w-0">
             <thead>
               <tr className="bg-muted/40 border-b">
                 <th className="px-4 py-2 text-left font-medium">Proveedor</th>
                 <th className="px-4 py-2 text-left font-medium">Contacto</th>
-                <th className="hidden px-4 py-2 text-left font-medium @4xl/table:table-cell">Cómo se consiguió</th>
-                <th className="hidden px-4 py-2 text-left font-medium @5xl/table:table-cell">Cobertura</th>
-                <th className="hidden px-4 py-2 text-left font-medium @6xl/table:table-cell">Contacto el</th>
+                <th className="hidden px-4 py-2 text-left font-medium @5xl/table:table-cell">Cómo se consiguió</th>
+                <th className="hidden px-4 py-2 text-left font-medium @6xl/table:table-cell">Cobertura</th>
+                <th className="hidden px-4 py-2 text-left font-medium @7xl/table:table-cell">Contacto el</th>
                 <th className="px-4 py-2 text-left font-medium">Etapa</th>
                 {(canEdit || canDelete) && <th className="px-2 py-2 w-16" />}
               </tr>
@@ -287,13 +287,13 @@ export function ProspectsTable({
                       <span className="text-muted-foreground">—</span>
                     )}
                   </td>
-                  <td className="text-muted-foreground hidden px-4 py-3 @4xl/table:table-cell">
+                  <td className="text-muted-foreground hidden px-4 py-3 @5xl/table:table-cell">
                     {p.source ? PROSPECT_SOURCE_LABELS[p.source as keyof typeof PROSPECT_SOURCE_LABELS] : "—"}
                   </td>
-                  <td className="text-muted-foreground hidden px-4 py-3 @5xl/table:table-cell">
+                  <td className="text-muted-foreground hidden px-4 py-3 @6xl/table:table-cell">
                     {p.coverage ? PROSPECT_COVERAGE_LABELS[p.coverage as keyof typeof PROSPECT_COVERAGE_LABELS] : "—"}
                   </td>
-                  <td className="text-muted-foreground hidden whitespace-nowrap px-4 py-3 @6xl/table:table-cell">
+                  <td className="text-muted-foreground hidden whitespace-nowrap px-4 py-3 @7xl/table:table-cell">
                     {p.contactedOn ? shortDate(p.contactedOn) : "—"}
                   </td>
                   <td className="px-4 py-3">

@@ -137,6 +137,14 @@
     -webkit-text-size-adjust: 100%;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
+  /* Laptops de 13"-14" (1280-1440 px de ancho útil): todo en mayúsculas y
+     espaciado ocupa mucho, así que la base baja un punto y la interfaz entera
+     (que va en rem) se escala igual. En pantallas grandes y en celular no cambia. */
+  @media (min-width: 768px) and (max-width: 1439px) {
+    html {
+      font-size: 15px;
+    }
+  }
   body {
     @apply bg-background text-foreground min-h-screen overflow-x-hidden;
     -webkit-font-smoothing: antialiased;

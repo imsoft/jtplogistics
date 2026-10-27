@@ -71,7 +71,7 @@ export function CreditNotesCard({
           <p className="text-muted-foreground text-sm">Ninguna. Una nota de crédito baja el saldo sin mover el banco (descuento, devolución, bonificación).</p>
         ) : (
           <div className="w-full overflow-x-auto">
-            <table className="w-full min-w-max text-sm">
+            <table className="w-full min-w-max text-sm md:min-w-0">
               <thead>
                 <tr className="border-b">
                   <th className="py-2 pr-4 text-left font-medium">Fecha</th>

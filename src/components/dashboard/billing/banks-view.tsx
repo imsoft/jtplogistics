@@ -374,7 +374,7 @@ export function BankDetailView({
             </p>
           ) : (
             <div className="w-full overflow-x-auto">
-              <table className="w-full min-w-max text-sm">
+              <table className="w-full min-w-max text-sm md:min-w-0">
                 <thead>
                   <tr className="border-b">
                     <th className="w-10 py-2 pr-2 text-left font-medium" title="Conciliado contra el estado de cuenta">OK</th>

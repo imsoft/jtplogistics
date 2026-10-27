@@ -174,7 +174,7 @@ export default function IncidentTypesPage() {
                               if (e.key === "Escape") setEditId(null);
                             }}
                           />
-                          <span className="text-muted-foreground shrink-0 font-mono text-xs">{t.value}</span>
+                          <span className="text-muted-foreground hidden shrink-0 font-mono text-xs sm:inline">{t.value}</span>
                           <Button
                             size="icon"
                             variant="ghost"
@@ -192,7 +192,7 @@ export default function IncidentTypesPage() {
                       ) : (
                         <>
                           <span className="flex-1 font-medium">{t.name}</span>
-                          <span className="text-muted-foreground shrink-0 font-mono text-xs">{t.value}</span>
+                          <span className="text-muted-foreground hidden shrink-0 font-mono text-xs sm:inline">{t.value}</span>
                           <Button
                             size="icon"
                             variant="ghost"

@@ -86,11 +86,11 @@ function getColumns(): ColumnDef<FinanceListRow>[] {
     {
       accessorKey: "sale",
       header: ({ column }) => (
-        <SortableColumnHeader
-          column={column}
-          title={FINANCE_TARIFF_SALE_LABEL}
-          className="h-auto min-h-8 max-w-[min(100%,220px)] whitespace-normal py-1.5 text-left font-medium leading-tight"
-        />
+        // Título corto en la tabla: el largo apila el encabezado en cinco
+        // renglones en laptops. El nombre completo sale al pasar el cursor.
+        <span title={FINANCE_TARIFF_SALE_LABEL}>
+          <SortableColumnHeader column={column} title="Venta" />
+        </span>
       ),
       cell: ({ row }) => {
         const v = row.getValue<number | null>("sale");
@@ -105,11 +105,11 @@ function getColumns(): ColumnDef<FinanceListRow>[] {
       accessorKey: "cost",
       meta: { className: "hidden @xl/table:table-cell" },
       header: ({ column }) => (
-        <SortableColumnHeader
-          column={column}
-          title={FINANCE_TARIFF_COST_LABEL}
-          className="h-auto min-h-8 max-w-[min(100%,220px)] whitespace-normal py-1.5 text-left font-medium leading-tight"
-        />
+        // Título corto en la tabla: el largo apila el encabezado en cinco
+        // renglones en laptops. El nombre completo sale al pasar el cursor.
+        <span title={FINANCE_TARIFF_COST_LABEL}>
+          <SortableColumnHeader column={column} title="Compra" />
+        </span>
       ),
       cell: ({ row }) => {
         const v = row.getValue<number | null>("cost");

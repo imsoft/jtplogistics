@@ -230,7 +230,9 @@ export function DataTable<TData, TValue>({
           isFetching && "pointer-events-none opacity-60"
         )}
       >
-        <Table className="w-full min-w-max">
+        {/* En celular la tabla conserva su ancho y se recorre de lado; desde
+            tablet se ajusta a la pantalla y el texto largo baja de renglón. */}
+        <Table className="w-full min-w-max md:min-w-0">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>

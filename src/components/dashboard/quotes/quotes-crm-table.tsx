@@ -207,9 +207,9 @@ export function QuotesCrmTable({
                   <th className="px-4 py-2 text-left font-medium">Compañía</th>
                   <th className="px-4 py-2 text-left font-medium">Estado</th>
                   <th className="px-4 py-2 text-left font-medium hidden @2xl/table:table-cell">Contacto</th>
-                  <th className="px-4 py-2 text-left font-medium hidden @4xl/table:table-cell">Teléfono</th>
-                  <th className="px-4 py-2 text-left font-medium hidden @4xl/table:table-cell">Vigencia</th>
-                  <th className="px-4 py-2 text-left font-medium hidden @5xl/table:table-cell">Generado por</th>
+                  <th className="px-4 py-2 text-left font-medium hidden @5xl/table:table-cell">Teléfono</th>
+                  <th className="px-4 py-2 text-left font-medium hidden @5xl/table:table-cell">Vigencia</th>
+                  <th className="px-4 py-2 text-left font-medium hidden @6xl/table:table-cell">Generado por</th>
                   <th className="px-4 py-2 text-left font-medium">Fecha</th>
                   <th className="px-4 py-2 w-24" />
                 </tr>
@@ -217,7 +217,7 @@ export function QuotesCrmTable({
               <tbody>
                 {filtered.map((q) => (
                   <tr key={q.id} className="border-b last:border-0">
-                    <td className="px-4 py-3 font-mono text-xs font-medium">{q.quoteNumber}</td>
+                    <td className="px-4 py-3 font-mono text-xs font-medium whitespace-nowrap">{q.quoteNumber}</td>
                     <td className="px-4 py-3">
                       {/* Un borrador puede guardarse antes de saber el cliente. */}
                       {q.company || <span className="text-muted-foreground italic">Sin cliente</span>}
@@ -231,16 +231,16 @@ export function QuotesCrmTable({
                       )}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground hidden @2xl/table:table-cell">{q.contact || "—"}</td>
-                    <td className="px-4 py-3 text-muted-foreground hidden @4xl/table:table-cell">
+                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap hidden @5xl/table:table-cell">
                       {q.phone ? formatPhone(q.phone) : "—"}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden @4xl/table:table-cell">
+                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap hidden @5xl/table:table-cell">
                       {new Date(q.validUntil).toLocaleDateString("es-MX", {
                         year: "numeric", month: "short", day: "numeric", timeZone: "UTC",
                       })}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden @5xl/table:table-cell">{q.createdByName}</td>
-                    <td className="px-4 py-3 text-muted-foreground text-xs">
+                    <td className="px-4 py-3 text-muted-foreground hidden @6xl/table:table-cell">{q.createdByName}</td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs whitespace-nowrap">
                       {new Date(q.createdAt).toLocaleDateString("es-MX", {
                         year: "numeric", month: "short", day: "numeric",
                       })}

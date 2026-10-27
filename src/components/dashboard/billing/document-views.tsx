@@ -299,7 +299,7 @@ export function DocumentDetailView({
             <p className="text-muted-foreground text-sm">Todavía no hay {doc.kind === "receivable" ? "cobros" : "pagos"} registrados.</p>
           ) : (
             <div className="w-full overflow-x-auto">
-              <table className="w-full min-w-max text-sm">
+              <table className="w-full min-w-max text-sm md:min-w-0">
                 <thead>
                   <tr className="border-b">
                     <th className="py-2 pr-4 text-left font-medium">Fecha</th>

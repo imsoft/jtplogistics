@@ -122,7 +122,7 @@ export function RoutesCrud({
         </p>
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_auto] xl:grid-cols-[1fr_1fr_1fr_1fr_auto]">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[repeat(4,minmax(0,1fr))_auto]">
             <CityCombobox
               id="filter-origin"
               label="Origen"

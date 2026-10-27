@@ -219,7 +219,7 @@ export function DocumentsView({
         </p>
       ) : (
         <div className="@container/table w-full overflow-x-auto rounded-md border">
-          <table className="w-full min-w-max text-sm">
+          <table className="w-full min-w-max text-sm md:min-w-0">
             <thead>
               <tr className="bg-muted/40 border-b">
                 {canUpdate && <th className="w-10 px-3 py-2"><span className="sr-only">Elegir</span></th>}

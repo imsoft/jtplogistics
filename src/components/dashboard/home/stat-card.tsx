@@ -25,11 +25,12 @@ export function StatCard({ label, value, hint, icon, href, accent }: StatCardPro
     >
       <CardContent className="flex items-start justify-between gap-3 p-4 sm:p-5">
         <div className="min-w-0">
-          <p className="truncate text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-xs">
+          {/* Hasta dos renglones: en laptops de 13" el texto en mayúsculas no cabe en uno. */}
+          <p className="line-clamp-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-xs">
             {label}
           </p>
           <p className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">{value}</p>
-          {hint && <p className="mt-0.5 truncate text-xs text-muted-foreground">{hint}</p>}
+          {hint && <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{hint}</p>}
         </div>
         <span
           className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${
@@ -43,7 +44,7 @@ export function StatCard({ label, value, hint, icon, href, accent }: StatCardPro
   );
 
   return href ? (
-    <Link href={href} className="block">
+    <Link href={href} className="block h-full">
       {content}
     </Link>
   ) : (

@@ -141,7 +141,7 @@ export function ExpensesView({ canCreate, canUpdate, canDelete }: { canCreate: b
         </p>
       ) : (
         <div className="@container/table w-full overflow-x-auto rounded-md border">
-          <table className="w-full min-w-max text-sm">
+          <table className="w-full min-w-max text-sm md:min-w-0">
             <thead>
               <tr className="bg-muted/40 border-b">
                 <th className="px-4 py-2 text-left font-medium">Fecha</th>

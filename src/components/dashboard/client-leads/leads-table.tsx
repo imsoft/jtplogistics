@@ -304,16 +304,16 @@ export function LeadsTable({
         </p>
       ) : (
         <div className="@container/table w-full overflow-x-auto rounded-md border">
-          <table className="w-full min-w-max text-sm">
+          <table className="w-full min-w-max text-sm md:min-w-0">
             <thead>
               <tr className="bg-muted/40 border-b">
                 <th className="px-4 py-2 text-left font-medium">Empresa</th>
                 <th className="hidden px-4 py-2 text-left font-medium @3xl/table:table-cell">Contacto</th>
                 <th className="px-4 py-2 text-left font-medium">Etapa</th>
                 <th className="px-4 py-2 text-left font-medium">Próximo seguimiento</th>
-                <th className="hidden px-4 py-2 text-left font-medium @4xl/table:table-cell">Responsable</th>
-                <th className="hidden px-4 py-2 text-right font-medium @5xl/table:table-cell">Venta mensual</th>
-                <th className="hidden px-4 py-2 text-left font-medium @6xl/table:table-cell">Última actividad</th>
+                <th className="hidden px-4 py-2 text-left font-medium @5xl/table:table-cell">Responsable</th>
+                <th className="hidden px-4 py-2 text-right font-medium @6xl/table:table-cell">Venta mensual</th>
+                <th className="hidden px-4 py-2 text-left font-medium @7xl/table:table-cell">Última actividad</th>
                 {(canEdit || canDelete) && <th className="w-16 px-2 py-2" />}
               </tr>
             </thead>
@@ -378,11 +378,11 @@ export function LeadsTable({
                   <td className="px-4 py-3">
                     <FollowUpCell lead={l} today={today} />
                   </td>
-                  <td className="text-muted-foreground hidden px-4 py-3 @4xl/table:table-cell">{l.ownerName ?? "—"}</td>
-                  <td className="hidden px-4 py-3 text-right whitespace-nowrap @5xl/table:table-cell">
+                  <td className="text-muted-foreground hidden px-4 py-3 @5xl/table:table-cell">{l.ownerName ?? "—"}</td>
+                  <td className="hidden px-4 py-3 text-right whitespace-nowrap @6xl/table:table-cell">
                     {l.estimatedMonthly != null ? `$${formatMxn(l.estimatedMonthly)}` : "—"}
                   </td>
-                  <td className="text-muted-foreground hidden px-4 py-3 @6xl/table:table-cell">
+                  <td className="text-muted-foreground hidden px-4 py-3 @7xl/table:table-cell">
                     {l.lastActivity ? (
                       <>
                         <span className="block text-xs whitespace-nowrap">

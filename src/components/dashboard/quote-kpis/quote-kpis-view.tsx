@@ -288,7 +288,7 @@ export function QuoteKpisView() {
           </Card>
 
           <div className="grid gap-6 xl:grid-cols-2">
-            <Card>
+            <Card className="min-w-0">
               <CardHeader>
                 <CardTitle className="text-base">Clientes más cotizados</CardTitle>
                 <CardDescription>Los 10 con más cotizaciones en el periodo.</CardDescription>
@@ -301,7 +301,7 @@ export function QuoteKpisView() {
                 />
               </CardContent>
             </Card>
-            <Card>
+            <Card className="min-w-0">
               <CardHeader>
                 <CardTitle className="text-base">Rutas más cotizadas</CardTitle>
                 <CardDescription>Las 10 rutas terrestres que más aparecen en cotizaciones.</CardDescription>
@@ -325,7 +325,7 @@ function KpiTable({ head, rows, empty }: { head: string[]; rows: (string | numbe
   if (rows.length === 0) return <p className="text-muted-foreground px-6 text-sm">{empty}</p>;
   return (
     <div className="w-full overflow-x-auto">
-      <table className="w-full min-w-max text-sm">
+      <table className="w-full min-w-max text-sm md:min-w-0">
         <thead>
           <tr className="bg-muted/40 border-y">
             {head.map((h, i) => (

@@ -33,7 +33,7 @@ function getColumns(): ColumnDef<PhoneDevice>[] {
       header: ({ column }) => <SortableColumnHeader column={column} title="Número" />,
       cell: ({ row }) => {
         const v = row.getValue<string | null>("phoneNumber");
-        return v ? formatPhone(v) : <span className="text-muted-foreground">—</span>;
+        return v ? <span className="whitespace-nowrap">{formatPhone(v)}</span> : <span className="text-muted-foreground">—</span>;
       },
     },
     {
@@ -42,7 +42,7 @@ function getColumns(): ColumnDef<PhoneDevice>[] {
       header: ({ column }) => <SortableColumnHeader column={column} title="IMEI" />,
       cell: ({ row }) => {
         const v = row.getValue<string | null>("imei");
-        return v ? formatIMEI(v) : <span className="text-muted-foreground">—</span>;
+        return v ? <span className="whitespace-nowrap">{formatIMEI(v)}</span> : <span className="text-muted-foreground">—</span>;
       },
     },
     {

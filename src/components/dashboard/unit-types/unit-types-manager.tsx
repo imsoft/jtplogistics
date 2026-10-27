@@ -198,7 +198,7 @@ export function UnitTypesManager({
                               if (e.key === "Escape") setEditId(null);
                             }}
                           />
-                          <span className="text-muted-foreground shrink-0 font-mono text-xs">{u.value}</span>
+                          <span className="text-muted-foreground hidden shrink-0 font-mono text-xs sm:inline">{u.value}</span>
                           <Button size="icon" variant="ghost" className="size-8 text-green-600 hover:text-green-700" onClick={() => handleSaveEdit(u.id)} disabled={isSaving} aria-label="Guardar">
                             <Check className="size-4" />
                           </Button>
@@ -209,7 +209,7 @@ export function UnitTypesManager({
                       ) : (
                         <>
                           <span className="flex-1 font-medium">{u.name}</span>
-                          <span className="text-muted-foreground shrink-0 font-mono text-xs">{u.value}</span>
+                          <span className="text-muted-foreground hidden shrink-0 font-mono text-xs sm:inline">{u.value}</span>
                           {canUpdate && (
                             <Button size="icon" variant="ghost" className="size-8" aria-label="Editar" onClick={() => { setEditId(u.id); setEditName(u.name); }}>
                               <Pencil className="size-4" />
