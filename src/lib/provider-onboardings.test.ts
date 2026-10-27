@@ -6,6 +6,7 @@ import {
   docProgress,
   isDocsComplete,
   onboardingStage,
+  providerNameKey,
   validateHold,
   type DocRecord,
 } from "@/lib/provider-onboardings";
@@ -69,5 +70,14 @@ describe("contrato", () => {
   it("los estados son los textos que usa Finanzas", () => {
     expect(CONTRACT_STATUSES.map((c) => c.label)).toContain("Enviado al proveedor, pendiente de firma");
     expect(CONTRACT_STATUSES.map((c) => c.label)).toContain("Recibido firmado");
+  });
+});
+
+describe("nombre comparable del proveedor", () => {
+  it("ignora acentos, mayúsculas y signos, pero no confunde nombres parecidos", () => {
+    expect(providerNameKey("PEÑA EXPRESS")).toBe(providerNameKey("peña express"));
+    expect(providerNameKey("Transportes García y Mirafuentes")).toBe(providerNameKey("TRANSPORTES GARCIA Y MIRAFUENTES"));
+    expect(providerNameKey("Telo")).not.toBe(providerNameKey("Logistica Sotelo"));
+    expect(providerNameKey(null)).toBe("");
   });
 });

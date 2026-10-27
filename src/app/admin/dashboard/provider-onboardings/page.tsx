@@ -14,7 +14,7 @@ export default function ProviderOnboardingsPage() {
       newHref="/admin/dashboard/provider-onboardings/new"
       newLabel="Nueva alta"
     >
-      <OnboardingsTable editBase="/admin/dashboard/provider-onboardings" canEdit canDelete />
+      <OnboardingsTable editBase="/admin/dashboard/provider-onboardings" canCreate canEdit canDelete />
     </ResourceListPage>
   );
 }

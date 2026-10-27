@@ -18,6 +18,7 @@ export default function CollaboratorProviderOnboardingsPage() {
     >
       <OnboardingsTable
         editBase="/collaborator/dashboard/provider-onboardings"
+        canCreate={permissions?.canCreateProviderOnboardings ?? false}
         canEdit={permissions?.canUpdateProviderOnboardings ?? false}
         canDelete={permissions?.canDeleteProviderOnboardings ?? false}
       />

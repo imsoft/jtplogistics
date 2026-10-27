@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ChevronDown, ClipboardCheck, Globe, Loader2, Mail, Pencil, Phone, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -94,6 +95,8 @@ export function ProspectsTable({
   canEdit?: boolean;
   canDelete?: boolean;
 }) {
+  const router = useRouter();
+  const onboardingHref = (id: string) => `${editBase.replace(/\/prospects$/, "/provider-onboardings")}/new?prospectId=${id}`;
   const [prospects, setProspects] = useState<Prospect[] | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<ProspectStatus | "todos">("todos");
@@ -151,7 +154,15 @@ export function ProspectsTable({
     setProspects((list) => list?.map((x) => (x.id === p.id ? { ...x, status } : x)) ?? list);
     try {
       await patch(p.id, { status });
-      toast.success("Etapa actualizada.");
+      if (status === "en_alta") {
+        // El alta no se crea sola: pide razón social y fecha de inicio.
+        toast.success("Etapa actualizada. Falta abrir su alta de proveedor.", {
+          action: { label: "Iniciar alta", onClick: () => router.push(onboardingHref(p.id)) },
+          duration: 10000,
+        });
+      } else {
+        toast.success("Etapa actualizada.");
+      }
     } catch (e) {
       setProspects(prev ?? null);
       toast.error(e instanceof Error ? e.message : "No se pudo actualizar.");
@@ -326,7 +337,7 @@ export function ProspectsTable({
                         {canEdit && (p.status === "en_alta" || p.status === "listo") && (
                           <Button variant="ghost" size="icon" className="size-7" asChild>
                             <Link
-                              href={`${editBase.replace(/\/prospects$/, "/provider-onboardings")}/new?prospectId=${p.id}`}
+                              href={onboardingHref(p.id)}
                               aria-label={`Iniciar alta de ${p.commercialName}`}
                               title="Iniciar alta de proveedor"
                             >

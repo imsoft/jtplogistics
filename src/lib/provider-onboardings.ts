@@ -89,3 +89,8 @@ export function validateHold(input: { onHold: boolean; holdReason: string }): st
   if (input.onHold && input.holdReason.trim().length < 3) return "Escribe por qué se detiene el alta.";
   return null;
 }
+
+/** Nombre comparable de un proveedor: sin acentos, mayúsculas ni signos. */
+export function providerNameKey(name: string | null | undefined): string {
+  return (name ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Check, ChevronDown, Circle, Loader2, Minus, PauseCircle, Pencil, PlayCircle, Trash2 } from "lucide-react";
+import { Check, ChevronDown, Circle, ClipboardCheck, Loader2, Minus, PauseCircle, Pencil, PlayCircle, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -138,16 +138,28 @@ function DocChip({
  * Lo del día a día (marcar un documento, mover el contrato, detener) se hace
  * aquí mismo; la ficha completa se abre con el lápiz.
  */
+interface PendingProspect {
+  id: string;
+  commercialName: string;
+  legalName: string | null;
+  createdByName: string | null;
+}
+
 export function OnboardingsTable({
   editBase,
+  canCreate = false,
   canEdit = false,
   canDelete = false,
 }: {
   editBase: string;
+  canCreate?: boolean;
   canEdit?: boolean;
   canDelete?: boolean;
 }) {
   const [rows, setRows] = useState<OnboardingRow[] | null>(null);
+  // Prospectos que ya van "En proceso de alta" sin expediente abierto: el alta
+  // no se crea sola (pide razón social y fecha), así que se avisan aquí.
+  const [pending, setPending] = useState<PendingProspect[]>([]);
   const [search, setSearch] = useState("");
   const [stage, setStage] = useState<OnboardingStage | "all">("all");
   const [contract, setContract] = useState<ContractStatus | "all">("all");
@@ -161,6 +173,10 @@ export function OnboardingsTable({
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d: OnboardingRow[]) => setRows(d))
       .catch(() => setRows([]));
+    fetch("/api/provider-onboardings/pending-prospects")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d: PendingProspect[]) => setPending(d))
+      .catch(() => setPending([]));
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -275,6 +291,35 @@ export function OnboardingsTable({
 
   return (
     <div className="min-w-0 space-y-4">
+      {pending.length > 0 && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/30">
+          <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">
+            {pending.length === 1 ? "1 prospecto espera su alta" : `${pending.length} prospectos esperan su alta`}
+          </p>
+          <p className="mb-3 text-xs text-amber-800 dark:text-amber-300">
+            Están en Prospección como “En proceso de alta” o “Listo para operar”, pero todavía no tienen expediente.
+          </p>
+          <ul className="divide-y divide-amber-200 dark:divide-amber-900">
+            {pending.map((p) => (
+              <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                <span className="min-w-0 text-sm">
+                  <span className="font-medium">{p.commercialName}</span>
+                  {p.createdByName && <span className="text-muted-foreground text-xs"> · lo registró {p.createdByName}</span>}
+                </span>
+                {canCreate && (
+                  <Button size="sm" asChild>
+                    <Link href={`${editBase}/new?prospectId=${p.id}`}>
+                      <ClipboardCheck className="size-4" />
+                      Iniciar alta
+                    </Link>
+                  </Button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center gap-2">
         <Input value={search} onChange={(e) => setSearch(e.target.value)} className="w-full sm:max-w-xs" aria-label="Buscar proveedor" />
         <AppSelect value={stage} onValueChange={(v) => setStage((v || "all") as OnboardingStage | "all")} options={stageOptions} className="w-full sm:w-44" />
@@ -300,7 +345,7 @@ export function OnboardingsTable({
                 <th className="px-4 py-2 text-left font-medium">Expediente</th>
                 <th className="px-4 py-2 text-left font-medium">Alta</th>
                 <th className="px-4 py-2 text-left font-medium">Contrato</th>
-                <th className="hidden px-4 py-2 text-left font-medium @5xl/table:table-cell">Autoriza</th>
+                <th className="hidden px-4 py-2 text-left font-medium @6xl/table:table-cell">Autoriza</th>
                 {(canEdit || canDelete) && <th className="w-24 px-2 py-2" />}
               </tr>
             </thead>
@@ -312,15 +357,15 @@ export function OnboardingsTable({
                 return (
                   <tr key={r.id} className={cn("border-b align-top last:border-0", st === "on_hold" && "bg-purple-50/60 dark:bg-purple-950/20")}>
                     <td className="px-4 py-3">
-                      <span className="block max-w-64 truncate font-medium" title={r.legalName}>{r.legalName}</span>
-                      <span className="text-muted-foreground block max-w-64 truncate text-xs" title={r.commercialName}>{r.commercialName}</span>
+                      <span className="block max-w-52 truncate font-medium min-[1440px]:max-w-64" title={r.legalName}>{r.legalName}</span>
+                      <span className="text-muted-foreground block max-w-52 truncate text-xs min-[1440px]:max-w-64" title={r.commercialName}>{r.commercialName}</span>
                       {st === "on_hold" && r.holdReason && (
-                        <span className="mt-1 block max-w-64 text-xs text-purple-900 dark:text-purple-200" title={r.holdReason}>{r.holdReason}</span>
+                        <span className="mt-1 block max-w-52 text-xs text-purple-900 min-[1440px]:max-w-64 dark:text-purple-200" title={r.holdReason}>{r.holdReason}</span>
                       )}
                     </td>
                     <td className="text-muted-foreground hidden whitespace-nowrap px-4 py-3 @3xl/table:table-cell">{shortDate(r.startedOn)}</td>
                     <td className="px-4 py-3">
-                      <div className="flex max-w-72 flex-wrap gap-1">
+                      <div className="flex w-64 max-w-64 flex-wrap gap-1 min-[1440px]:w-72 min-[1440px]:max-w-72">
                         {ONBOARDING_DOCS.map((d) => (
                           <DocChip key={d.key} docKey={d.key} status={r.docs[d.key]} canEdit={canEdit} onChange={(next) => setDoc(r, d.key, next)} />
                         ))}
@@ -335,7 +380,7 @@ export function OnboardingsTable({
                       {canEdit ? (
                         <DropdownMenu>
                           <DropdownMenuTrigger className="inline-flex max-w-56 items-center gap-1 rounded-full text-left outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                            <Badge variant="outline" className={cn("border-0 whitespace-normal", c.badgeClass)}>{c.label}</Badge>
+                            <Badge variant="outline" className={cn("rounded-md border-0 whitespace-normal", c.badgeClass)}>{c.label}</Badge>
                             <ChevronDown className="text-muted-foreground size-3 shrink-0" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="start">
@@ -345,11 +390,11 @@ export function OnboardingsTable({
                           </DropdownMenuContent>
                         </DropdownMenu>
                       ) : (
-                        <Badge variant="outline" className={cn("border-0 whitespace-normal", c.badgeClass)}>{c.label}</Badge>
+                        <Badge variant="outline" className={cn("rounded-md border-0 whitespace-normal", c.badgeClass)}>{c.label}</Badge>
                       )}
                       {r.signedReceivedOn && <span className="text-muted-foreground mt-1 block text-xs">Firmado {shortDate(r.signedReceivedOn)}</span>}
                     </td>
-                    <td className="text-muted-foreground hidden px-4 py-3 text-xs @5xl/table:table-cell">
+                    <td className="text-muted-foreground hidden px-4 py-3 text-xs @6xl/table:table-cell">
                       {r.altaAuthorizedBy && <span className="block">Alta: {r.altaAuthorizedBy}</span>}
                       {r.contractAuthorizedBy && <span className="block">Contrato: {r.contractAuthorizedBy}</span>}
                       {!r.altaAuthorizedBy && !r.contractAuthorizedBy && "—"}
