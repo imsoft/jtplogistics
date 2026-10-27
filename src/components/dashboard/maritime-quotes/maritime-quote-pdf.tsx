@@ -7,10 +7,12 @@ import {
   type MaritimeQuoteComputed,
 } from "@/lib/maritime-quote";
 import { pdfSentence, pdfTitle, pdfUpper } from "@/lib/pdf-text-case";
+import { BRAND as COLORS } from "@/lib/email-layout";
 
-const BRAND = "#2D4EAA";
-const TEXT = "#1A1A1A";
-const LINE = "#C8D5EE";
+// Los mismos colores de la plataforma y de los correos.
+const BRAND = COLORS.blue;
+const TEXT = COLORS.text;
+const LINE = COLORS.border;
 
 const s = StyleSheet.create({
   page: { fontFamily: "Helvetica", fontSize: 7.5, color: TEXT, paddingTop: 24, paddingBottom: 30, paddingHorizontal: 30 },

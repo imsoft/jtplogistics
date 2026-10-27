@@ -3,15 +3,16 @@
 import { Document, Page, Text, View, Image, StyleSheet } from "@react-pdf/renderer";
 import { renderLexicalContent } from "@/lib/utils/lexical-to-pdf";
 import type { ProviderTariffData } from "@/types/provider-tariff.types";
+import { BRAND as COLORS } from "@/lib/email-layout";
 
-// Colores del machote autorizado: azul marino para las cabeceras y azul claro
-// para las filas de tarifas.
-const NAVY = "#1F3864";
-const ROW_BLUE = "#B4C7E7";
+// La estructura del machote autorizado con los colores de la plataforma:
+// azul para las cabeceras y azul claro para las filas de tarifas.
+const NAVY = COLORS.blue;
+const ROW_BLUE = COLORS.surface;
 const WHITE = "#FFFFFF";
-const TEXT = "#1A1A1A";
-const MUTED = "#6B7280";
-const LINE = "#C8D5EE";
+const TEXT = COLORS.text;
+const MUTED = COLORS.muted;
+const LINE = COLORS.border;
 
 const s = StyleSheet.create({
   page: { fontFamily: "Helvetica", fontSize: 8, color: TEXT, paddingTop: 18, paddingBottom: 36, paddingHorizontal: 32 },

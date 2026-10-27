@@ -1,16 +1,18 @@
 "use client";
 
 import { Document, Page, Text, View, Image, StyleSheet } from "@react-pdf/renderer";
+import { BRAND as COLORS } from "@/lib/email-layout";
 import type { QuoteData } from "@/types/carrier-quote.types";
 import { renderLexicalContent } from "@/lib/utils/lexical-to-pdf";
 import { pdfSentence, pdfTitle, pdfUpper } from "@/lib/pdf-text-case";
 
-const BRAND = "#2D4EAA";       // oklch(0.488 0.243 264) → JTP primary blue
-const BRAND_LIGHT = "#EBF0FB"; // very light tint for alternating rows
+// Los mismos colores de la plataforma y de los correos.
+const BRAND = COLORS.blue;
+const BRAND_LIGHT = COLORS.background; // renglones alternos
 const WHITE = "#FFFFFF";
-const TEXT = "#1A1A1A";
-const MUTED = "#6B7280";
-const LINE = "#C8D5EE";        // subtle blue-gray for dividers
+const TEXT = COLORS.text;
+const MUTED = COLORS.muted;
+const LINE = COLORS.border;
 
 const s = StyleSheet.create({
   page: { fontFamily: "Helvetica", fontSize: 8, color: TEXT, paddingTop: 18, paddingBottom: 30, paddingHorizontal: 36 },
