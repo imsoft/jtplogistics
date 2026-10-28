@@ -27,8 +27,11 @@ import {
   shipmentsToExcelAoa,
 } from "@/lib/excel-export";
 import type { Shipment, ShipmentStatus } from "@/types/shipment.types";
-import { FileDown } from "lucide-react";
+import { FileDown, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
+import { shipmentLockReason } from "@/lib/shipment-lock";
+import { RowDeleteDialog } from "@/components/dashboard/resources/row-delete-dialog";
 
 function fmtDate(iso: string | null) {
   if (!iso) return null;
@@ -275,11 +278,14 @@ function getRowClassName(shipment: Shipment): string {
 interface ShipmentsTableProps {
   apiEndpoint?: string;
   detailBasePath?: string;
+  /** Dirección elimina siempre (cerrados, confirmando su correo); el colaborador según su permiso. */
+  isAdmin?: boolean;
 }
 
 export function ShipmentsTable({
   apiEndpoint = "/api/admin/shipments",
   detailBasePath = "/admin/dashboard/shipments",
+  isAdmin = true,
 }: ShipmentsTableProps = {}) {
   const endpoint = apiEndpoint;
   const detailBase = detailBasePath;
@@ -319,6 +325,7 @@ export function ShipmentsTable({
     isFetching,
     error,
     buildQuery,
+    refetch,
   } = useServerTable<Shipment>({
     endpoint,
     pageSize: 20,
@@ -328,7 +335,54 @@ export function ShipmentsTable({
 
   // La columna aparece solo cuando la API manda la tarifa (dirección, o colaborador que ve Finanzas).
   const showSale = useMemo(() => shipments.some((s) => "sale" in s), [shipments]);
-  const columns = useMemo(() => getColumns(incidentTypes, showSale), [incidentTypes, showSale]);
+  const { permissions } = useCollaboratorPermissions();
+  const canDelete = isAdmin || Boolean(permissions?.canDeleteShipments);
+  const [deleting, setDeleting] = useState<Shipment | null>(null);
+
+  const columns = useMemo(() => {
+    const base = getColumns(incidentTypes, showSale);
+    if (!canDelete) return base;
+    const actions: ColumnDef<Shipment> = {
+      id: "actions",
+      // Pegada al borde derecho: en laptops la tabla se recorre de lado y el
+      // botón quedaría escondido al final.
+      meta: { className: "sticky right-0 z-[1] bg-background w-10" },
+      enableSorting: false,
+      enableHiding: false,
+      header: () => <span className="sr-only">Acciones</span>,
+      cell: ({ row }) => {
+        // Cerrado o sin incidencias: solo dirección lo elimina.
+        if (!isAdmin && shipmentLockReason(row.original)) return null;
+        return (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7"
+            aria-label={`Eliminar embarque ${row.original.eco ?? ""}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              setDeleting(row.original);
+            }}
+          >
+            <Trash2 className="text-destructive size-3.5" />
+          </Button>
+        );
+      },
+    };
+    return [...base, actions];
+  }, [incidentTypes, showSale, canDelete, isAdmin]);
+
+  async function deleteShipment(confirmEmail: string) {
+    if (!deleting) return;
+    const res = await fetch(`${endpoint}/${deleting.id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ confirmEmail }),
+    });
+    if (!res.ok) throw new Error(((await res.json().catch(() => ({}))) as { error?: string }).error ?? "No se pudo eliminar.");
+    toast.success("Embarque eliminado.");
+    refetch();
+  }
 
   const hasActiveQuery =
     search.trim() !== "" || Object.keys(filters).length > 0;
@@ -374,6 +428,21 @@ export function ShipmentsTable({
   }
 
   return (
+    <>
+    <RowDeleteDialog
+      open={deleting !== null}
+      title="¿Eliminar embarque?"
+      description={
+        <>
+          Se eliminará el embarque <strong>{deleting?.eco ?? "sin ECO"}</strong>
+          {deleting?.origin || deleting?.destination ? ` (${deleting?.origin ?? "—"} → ${deleting?.destination ?? "—"})` : ""} junto con sus
+          tarifas en Finanzas. Las facturas que se hayan hecho de él se conservan. No se puede deshacer.
+        </>
+      }
+      requireEmail={deleting !== null && shipmentLockReason(deleting) !== null}
+      onConfirm={deleteShipment}
+      onClose={() => setDeleting(null)}
+    />
     <DataTable<Shipment, unknown>
       key={compactView ? "shipments-compact" : "shipments-full"}
       columns={columns}
@@ -484,5 +553,6 @@ export function ShipmentsTable({
         </div>
       }
     />
+    </>
   );
 }

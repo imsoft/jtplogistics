@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { DataTableSkeleton } from "@/components/ui/skeletons";
 import { useRouter } from "next/navigation";
-import { FileDown } from "lucide-react";
+import { FileDown, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAdminFetch } from "@/hooks/use-admin-fetch";
 import { type ColumnDef } from "@tanstack/react-table";
@@ -21,6 +21,8 @@ import { formatMxn } from "@/lib/utils";
 import { SHIPMENT_STATUS_CONFIG } from "@/components/dashboard/resources/shipments-table";
 import type { FinanceListRow } from "@/types/finance.types";
 import type { ShipmentStatus } from "@/types/shipment.types";
+import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
+import { RowDeleteDialog } from "@/components/dashboard/resources/row-delete-dialog";
 
 function fmtDate(iso: string | null) {
   if (!iso) return null;
@@ -150,17 +152,52 @@ function getColumns(): ColumnDef<FinanceListRow>[] {
 interface FinancesTableProps {
   apiEndpoint?: string;
   detailBasePath?: string;
+  /** Dirección quita tarifas siempre; el colaborador con el permiso de eliminar en Finanzas. */
+  isAdmin?: boolean;
 }
 
 export function FinancesTable({
   apiEndpoint = "/api/admin/finances",
   detailBasePath = "/admin/dashboard/finances",
+  isAdmin = true,
 }: FinancesTableProps = {}) {
   const endpoint = apiEndpoint;
   const detailBase = detailBasePath;
   const router = useRouter();
-  const columns = useMemo(() => getColumns(), []);
-  const { data: rows, isLoaded, error } = useAdminFetch<FinanceListRow>(
+  const { permissions } = useCollaboratorPermissions();
+  const canDelete = isAdmin || Boolean(permissions?.canDeleteFinances);
+  const [clearing, setClearing] = useState<FinanceListRow | null>(null);
+  const columns = useMemo(() => {
+    const base = getColumns();
+    if (!canDelete) return base;
+    const actions: ColumnDef<FinanceListRow> = {
+      id: "actions",
+      // Pegada al borde derecho: en laptops la tabla se recorre de lado y el
+      // botón quedaría escondido al final.
+      meta: { className: "sticky right-0 z-[1] bg-background w-10" },
+      enableSorting: false,
+      enableHiding: false,
+      header: () => <span className="sr-only">Acciones</span>,
+      cell: ({ row }) =>
+        row.original.sale == null && row.original.cost == null ? null : (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7"
+            aria-label={`Quitar tarifas del embarque ${row.original.eco ?? ""}`}
+            title="Quitar tarifas"
+            onClick={(e) => {
+              e.stopPropagation();
+              setClearing(row.original);
+            }}
+          >
+            <Trash2 className="text-destructive size-3.5" />
+          </Button>
+        ),
+    };
+    return [...base, actions];
+  }, [canDelete]);
+  const { data: rows, isLoaded, error, reload } = useAdminFetch<FinanceListRow>(
     endpoint,
     "Error al cargar finanzas"
   );
@@ -185,7 +222,32 @@ export function FinancesTable({
     );
   }
 
+  async function clearTariffs() {
+    if (!clearing) return;
+    const res = await fetch(`${endpoint}/${clearing.id}`, { method: "DELETE" });
+    if (!res.ok) throw new Error(((await res.json().catch(() => ({}))) as { error?: string }).error ?? "No se pudieron quitar las tarifas.");
+    toast.success("Tarifas eliminadas.");
+    reload();
+  }
+
   return (
+    <>
+    <RowDeleteDialog
+      open={clearing !== null}
+      title="¿Quitar las tarifas?"
+      description={
+        <>
+          Se quitarán la tarifa de venta
+          {clearing?.sale != null ? ` ($${formatMxn(clearing.sale)})` : ""} y la de compra
+          {clearing?.cost != null ? ` ($${formatMxn(clearing.cost)})` : ""} del embarque{" "}
+          <strong>{clearing?.eco ?? "sin ECO"}</strong>. El embarque sigue en su tabla y las cifras quedan en la
+          bitácora por si hay que reponerlas.
+        </>
+      }
+      confirmLabel="Quitar tarifas"
+      onConfirm={clearTariffs}
+      onClose={() => setClearing(null)}
+    />
     <DataTable<FinanceListRow, unknown>
       columns={columns}
       data={rows}
@@ -207,5 +269,6 @@ export function FinancesTable({
         </Button>
       }
     />
+    </>
   );
 }

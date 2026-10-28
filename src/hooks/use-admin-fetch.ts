@@ -6,6 +6,8 @@ interface UseAdminFetchResult<T> {
   data: T[];
   isLoaded: boolean;
   error: string | null;
+  /** Vuelve a pedir los datos (p. ej. después de eliminar). */
+  reload: () => void;
 }
 
 export function useAdminFetch<T>(
@@ -31,5 +33,5 @@ export function useAdminFetch<T>(
 
   useEffect(() => { load(); }, [load]);
 
-  return { data, isLoaded, error };
+  return { data, isLoaded, error, reload: load };
 }

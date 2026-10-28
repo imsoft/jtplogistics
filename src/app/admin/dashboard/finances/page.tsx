@@ -10,7 +10,7 @@ export default function FinancesPage() {
   return (
     <ResourceListPage
       title="Tabla de finanzas"
-      description="Todos los embarques con su estado. Las tarifas de venta y compra aparecen cuando existe registro financiero vinculado al embarque. Solo consulta: edita en la tabla de embarques."
+      description="Todos los embarques con su estado. Las tarifas de venta y compra aparecen cuando existe registro financiero vinculado al embarque. Las tarifas se capturan en la tabla de embarques; aquí se pueden quitar."
     >
       <FinancesTable />
     </ResourceListPage>

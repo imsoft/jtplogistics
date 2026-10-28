@@ -15,6 +15,7 @@ export default function CollaboratorFinancesPage() {
       <FinancesTable
         apiEndpoint="/api/collaborator/finances"
         detailBasePath="/collaborator/dashboard/finances"
+        isAdmin={false}
       />
     </ResourceListPage>
   );

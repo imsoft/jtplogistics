@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { shipmentLockReason } from "@/lib/shipment-lock";
+import { shipmentDeleteBlock, shipmentLockReason } from "@/lib/shipment-lock";
 
 describe("shipmentLockReason", () => {
   it("cerrado manda", () => {
@@ -14,5 +14,19 @@ describe("shipmentLockReason", () => {
     expect(shipmentLockReason({ status: "delivered", incident: "si" })).toBeNull();
     expect(shipmentLockReason({ status: "pending", incident: "" })).toBeNull();
     expect(shipmentLockReason({ status: "pending", incident: null })).toBeNull();
+  });
+});
+
+describe("shipmentDeleteBlock", () => {
+  const closed = { status: "returned", incident: null };
+  it("abierto: se elimina sin más", () => {
+    expect(shipmentDeleteBlock({ status: "pending", incident: null }, { isAdmin: false, emailConfirmed: false })).toBeNull();
+  });
+  it("cerrado: el colaborador no puede", () => {
+    expect(shipmentDeleteBlock(closed, { isAdmin: false, emailConfirmed: true })).toMatch(/solo dirección/);
+  });
+  it("cerrado: dirección solo confirmando su correo", () => {
+    expect(shipmentDeleteBlock(closed, { isAdmin: true, emailConfirmed: false })).toMatch(/confirma tu correo/);
+    expect(shipmentDeleteBlock(closed, { isAdmin: true, emailConfirmed: true })).toBeNull();
   });
 });

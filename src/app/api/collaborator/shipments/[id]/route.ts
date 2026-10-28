@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 import { logAudit, diffObjects } from "@/lib/audit-log";
-import { shipmentLockReason, LOCK_TEXT } from "@/lib/shipment-lock";
+import { shipmentDeleteBlock, shipmentLockReason, LOCK_TEXT } from "@/lib/shipment-lock";
 import { readTariffs, isTariffOnlyBody, canManageTariffs } from "@/lib/shipment-tariffs";
 import { outcomeAfterStatus } from "@/lib/shipment-outcome";
-import { syncShipmentFinance } from "@/lib/shipment-tariffs-server";
+import { deleteShipmentWithFinance, syncShipmentFinance } from "@/lib/shipment-tariffs-server";
 
 function toJson(s: {
   id: string;
@@ -241,7 +241,7 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -257,17 +257,16 @@ export async function DELETE(
     const { id } = await params;
     const shipment = await prisma.shipment.findUnique({ where: { id } });
     if (!shipment) return Response.json({ error: "No encontrado" }, { status: 404 });
-    if (shipment.status === SHIPMENT_CLOSED_STATUS) {
-      return Response.json(
-        { error: "El embarque está cerrado y no se puede eliminar. Para ello, reabre el embarque cambiando el estado." },
-        { status: 403 },
-      );
-    }
-    // Registrado sin incidencias: se consulta como perfil y tampoco se elimina.
-    if (shipmentLockReason(shipment) === "no_incident") {
-      return Response.json({ error: "Este embarque quedó registrado sin incidencias y no se puede eliminar." }, { status: 403 });
-    }
-    await prisma.shipment.delete({ where: { id } });
+    // Cerrado o sin incidencias: solo dirección, confirmando su correo.
+    const body = (await req.json().catch(() => ({}))) as { confirmEmail?: unknown };
+    const block = shipmentDeleteBlock(shipment, {
+      isAdmin: session.user.role === "admin",
+      emailConfirmed:
+        typeof body.confirmEmail === "string" &&
+        body.confirmEmail.trim().toLowerCase() === session.user.email.toLowerCase(),
+    });
+    if (block) return Response.json({ error: block }, { status: 403 });
+    await deleteShipmentWithFinance(shipment);
     void logAudit({
       resource: "shipment",
       resourceId: id,

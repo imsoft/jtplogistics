@@ -27,7 +27,7 @@ function financeData(s: Shipment) {
 }
 
 /** El registro de finanzas del embarque: el ligado, o uno viejo sin liga que coincida. */
-async function financeOf(shipment: Shipment): Promise<Finance | null> {
+export async function financeOf(shipment: Shipment): Promise<Finance | null> {
   const linked = await prisma.finance.findUnique({ where: { shipmentId: shipment.id } });
   if (linked) return linked;
   if (!shipment.eco || !shipment.client || !shipment.origin || !shipment.destination) return null;
@@ -80,4 +80,25 @@ export function financesForShipments(shipments: Shipment[]): Promise<Finance[]> 
     where: { OR: [{ shipmentId: { in: shipments.map((s) => s.id) } }, ...(ecos.length ? [{ shipmentId: null, eco: { in: ecos } }] : [])] },
     orderBy: { createdAt: "desc" },
   });
+}
+
+/**
+ * Elimina el embarque junto con su registro de finanzas: si el registro se
+ * quedara huérfano, su venta y su costo seguirían sumando en los resúmenes.
+ */
+export async function deleteShipmentWithFinance(shipment: Shipment): Promise<void> {
+  const finance = await financeOf(shipment);
+  await prisma.$transaction([
+    ...(finance ? [prisma.finance.delete({ where: { id: finance.id } })] : []),
+    prisma.shipment.delete({ where: { id: shipment.id } }),
+  ]);
+}
+
+/** Quita la tarifa de venta y la de compra del embarque y de su registro de finanzas. */
+export async function clearShipmentTariffs(shipment: Shipment): Promise<void> {
+  const finance = await financeOf(shipment);
+  await prisma.$transaction([
+    prisma.shipment.update({ where: { id: shipment.id }, data: { sale: null, cost: null } }),
+    ...(finance ? [prisma.finance.update({ where: { id: finance.id }, data: { sale: null, cost: null } })] : []),
+  ]);
 }

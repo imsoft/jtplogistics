@@ -32,3 +32,19 @@ export const LOCK_TEXT: Record<Exclude<ShipmentLockReason, null>, { title: strin
     button: "Desbloquear para editar",
   },
 };
+
+/**
+ * Por qué no se puede eliminar un embarque (null = sí se puede). Abierto lo
+ * elimina quien tenga permiso; cerrado o sin incidencias, solo dirección y
+ * confirmando su correo, igual que para desbloquearlo.
+ */
+export function shipmentDeleteBlock(
+  s: { status?: string | null; incident?: string | null },
+  who: { isAdmin: boolean; emailConfirmed: boolean }
+): string | null {
+  const lock = shipmentLockReason(s);
+  if (!lock) return null;
+  if (!who.isAdmin) return `${LOCK_TEXT[lock].title}: solo dirección puede eliminarlo.`;
+  if (!who.emailConfirmed) return `${LOCK_TEXT[lock].title}: confirma tu correo para eliminarlo.`;
+  return null;
+}

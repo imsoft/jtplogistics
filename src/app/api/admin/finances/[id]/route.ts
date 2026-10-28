@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
 import { findFinanceForShipment } from "@/lib/finance-shipment-match";
+import { clearTariffsResponse } from "@/lib/finance-tariffs-delete";
 import type { FinanceShipmentDetail } from "@/types/finance.types";
 
 function toDetail(
@@ -85,14 +86,16 @@ export function PATCH() {
   );
 }
 
-export function DELETE() {
-  return adminHandler(async () =>
-    Response.json(
-      {
-        error:
-          "La tabla de finanzas es solo de consulta. No se pueden eliminar registros desde aquí.",
-      },
-      { status: 403 }
-    )
-  );
+/**
+ * DELETE /api/admin/finances/[id] — quita las tarifas de venta y compra del
+ * embarque (el id es el del embarque). El embarque sigue en su tabla.
+ */
+export function DELETE(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  return adminHandler(async (session) => {
+    const { id } = await params;
+    return clearTariffsResponse(id, session.user);
+  });
 }

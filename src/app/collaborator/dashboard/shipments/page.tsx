@@ -17,6 +17,7 @@ export default function CollaboratorShipmentsPage() {
       <ShipmentsTable
         apiEndpoint="/api/collaborator/shipments"
         detailBasePath="/collaborator/dashboard/shipments"
+        isAdmin={false}
       />
     </ResourceListPage>
   );
