@@ -155,7 +155,7 @@ export function LeadsTable({
         if (st !== "vencido" && st !== "hoy") return false;
       } else if (filter !== "todos" && l.stage !== filter) return false;
       if (!q) return true;
-      return [l.companyName, l.contactName, l.phone, l.email, l.city, l.industry, l.notes, l.ownerName]
+      return [l.companyName, l.contactName, l.phone, l.email, l.city, l.industry, l.rfc, l.address, l.notes, l.ownerName]
         .some((v) => normalizeSearch(v ?? "").includes(q));
     });
   }, [byOwner, search, filter, today]);

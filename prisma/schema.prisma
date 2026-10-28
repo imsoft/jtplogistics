@@ -1384,6 +1384,8 @@ model ClientLead {
   city             String?           @map("city")
   /// Giro o industria del cliente.
   industry         String?           @map("industry")
+  rfc              String?           @map("rfc")
+  address          String?           @map("address")
   source           ClientLeadSource? @map("source")
   stage            ClientLeadStage   @default(prospecto) @map("stage")
   /// Venta mensual que se espera si se cierra, en pesos.

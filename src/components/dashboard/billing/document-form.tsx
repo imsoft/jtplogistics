@@ -14,6 +14,7 @@ import { AppSelect } from "@/components/ui/app-select";
 import { formatMxn, formatMxnLive, parseMxn } from "@/lib/utils";
 import { BILLING_KIND_LABELS, IVA_WITHHOLDING_OPTIONS, computeTotals, type BillingKind } from "@/lib/billing";
 import { money, todayKey, uploadAttachment, type BillingAttachmentRow, type BillingDocument, type UploadedAttachment } from "./billing-shared";
+import { DatePicker } from "@/components/ui/date-picker";
 
 export interface DocumentFormData {
   /** Borrador armado desde un embarque: el folio llega al emitir la factura. */
@@ -367,11 +368,11 @@ export function DocumentForm({
           </div>
           <div className="space-y-2">
             <Label htmlFor="doc-issue">Fecha de la factura</Label>
-            <Input id="doc-issue" type="date" value={form.issueDate} onChange={(e) => onIssueDateChange(e.target.value)} className="w-auto" required disabled={fromXml} />
+            <DatePicker id="doc-issue" value={form.issueDate} onChange={(v) => onIssueDateChange(v)} required disabled={fromXml} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="doc-due">Vence</Label>
-            <Input id="doc-due" type="date" value={form.dueDate} onChange={(e) => set("dueDate")(e.target.value)} className="w-auto" required />
+            <DatePicker id="doc-due" value={form.dueDate} onChange={(v) => set("dueDate")(v)} required />
             {partyDays != null && (
               <p className="text-muted-foreground text-xs">
                 {kind === "receivable" ? "Crédito del cliente" : "Días de pago al transportista"}: {partyDays} días.

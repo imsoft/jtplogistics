@@ -19,6 +19,7 @@ import {
   type DocRecord,
   type DocStatus,
 } from "@/lib/provider-onboardings";
+import { DatePicker } from "@/components/ui/date-picker";
 
 export interface OnboardingFormData {
   legalName: string;
@@ -120,7 +121,7 @@ export function OnboardingForm({
           </div>
           <div className="space-y-2">
             <Label htmlFor="ob-start">Fecha de inicio del alta</Label>
-            <Input id="ob-start" type="date" required {...text("startedOn")} className="w-auto" />
+            <DatePicker id="ob-start" required value={form.startedOn as string} onChange={(v) => set("startedOn")(v as never)} />
           </div>
         </CardContent>
       </Card>
@@ -162,7 +163,7 @@ export function OnboardingForm({
           ))}
           <div className="space-y-2 sm:col-span-2 sm:max-w-md">
             <Label htmlFor="ob-completed">Fecha de alta completa</Label>
-            <Input id="ob-completed" type="date" {...text("completedOn")} className="w-auto" />
+            <DatePicker id="ob-completed" value={form.completedOn as string} onChange={(v) => set("completedOn")(v as never)} />
             <p className="text-muted-foreground text-xs">Si la dejas vacía, se pone sola el día en que el expediente quede completo.</p>
           </div>
           <div className="space-y-2 sm:col-span-2 sm:max-w-md">
@@ -188,19 +189,19 @@ export function OnboardingForm({
           </div>
           <div className="space-y-2">
             <Label htmlFor="ob-legal-req">Fecha de solicitud a jurídico</Label>
-            <Input id="ob-legal-req" type="date" {...text("legalRequestedOn")} className="w-auto" />
+            <DatePicker id="ob-legal-req" value={form.legalRequestedOn as string} onChange={(v) => set("legalRequestedOn")(v as never)} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="ob-legal-rec">Fecha de recepción de jurídico</Label>
-            <Input id="ob-legal-rec" type="date" {...text("legalReceivedOn")} className="w-auto" />
+            <DatePicker id="ob-legal-rec" value={form.legalReceivedOn as string} onChange={(v) => set("legalReceivedOn")(v as never)} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="ob-sent">Fecha de envío al proveedor</Label>
-            <Input id="ob-sent" type="date" {...text("sentToProviderOn")} className="w-auto" />
+            <DatePicker id="ob-sent" value={form.sentToProviderOn as string} onChange={(v) => set("sentToProviderOn")(v as never)} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="ob-signed">Fecha de recepción firmado</Label>
-            <Input id="ob-signed" type="date" {...text("signedReceivedOn")} className="w-auto" />
+            <DatePicker id="ob-signed" value={form.signedReceivedOn as string} onChange={(v) => set("signedReceivedOn")(v as never)} />
           </div>
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="ob-contract-by">Persona que autoriza el contrato</Label>

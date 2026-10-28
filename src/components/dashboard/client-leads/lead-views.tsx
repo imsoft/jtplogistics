@@ -21,6 +21,8 @@ function toFormData(l: Lead): LeadFormData {
     email: l.email ?? "",
     city: l.city ?? "",
     industry: l.industry ?? "",
+    rfc: l.rfc ?? "",
+    address: l.address ?? "",
     source: l.source ?? "",
     stage: l.stage,
     estimatedMonthly: l.estimatedMonthly != null ? formatMxn(l.estimatedMonthly) : "",

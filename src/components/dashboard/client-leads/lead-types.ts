@@ -10,6 +10,8 @@ export interface Lead {
   email: string | null;
   city: string | null;
   industry: string | null;
+  rfc: string | null;
+  address: string | null;
   source: string | null;
   stage: LeadStage;
   estimatedMonthly: number | null;

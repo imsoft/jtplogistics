@@ -55,6 +55,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
                 position: lead.position,
                 email: lead.email,
                 phone: lead.phone,
+                rfc: lead.rfc,
+                address: lead.address,
                 notes: lead.notes,
               },
               select: { id: true },

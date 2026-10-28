@@ -26,6 +26,7 @@ import { normalizeSearch } from "@/lib/search";
 import { EXPENSE_CATEGORIES, r2, toMxn, type Currency } from "@/lib/billing";
 import { money, shortDay, todayKey, useBankAccounts, type BankAccountRow } from "./billing-shared";
 import { ExportableTable } from "@/components/dashboard/export/exportable-table";
+import { DatePicker } from "@/components/ui/date-picker";
 
 interface Expense {
   id: string;
@@ -274,7 +275,7 @@ function ExpenseForm({
       <div className="grid max-h-[60vh] gap-4 overflow-y-auto sm:grid-cols-2" ref={container}>
         <div className="space-y-2">
           <Label htmlFor="exp-date">Fecha</Label>
-          <Input id="exp-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-auto" />
+          <DatePicker id="exp-date" value={date} onChange={(v) => setDate(v)} />
         </div>
         <div className="space-y-2">
           <Label>Categoría</Label>

@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { formatMxnLive, parseMxn } from "@/lib/utils";
 import { IVA_WITHHOLDING_OPTIONS, computeTotals } from "@/lib/billing";
 import { money, shortDay, todayKey, uploadAttachment, type BillingAttachmentRow, type BillingDocument, type UploadedAttachment } from "./billing-shared";
+import { DatePicker } from "@/components/ui/date-picker";
 
 const IVA_OPTIONS = [
   { value: "0.16", label: "16 %" },
@@ -257,7 +258,7 @@ function CreditNoteForm({ doc, onClose, onSaved }: { doc: BillingDocument; onClo
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="cn-date">Fecha</Label>
-            <Input id="cn-date" type="date" max={todayKey()} value={issueDate} onChange={(e) => setIssueDate(e.target.value)} className="w-auto" disabled={Boolean(xml)} />
+            <DatePicker id="cn-date" max={todayKey()} value={issueDate} onChange={(v) => setIssueDate(v)} disabled={Boolean(xml)} />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-2">

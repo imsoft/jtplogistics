@@ -5,6 +5,7 @@
 
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { RFC_RE, normalizeRfc } from "@/lib/sat-catalogs";
 import { ACTIVE_USERS } from "@/lib/offboarding";
 import { LEAD_SOURCE_VALUES, LEAD_STAGE_VALUES } from "@/lib/client-leads";
 
@@ -37,6 +38,8 @@ export function leadToJson(l: LeadRow) {
     email: l.email,
     city: l.city,
     industry: l.industry,
+    rfc: l.rfc,
+    address: l.address,
     source: l.source,
     stage: l.stage,
     estimatedMonthly: l.estimatedMonthly,
@@ -92,6 +95,12 @@ export function readLeadBody(body: Record<string, unknown>) {
     email: text("email")?.toLowerCase() ?? text("email"),
     city: text("city"),
     industry: text("industry"),
+    // Igual que en Clientes: mayúsculas y sin espacios ni guiones.
+    rfc: (() => {
+      const v = text("rfc");
+      return typeof v === "string" ? normalizeRfc(v) || null : v;
+    })(),
+    address: text("address"),
     notes: text("notes"),
     lostReason: text("lostReason"),
     nextAction: text("nextAction"),
@@ -167,4 +176,9 @@ export async function quotesForLead(names: string[]) {
       amount: null,
     })),
   ].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+/** El RFC, si viene, tiene que tener formato válido (12 o 13 caracteres). */
+export function leadRfcError(rfc: string | null | undefined): string | null {
+  return rfc && !RFC_RE.test(rfc) ? "El RFC no tiene un formato válido (12 o 13 caracteres)." : null;
 }

@@ -4,9 +4,9 @@ import { logAudit } from "@/lib/audit-log";
 import { requireModuleAccess } from "@/lib/module-access";
 import { companyDateKey } from "@/lib/time-clock";
 import { LEAD_STAGE_LABELS, isLeadStage, requiresLostReason, type LeadStage } from "@/lib/client-leads";
-import { LEADS_MODULE, LEAD_INCLUDE, isValidOwner, leadToJson, readLeadBody } from "@/lib/client-leads-server";
+import { LEADS_MODULE, LEAD_INCLUDE, isValidOwner, leadRfcError, leadToJson, readLeadBody } from "@/lib/client-leads-server";
 
-const SEARCH_FIELDS = ["companyName", "contactName", "phone", "email", "city", "industry", "notes"] as const;
+const SEARCH_FIELDS = ["companyName", "contactName", "phone", "email", "city", "industry", "rfc", "address", "notes"] as const;
 
 /**
  * GET /api/client-leads?q=&stage=&owner=&followUp=pendiente
@@ -52,6 +52,9 @@ export async function POST(request: Request) {
     if (requiresLostReason(stage) && !data.lostReason) {
       return Response.json({ error: "Escribe por qué se perdió." }, { status: 400 });
     }
+    const rfcError = leadRfcError(data.rfc);
+    if (rfcError) return Response.json({ error: rfcError }, { status: 400 });
+
     // Si no se elige responsable, el prospecto queda a cargo de quien lo registra.
     const ownerId = data.ownerId ?? session.user.id;
     if (data.ownerId && !(await isValidOwner(data.ownerId))) {
@@ -67,6 +70,8 @@ export async function POST(request: Request) {
         email: data.email ?? null,
         city: data.city ?? null,
         industry: data.industry ?? null,
+        rfc: data.rfc ?? null,
+        address: data.address ?? null,
         notes: data.notes ?? null,
         lostReason: data.lostReason ?? null,
         nextAction: data.nextAction ?? null,

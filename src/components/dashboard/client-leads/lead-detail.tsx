@@ -49,6 +49,7 @@ import {
 } from "@/lib/client-leads";
 import { FollowUpCell, StageBadge } from "./leads-table";
 import { shortDay, todayKey, type LeadDetail } from "./lead-types";
+import { DatePicker } from "@/components/ui/date-picker";
 
 const ACTIVITY_ICONS: Record<LeadActivityType, React.ElementType> = {
   llamada: Phone,
@@ -213,6 +214,8 @@ export function LeadDetailView({
               <InfoRow label="Correo" value={lead.email} isEmail />
               <InfoRow label="Ciudad" value={lead.city} />
               <InfoRow label="Giro" value={lead.industry} />
+              <InfoRow label="RFC" value={lead.rfc} />
+              <InfoRow label="Dirección" value={lead.address} />
               <InfoRow label="Cómo llegó" value={lead.source ? LEAD_SOURCE_LABELS[lead.source as LeadSource] : null} />
               <InfoRow label="Responsable" value={lead.ownerName} />
               <InfoRow
@@ -353,7 +356,7 @@ function ActivityForm({ lead, onSaved }: { lead: LeadDetail; onSaved: () => void
             </div>
             <div className="space-y-2">
               <Label htmlFor="activity-date">Fecha</Label>
-              <Input id="activity-date" type="date" max={today} value={occurredOn} onChange={(e) => setOccurredOn(e.target.value)} className="w-auto" />
+              <DatePicker id="activity-date" max={today} value={occurredOn} onChange={(v) => setOccurredOn(v)} />
             </div>
           </div>
           <div className="space-y-2">
@@ -364,14 +367,7 @@ function ActivityForm({ lead, onSaved }: { lead: LeadDetail; onSaved: () => void
           <div className="grid gap-4 sm:grid-cols-[auto_minmax(0,1fr)]">
             <div className="space-y-2">
               <Label htmlFor="activity-next-date">Próximo seguimiento</Label>
-              <Input
-                id="activity-next-date"
-                type="date"
-                min={today}
-                value={nextFollowUpOn}
-                onChange={(e) => setNextFollowUpOn(e.target.value)}
-                className="w-auto"
-              />
+              <DatePicker id="activity-next-date" min={today} value={nextFollowUpOn} onChange={(v) => setNextFollowUpOn(v)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="activity-next-action">Qué toca hacer</Label>

@@ -13,6 +13,7 @@ import {
   PROSPECT_SOURCES,
   PROSPECT_STATUSES,
 } from "@/lib/provider-prospects";
+import { DatePicker } from "@/components/ui/date-picker";
 
 export interface ProspectFormData {
   commercialName: string;
@@ -133,7 +134,7 @@ export function ProspectForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="p-date">Fecha de contacto</Label>
-          <Input id="p-date" type="date" value={form.contactedOn} onChange={(e) => set("contactedOn")(e.target.value)} className="w-auto" />
+          <DatePicker id="p-date" value={form.contactedOn} onChange={(v) => set("contactedOn")(v)} />
         </div>
         <div className="space-y-2">
           <Label>Etapa</Label>

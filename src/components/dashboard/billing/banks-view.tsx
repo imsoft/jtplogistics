@@ -19,6 +19,7 @@ import type { Currency } from "@/lib/billing";
 import { KIND_SLUG, money, shortDay, todayKey, type BankAccountRow } from "./billing-shared";
 import { StatementImportDialog } from "./statement-import-dialog";
 import { ExportableTable } from "@/components/dashboard/export/exportable-table";
+import { DatePicker } from "@/components/ui/date-picker";
 
 /** Cuentas de banco con su saldo y movimientos sin conciliar. */
 export function BanksView({ basePath, canCreate }: { basePath: string; canCreate: boolean }) {
@@ -198,7 +199,7 @@ function AccountForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="acc-initial-on">Al día</Label>
-          <Input id="acc-initial-on" type="date" value={initialBalanceOn} onChange={(e) => setInitialBalanceOn(e.target.value)} className="w-auto" />
+          <DatePicker id="acc-initial-on" value={initialBalanceOn} onChange={(v) => setInitialBalanceOn(v)} />
         </div>
         {account && (
           <div className="flex items-center gap-3 sm:col-span-2">
@@ -544,7 +545,7 @@ function MovementForm({ accountId, currency, onClose, onSaved }: { accountId: st
         </div>
         <div className="space-y-2">
           <Label htmlFor="mov-date">Fecha</Label>
-          <Input id="mov-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-auto" />
+          <DatePicker id="mov-date" value={date} onChange={(v) => setDate(v)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="mov-amount">Monto ({currency})</Label>

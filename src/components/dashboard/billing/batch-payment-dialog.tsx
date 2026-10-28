@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { formatMxn, formatMxnLive, parseMxn } from "@/lib/utils";
 import { BILLING_KIND_LABELS, SAT_PAYMENT_FORMS, bankAmountFor, r2 } from "@/lib/billing";
 import { folioLabel, money, todayKey, type BankAccountRow, type BillingDocument } from "./billing-shared";
+import { DatePicker } from "@/components/ui/date-picker";
 
 /**
  * Una sola transferencia que paga varias facturas del mismo cliente o
@@ -133,7 +134,7 @@ function BatchForm({ docs, accounts, onClose, onSaved }: { docs: BillingDocument
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="batch-date">Fecha</Label>
-              <Input id="batch-date" type="date" max={todayKey()} value={paidOn} onChange={(e) => setPaidOn(e.target.value)} className="w-auto" />
+              <DatePicker id="batch-date" max={todayKey()} value={paidOn} onChange={(v) => setPaidOn(v)} />
             </div>
             <div className="space-y-2">
               <Label>{first.kind === "receivable" ? "Cuenta donde entró" : "Cuenta de donde salió"}</Label>

@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { formatMxn, formatMxnLive, parseMxn } from "@/lib/utils";
 import { BILLING_KIND_LABELS, SAT_PAYMENT_FORMS, bankAmountFor } from "@/lib/billing";
 import { folioLabel, money, todayKey, type BankAccountRow, type BillingDocument } from "./billing-shared";
+import { DatePicker } from "@/components/ui/date-picker";
 
 /**
  * Registrar un cobro (factura a cliente) o un pago (factura de proveedor).
@@ -105,7 +106,7 @@ function PaymentForm({
         <div className="grid gap-4 sm:grid-cols-2" ref={container}>
           <div className="space-y-2">
             <Label htmlFor="pay-date">Fecha</Label>
-            <Input id="pay-date" type="date" max={todayKey()} value={paidOn} onChange={(e) => setPaidOn(e.target.value)} className="w-auto" />
+            <DatePicker id="pay-date" max={todayKey()} value={paidOn} onChange={(v) => setPaidOn(v)} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="pay-amount">Monto ({doc.currency})</Label>

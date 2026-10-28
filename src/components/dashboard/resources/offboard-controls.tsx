@@ -4,7 +4,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Check, Copy, Loader2, UserCheck, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -16,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { MIN_OFFBOARD_REASON } from "@/lib/offboarding";
+import { DatePicker } from "@/components/ui/date-picker";
 
 export interface OffboardState {
   offboardedOn: string | null;
@@ -208,14 +208,7 @@ export function OffboardButton({
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="off-date">Fecha de baja</Label>
-                  <Input
-                    id="off-date"
-                    type="date"
-                    value={date}
-                    max={todayKey()}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="w-auto"
-                  />
+                  <DatePicker id="off-date" value={date} max={todayKey()} onChange={(v) => setDate(v)} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="off-reason">Motivo</Label>

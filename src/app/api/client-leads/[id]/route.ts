@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
 import { hasModuleAccess, requireModuleAccess } from "@/lib/module-access";
 import { LEAD_STAGE_LABELS, requiresLostReason, type LeadStage } from "@/lib/client-leads";
-import { LEADS_MODULE, LEAD_INCLUDE, isValidOwner, leadToJson, quotesForLead, readLeadBody } from "@/lib/client-leads-server";
+import { LEADS_MODULE, LEAD_INCLUDE, isValidOwner, leadRfcError, leadToJson, quotesForLead, readLeadBody } from "@/lib/client-leads-server";
 
 /** GET /api/client-leads/[id] — ficha con todas sus actividades y cotizaciones. */
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -59,6 +59,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const data = readLeadBody(body);
 
     if (data.companyName === null) return Response.json({ error: "El nombre de la empresa no puede quedar vacío." }, { status: 400 });
+    const rfcError = leadRfcError(data.rfc);
+    if (rfcError) return Response.json({ error: rfcError }, { status: 400 });
     const nextStage = (data.stage ?? current.stage) as LeadStage;
     const lostReason = data.lostReason !== undefined ? data.lostReason : current.lostReason;
     if (requiresLostReason(nextStage) && !lostReason) {
@@ -78,6 +80,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         ...(data.email !== undefined && { email: data.email }),
         ...(data.city !== undefined && { city: data.city }),
         ...(data.industry !== undefined && { industry: data.industry }),
+        ...(data.rfc !== undefined && { rfc: data.rfc }),
+        ...(data.address !== undefined && { address: data.address }),
         ...(data.notes !== undefined && { notes: data.notes }),
         ...(data.lostReason !== undefined && { lostReason: data.lostReason }),
         ...(data.nextAction !== undefined && { nextAction: data.nextAction }),

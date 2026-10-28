@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DatePicker } from "@/components/ui/date-picker";
 
 interface Holiday {
   id: string;
@@ -162,7 +163,7 @@ export function HolidaysCard() {
         <div className="grid gap-3 border-t pt-4 sm:grid-cols-[auto_1fr_auto] sm:items-end">
           <div className="space-y-2">
             <Label htmlFor="hol-date">Fecha</Label>
-            <Input id="hol-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-auto" />
+            <DatePicker id="hol-date" value={date} onChange={(v) => setDate(v)} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="hol-name">Nombre</Label>

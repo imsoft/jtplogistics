@@ -18,6 +18,7 @@ import {
   type ActaData,
   type ActaErrors,
 } from "@/lib/acta-administrativa";
+import { DatePicker } from "@/components/ui/date-picker";
 
 interface EmployeeOption {
   id: string;
@@ -159,7 +160,7 @@ export function ActaForm({
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-3">
           <Field id="a-date" label="Fecha" error={errors.date}>
-            <Input id="a-date" type="date" {...text("date")} />
+            <DatePicker id="a-date" value={data.date as string} onChange={(v) => set("date")(v as never)} />
           </Field>
           <Field id="a-start" label="Hora de inicio" error={errors.startTime}>
             <Input id="a-start" type="time" {...text("startTime")} />
@@ -219,10 +220,10 @@ export function ActaForm({
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <Field id="a-idate" label="Fecha de los hechos" error={errors.incidentDate}>
-            <Input id="a-idate" type="date" {...text("incidentDate")} />
+            <DatePicker id="a-idate" value={data.incidentDate as string} onChange={(v) => set("incidentDate")(v as never)} />
           </Field>
           <Field id="a-mdate" label="Fecha de la reunión" help="En la que se le pidió que explicara.">
-            <Input id="a-mdate" type="date" {...text("meetingDate")} />
+            <DatePicker id="a-mdate" value={data.meetingDate as string} onChange={(v) => set("meetingDate")(v as never)} />
           </Field>
           <div className="sm:col-span-2">
             <Field

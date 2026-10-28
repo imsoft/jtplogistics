@@ -11,7 +11,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LEAVE_LABELS, type LeaveKind } from "@/lib/time-clock-leaves";
@@ -24,6 +23,7 @@ import {
   type TimeClockExport,
 } from "@/lib/time-clock-download";
 import { ExportableTable } from "@/components/dashboard/export/exportable-table";
+import { DatePicker } from "@/components/ui/date-picker";
 
 type Mark = "clock_in" | "lunch_start" | "lunch_end" | "clock_out";
 
@@ -164,23 +164,11 @@ export function TimeClockLog({ canCorrect = false }: { canCorrect?: boolean }) {
       <div className="flex flex-wrap items-end gap-4">
         <div className="space-y-2">
           <Label htmlFor="tc-from">Desde</Label>
-          <Input
-            id="tc-from"
-            type="date"
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-            className="w-auto"
-          />
+          <DatePicker id="tc-from" value={from} onChange={(v) => setFrom(v)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="tc-to">Hasta</Label>
-          <Input
-            id="tc-to"
-            type="date"
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-            className="w-auto"
-          />
+          <DatePicker id="tc-to" value={to} onChange={(v) => setTo(v)} />
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

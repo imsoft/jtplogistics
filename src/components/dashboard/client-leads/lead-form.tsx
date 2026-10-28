@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { AppSelect } from "@/components/ui/app-select";
 import { formatMxnLive, parseMxn } from "@/lib/utils";
 import { LEAD_SOURCES, LEAD_STAGES } from "@/lib/client-leads";
+import { DatePicker } from "@/components/ui/date-picker";
 
 export interface LeadFormData {
   companyName: string;
@@ -20,6 +21,8 @@ export interface LeadFormData {
   email: string;
   city: string;
   industry: string;
+  rfc: string;
+  address: string;
   source: string;
   stage: string;
   estimatedMonthly: string;
@@ -38,6 +41,8 @@ export const EMPTY_LEAD: LeadFormData = {
   email: "",
   city: "",
   industry: "",
+  rfc: "",
+  address: "",
   source: "",
   stage: "prospecto",
   estimatedMonthly: "",
@@ -59,6 +64,8 @@ export function leadPayload(f: LeadFormData) {
     email: orNull(f.email),
     city: orNull(f.city),
     industry: orNull(f.industry),
+    rfc: orNull(f.rfc),
+    address: orNull(f.address),
     source: orNull(f.source),
     stage: f.stage || "prospecto",
     estimatedMonthly: f.estimatedMonthly.trim() ? parseMxn(f.estimatedMonthly) ?? null : null,
@@ -136,6 +143,16 @@ export function LeadForm({
             <Input id="lead-city" {...text("city")} />
           </div>
           <div className="space-y-2">
+            <Label htmlFor="lead-rfc">RFC</Label>
+            <Input id="lead-rfc" maxLength={13} {...text("rfc")} />
+            <p className="text-muted-foreground text-xs">12 caracteres si es empresa, 13 si es persona física.</p>
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="lead-address">Dirección</Label>
+            <Input id="lead-address" {...text("address")} />
+            <p className="text-muted-foreground text-xs">Calle, número, colonia, código postal.</p>
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="lead-contact">Nombre de contacto</Label>
             <Input id="lead-contact" {...text("contactName")} />
           </div>
@@ -205,7 +222,7 @@ export function LeadForm({
           </div>
           <div className="space-y-2">
             <Label htmlFor="lead-next-date">Próximo seguimiento</Label>
-            <Input id="lead-next-date" type="date" className="w-auto" {...text("nextFollowUpOn")} />
+            <DatePicker id="lead-next-date" value={form.nextFollowUpOn} onChange={(v) => set("nextFollowUpOn")(v)} />
           </div>
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="lead-next-action">Qué toca hacer</Label>

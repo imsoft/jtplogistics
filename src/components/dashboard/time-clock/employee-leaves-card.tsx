@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AppSelect } from "@/components/ui/app-select";
 import { LEAVE_KINDS, LEAVE_LABELS, type LeaveKind } from "@/lib/time-clock-leaves";
+import { DatePicker } from "@/components/ui/date-picker";
 
 interface Leave {
   id: string;
@@ -156,23 +157,11 @@ export function EmployeeLeavesCard({ userId }: { userId: string }) {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="leave-start">Del</Label>
-              <Input
-                id="leave-start"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-auto"
-              />
+              <DatePicker id="leave-start" value={startDate} onChange={(v) => setStartDate(v)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="leave-end">Al</Label>
-              <Input
-                id="leave-end"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-auto"
-              />
+              <DatePicker id="leave-end" value={endDate} onChange={(v) => setEndDate(v)} />
               <p className="text-muted-foreground text-xs">
                 Si es un solo día, déjalo vacío.
               </p>
