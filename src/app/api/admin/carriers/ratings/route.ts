@@ -8,7 +8,7 @@ export interface CarrierRating {
   delivered: number;
   deliveredWithDelay: number;
   notDelivered: number;
-  inTransit: number; // pending + at_risk
+  inTransit: number; // pending, in_transit y at_risk
   withIncident: number;
   /** 0–100 | null if no closed shipments */
   punctualityScore: number | null;
@@ -94,7 +94,7 @@ export function GET() {
       if (st === "delivered") entry.delivered += 1;
       else if (st === "delivered_with_delay") entry.deliveredWithDelay += 1;
       else if (st === "not_delivered") entry.notDelivered += 1;
-      else entry.inTransit += 1; // pending o at_risk: todavía en camino
+      else entry.inTransit += 1; // pendiente, en tránsito o en riesgo: todavía en camino
 
       if (hasIncident(s.incident)) entry.withIncident += 1;
 

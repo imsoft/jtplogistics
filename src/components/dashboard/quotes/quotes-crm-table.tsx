@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { toast } from "sonner";
@@ -22,6 +23,7 @@ import {
 import { QuoteRowActions } from "@/components/dashboard/quotes/quote-row-actions";
 import { RejectionReasonDialog, type RejectionChoice } from "@/components/dashboard/quotes/rejection-reason-dialog";
 import { QUOTE_REJECTION_LABELS, type QuoteRejectionReason } from "@/lib/quote-rejection";
+import { ExportableTable } from "@/components/dashboard/export/exportable-table";
 
 export interface CrmQuote {
   id: string;
@@ -94,6 +96,7 @@ export function QuotesCrmTable({
   initialQuotes,
   apiEndpoint = "/api/admin/generated-quotes",
   editBase = "/admin/dashboard/quotes",
+  viewBase,
   canUpdateStatus = true,
   canEdit = true,
   canDelete = true,
@@ -101,6 +104,8 @@ export function QuotesCrmTable({
   initialQuotes: CrmQuote[];
   apiEndpoint?: string;
   editBase?: string;
+  /** Perfil de cada cotización; por omisión el mismo lugar que la edición. */
+  viewBase?: string;
   canUpdateStatus?: boolean;
   canEdit?: boolean;
   canDelete?: boolean;
@@ -199,74 +204,81 @@ export function QuotesCrmTable({
 
       <Card>
         <CardContent className="px-0 py-0">
-          <div className="@container/table overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/40 text-xs text-muted-foreground">
-                  <th className="px-4 py-2 text-left font-medium">No. Cotización</th>
-                  <th className="px-4 py-2 text-left font-medium">Compañía</th>
-                  <th className="px-4 py-2 text-left font-medium">Estado</th>
-                  <th className="px-4 py-2 text-left font-medium hidden @2xl/table:table-cell">Contacto</th>
-                  <th className="px-4 py-2 text-left font-medium hidden @5xl/table:table-cell">Teléfono</th>
-                  <th className="px-4 py-2 text-left font-medium hidden @5xl/table:table-cell">Vigencia</th>
-                  <th className="px-4 py-2 text-left font-medium hidden @6xl/table:table-cell">Generado por</th>
-                  <th className="px-4 py-2 text-left font-medium">Fecha</th>
-                  <th className="px-4 py-2 w-24" />
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((q) => (
-                  <tr key={q.id} className="border-b last:border-0">
-                    <td className="px-4 py-3 font-mono text-xs font-medium whitespace-nowrap">{q.quoteNumber}</td>
-                    <td className="px-4 py-3">
-                      {/* Un borrador puede guardarse antes de saber el cliente. */}
-                      {q.company || <span className="text-muted-foreground italic">Sin cliente</span>}
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusCell quote={q} onChange={changeStatus} editable={canUpdateStatus} />
-                      {q.status === "rechazada" && q.rejectionReason && (
-                        <span className="text-muted-foreground mt-1 block text-xs">
-                          {QUOTE_REJECTION_LABELS[q.rejectionReason as QuoteRejectionReason] ?? q.rejectionReason}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden @2xl/table:table-cell">{q.contact || "—"}</td>
-                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap hidden @5xl/table:table-cell">
-                      {q.phone ? formatPhone(q.phone) : "—"}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap hidden @5xl/table:table-cell">
-                      {new Date(q.validUntil).toLocaleDateString("es-MX", {
-                        year: "numeric", month: "short", day: "numeric", timeZone: "UTC",
-                      })}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground hidden @6xl/table:table-cell">{q.createdByName}</td>
-                    <td className="px-4 py-3 text-muted-foreground text-xs whitespace-nowrap">
-                      {new Date(q.createdAt).toLocaleDateString("es-MX", {
-                        year: "numeric", month: "short", day: "numeric",
-                      })}
-                    </td>
-                    <td className="px-2 py-2">
-                      <QuoteRowActions
-                        id={q.id}
-                        quoteNumber={q.quoteNumber}
-                        apiEndpoint={apiEndpoint}
-                        editBase={editBase}
-                        canEdit={canEdit}
-                        canDelete={canDelete}
-                      />
-                    </td>
+          <ExportableTable title="Cotizaciones">
+            <div className="@container/table overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/40 text-xs text-muted-foreground">
+                    <th className="px-4 py-2 text-left font-medium">No. Cotización</th>
+                    <th className="px-4 py-2 text-left font-medium">Compañía</th>
+                    <th className="px-4 py-2 text-left font-medium">Estado</th>
+                    <th className="px-4 py-2 text-left font-medium hidden @2xl/table:table-cell">Contacto</th>
+                    <th className="px-4 py-2 text-left font-medium hidden @5xl/table:table-cell">Teléfono</th>
+                    <th className="px-4 py-2 text-left font-medium hidden @5xl/table:table-cell">Vigencia</th>
+                    <th className="px-4 py-2 text-left font-medium hidden @6xl/table:table-cell">Generado por</th>
+                    <th className="px-4 py-2 text-left font-medium">Fecha</th>
+                    <th className="px-4 py-2 w-24" />
                   </tr>
-                ))}
-                {filtered.length === 0 && (
-                  <tr>
-                    <td colSpan={9} className="px-4 py-8 text-center text-sm text-muted-foreground">
-                      No hay cotizaciones en este estado.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filtered.map((q) => (
+                    <tr key={q.id} className="border-b last:border-0">
+                      <td className="px-4 py-3 font-mono text-xs font-medium whitespace-nowrap">
+                        <Link href={`${viewBase ?? editBase}/${q.id}`} className="text-primary hover:underline">
+                          {q.quoteNumber}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3">
+                        {/* Un borrador puede guardarse antes de saber el cliente. */}
+                        {q.company || <span className="text-muted-foreground italic">Sin cliente</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        <StatusCell quote={q} onChange={changeStatus} editable={canUpdateStatus} />
+                        {q.status === "rechazada" && q.rejectionReason && (
+                          <span className="text-muted-foreground mt-1 block text-xs">
+                            {QUOTE_REJECTION_LABELS[q.rejectionReason as QuoteRejectionReason] ?? q.rejectionReason}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground hidden @2xl/table:table-cell">{q.contact || "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap hidden @5xl/table:table-cell">
+                        {q.phone ? formatPhone(q.phone) : "—"}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap hidden @5xl/table:table-cell">
+                        {new Date(q.validUntil).toLocaleDateString("es-MX", {
+                          year: "numeric", month: "short", day: "numeric", timeZone: "UTC",
+                        })}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground hidden @6xl/table:table-cell">{q.createdByName}</td>
+                      <td className="px-4 py-3 text-muted-foreground text-xs whitespace-nowrap">
+                        {new Date(q.createdAt).toLocaleDateString("es-MX", {
+                          year: "numeric", month: "short", day: "numeric",
+                        })}
+                      </td>
+                      <td className="px-2 py-2">
+                        <QuoteRowActions
+                          id={q.id}
+                          quoteNumber={q.quoteNumber}
+                          apiEndpoint={apiEndpoint}
+                          editBase={editBase}
+                          viewBase={viewBase ?? editBase}
+                          canEdit={canEdit}
+                          canDelete={canDelete}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                  {filtered.length === 0 && (
+                    <tr>
+                      <td colSpan={9} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                        No hay cotizaciones en este estado.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </ExportableTable>
         </CardContent>
       </Card>
 

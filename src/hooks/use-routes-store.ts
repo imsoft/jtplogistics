@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import type { Route, RouteFormData } from "@/types/route.types";
+import type { Route, RouteFormData, RouteStatus } from "@/types/route.types";
 
 async function fetchRoutes(): Promise<Route[]> {
   const res = await fetch("/api/routes");
@@ -124,6 +124,24 @@ export function useRoutesStore() {
     [routes]
   );
 
+  /** Cambia solo el estatus (lo que puede hacer pricing). Devuelve el error o null. */
+  const changeRouteStatus = useCallback(async (id: string, status: RouteStatus): Promise<string | null> => {
+    const prev = routes;
+    setRoutes((list) => list.map((r) => (r.id === id ? { ...r, status } : r)));
+    const res = await fetch(`/api/routes/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    if (!res.ok) {
+      setRoutes(prev);
+      return ((await res.json().catch(() => ({}))) as { error?: string }).error ?? "No se pudo cambiar el estatus.";
+    }
+    const updated = await res.json();
+    setRoutes((list) => list.map((r) => (r.id === id ? updated : r)));
+    return null;
+  }, [routes]);
+
   return {
     routes,
     isLoaded,
@@ -131,6 +149,7 @@ export function useRoutesStore() {
     refetch: loadRoutes,
     addRoute,
     updateRoute,
+    changeRouteStatus,
     deleteRoute,
     getRouteById,
   };

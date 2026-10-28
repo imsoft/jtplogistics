@@ -46,6 +46,7 @@ import {
   type LeadStage,
 } from "@/lib/client-leads";
 import { shortDay, todayKey, type Lead } from "./lead-types";
+import { ExportableTable } from "@/components/dashboard/export/exportable-table";
 
 const STAGE_BY_VALUE = Object.fromEntries(LEAD_STAGES.map((s) => [s.value, s]));
 
@@ -303,128 +304,130 @@ export function LeadsTable({
             : "Ningún prospecto coincide con los filtros."}
         </p>
       ) : (
-        <div className="@container/table w-full overflow-x-auto rounded-md border">
-          <table className="w-full min-w-max text-sm md:min-w-0">
-            <thead>
-              <tr className="bg-muted/40 border-b">
-                <th className="px-4 py-2 text-left font-medium">Empresa</th>
-                <th className="hidden px-4 py-2 text-left font-medium @3xl/table:table-cell">Contacto</th>
-                <th className="px-4 py-2 text-left font-medium">Etapa</th>
-                <th className="px-4 py-2 text-left font-medium">Próximo seguimiento</th>
-                <th className="hidden px-4 py-2 text-left font-medium @5xl/table:table-cell">Responsable</th>
-                <th className="hidden px-4 py-2 text-right font-medium @6xl/table:table-cell">Venta mensual</th>
-                <th className="hidden px-4 py-2 text-left font-medium @7xl/table:table-cell">Última actividad</th>
-                {(canEdit || canDelete) && <th className="w-16 px-2 py-2" />}
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((l) => (
-                <tr key={l.id} className="border-b align-top last:border-0">
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`${basePath}/${l.id}`}
-                      className="text-primary block max-w-56 truncate font-medium hover:underline"
-                      title={l.companyName}
-                    >
-                      {l.companyName}
-                    </Link>
-                    {(l.industry || l.city) && (
-                      <span className="text-muted-foreground block text-xs">
-                        {[l.industry, l.city].filter(Boolean).join(" · ")}
-                      </span>
-                    )}
-                    {l.clientName && <span className="block text-xs text-green-700">Cliente: {l.clientName}</span>}
-                  </td>
-                  <td className="hidden px-4 py-3 @3xl/table:table-cell">
-                    {l.contactName && <span className="block">{l.contactName}</span>}
-                    {l.phone && (
-                      <span className="text-muted-foreground flex items-center gap-1 text-xs">
-                        <Phone className="size-3" />
-                        {formatPhone(l.phone)}
-                      </span>
-                    )}
-                    {l.email && (
-                      <span className="text-muted-foreground text-email flex items-center gap-1 text-xs">
-                        <Mail className="size-3" />
-                        {l.email}
-                      </span>
-                    )}
-                    {!l.contactName && !l.phone && !l.email && <span className="text-muted-foreground">—</span>}
-                  </td>
-                  <td className="px-4 py-3">
-                    {canEdit ? (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger className="focus-visible:ring-ring inline-flex items-center gap-1 rounded-full outline-none focus-visible:ring-2">
-                          <StageBadge stage={l.stage} />
-                          <ChevronDown className="text-muted-foreground size-3" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start">
-                          {LEAD_STAGES.map((s) => (
-                            <DropdownMenuItem key={s.value} onClick={() => changeStage(l, s.value)}>
-                              {s.label}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    ) : (
-                      <StageBadge stage={l.stage} />
-                    )}
-                    {l.stage === "perdido" && l.lostReason && (
-                      <span className="text-muted-foreground mt-1 block max-w-56 truncate text-xs" title={l.lostReason}>
-                        {l.lostReason}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <FollowUpCell lead={l} today={today} />
-                  </td>
-                  <td className="text-muted-foreground hidden px-4 py-3 @5xl/table:table-cell">{l.ownerName ?? "—"}</td>
-                  <td className="hidden px-4 py-3 text-right whitespace-nowrap @6xl/table:table-cell">
-                    {l.estimatedMonthly != null ? `$${formatMxn(l.estimatedMonthly)}` : "—"}
-                  </td>
-                  <td className="text-muted-foreground hidden px-4 py-3 @7xl/table:table-cell">
-                    {l.lastActivity ? (
-                      <>
-                        <span className="block text-xs whitespace-nowrap">
-                          {LEAD_ACTIVITY_LABELS[l.lastActivity.type]} · {shortDay(l.lastActivity.occurredOn)}
-                        </span>
-                        <span className="block max-w-56 truncate text-xs" title={l.lastActivity.summary}>
-                          {l.lastActivity.summary}
-                        </span>
-                      </>
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                  {(canEdit || canDelete) && (
-                    <td className="px-2 py-3">
-                      <div className="flex items-center gap-1">
-                        {canEdit && (
-                          <Button variant="ghost" size="icon" className="size-7" asChild>
-                            <Link href={`${basePath}/${l.id}/edit`} aria-label={`Editar ${l.companyName}`}>
-                              <Pencil className="size-3.5" />
-                            </Link>
-                          </Button>
-                        )}
-                        {canDelete && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-7"
-                            aria-label={`Eliminar ${l.companyName}`}
-                            onClick={() => setDeleting(l)}
-                          >
-                            <Trash2 className="text-destructive size-3.5" />
-                          </Button>
-                        )}
-                      </div>
-                    </td>
-                  )}
+        <ExportableTable title="CRM de clientes">
+          <div className="@container/table w-full overflow-x-auto rounded-md border">
+            <table className="w-full min-w-max text-sm md:min-w-0">
+              <thead>
+                <tr className="bg-muted/40 border-b">
+                  <th className="px-4 py-2 text-left font-medium">Empresa</th>
+                  <th className="hidden px-4 py-2 text-left font-medium @3xl/table:table-cell">Contacto</th>
+                  <th className="px-4 py-2 text-left font-medium">Etapa</th>
+                  <th className="px-4 py-2 text-left font-medium">Próximo seguimiento</th>
+                  <th className="hidden px-4 py-2 text-left font-medium @5xl/table:table-cell">Responsable</th>
+                  <th className="hidden px-4 py-2 text-right font-medium @6xl/table:table-cell">Venta mensual</th>
+                  <th className="hidden px-4 py-2 text-left font-medium @7xl/table:table-cell">Última actividad</th>
+                  {(canEdit || canDelete) && <th className="w-16 px-2 py-2" />}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {visible.map((l) => (
+                  <tr key={l.id} className="border-b align-top last:border-0">
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`${basePath}/${l.id}`}
+                        className="text-primary block max-w-56 truncate font-medium hover:underline"
+                        title={l.companyName}
+                      >
+                        {l.companyName}
+                      </Link>
+                      {(l.industry || l.city) && (
+                        <span className="text-muted-foreground block text-xs">
+                          {[l.industry, l.city].filter(Boolean).join(" · ")}
+                        </span>
+                      )}
+                      {l.clientName && <span className="block text-xs text-green-700">Cliente: {l.clientName}</span>}
+                    </td>
+                    <td className="hidden px-4 py-3 @3xl/table:table-cell">
+                      {l.contactName && <span className="block">{l.contactName}</span>}
+                      {l.phone && (
+                        <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                          <Phone className="size-3" />
+                          {formatPhone(l.phone)}
+                        </span>
+                      )}
+                      {l.email && (
+                        <span className="text-muted-foreground text-email flex items-center gap-1 text-xs">
+                          <Mail className="size-3" />
+                          {l.email}
+                        </span>
+                      )}
+                      {!l.contactName && !l.phone && !l.email && <span className="text-muted-foreground">—</span>}
+                    </td>
+                    <td className="px-4 py-3">
+                      {canEdit ? (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger className="focus-visible:ring-ring inline-flex items-center gap-1 rounded-full outline-none focus-visible:ring-2">
+                            <StageBadge stage={l.stage} />
+                            <ChevronDown className="text-muted-foreground size-3" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start">
+                            {LEAD_STAGES.map((s) => (
+                              <DropdownMenuItem key={s.value} onClick={() => changeStage(l, s.value)}>
+                                {s.label}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      ) : (
+                        <StageBadge stage={l.stage} />
+                      )}
+                      {l.stage === "perdido" && l.lostReason && (
+                        <span className="text-muted-foreground mt-1 block max-w-56 truncate text-xs" title={l.lostReason}>
+                          {l.lostReason}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <FollowUpCell lead={l} today={today} />
+                    </td>
+                    <td className="text-muted-foreground hidden px-4 py-3 @5xl/table:table-cell">{l.ownerName ?? "—"}</td>
+                    <td className="hidden px-4 py-3 text-right whitespace-nowrap @6xl/table:table-cell">
+                      {l.estimatedMonthly != null ? `$${formatMxn(l.estimatedMonthly)}` : "—"}
+                    </td>
+                    <td className="text-muted-foreground hidden px-4 py-3 @7xl/table:table-cell">
+                      {l.lastActivity ? (
+                        <>
+                          <span className="block text-xs whitespace-nowrap">
+                            {LEAD_ACTIVITY_LABELS[l.lastActivity.type]} · {shortDay(l.lastActivity.occurredOn)}
+                          </span>
+                          <span className="block max-w-56 truncate text-xs" title={l.lastActivity.summary}>
+                            {l.lastActivity.summary}
+                          </span>
+                        </>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                    {(canEdit || canDelete) && (
+                      <td className="px-2 py-3">
+                        <div className="flex items-center gap-1">
+                          {canEdit && (
+                            <Button variant="ghost" size="icon" className="size-7" asChild>
+                              <Link href={`${basePath}/${l.id}/edit`} aria-label={`Editar ${l.companyName}`}>
+                                <Pencil className="size-3.5" />
+                              </Link>
+                            </Button>
+                          )}
+                          {canDelete && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-7"
+                              aria-label={`Eliminar ${l.companyName}`}
+                              onClick={() => setDeleting(l)}
+                            >
+                              <Trash2 className="text-destructive size-3.5" />
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </ExportableTable>
       )}
 
       <Dialog open={losing !== null} onOpenChange={(open) => !open && setLosing(null)}>

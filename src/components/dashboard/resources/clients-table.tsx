@@ -148,6 +148,7 @@ export function ClientsTable({
     isLoading,
     isFetching,
     error,
+    buildQuery,
   } = useServerTable<Client>({
     endpoint: apiEndpoint,
     pageSize: 20,
@@ -166,6 +167,13 @@ export function ClientsTable({
 
   return (
     <DataTable<Client, unknown>
+      exportTitle="Clientes"
+      fetchAllForExport={async () => {
+        // Todas las filas con la búsqueda y el orden actuales.
+        const res = await fetch(`${apiEndpoint}?${buildQuery({ all: "1" })}`);
+        if (!res.ok) throw new Error();
+        return ((await res.json()) as { data: Client[] }).data;
+      }}
       columns={getColumns()}
       data={clients}
       filterPlaceholder="Buscar…"

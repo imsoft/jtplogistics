@@ -156,6 +156,7 @@ export function EmailsTable({
           </p>
         ) : (
           <DataTable<EmailAccount, unknown>
+      exportTitle="Correos asignados"
             columns={columns}
             data={filteredAssigned}
             filterColumn="search"
@@ -181,6 +182,7 @@ export function EmailsTable({
           </p>
         ) : (
           <DataTable<EmailAccount, unknown>
+      exportTitle="Correos sin asignar"
             columns={columns}
             data={filteredUnassigned}
             filterColumn="search"

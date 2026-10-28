@@ -34,6 +34,7 @@ import {
   getQuoteDisplayStatus,
   type QuoteStatusDisplay,
 } from "@/lib/constants/quote-status";
+import { ExportableTable } from "@/components/dashboard/export/exportable-table";
 
 export interface CrmMaritimeQuote {
   id: string;
@@ -160,135 +161,137 @@ export function MaritimeQuotesCrmTable({
 
       <Card>
         <CardContent className="px-0 py-0">
-          <div className="@container/table overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/40 text-xs text-muted-foreground">
-                  <th className="px-4 py-2 text-left font-medium">Referencia</th>
-                  <th className="px-4 py-2 text-left font-medium">Cliente</th>
-                  <th className="px-4 py-2 text-left font-medium">Estado</th>
-                  <th className="px-4 py-2 text-right font-medium">Total a depositar</th>
-                  <th className="px-4 py-2 text-left font-medium hidden @4xl/table:table-cell">Vigencia</th>
-                  <th className="px-4 py-2 text-left font-medium hidden @5xl/table:table-cell">Creó</th>
-                  <th className="px-4 py-2 text-left font-medium">Fecha</th>
-                  <th className="px-4 py-2 w-20" />
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((q) => {
-                  const display = getQuoteDisplayStatus(q.status, q.validUntil);
-                  const isLocked = q.status === "aceptada" && !canEditAccepted;
-                  const statusEditable = canUpdate && !isLocked;
-                  const showEdit = canUpdate && !isLocked;
-                  const showDelete = canDelete && !isLocked;
-                  const showActions = showEdit || showDelete;
-                  return (
-                    <tr key={q.id} className="border-b last:border-0">
-                      <td className="px-4 py-3 font-mono text-xs font-medium">{q.reference}</td>
-                      <td className="px-4 py-3">
-                        {/* Un borrador puede guardarse antes de saber el cliente. */}
-                        {q.client || <span className="text-muted-foreground italic">Sin cliente</span>}
-                      </td>
-                      <td className="px-4 py-3">
-                        {!statusEditable ? (
-                          <Badge variant="outline" className={cn("border-0", QUOTE_STATUS_CONFIG[display].badgeClass)}>
-                            {QUOTE_STATUS_CONFIG[display].label}
-                          </Badge>
-                        ) : (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger className="inline-flex items-center gap-1 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <ExportableTable title="Cotizaciones marítimas">
+            <div className="@container/table overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/40 text-xs text-muted-foreground">
+                    <th className="px-4 py-2 text-left font-medium">Referencia</th>
+                    <th className="px-4 py-2 text-left font-medium">Cliente</th>
+                    <th className="px-4 py-2 text-left font-medium">Estado</th>
+                    <th className="px-4 py-2 text-right font-medium">Total a depositar</th>
+                    <th className="px-4 py-2 text-left font-medium hidden @4xl/table:table-cell">Vigencia</th>
+                    <th className="px-4 py-2 text-left font-medium hidden @5xl/table:table-cell">Creó</th>
+                    <th className="px-4 py-2 text-left font-medium">Fecha</th>
+                    <th className="px-4 py-2 w-20" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((q) => {
+                    const display = getQuoteDisplayStatus(q.status, q.validUntil);
+                    const isLocked = q.status === "aceptada" && !canEditAccepted;
+                    const statusEditable = canUpdate && !isLocked;
+                    const showEdit = canUpdate && !isLocked;
+                    const showDelete = canDelete && !isLocked;
+                    const showActions = showEdit || showDelete;
+                    return (
+                      <tr key={q.id} className="border-b last:border-0">
+                        <td className="px-4 py-3 font-mono text-xs font-medium">{q.reference}</td>
+                        <td className="px-4 py-3">
+                          {/* Un borrador puede guardarse antes de saber el cliente. */}
+                          {q.client || <span className="text-muted-foreground italic">Sin cliente</span>}
+                        </td>
+                        <td className="px-4 py-3">
+                          {!statusEditable ? (
                             <Badge variant="outline" className={cn("border-0", QUOTE_STATUS_CONFIG[display].badgeClass)}>
                               {QUOTE_STATUS_CONFIG[display].label}
                             </Badge>
-                            <ChevronDown className="size-3 text-muted-foreground" />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="start">
-                            {QUOTE_STATUS_OPTIONS.map((opt) => (
-                              <DropdownMenuItem
-                                key={opt.value}
-                                onClick={() => changeStatus(q.id, opt.value)}
-                                className={cn(q.status === opt.value && "font-semibold")}
-                              >
-                                <span className={cn("mr-2 inline-block size-2 rounded-full", QUOTE_STATUS_CONFIG[opt.value].badgeClass)} />
-                                {opt.label}
-                              </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                        )}
-                        {q.status === "rechazada" && q.rejectionReason && (
-                          <span className="text-muted-foreground mt-1 block text-xs">
-                            {QUOTE_REJECTION_LABELS[q.rejectionReason as QuoteRejectionReason] ?? q.rejectionReason}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-right font-medium">${formatMxn(q.total)}</td>
-                      <td className="px-4 py-3 text-muted-foreground hidden @4xl/table:table-cell">
-                        {new Date(q.validUntil).toLocaleDateString("es-MX", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" })}
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground hidden @5xl/table:table-cell">{q.createdByName}</td>
-                      <td className="px-4 py-3 text-muted-foreground text-xs">
-                        {new Date(q.createdAt).toLocaleDateString("es-MX", { year: "numeric", month: "short", day: "numeric" })}
-                      </td>
-                      <td className="px-2 py-2">
-                        {isLocked ? (
-                          <div
-                            className="flex items-center justify-center text-muted-foreground"
-                            title="Cotización aceptada: requiere permiso del administrador para editar o eliminar"
-                          >
-                            <Lock className="size-3.5" aria-label="Bloqueada" />
-                          </div>
-                        ) : showActions ? (
-                        <div className="flex items-center gap-1">
-                          {showEdit && (
-                            <Button variant="ghost" size="icon" className="size-7" asChild>
-                              <Link href={`${editBase}/${q.id}/edit`} aria-label="Editar">
-                                <Pencil className="size-3.5" />
-                              </Link>
-                            </Button>
-                          )}
-                          {showDelete && (
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-destructive" aria-label="Eliminar">
-                                <Trash2 className="size-3.5" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>¿Eliminar cotización?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Se eliminará {q.reference} del historial. Esta acción no se puede deshacer.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction
-                                  variant="destructive"
-                                  onClick={() => remove(q.id)}
+                          ) : (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger className="inline-flex items-center gap-1 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                              <Badge variant="outline" className={cn("border-0", QUOTE_STATUS_CONFIG[display].badgeClass)}>
+                                {QUOTE_STATUS_CONFIG[display].label}
+                              </Badge>
+                              <ChevronDown className="size-3 text-muted-foreground" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start">
+                              {QUOTE_STATUS_OPTIONS.map((opt) => (
+                                <DropdownMenuItem
+                                  key={opt.value}
+                                  onClick={() => changeStatus(q.id, opt.value)}
+                                  className={cn(q.status === opt.value && "font-semibold")}
                                 >
-                                  Eliminar
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                                  <span className={cn("mr-2 inline-block size-2 rounded-full", QUOTE_STATUS_CONFIG[opt.value].badgeClass)} />
+                                  {opt.label}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                           )}
-                        </div>
-                        ) : null}
+                          {q.status === "rechazada" && q.rejectionReason && (
+                            <span className="text-muted-foreground mt-1 block text-xs">
+                              {QUOTE_REJECTION_LABELS[q.rejectionReason as QuoteRejectionReason] ?? q.rejectionReason}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-right font-medium">${formatMxn(q.total)}</td>
+                        <td className="px-4 py-3 text-muted-foreground hidden @4xl/table:table-cell">
+                          {new Date(q.validUntil).toLocaleDateString("es-MX", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" })}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground hidden @5xl/table:table-cell">{q.createdByName}</td>
+                        <td className="px-4 py-3 text-muted-foreground text-xs">
+                          {new Date(q.createdAt).toLocaleDateString("es-MX", { year: "numeric", month: "short", day: "numeric" })}
+                        </td>
+                        <td className="px-2 py-2">
+                          {isLocked ? (
+                            <div
+                              className="flex items-center justify-center text-muted-foreground"
+                              title="Cotización aceptada: requiere permiso del administrador para editar o eliminar"
+                            >
+                              <Lock className="size-3.5" aria-label="Bloqueada" />
+                            </div>
+                          ) : showActions ? (
+                          <div className="flex items-center gap-1">
+                            {showEdit && (
+                              <Button variant="ghost" size="icon" className="size-7" asChild>
+                                <Link href={`${editBase}/${q.id}/edit`} aria-label="Editar">
+                                  <Pencil className="size-3.5" />
+                                </Link>
+                              </Button>
+                            )}
+                            {showDelete && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-destructive" aria-label="Eliminar">
+                                  <Trash2 className="size-3.5" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>¿Eliminar cotización?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Se eliminará {q.reference} del historial. Esta acción no se puede deshacer.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    variant="destructive"
+                                    onClick={() => remove(q.id)}
+                                  >
+                                    Eliminar
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                            )}
+                          </div>
+                          ) : null}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {filtered.length === 0 && (
+                    <tr>
+                      <td colSpan={8} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                        No hay cotizaciones marítimas en este estado.
                       </td>
                     </tr>
-                  );
-                })}
-                {filtered.length === 0 && (
-                  <tr>
-                    <td colSpan={8} className="px-4 py-8 text-center text-sm text-muted-foreground">
-                      No hay cotizaciones marítimas en este estado.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </ExportableTable>
         </CardContent>
       </Card>
 

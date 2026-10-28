@@ -26,6 +26,7 @@ function toDateInput(iso: string | null | undefined): string {
 
 const STATUS_OPTIONS: { value: ShipmentStatus; label: string }[] = [
   { value: "pending", label: SHIPMENT_STATUS_CONFIG.pending.label },
+  { value: "in_transit", label: SHIPMENT_STATUS_CONFIG.in_transit.label },
   { value: "delivered", label: SHIPMENT_STATUS_CONFIG.delivered.label },
   { value: "delivered_with_delay", label: SHIPMENT_STATUS_CONFIG.delivered_with_delay.label },
   { value: "not_delivered", label: SHIPMENT_STATUS_CONFIG.not_delivered.label },

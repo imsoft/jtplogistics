@@ -42,6 +42,7 @@ export default function VendorGeneratedQuotesPage() {
         <QuotesCrmTable
           initialQuotes={quotes}
           apiEndpoint="/api/vendor/generated-quotes"
+          viewBase="/vendor/dashboard/generated-quotes"
           canUpdateStatus={false}
           canEdit={false}
           canDelete={false}

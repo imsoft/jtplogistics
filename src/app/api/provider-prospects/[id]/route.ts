@@ -3,6 +3,7 @@ import { logAudit } from "@/lib/audit-log";
 import { requireProspectAccess } from "@/lib/prospect-auth";
 import { PROSPECT_STATUS_LABELS, requiresDiscardReason } from "@/lib/provider-prospects";
 import { prospectToJson, readProspectBody } from "../route";
+import { alertProspectReady } from "@/lib/provider-onboarding-alerts-server";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -47,7 +48,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       return Response.json({ error: "Escribe por qué se descarta." }, { status: 400 });
     }
 
-    await prisma.providerProspect.update({
+    const saved = await prisma.providerProspect.update({
       where: { id },
       data: {
         ...(data.commercialName !== undefined && { commercialName: data.commercialName }),
@@ -77,6 +78,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
             },
           ]
         : [];
+
+    // Listo para alta: avisar a quien abre los expedientes (Liz).
+    void alertProspectReady(saved, current.status, session.user);
 
     void logAudit({
       resource: "provider_prospect",

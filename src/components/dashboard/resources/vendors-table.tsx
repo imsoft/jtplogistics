@@ -62,6 +62,7 @@ export function VendorsTable({
     isLoading,
     isFetching,
     error,
+    buildQuery,
   } = useServerTable<Vendor>({
     endpoint: apiEndpoint,
     pageSize: 20,
@@ -80,6 +81,13 @@ export function VendorsTable({
 
   return (
     <DataTable<Vendor, unknown>
+      exportTitle="Vendedores"
+      fetchAllForExport={async () => {
+        // Todas las filas con la búsqueda y el orden actuales.
+        const res = await fetch(`${apiEndpoint}?${buildQuery({ all: "1" })}`);
+        if (!res.ok) throw new Error();
+        return ((await res.json()) as { data: Vendor[] }).data;
+      }}
       columns={getColumns()}
       data={vendors}
       filterPlaceholder="Buscar…"

@@ -66,6 +66,7 @@ interface CollaboratorPermissions {
   canViewTimeClock: boolean;
   canManageSchedules: boolean;
   canViewQuoteKpis: boolean;
+  canChangeRouteStatus: boolean;
   canCreateLaptops: boolean;
   canUpdateLaptops: boolean;
   canDeleteLaptops: boolean;

@@ -49,6 +49,7 @@ import {
   type DocStatus,
   type OnboardingStage,
 } from "@/lib/provider-onboardings";
+import { ExportableTable } from "@/components/dashboard/export/exportable-table";
 
 export interface OnboardingRow {
   id: string;
@@ -345,102 +346,113 @@ export function OnboardingsTable({
           {rows.length === 0 ? "Todavía no hay altas registradas." : "Ninguna alta coincide con los filtros."}
         </p>
       ) : (
-        <div className="@container/table w-full overflow-x-auto rounded-md border">
-          <table className="w-full min-w-max text-xs font-medium tracking-wide md:min-w-0">
-            <thead>
-              <tr className="bg-primary/[0.07] border-b">
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary">Proveedor</th>
-                <th className="hidden px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary @3xl/table:table-cell">Inicio</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary">Expediente</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary">Alta</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary">Contrato</th>
-                <th className="hidden px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary @6xl/table:table-cell">Autoriza</th>
-                {(canEdit || canDelete) && <th className="w-24 px-2 py-2" />}
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((r) => {
-                const st = onboardingStage(r);
-                const progress = docProgress(r.docs);
-                const c = CONTRACT_BY_VALUE[r.contractStatus];
-                return (
-                  <tr key={r.id} className={cn("border-b align-top last:border-0", st === "on_hold" && "bg-gray-50 dark:bg-gray-900/40")}>
-                    <td className="px-4 py-3">
-                      <span className="block max-w-52 truncate font-semibold min-[1440px]:max-w-64" title={r.legalName}>{r.legalName}</span>
-                      <span className="text-muted-foreground block max-w-52 truncate text-xs min-[1440px]:max-w-64" title={r.commercialName}>{r.commercialName}</span>
-                      {st === "on_hold" && r.holdReason && (
-                        <span className="mt-1 block max-w-52 text-xs text-gray-700 min-[1440px]:max-w-64 dark:text-gray-300" title={r.holdReason}>{r.holdReason}</span>
-                      )}
-                    </td>
-                    <td className="text-muted-foreground hidden whitespace-nowrap px-4 py-3 @3xl/table:table-cell">{shortDate(r.startedOn)}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex w-64 max-w-64 flex-wrap gap-1 min-[1440px]:w-72 min-[1440px]:max-w-72">
-                        {ONBOARDING_DOCS.map((d) => (
-                          <DocChip key={d.key} docKey={d.key} status={r.docs[d.key]} canEdit={canEdit} onChange={(next) => setDoc(r, d.key, next)} />
-                        ))}
-                      </div>
-                      <span className="text-muted-foreground mt-1 block text-xs">{progress.done} de {progress.total}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge variant="outline" className={cn("border-0 whitespace-nowrap", STAGE_TONE[st])}>{STAGE_LABELS[st]}</Badge>
-                      {r.completedOn && <span className="text-muted-foreground mt-1 block text-xs">{shortDate(r.completedOn)}</span>}
-                    </td>
-                    <td className="px-4 py-3">
-                      {canEdit ? (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger className="inline-flex max-w-56 items-center gap-1 rounded-full text-left outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                            <Badge variant="outline" className={cn("rounded-md border-0 whitespace-normal", c.badgeClass)}>{c.label}</Badge>
-                            <ChevronDown className="text-muted-foreground size-3 shrink-0" />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="start">
-                            {CONTRACT_STATUSES.map((s) => (
-                              <DropdownMenuItem key={s.value} onClick={() => setContractStatus(r, s.value)}>{s.label}</DropdownMenuItem>
-                            ))}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      ) : (
-                        <Badge variant="outline" className={cn("rounded-md border-0 whitespace-normal", c.badgeClass)}>{c.label}</Badge>
-                      )}
-                      {r.signedReceivedOn && <span className="text-muted-foreground mt-1 block text-xs">Firmado {shortDate(r.signedReceivedOn)}</span>}
-                    </td>
-                    <td className="text-muted-foreground hidden px-4 py-3 text-xs @6xl/table:table-cell">
-                      {r.altaAuthorizedBy && <span className="block">Alta: {r.altaAuthorizedBy}</span>}
-                      {r.contractAuthorizedBy && <span className="block">Contrato: {r.contractAuthorizedBy}</span>}
-                      {!r.altaAuthorizedBy && !r.contractAuthorizedBy && "—"}
-                    </td>
-                    {(canEdit || canDelete) && (
-                      <td className="px-2 py-3">
-                        <div className="flex items-center gap-1">
-                          {canEdit && (
-                            st === "on_hold" ? (
-                              <Button variant="ghost" size="icon" className="size-7" aria-label="Reactivar alta" title="Reactivar" onClick={() => resume(r)}>
-                                <PlayCircle className="size-3.5 text-green-700" />
-                              </Button>
-                            ) : (
-                              <Button variant="ghost" size="icon" className="size-7" aria-label="Detener alta" title="Detener" onClick={() => { setHoldReason(""); setHolding(r); }}>
-                                <PauseCircle className="size-3.5 text-gray-600" />
-                              </Button>
-                            )
-                          )}
-                          {canEdit && (
-                            <Button variant="ghost" size="icon" className="size-7" asChild>
-                              <Link href={`${editBase}/${r.id}/edit`} aria-label={`Editar ${r.legalName}`}><Pencil className="size-3.5" /></Link>
-                            </Button>
-                          )}
-                          {canDelete && (
-                            <Button variant="ghost" size="icon" className="size-7" aria-label={`Eliminar ${r.legalName}`} onClick={() => setDeleting(r)}>
-                              <Trash2 className="text-destructive size-3.5" />
-                            </Button>
-                          )}
-                        </div>
+        <ExportableTable title="Alta de proveedores">
+          <div className="@container/table w-full overflow-x-auto rounded-md border">
+            <table className="w-full min-w-max text-xs font-medium tracking-wide md:min-w-0">
+              <thead>
+                <tr className="bg-primary/[0.07] border-b">
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary">Proveedor</th>
+                  <th className="hidden px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary @3xl/table:table-cell">Inicio</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary">Expediente</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary">Alta</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary">Contrato</th>
+                  <th className="hidden px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary @6xl/table:table-cell">Autoriza</th>
+                  {(canEdit || canDelete) && <th className="w-24 px-2 py-2" />}
+                </tr>
+              </thead>
+              <tbody>
+                {visible.map((r) => {
+                  const st = onboardingStage(r);
+                  const progress = docProgress(r.docs);
+                  const c = CONTRACT_BY_VALUE[r.contractStatus];
+                  return (
+                    <tr key={r.id} className={cn("border-b align-top last:border-0", st === "on_hold" && "bg-gray-50 dark:bg-gray-900/40")}>
+                      <td className="px-4 py-3">
+                        <span className="block max-w-52 truncate font-semibold min-[1440px]:max-w-64" title={r.legalName}>{r.legalName}</span>
+                        <span className="text-muted-foreground block max-w-52 truncate text-xs min-[1440px]:max-w-64" title={r.commercialName}>{r.commercialName}</span>
+                        {st === "on_hold" && r.holdReason && (
+                          <span className="mt-1 block max-w-52 text-xs text-gray-700 min-[1440px]:max-w-64 dark:text-gray-300" title={r.holdReason}>{r.holdReason}</span>
+                        )}
                       </td>
-                    )}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                      <td className="text-muted-foreground hidden whitespace-nowrap px-4 py-3 @3xl/table:table-cell">{shortDate(r.startedOn)}</td>
+                      <td
+                        className="px-4 py-3"
+                        data-export={[
+                          `${progress.done} de ${progress.total}`,
+                          ...(() => {
+                            const pend = ONBOARDING_DOCS.filter((d) => r.docs[d.key] === "pending").map((d) => d.label);
+                            return pend.length ? [`Pendiente: ${pend.join(", ")}`] : [];
+                          })(),
+                        ].join(" · ")}
+                      >
+                        <div className="flex w-64 max-w-64 flex-wrap gap-1 min-[1440px]:w-72 min-[1440px]:max-w-72">
+                          {ONBOARDING_DOCS.map((d) => (
+                            <DocChip key={d.key} docKey={d.key} status={r.docs[d.key]} canEdit={canEdit} onChange={(next) => setDoc(r, d.key, next)} />
+                          ))}
+                        </div>
+                        <span className="text-muted-foreground mt-1 block text-xs">{progress.done} de {progress.total}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge variant="outline" className={cn("border-0 whitespace-nowrap", STAGE_TONE[st])}>{STAGE_LABELS[st]}</Badge>
+                        {r.completedOn && <span className="text-muted-foreground mt-1 block text-xs">{shortDate(r.completedOn)}</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        {canEdit ? (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger className="inline-flex max-w-56 items-center gap-1 rounded-full text-left outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                              <Badge variant="outline" className={cn("rounded-md border-0 whitespace-normal", c.badgeClass)}>{c.label}</Badge>
+                              <ChevronDown className="text-muted-foreground size-3 shrink-0" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start">
+                              {CONTRACT_STATUSES.map((s) => (
+                                <DropdownMenuItem key={s.value} onClick={() => setContractStatus(r, s.value)}>{s.label}</DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        ) : (
+                          <Badge variant="outline" className={cn("rounded-md border-0 whitespace-normal", c.badgeClass)}>{c.label}</Badge>
+                        )}
+                        {r.signedReceivedOn && <span className="text-muted-foreground mt-1 block text-xs">Firmado {shortDate(r.signedReceivedOn)}</span>}
+                      </td>
+                      <td className="text-muted-foreground hidden px-4 py-3 text-xs @6xl/table:table-cell">
+                        {r.altaAuthorizedBy && <span className="block">Alta: {r.altaAuthorizedBy}</span>}
+                        {r.contractAuthorizedBy && <span className="block">Contrato: {r.contractAuthorizedBy}</span>}
+                        {!r.altaAuthorizedBy && !r.contractAuthorizedBy && "—"}
+                      </td>
+                      {(canEdit || canDelete) && (
+                        <td className="px-2 py-3">
+                          <div className="flex items-center gap-1">
+                            {canEdit && (
+                              st === "on_hold" ? (
+                                <Button variant="ghost" size="icon" className="size-7" aria-label="Reactivar alta" title="Reactivar" onClick={() => resume(r)}>
+                                  <PlayCircle className="size-3.5 text-green-700" />
+                                </Button>
+                              ) : (
+                                <Button variant="ghost" size="icon" className="size-7" aria-label="Detener alta" title="Detener" onClick={() => { setHoldReason(""); setHolding(r); }}>
+                                  <PauseCircle className="size-3.5 text-gray-600" />
+                                </Button>
+                              )
+                            )}
+                            {canEdit && (
+                              <Button variant="ghost" size="icon" className="size-7" asChild>
+                                <Link href={`${editBase}/${r.id}/edit`} aria-label={`Editar ${r.legalName}`}><Pencil className="size-3.5" /></Link>
+                              </Button>
+                            )}
+                            {canDelete && (
+                              <Button variant="ghost" size="icon" className="size-7" aria-label={`Eliminar ${r.legalName}`} onClick={() => setDeleting(r)}>
+                                <Trash2 className="text-destructive size-3.5" />
+                              </Button>
+                            )}
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </ExportableTable>
       )}
 
       <p className="text-muted-foreground text-xs">

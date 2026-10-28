@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
-import { gateRoutes } from "@/lib/route-auth";
+import { gateRouteStatus, gateRoutes } from "@/lib/route-auth";
 import { type PrismaRoute, VALID_STATUSES, routeToJson } from "@/lib/api/route-utils";
 import { getCityState } from "@/lib/data/mexico-cities";
 import { logRoute, diffSnapshots, type RouteSnapshot } from "@/lib/route-log";
@@ -50,10 +50,11 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await gateRoutes("canUpdateRoutes");
-
     const { id } = await params;
     const body = await request.json();
+    // Solo el estatus: basta el permiso suelto de cambiar estatus (pricing).
+    const statusOnly = body && typeof body === "object" && Object.keys(body).length === 1 && "status" in body;
+    const session = statusOnly ? await gateRouteStatus() : await gateRoutes("canUpdateRoutes");
     const origin = body.origin != null ? String(body.origin).trim() : undefined;
     const destination = body.destination != null ? String(body.destination).trim() : undefined;
     const destinationState = body.destinationState != null ? String(body.destinationState).trim() : undefined;

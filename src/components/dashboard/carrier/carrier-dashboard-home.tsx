@@ -206,6 +206,7 @@ export function CarrierDashboardHome() {
           ) : (
             <div className="overflow-x-auto">
               <DataTable
+      exportTitle="Mis rutas"
                 columns={columns}
                 data={rows}
                 filterColumn="search"

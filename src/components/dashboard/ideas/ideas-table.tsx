@@ -95,6 +95,7 @@ export function IdeasTable({
 
   return (
     <DataTable
+      exportTitle="Ideas"
       columns={columns}
       data={ideas}
       filterColumn="title"

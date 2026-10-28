@@ -24,3 +24,10 @@ describe("shipment-outcome", () => {
     expect(outcomeFromHistory(["at_risk", "not_delivered", "delivered_with_delay", "returned"])).toBe("delivered_with_delay");
   });
 });
+
+describe("en tránsito", () => {
+  it("no deja resultado de entrega, como pendiente", () => {
+    expect(outcomeAfterStatus("in_transit", "delivered")).toBeNull();
+    expect(outcomeFromHistory(["delivered", "in_transit"])).toBeNull();
+  });
+});

@@ -21,7 +21,7 @@ const SORTABLE_FIELDS = new Set([
 ]);
 
 const VALID_STATUSES: ShipmentStatus[] = [
-  "pending", "delivered", "delivered_with_delay", "not_delivered", "at_risk", "returned",
+  "pending", "in_transit", "delivered", "delivered_with_delay", "not_delivered", "at_risk", "returned",
 ];
 
 function toJson(s: {
@@ -182,7 +182,7 @@ export async function POST(request: Request) {
       return Response.json({ error: "Sin permiso para capturar tarifas" }, { status: 403 });
     }
 
-    const validStatuses = ["pending", "delivered", "delivered_with_delay", "not_delivered", "at_risk", "returned"];
+    const validStatuses = ["pending", "in_transit", "delivered", "delivered_with_delay", "not_delivered", "at_risk", "returned"];
 
     const shipment = await prisma.shipment.create({
       data: {

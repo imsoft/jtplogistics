@@ -24,3 +24,21 @@ export async function gateRoutes(field: RoutePermField) {
   }
   return session;
 }
+
+/**
+ * Cambiar solo el estatus de una ruta: admin, o colaborador con permiso de
+ * editar rutas o con el permiso suelto de cambiar estatus (pricing).
+ */
+export async function gateRouteStatus() {
+  const session = await requireCollaboratorOrAdmin();
+  if (session.user.role === "collaborator") {
+    const me = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { canUpdateRoutes: true, canChangeRouteStatus: true },
+    });
+    if (!me?.canUpdateRoutes && !me?.canChangeRouteStatus) {
+      throw Response.json({ error: "Sin permiso" }, { status: 403 });
+    }
+  }
+  return session;
+}

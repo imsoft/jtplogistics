@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { DataTableSkeleton } from "@/components/ui/skeletons";
 import { useRouter } from "next/navigation";
-import { FileDown, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAdminFetch } from "@/hooks/use-admin-fetch";
 import { type ColumnDef } from "@tanstack/react-table";
@@ -11,11 +11,6 @@ import { DataTable } from "@/components/ui/data-table";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  downloadXlsxFromAoa,
-  excelExportFilename,
-  financesToExcelAoa,
-} from "@/lib/excel-export";
 import { FINANCE_TARIFF_COST_LABEL, FINANCE_TARIFF_SALE_LABEL } from "@/lib/constants/finance-tariff-labels";
 import { formatMxn } from "@/lib/utils";
 import { SHIPMENT_STATUS_CONFIG } from "@/components/dashboard/resources/shipments-table";
@@ -202,15 +197,6 @@ export function FinancesTable({
     "Error al cargar finanzas"
   );
 
-  const exportToExcel = useCallback(async () => {
-    try {
-      const aoa = financesToExcelAoa(rows);
-      await downloadXlsxFromAoa(excelExportFilename("finanzas"), "Finanzas", aoa);
-      toast.success("Archivo Excel descargado.");
-    } catch {
-      toast.error("No se pudo exportar el archivo.");
-    }
-  }, [rows]);
 
   if (!isLoaded) return <DataTableSkeleton />;
   if (error) return <p className="text-destructive text-sm">{error}</p>;
@@ -249,6 +235,7 @@ export function FinancesTable({
       onClose={() => setClearing(null)}
     />
     <DataTable<FinanceListRow, unknown>
+      exportTitle="Tabla de finanzas"
       columns={columns}
       data={rows}
       filterColumn="search"
@@ -256,18 +243,6 @@ export function FinancesTable({
       initialColumnVisibility={{ search: false }}
       getRowId={(row) => row.id}
       onRowClick={(row) => router.push(`${detailBase}/${row.id}`)}
-      toolbar={
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full gap-2 sm:w-auto"
-          onClick={exportToExcel}
-          disabled={rows.length === 0}
-        >
-          <FileDown className="size-4 shrink-0" />
-          Exportar Excel
-        </Button>
-      }
     />
     </>
   );

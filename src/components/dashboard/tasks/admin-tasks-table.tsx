@@ -80,6 +80,7 @@ export function AdminTasksTable({
   return (
     <>
       <DataTable
+      exportTitle="Tareas"
         columns={columns}
         data={displayTasks}
         filterColumn="search"

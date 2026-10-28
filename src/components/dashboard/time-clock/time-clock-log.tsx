@@ -23,6 +23,7 @@ import {
   downloadTimeClockWord,
   type TimeClockExport,
 } from "@/lib/time-clock-download";
+import { ExportableTable } from "@/components/dashboard/export/exportable-table";
 
 type Mark = "clock_in" | "lunch_start" | "lunch_end" | "clock_out";
 
@@ -218,129 +219,131 @@ export function TimeClockLog({ canCorrect = false }: { canCorrect?: boolean }) {
           </CardContent>
         </Card>
       ) : (
-        <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full min-w-[940px] text-sm">
-            <thead>
-              <tr className="border-b bg-muted/40">
-                <th className="px-4 py-2 text-left font-medium">Colaborador</th>
-                <th className="px-4 py-2 text-left font-medium">Jornada</th>
-                {COLUMNS.map((c) => (
-                  <th key={c.mark} className="px-4 py-2 text-left font-medium">{c.label}</th>
-                ))}
-                <th className="px-4 py-2 text-left font-medium">Anotaciones</th>
-                <th className="px-4 py-2 text-left font-medium">Señales</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={`${row.workDate}-${row.userId}`} className="border-b last:border-0">
-                  <td className="px-4 py-2.5 font-medium">
-                    {row.userName}
-                    {row.corrections.map((c, i) => (
-                      <span key={i} className="text-muted-foreground block text-xs font-normal">
-                        {c.kind ? CORRECTION_LABELS[c.kind] : "Corregido"}
-                        {c.by ? ` por ${c.by}` : ""}: {c.reason}
-                      </span>
-                    ))}
-                  </td>
-                  <td className="text-muted-foreground px-4 py-2.5 tabular-nums">
-                    <span className="whitespace-nowrap">{row.workDate}</span>
-                    {row.leave && (
-                      <span className="text-foreground bg-muted mt-1 block w-fit rounded px-1.5 py-0.5 text-xs font-medium">
-                        {LEAVE_LABELS[row.leave as LeaveKind] ?? row.leave}
-                      </span>
-                    )}
-                    {holidays.has(row.workDate) && (
-                      <span className="text-foreground bg-muted mt-1 block w-fit rounded px-1.5 py-0.5 text-xs font-medium">
-                        Festivo: {holidays.get(row.workDate)}
-                      </span>
-                    )}
-                  </td>
-                  {COLUMNS.map((c) => {
-                    const m = row.marks[c.mark];
-                    return (
-                      <td key={c.mark} className="px-4 py-2.5">
-                        {m ? (
-                          <span className="flex flex-col">
-                            <span className="font-semibold tabular-nums">{hms(m.at)}</span>
-                            {/* Checadas viejas: antes se podía marcar sin
-                                ubicación y no quedaba rastro de dónde. */}
-                            {m.geoStatus !== "granted" && (
-                              <span className="flex items-center gap-1 text-xs text-amber-700 dark:text-amber-400">
-                                <MapPinOff className="size-3" />Sin ubicación
-                              </span>
-                            )}
-                            {m.distanceM !== null && (
-                              <span
-                                className={`flex items-center gap-1 text-xs ${
-                                  m.outsideGeofence ? "text-amber-700 dark:text-amber-400" : "text-muted-foreground"
-                                }`}
-                              >
-                                <MapPin className="size-3" />{m.distanceM} m
-                              </span>
-                            )}
-                            {m.foreignNetwork && (
-                              <span className="flex items-center gap-1 text-xs text-amber-700 dark:text-amber-400">
-                                <WifiOff className="size-3" />Otra conexión
-                              </span>
-                            )}
-                            {m.sharedDevice && (
-                              <span className="flex items-center gap-1 text-xs text-amber-700 dark:text-amber-400">
-                                <MonitorSmartphone className="size-3" />Equipo compartido
-                              </span>
-                            )}
-                            {canCorrect && (
-                              <CorrectionDialog
-                                entryId={m.entryId}
-                                personName={row.userName}
-                                markLabel={c.label}
-                                currentTime={m.at}
-                                onDone={load}
-                              />
-                            )}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
-                      </td>
-                    );
-                  })}
-                  <td className="px-4 py-2.5">
-                    {row.flags.length === 0 ? (
-                      <span className="text-muted-foreground">—</span>
-                    ) : (
-                      <span className="flex flex-wrap gap-1">
-                        {row.flags.map((f, i) => (
-                          <span
-                            key={i}
-                            className={`rounded px-1.5 py-0.5 text-xs font-medium ${FLAG_TONE[f.kind]}`}
-                          >
-                            {FLAG_LABELS[f.kind]}
-                            {f.minutesLate !== null && f.minutesLate > 0 && ` ${f.minutesLate} min`}
-                          </span>
-                        ))}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-2.5">
-                    <span className="text-muted-foreground flex flex-col gap-0.5 text-xs">
-                      {row.ips.length > 0 && <span>{row.ips.join(", ")}</span>}
-                      {row.devices.length > 1 && (
-                        <span className="flex items-center gap-1">
-                          <MonitorSmartphone className="size-3" />
-                          {row.devices.length} equipos
+        <ExportableTable title="Registro del checador">
+          <div className="overflow-x-auto rounded-lg border">
+            <table className="w-full min-w-[940px] text-sm">
+              <thead>
+                <tr className="border-b bg-muted/40">
+                  <th className="px-4 py-2 text-left font-medium">Colaborador</th>
+                  <th className="px-4 py-2 text-left font-medium">Jornada</th>
+                  {COLUMNS.map((c) => (
+                    <th key={c.mark} className="px-4 py-2 text-left font-medium">{c.label}</th>
+                  ))}
+                  <th className="px-4 py-2 text-left font-medium">Anotaciones</th>
+                  <th className="px-4 py-2 text-left font-medium">Señales</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={`${row.workDate}-${row.userId}`} className="border-b last:border-0">
+                    <td className="px-4 py-2.5 font-medium">
+                      {row.userName}
+                      {row.corrections.map((c, i) => (
+                        <span key={i} className="text-muted-foreground block text-xs font-normal">
+                          {c.kind ? CORRECTION_LABELS[c.kind] : "Corregido"}
+                          {c.by ? ` por ${c.by}` : ""}: {c.reason}
+                        </span>
+                      ))}
+                    </td>
+                    <td className="text-muted-foreground px-4 py-2.5 tabular-nums">
+                      <span className="whitespace-nowrap">{row.workDate}</span>
+                      {row.leave && (
+                        <span className="text-foreground bg-muted mt-1 block w-fit rounded px-1.5 py-0.5 text-xs font-medium">
+                          {LEAVE_LABELS[row.leave as LeaveKind] ?? row.leave}
                         </span>
                       )}
-                      {row.reasons.map((r, i) => (
-                        <span key={i} className="text-foreground">{r}</span>
-                      ))}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                      {holidays.has(row.workDate) && (
+                        <span className="text-foreground bg-muted mt-1 block w-fit rounded px-1.5 py-0.5 text-xs font-medium">
+                          Festivo: {holidays.get(row.workDate)}
+                        </span>
+                      )}
+                    </td>
+                    {COLUMNS.map((c) => {
+                      const m = row.marks[c.mark];
+                      return (
+                        <td key={c.mark} className="px-4 py-2.5">
+                          {m ? (
+                            <span className="flex flex-col">
+                              <span className="font-semibold tabular-nums">{hms(m.at)}</span>
+                              {/* Checadas viejas: antes se podía marcar sin
+                                  ubicación y no quedaba rastro de dónde. */}
+                              {m.geoStatus !== "granted" && (
+                                <span className="flex items-center gap-1 text-xs text-amber-700 dark:text-amber-400">
+                                  <MapPinOff className="size-3" />Sin ubicación
+                                </span>
+                              )}
+                              {m.distanceM !== null && (
+                                <span
+                                  className={`flex items-center gap-1 text-xs ${
+                                    m.outsideGeofence ? "text-amber-700 dark:text-amber-400" : "text-muted-foreground"
+                                  }`}
+                                >
+                                  <MapPin className="size-3" />{m.distanceM} m
+                                </span>
+                              )}
+                              {m.foreignNetwork && (
+                                <span className="flex items-center gap-1 text-xs text-amber-700 dark:text-amber-400">
+                                  <WifiOff className="size-3" />Otra conexión
+                                </span>
+                              )}
+                              {m.sharedDevice && (
+                                <span className="flex items-center gap-1 text-xs text-amber-700 dark:text-amber-400">
+                                  <MonitorSmartphone className="size-3" />Equipo compartido
+                                </span>
+                              )}
+                              {canCorrect && (
+                                <CorrectionDialog
+                                  entryId={m.entryId}
+                                  personName={row.userName}
+                                  markLabel={c.label}
+                                  currentTime={m.at}
+                                  onDone={load}
+                                />
+                              )}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </td>
+                      );
+                    })}
+                    <td className="px-4 py-2.5">
+                      {row.flags.length === 0 ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : (
+                        <span className="flex flex-wrap gap-1">
+                          {row.flags.map((f, i) => (
+                            <span
+                              key={i}
+                              className={`rounded px-1.5 py-0.5 text-xs font-medium ${FLAG_TONE[f.kind]}`}
+                            >
+                              {FLAG_LABELS[f.kind]}
+                              {f.minutesLate !== null && f.minutesLate > 0 && ` ${f.minutesLate} min`}
+                            </span>
+                          ))}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <span className="text-muted-foreground flex flex-col gap-0.5 text-xs">
+                        {row.ips.length > 0 && <span>{row.ips.join(", ")}</span>}
+                        {row.devices.length > 1 && (
+                          <span className="flex items-center gap-1">
+                            <MonitorSmartphone className="size-3" />
+                            {row.devices.length} equipos
+                          </span>
+                        )}
+                        {row.reasons.map((r, i) => (
+                          <span key={i} className="text-foreground">{r}</span>
+                        ))}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </ExportableTable>
       )}
 
       <p className="text-muted-foreground text-xs">

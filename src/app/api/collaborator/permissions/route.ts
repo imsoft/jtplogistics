@@ -28,6 +28,7 @@ export async function GET() {
         canViewTimeClock: true,
         canManageSchedules: true,
         canViewQuoteKpis: true,
+        canChangeRouteStatus: true,
         canViewPhones: true,
         canViewEmails: true,
         canViewTasks: true,

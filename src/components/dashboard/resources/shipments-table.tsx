@@ -21,13 +21,8 @@ import { formatMxn, formatPhone } from "@/lib/utils";
 import { formatIncidentYesNo } from "@/lib/incident-yes-no";
 import { getIncidentTypeLabel } from "@/lib/incident-type-label";
 import { useIncidentTypes } from "@/hooks/use-incident-types";
-import {
-  downloadXlsxFromAoa,
-  excelExportFilename,
-  shipmentsToExcelAoa,
-} from "@/lib/excel-export";
 import type { Shipment, ShipmentStatus } from "@/types/shipment.types";
-import { FileDown, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 import { shipmentLockReason } from "@/lib/shipment-lock";
@@ -53,9 +48,14 @@ export const SHIPMENT_STATUS_CONFIG: Record<
     badgeClass: "bg-gray-100 text-gray-800",
     rowClass: "",
   },
+  in_transit: {
+    label: "En tránsito",
+    badgeClass: "bg-blue-100 text-blue-800",
+    rowClass: "",
+  },
   delivered: {
     label: "Entregado",
-    badgeClass: "bg-blue-100 text-blue-800",
+    badgeClass: "bg-blue-200 text-blue-900",
     rowClass: "bg-blue-50",
   },
   delivered_with_delay: {
@@ -404,18 +404,12 @@ export function ShipmentsTable({
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  const exportToExcel = useCallback(async () => {
-    try {
-      const res = await fetch(`${endpoint}?${buildQuery({ all: "1" })}`);
-      if (!res.ok) throw new Error();
-      const json = (await res.json()) as { data: Shipment[] };
-      const aoa = shipmentsToExcelAoa(json.data, incidentTypes);
-      await downloadXlsxFromAoa(excelExportFilename("embarques"), "Embarques", aoa);
-      toast.success("Archivo Excel descargado.");
-    } catch {
-      toast.error("No se pudo exportar el archivo.");
-    }
-  }, [buildQuery, incidentTypes, endpoint]);
+  // Exportar: todas las filas con la búsqueda, los filtros y el orden actuales.
+  const fetchAllForExport = useCallback(async () => {
+    const res = await fetch(`${endpoint}?${buildQuery({ all: "1" })}`);
+    if (!res.ok) throw new Error();
+    return ((await res.json()) as { data: Shipment[] }).data;
+  }, [buildQuery, endpoint]);
 
   if (isLoading) return <DataTableSkeleton />;
   if (error) return <p className="text-destructive text-sm">{error}</p>;
@@ -444,6 +438,8 @@ export function ShipmentsTable({
       onClose={() => setDeleting(null)}
     />
     <DataTable<Shipment, unknown>
+      exportTitle="Tabla de embarques"
+      fetchAllForExport={fetchAllForExport}
       key={compactView ? "shipments-compact" : "shipments-full"}
       columns={columns}
       data={shipments}
@@ -538,16 +534,6 @@ export function ShipmentsTable({
           <div className="flex w-full flex-col gap-2 sm:flex-row sm:ml-auto sm:w-auto sm:shrink-0">
             <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={clearFilters}>
               Limpiar filtros
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full sm:w-auto gap-2"
-              onClick={exportToExcel}
-              disabled={total === 0}
-            >
-              <FileDown className="size-4 shrink-0" />
-              Exportar Excel
             </Button>
           </div>
         </div>

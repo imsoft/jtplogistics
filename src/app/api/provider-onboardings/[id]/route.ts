@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
 import { requireModuleAccess } from "@/lib/module-access";
 import { companyDateKey } from "@/lib/time-clock";
+import { sendOnboardingAlert } from "@/lib/provider-onboarding-alerts-server";
 import {
   CONTRACT_STATUS_LABELS,
   ONBOARDING_DOCS,
@@ -93,7 +94,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     });
 
     const changes: { field: string; label: string; from: string | null; to: string | null }[] = [];
+    const alertName = texts.commercialName ?? current.commercialName;
+    if (completedOn && !currentCompleted) {
+      void sendOnboardingAlert({ kind: "completed", onboardingId: id, name: alertName }, session.user);
+    }
     if (contractStatus && contractStatus !== current.contractStatus) {
+      void sendOnboardingAlert({ kind: "contract", onboardingId: id, name: alertName, contractLabel: CONTRACT_STATUS_LABELS[contractStatus] }, session.user);
       changes.push({ field: "contractStatus", label: "Contrato", from: CONTRACT_STATUS_LABELS[current.contractStatus], to: CONTRACT_STATUS_LABELS[contractStatus] });
     }
     if (onHold !== Boolean(current.onHoldSince)) {

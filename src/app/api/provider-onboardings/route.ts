@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
 import { requireModuleAccess } from "@/lib/module-access";
 import { companyDateKey } from "@/lib/time-clock";
+import { sendOnboardingAlert } from "@/lib/provider-onboarding-alerts-server";
 import {
   CONTRACT_STATUS_LABELS,
   ONBOARDING_DOCS,
@@ -173,6 +174,11 @@ export async function POST(request: Request) {
         where: { id: prospectId, status: { in: ["pendiente", "prospectando", "negociando"] } },
         data: { status: "en_alta" },
       });
+    }
+
+    void sendOnboardingAlert({ kind: "created", onboardingId: created.id, name: texts.commercialName }, session.user);
+    if (completedOn) {
+      void sendOnboardingAlert({ kind: "completed", onboardingId: created.id, name: texts.commercialName }, session.user);
     }
 
     void logAudit({

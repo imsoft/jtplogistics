@@ -94,6 +94,7 @@ export function LaptopsTable({
           </p>
         ) : (
           <DataTable<Laptop, unknown>
+      exportTitle="Laptops asignadas"
             columns={columns}
             data={assigned}
             filterColumn="search"
@@ -115,6 +116,7 @@ export function LaptopsTable({
           </p>
         ) : (
           <DataTable<Laptop, unknown>
+      exportTitle="Laptops sin asignar"
             columns={columns}
             data={unassigned}
             filterColumn="search"

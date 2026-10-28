@@ -51,6 +51,8 @@ export const PERMISSION_FIELDS = [
   "canViewTimeClock",
   "canManageSchedules",
   "canViewQuoteKpis",
+  "canChangeRouteStatus",
+  "canReceiveOnboardingAlerts",
 ];
 
 export const PERMISSION_LABELS: Record<string, string> = Object.fromEntries([
@@ -67,6 +69,8 @@ export const PERMISSION_LABELS: Record<string, string> = Object.fromEntries([
   ["canViewTimeClock", "Checador: ver el registro de todos"],
   ["canManageSchedules", "Checador: capturar horarios"],
   ["canViewQuoteKpis", "KPIs de cotizaciones: ver"],
+  ["canChangeRouteStatus", "Rutas: cambiar estatus (activa, pendiente, inactiva)"],
+  ["canReceiveOnboardingAlerts", "Alta de proveedores: recibir avisos (campana y correo)"],
 ]);
 
 /** Todo lo que cuelga de un colaborador: equipo asignado y cuentas de correo. */

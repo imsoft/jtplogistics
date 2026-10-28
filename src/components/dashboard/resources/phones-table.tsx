@@ -155,6 +155,7 @@ export function PhonesTable({
           </p>
         ) : (
           <DataTable<PhoneDevice, unknown>
+      exportTitle="Celulares asignados"
             columns={columns}
             data={filteredAssigned}
             filterColumn="search"
@@ -176,6 +177,7 @@ export function PhonesTable({
           </p>
         ) : (
           <DataTable<PhoneDevice, unknown>
+      exportTitle="Celulares sin asignar"
             columns={columns}
             data={unassigned}
             filterColumn="search"

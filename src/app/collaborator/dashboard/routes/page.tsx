@@ -60,6 +60,7 @@ export default function CollaboratorRoutesPage() {
         basePath="/collaborator/dashboard/routes"
         canEdit={permissions.canUpdateRoutes}
         canDelete={permissions.canDeleteRoutes}
+        canChangeStatus={permissions.canUpdateRoutes || permissions.canChangeRouteStatus}
       />
     </div>
   );

@@ -90,7 +90,7 @@ const SHIPMENT_LABELS: Record<string, string> = {
   cost: "Tarifa de compra",
 };
 
-const VALID_STATUSES = ["pending", "delivered", "delivered_with_delay", "not_delivered", "at_risk", "returned"] as const;
+const VALID_STATUSES = ["pending", "in_transit", "delivered", "delivered_with_delay", "not_delivered", "at_risk", "returned"] as const;
 const SHIPMENT_CLOSED_STATUS: (typeof VALID_STATUSES)[number] = "returned";
 
 export function PATCH(

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FileText, Loader2, Pencil, Trash2 } from "lucide-react";
+import { Eye, FileText, Loader2, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +28,7 @@ export function QuoteRowActions({
   quoteNumber,
   apiEndpoint = "/api/admin/generated-quotes",
   editBase = "/admin/dashboard/quotes",
+  viewBase,
   canEdit = true,
   canDelete = true,
 }: {
@@ -35,6 +36,8 @@ export function QuoteRowActions({
   quoteNumber: string;
   apiEndpoint?: string;
   editBase?: string;
+  /** Perfil de la cotización (ver sin editar). */
+  viewBase?: string;
   canEdit?: boolean;
   canDelete?: boolean;
 }) {
@@ -67,6 +70,13 @@ export function QuoteRowActions({
 
   return (
     <div className="flex items-center gap-1">
+      {viewBase && (
+        <Button variant="ghost" size="icon" className="size-7" asChild>
+          <Link href={`${viewBase}/${id}`} aria-label="Ver cotización" title="Ver cotización">
+            <Eye className="size-3.5" />
+          </Link>
+        </Button>
+      )}
       <Button
         variant="ghost"
         size="icon"

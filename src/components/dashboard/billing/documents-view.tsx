@@ -33,6 +33,7 @@ import {
   useBankAccounts,
   type BillingDocument,
 } from "./billing-shared";
+import { ExportableTable } from "@/components/dashboard/export/exportable-table";
 
 type Filter = "abiertas" | "todas" | DocumentStatus;
 
@@ -218,85 +219,87 @@ export function DocumentsView({
             : "Ninguna factura coincide con los filtros."}
         </p>
       ) : (
-        <div className="@container/table w-full overflow-x-auto rounded-md border">
-          <table className="w-full min-w-max text-sm md:min-w-0">
-            <thead>
-              <tr className="bg-muted/40 border-b">
-                {canUpdate && <th className="w-10 px-3 py-2"><span className="sr-only">Elegir</span></th>}
-                <th className="px-4 py-2 text-left font-medium">Folio</th>
-                <th className="px-4 py-2 text-left font-medium">{labels.party}</th>
-                <th className="hidden px-4 py-2 text-left font-medium @6xl/table:table-cell">Fecha</th>
-                <th className="px-4 py-2 text-left font-medium">Vence</th>
-                <th className="hidden px-4 py-2 text-right font-medium @5xl/table:table-cell">Total</th>
-                <th className="px-4 py-2 text-right font-medium">Saldo</th>
-                <th className="px-4 py-2 text-left font-medium">Estado</th>
-                {canUpdate && <th className="w-24 px-2 py-2" />}
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((d) => {
-                const late = d.status === "vencida" ? daysOverdue(d.dueDate, today) : 0;
-                return (
-                  <tr key={d.id} className="border-b align-top last:border-0">
-                    {canUpdate && (
-                      <td className="px-3 py-3">
-                        {payable(d) && (
-                          <input
-                            type="checkbox"
-                            checked={selected.includes(d.id)}
-                            disabled={!selected.includes(d.id) && !compatible(d)}
-                            onChange={() => toggle(d.id)}
-                            className="accent-primary size-4 disabled:opacity-30"
-                            aria-label={`Elegir ${folioLabel(d)} para pagar junto con otras`}
-                            title={!selected.includes(d.id) && !compatible(d) ? "Solo facturas del mismo cliente o proveedor y en la misma moneda" : undefined}
-                          />
-                        )}
-                      </td>
-                    )}
-                    <td className="px-4 py-3">
-                      <Link href={`${basePath}/${d.id}`} className="text-primary font-mono text-xs font-medium hover:underline">
-                        {folioLabel(d)}
-                      </Link>
-                      {d.source === "alegra" && <span className="text-muted-foreground block text-[11px]">De Alegra</span>}
-                      {d.shipmentEco && <span className="text-muted-foreground block text-[11px]">ECO {d.shipmentEco}</span>}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="block max-w-64 truncate font-medium" title={d.partyName}>{d.partyName}</span>
-                      {d.concept && <span className="text-muted-foreground block max-w-64 truncate text-xs" title={d.concept}>{d.concept}</span>}
-                    </td>
-                    <td className="text-muted-foreground hidden px-4 py-3 whitespace-nowrap @6xl/table:table-cell">{shortDay(d.issueDate)}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className={cn(late > 0 && "text-destructive font-medium")}>{shortDay(d.dueDate)}</span>
-                      {late > 0 && <span className="text-destructive block text-xs">{late} días de atraso</span>}
-                    </td>
-                    <td className="hidden px-4 py-3 text-right whitespace-nowrap tabular-nums @5xl/table:table-cell">{money(d.total, d.currency)}</td>
-                    <td className="px-4 py-3 text-right font-medium whitespace-nowrap tabular-nums">{money(d.balance, d.currency)}</td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={d.status} />
-                    </td>
-                    {canUpdate && (
-                      <td className="px-2 py-3">
-                        <div className="flex items-center justify-end gap-1">
-                          {d.balance > 0 && d.status !== "cancelada" && (
-                            <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => setPaying(d)}>
-                              <HandCoins className="size-3.5" />
-                              {labels.payment}
-                            </Button>
+        <ExportableTable title={labels.plural}>
+          <div className="@container/table w-full overflow-x-auto rounded-md border">
+            <table className="w-full min-w-max text-sm md:min-w-0">
+              <thead>
+                <tr className="bg-muted/40 border-b">
+                  {canUpdate && <th className="w-10 px-3 py-2"><span className="sr-only">Elegir</span></th>}
+                  <th className="px-4 py-2 text-left font-medium">Folio</th>
+                  <th className="px-4 py-2 text-left font-medium">{labels.party}</th>
+                  <th className="hidden px-4 py-2 text-left font-medium @6xl/table:table-cell">Fecha</th>
+                  <th className="px-4 py-2 text-left font-medium">Vence</th>
+                  <th className="hidden px-4 py-2 text-right font-medium @5xl/table:table-cell">Total</th>
+                  <th className="px-4 py-2 text-right font-medium">Saldo</th>
+                  <th className="px-4 py-2 text-left font-medium">Estado</th>
+                  {canUpdate && <th className="w-24 px-2 py-2" />}
+                </tr>
+              </thead>
+              <tbody>
+                {visible.map((d) => {
+                  const late = d.status === "vencida" ? daysOverdue(d.dueDate, today) : 0;
+                  return (
+                    <tr key={d.id} className="border-b align-top last:border-0">
+                      {canUpdate && (
+                        <td className="px-3 py-3">
+                          {payable(d) && (
+                            <input
+                              type="checkbox"
+                              checked={selected.includes(d.id)}
+                              disabled={!selected.includes(d.id) && !compatible(d)}
+                              onChange={() => toggle(d.id)}
+                              className="accent-primary size-4 disabled:opacity-30"
+                              aria-label={`Elegir ${folioLabel(d)} para pagar junto con otras`}
+                              title={!selected.includes(d.id) && !compatible(d) ? "Solo facturas del mismo cliente o proveedor y en la misma moneda" : undefined}
+                            />
                           )}
-                          <Button variant="ghost" size="icon" className="size-7" asChild>
-                            <Link href={`${basePath}/${d.id}/edit`} aria-label={`Editar ${folioLabel(d)}`}>
-                              <Pencil className="size-3.5" />
-                            </Link>
-                          </Button>
-                        </div>
+                        </td>
+                      )}
+                      <td className="px-4 py-3">
+                        <Link href={`${basePath}/${d.id}`} className="text-primary font-mono text-xs font-medium hover:underline">
+                          {folioLabel(d)}
+                        </Link>
+                        {d.source === "alegra" && <span className="text-muted-foreground block text-[11px]">De Alegra</span>}
+                        {d.shipmentEco && <span className="text-muted-foreground block text-[11px]">ECO {d.shipmentEco}</span>}
                       </td>
-                    )}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                      <td className="px-4 py-3">
+                        <span className="block max-w-64 truncate font-medium" title={d.partyName}>{d.partyName}</span>
+                        {d.concept && <span className="text-muted-foreground block max-w-64 truncate text-xs" title={d.concept}>{d.concept}</span>}
+                      </td>
+                      <td className="text-muted-foreground hidden px-4 py-3 whitespace-nowrap @6xl/table:table-cell">{shortDay(d.issueDate)}</td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className={cn(late > 0 && "text-destructive font-medium")}>{shortDay(d.dueDate)}</span>
+                        {late > 0 && <span className="text-destructive block text-xs">{late} días de atraso</span>}
+                      </td>
+                      <td className="hidden px-4 py-3 text-right whitespace-nowrap tabular-nums @5xl/table:table-cell">{money(d.total, d.currency)}</td>
+                      <td className="px-4 py-3 text-right font-medium whitespace-nowrap tabular-nums">{money(d.balance, d.currency)}</td>
+                      <td className="px-4 py-3">
+                        <StatusBadge status={d.status} />
+                      </td>
+                      {canUpdate && (
+                        <td className="px-2 py-3">
+                          <div className="flex items-center justify-end gap-1">
+                            {d.balance > 0 && d.status !== "cancelada" && (
+                              <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => setPaying(d)}>
+                                <HandCoins className="size-3.5" />
+                                {labels.payment}
+                              </Button>
+                            )}
+                            <Button variant="ghost" size="icon" className="size-7" asChild>
+                              <Link href={`${basePath}/${d.id}/edit`} aria-label={`Editar ${folioLabel(d)}`}>
+                                <Pencil className="size-3.5" />
+                              </Link>
+                            </Button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </ExportableTable>
       )}
 
       <BatchPaymentDialog

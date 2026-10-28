@@ -3,7 +3,9 @@
 import { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { MoveRight, Pencil, Trash2 } from "lucide-react";
+import { ChevronDown, MoveRight, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { AppSelect } from "@/components/ui/app-select";
@@ -19,10 +21,11 @@ import { useUnitTypes } from "@/hooks/use-unit-types";
 import { parseCityValue } from "@/lib/data/mexico-cities";
 import { formatMxn } from "@/lib/utils";
 import { fuzzyMatch } from "@/lib/search";
-import { ROUTE_STATUS_LABELS } from "@/lib/constants/route-status";
+import { ROUTE_STATUS_BADGE, ROUTE_STATUS_LABELS } from "@/lib/constants/route-status";
 import type { Route, RouteStatus } from "@/types/route.types";
 import { ROUTE_STATUS_OPTIONS } from "@/lib/constants/route-status";
 import { DataTableSkeleton } from "@/components/ui/skeletons";
+import { ExportableTable } from "@/components/dashboard/export/exportable-table";
 
 const STATUS_FILTER_ALL = "all";
 const UNIT_FILTER_ALL = "all";
@@ -41,14 +44,29 @@ interface RoutesCrudProps {
   basePath?: string;
   canEdit?: boolean;
   canDelete?: boolean;
+  /** Cambiar el estatus desde la tabla (quien edita rutas, o pricing con su permiso). */
+  canChangeStatus?: boolean;
 }
 
 export function RoutesCrud({
   basePath = "/admin/dashboard/routes",
   canEdit = true,
   canDelete = true,
+  canChangeStatus = true,
 }: RoutesCrudProps = {}) {
-  const { routes, deleteRoute: removeRoute, isLoaded, error } = useRoutesStore();
+  const { routes, deleteRoute: removeRoute, changeRouteStatus, isLoaded, error } = useRoutesStore();
+
+  async function setStatus(route: Route, status: RouteStatus) {
+    if (status === route.status) return;
+    const err = await changeRouteStatus(route.id, status);
+    if (err) toast.error(err);
+    else
+      toast.success(
+        status === "active"
+          ? `${route.origin} → ${route.destination}: activa. Se avisó a los transportistas que la cubren.`
+          : `${route.origin} → ${route.destination}: ${ROUTE_STATUS_LABELS[status].toLowerCase()}.`
+      );
+  }
   const unitTypes = useUnitTypes();
   const unitTypeLabel = useMemo(
     () => Object.fromEntries(unitTypes.map((u) => [u.value, u.label])),
@@ -176,138 +194,163 @@ export function RoutesCrud({
               No hay rutas con esos filtros.
             </p>
           ) : (
-            <div className="space-y-4">
-              {groupedRoutes.map(({ origin, items }) => (
-                <div key={origin} className="overflow-x-auto rounded-lg border">
-                  <div className="border-b bg-muted/60 px-4 py-2">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Desde {origin}
-                    </span>
-                  </div>
-                  <table className="w-full min-w-170 text-sm uppercase">
-                    <thead className="sticky top-0 z-10">
-                      <tr className="border-b bg-muted/20 text-xs font-medium text-muted-foreground">
-                        <th className="px-4 py-1.5 text-left font-medium">Ruta</th>
-                        <th className="px-4 py-1.5 text-left font-medium">Estado</th>
-                        <th className="px-4 py-1.5 text-left font-medium">Tipo</th>
-                        <th className="px-4 py-1.5 text-left font-medium">Descripción</th>
-                        <th className="px-4 py-1.5 text-left font-medium">
-                          Target {filterUnitType !== UNIT_FILTER_ALL && `${unitTypeLabel[filterUnitType] ?? filterUnitType}`} (MXN)
-                        </th>
-                        <th className="px-4 py-1.5 text-left font-medium">Estatus</th>
-                        <th className="px-4 py-1.5 text-left font-medium">Creado por</th>
-                        <th className="px-4 py-1.5 text-right font-medium">
-                          <span className="sr-only">Acciones</span>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {items.map((route) => {
-                        const description = route.description?.trim() ?? "";
-                        return (
-                          <tr
-                            key={route.id}
-                            className="border-b last:border-b-0 transition-colors hover:bg-hover hover:text-hover-foreground"
-                          >
-                            <td className="px-4 py-3">
-                              <Link
-                                href={`${basePath}/${route.id}`}
-                                className="flex items-center gap-1 font-medium hover:text-primary transition-colors uppercase"
-                              >
-                                <span className="truncate">{route.origin}</span>
-                                <MoveRight className="size-3.5 shrink-0 text-muted-foreground" />
-                                <span className="truncate">{route.destination}</span>
-                              </Link>
-                            </td>
-                            <td className="px-4 py-3">
-                              {route.destinationState ?? (
-                                <span className="text-muted-foreground">—</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-3">
-                              {route.unitTargets && route.unitTargets.length > 1
-                                ? route.unitTargets
-                                    .map((u) => unitTypeLabel[u.unitType] ?? u.unitType)
-                                    .join(", ")
-                                : unitTypeLabel[route.unitType] ?? route.unitType}
-                            </td>
-                            <td className="px-4 py-3">
-                              {description ? (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <span className="block max-w-35 cursor-default truncate sm:max-w-50">
+            <ExportableTable title="Rutas">
+              <div className="space-y-4">
+                {groupedRoutes.map(({ origin, items }) => (
+                  <div key={origin} className="overflow-x-auto rounded-lg border">
+                    <div className="border-b bg-muted/60 px-4 py-2">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Desde {origin}
+                      </span>
+                    </div>
+                    <table className="w-full min-w-170 text-sm uppercase">
+                      <thead className="sticky top-0 z-10">
+                        <tr className="border-b bg-muted/20 text-xs font-medium text-muted-foreground">
+                          <th className="px-4 py-1.5 text-left font-medium">Ruta</th>
+                          <th className="px-4 py-1.5 text-left font-medium">Estado</th>
+                          <th className="px-4 py-1.5 text-left font-medium">Tipo</th>
+                          <th className="px-4 py-1.5 text-left font-medium">Descripción</th>
+                          <th className="px-4 py-1.5 text-left font-medium">
+                            Target {filterUnitType !== UNIT_FILTER_ALL && `${unitTypeLabel[filterUnitType] ?? filterUnitType}`} (MXN)
+                          </th>
+                          <th className="px-4 py-1.5 text-left font-medium">Estatus</th>
+                          <th className="px-4 py-1.5 text-left font-medium">Creado por</th>
+                          <th className="px-4 py-1.5 text-right font-medium">
+                            <span className="sr-only">Acciones</span>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {items.map((route) => {
+                          const description = route.description?.trim() ?? "";
+                          return (
+                            <tr
+                              key={route.id}
+                              className="border-b last:border-b-0 transition-colors hover:bg-hover hover:text-hover-foreground"
+                            >
+                              <td className="px-4 py-3" data-export={`${route.origin} → ${route.destination}`}>
+                                <Link
+                                  href={`${basePath}/${route.id}`}
+                                  className="flex items-center gap-1 font-medium hover:text-primary transition-colors uppercase"
+                                >
+                                  <span className="truncate">{route.origin}</span>
+                                  <MoveRight className="size-3.5 shrink-0 text-muted-foreground" />
+                                  <span className="truncate">{route.destination}</span>
+                                </Link>
+                              </td>
+                              <td className="px-4 py-3">
+                                {route.destinationState ?? (
+                                  <span className="text-muted-foreground">—</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3">
+                                {route.unitTargets && route.unitTargets.length > 1
+                                  ? route.unitTargets
+                                      .map((u) => unitTypeLabel[u.unitType] ?? u.unitType)
+                                      .join(", ")
+                                  : unitTypeLabel[route.unitType] ?? route.unitType}
+                              </td>
+                              <td className="px-4 py-3">
+                                {description ? (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="block max-w-35 cursor-default truncate sm:max-w-50">
+                                        {description}
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="max-w-xs whitespace-pre-wrap">
                                       {description}
-                                    </span>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="top" className="max-w-xs whitespace-pre-wrap">
-                                    {description}
-                                  </TooltipContent>
-                                </Tooltip>
-                              ) : (
-                                <span className="text-muted-foreground">—</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-3">
-                              {(() => {
-                                let displayTarget: number | undefined;
-
-                                // Si hay filtro de tipo de unidad específico, buscar ese target
-                                if (filterUnitType !== UNIT_FILTER_ALL && route.unitTargets && route.unitTargets.length > 0) {
-                                  const matchingTarget = route.unitTargets.find(ut => ut.unitType === filterUnitType);
-                                  displayTarget = matchingTarget?.target;
-                                } else {
-                                  // Sin filtro o no encontrado: mostrar el del primer unitType o el heredado
-                                  displayTarget =
-                                    (route.unitTargets && route.unitTargets.length > 0)
-                                      ? route.unitTargets[0].target
-                                      : route.target;
-                                }
-
-                                return displayTarget != null ? (
-                                  `$${formatMxn(displayTarget)}`
+                                    </TooltipContent>
+                                  </Tooltip>
                                 ) : (
                                   <span className="text-muted-foreground">—</span>
-                                );
-                              })()}
-                            </td>
-                            <td className="px-4 py-3">
-                              {ROUTE_STATUS_LABELS[route.status]}
-                            </td>
-                            <td className="px-4 py-3">
-                              {route.createdByName ?? (
-                                <span className="text-muted-foreground">—</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-3">
-                              <div className="flex justify-end gap-2">
-                                {canEdit && (
-                                  <Button variant="ghost" size="icon" asChild aria-label="Editar ruta">
-                                    <Link href={`${basePath}/${route.id}/edit`}>
-                                      <Pencil className="size-4" />
-                                    </Link>
-                                  </Button>
                                 )}
-                                {canDelete && (
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => openDelete(route)}
-                                    aria-label="Eliminar ruta"
-                                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                  >
-                                    <Trash2 className="size-4" />
-                                  </Button>
+                              </td>
+                              <td className="px-4 py-3">
+                                {(() => {
+                                  let displayTarget: number | undefined;
+  
+                                  // Si hay filtro de tipo de unidad específico, buscar ese target
+                                  if (filterUnitType !== UNIT_FILTER_ALL && route.unitTargets && route.unitTargets.length > 0) {
+                                    const matchingTarget = route.unitTargets.find(ut => ut.unitType === filterUnitType);
+                                    displayTarget = matchingTarget?.target;
+                                  } else {
+                                    // Sin filtro o no encontrado: mostrar el del primer unitType o el heredado
+                                    displayTarget =
+                                      (route.unitTargets && route.unitTargets.length > 0)
+                                        ? route.unitTargets[0].target
+                                        : route.target;
+                                  }
+  
+                                  return displayTarget != null ? (
+                                    `$${formatMxn(displayTarget)}`
+                                  ) : (
+                                    <span className="text-muted-foreground">—</span>
+                                  );
+                                })()}
+                              </td>
+                              <td className="px-4 py-3">
+                                {canChangeStatus ? (
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger
+                                      className="inline-flex items-center gap-1 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                      aria-label={`Cambiar estatus de ${route.origin} → ${route.destination}`}
+                                    >
+                                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium uppercase tracking-wide ${ROUTE_STATUS_BADGE[route.status]}`}>
+                                        {ROUTE_STATUS_LABELS[route.status]}
+                                      </span>
+                                      <ChevronDown className="text-muted-foreground size-3" />
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="start">
+                                      {ROUTE_STATUS_OPTIONS.map((o) => (
+                                        <DropdownMenuItem key={o.value} onClick={() => setStatus(route, o.value)}>
+                                          {o.label}
+                                        </DropdownMenuItem>
+                                      ))}
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                ) : (
+                                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium uppercase tracking-wide ${ROUTE_STATUS_BADGE[route.status]}`}>
+                                    {ROUTE_STATUS_LABELS[route.status]}
+                                  </span>
                                 )}
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              ))}
-            </div>
+                              </td>
+                              <td className="px-4 py-3">
+                                {route.createdByName ?? (
+                                  <span className="text-muted-foreground">—</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="flex justify-end gap-2">
+                                  {canEdit && (
+                                    <Button variant="ghost" size="icon" asChild aria-label="Editar ruta">
+                                      <Link href={`${basePath}/${route.id}/edit`}>
+                                        <Pencil className="size-4" />
+                                      </Link>
+                                    </Button>
+                                  )}
+                                  {canDelete && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => openDelete(route)}
+                                      aria-label="Eliminar ruta"
+                                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                    >
+                                      <Trash2 className="size-4" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ))}
+              </div>
+            </ExportableTable>
           )}
         </>
       )}

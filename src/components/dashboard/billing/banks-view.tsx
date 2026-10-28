@@ -18,6 +18,7 @@ import { cn, formatMxnLive } from "@/lib/utils";
 import type { Currency } from "@/lib/billing";
 import { KIND_SLUG, money, shortDay, todayKey, type BankAccountRow } from "./billing-shared";
 import { StatementImportDialog } from "./statement-import-dialog";
+import { ExportableTable } from "@/components/dashboard/export/exportable-table";
 
 /** Cuentas de banco con su saldo y movimientos sin conciliar. */
 export function BanksView({ basePath, canCreate }: { basePath: string; canCreate: boolean }) {
@@ -373,70 +374,72 @@ export function BankDetailView({
                 : "Todos los movimientos están conciliados."}
             </p>
           ) : (
-            <div className="w-full overflow-x-auto">
-              <table className="w-full min-w-max text-sm md:min-w-0">
-                <thead>
-                  <tr className="border-b">
-                    <th className="w-10 py-2 pr-2 text-left font-medium" title="Conciliado contra el estado de cuenta">OK</th>
-                    <th className="py-2 pr-4 text-left font-medium">Fecha</th>
-                    <th className="py-2 pr-4 text-left font-medium">Concepto</th>
-                    <th className="py-2 pr-4 text-right font-medium">Entra</th>
-                    <th className="py-2 pr-4 text-right font-medium">Sale</th>
-                    <th className="py-2 pr-4 text-right font-medium">Saldo</th>
-                    {canDelete && <th className="w-10" />}
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((m) => (
-                    <tr key={m.id} className={cn("border-b last:border-0", m.reconciled && "text-muted-foreground")}>
-                      <td className="py-2 pr-2">
-                        <input
-                          type="checkbox"
-                          checked={m.reconciled}
-                          disabled={!canUpdate}
-                          onChange={() => toggle(m)}
-                          className="accent-primary size-4"
-                          aria-label={`Conciliado: ${m.concept}`}
-                        />
-                      </td>
-                      <td className="py-2 pr-4 whitespace-nowrap">{shortDay(m.date)}</td>
-                      <td className="py-2 pr-4">
-                        {m.documentId && m.documentKind ? (
-                          <Link href={`${billingBase}/${KIND_SLUG[m.documentKind]}/${m.documentId}`} className="text-primary hover:underline">
-                            {m.concept}
-                          </Link>
-                        ) : (
-                          m.concept
-                        )}
-                        {m.batchDocuments.length > 0 && (
-                          <span className="block text-xs">
-                            {m.batchDocuments.map((d, i) => (
-                              <span key={d.id}>
-                                {i > 0 && " · "}
-                                <Link href={`${billingBase}/${KIND_SLUG[d.kind]}/${d.id}`} className="text-primary hover:underline">{d.folio}</Link>
-                              </span>
-                            ))}
-                          </span>
-                        )}
-                        {m.reference && <span className="text-muted-foreground block text-xs">Ref. {m.reference}</span>}
-                      </td>
-                      <td className="py-2 pr-4 text-right whitespace-nowrap tabular-nums text-green-700">{m.amount > 0 ? money(m.amount, data.currency) : ""}</td>
-                      <td className="text-destructive py-2 pr-4 text-right whitespace-nowrap tabular-nums">{m.amount < 0 ? money(-m.amount, data.currency) : ""}</td>
-                      <td className="py-2 pr-4 text-right whitespace-nowrap tabular-nums">{money(m.balance, data.currency)}</td>
-                      {canDelete && (
-                        <td className="py-2">
-                          {m.source === "manual" && (
-                            <Button variant="ghost" size="icon" className="size-7" aria-label="Borrar movimiento" onClick={() => remove(m)}>
-                              <Trash2 className="text-destructive size-3.5" />
-                            </Button>
-                          )}
-                        </td>
-                      )}
+            <ExportableTable title={`Movimientos ${data.name}`}>
+              <div className="w-full overflow-x-auto">
+                <table className="w-full min-w-max text-sm md:min-w-0">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="w-10 py-2 pr-2 text-left font-medium" title="Conciliado contra el estado de cuenta">OK</th>
+                      <th className="py-2 pr-4 text-left font-medium">Fecha</th>
+                      <th className="py-2 pr-4 text-left font-medium">Concepto</th>
+                      <th className="py-2 pr-4 text-right font-medium">Entra</th>
+                      <th className="py-2 pr-4 text-right font-medium">Sale</th>
+                      <th className="py-2 pr-4 text-right font-medium">Saldo</th>
+                      {canDelete && <th className="w-10" />}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {rows.map((m) => (
+                      <tr key={m.id} className={cn("border-b last:border-0", m.reconciled && "text-muted-foreground")}>
+                        <td className="py-2 pr-2">
+                          <input
+                            type="checkbox"
+                            checked={m.reconciled}
+                            disabled={!canUpdate}
+                            onChange={() => toggle(m)}
+                            className="accent-primary size-4"
+                            aria-label={`Conciliado: ${m.concept}`}
+                          />
+                        </td>
+                        <td className="py-2 pr-4 whitespace-nowrap">{shortDay(m.date)}</td>
+                        <td className="py-2 pr-4">
+                          {m.documentId && m.documentKind ? (
+                            <Link href={`${billingBase}/${KIND_SLUG[m.documentKind]}/${m.documentId}`} className="text-primary hover:underline">
+                              {m.concept}
+                            </Link>
+                          ) : (
+                            m.concept
+                          )}
+                          {m.batchDocuments.length > 0 && (
+                            <span className="block text-xs">
+                              {m.batchDocuments.map((d, i) => (
+                                <span key={d.id}>
+                                  {i > 0 && " · "}
+                                  <Link href={`${billingBase}/${KIND_SLUG[d.kind]}/${d.id}`} className="text-primary hover:underline">{d.folio}</Link>
+                                </span>
+                              ))}
+                            </span>
+                          )}
+                          {m.reference && <span className="text-muted-foreground block text-xs">Ref. {m.reference}</span>}
+                        </td>
+                        <td className="py-2 pr-4 text-right whitespace-nowrap tabular-nums text-green-700">{m.amount > 0 ? money(m.amount, data.currency) : ""}</td>
+                        <td className="text-destructive py-2 pr-4 text-right whitespace-nowrap tabular-nums">{m.amount < 0 ? money(-m.amount, data.currency) : ""}</td>
+                        <td className="py-2 pr-4 text-right whitespace-nowrap tabular-nums">{money(m.balance, data.currency)}</td>
+                        {canDelete && (
+                          <td className="py-2">
+                            {m.source === "manual" && (
+                              <Button variant="ghost" size="icon" className="size-7" aria-label="Borrar movimiento" onClick={() => remove(m)}>
+                                <Trash2 className="text-destructive size-3.5" />
+                              </Button>
+                            )}
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </ExportableTable>
           )}
         </CardContent>
       </Card>

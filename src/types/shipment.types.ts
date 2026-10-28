@@ -1,5 +1,6 @@
 export type ShipmentStatus =
   | "pending"
+  | "in_transit"
   | "delivered"
   | "delivered_with_delay"
   | "not_delivered"

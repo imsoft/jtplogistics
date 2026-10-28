@@ -180,6 +180,7 @@ export function SupportPanel() {
         </p>
       ) : (
         <DataTable<SupportTicketRow, unknown>
+      exportTitle="Mis reportes de equipo"
           columns={columns}
           data={tickets}
           filterColumn="search"

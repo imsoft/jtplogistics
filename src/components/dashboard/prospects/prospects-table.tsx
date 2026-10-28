@@ -42,6 +42,7 @@ import {
   PROSPECT_STATUSES,
   type ProspectStatus,
 } from "@/lib/provider-prospects";
+import { ExportableTable } from "@/components/dashboard/export/exportable-table";
 
 interface Prospect {
   id: string;
@@ -247,130 +248,132 @@ export function ProspectsTable({
             : "Ningún prospecto coincide con la búsqueda."}
         </p>
       ) : (
-        <div className="@container/table w-full overflow-x-auto rounded-md border">
-          <table className="w-full min-w-max text-sm md:min-w-0">
-            <thead>
-              <tr className="bg-muted/40 border-b">
-                <th className="px-4 py-2 text-left font-medium">Proveedor</th>
-                <th className="px-4 py-2 text-left font-medium">Contacto</th>
-                <th className="hidden px-4 py-2 text-left font-medium @5xl/table:table-cell">Cómo se consiguió</th>
-                <th className="hidden px-4 py-2 text-left font-medium @6xl/table:table-cell">Cobertura</th>
-                <th className="hidden px-4 py-2 text-left font-medium @7xl/table:table-cell">Contacto el</th>
-                <th className="px-4 py-2 text-left font-medium">Etapa</th>
-                {(canEdit || canDelete) && <th className="px-2 py-2 w-16" />}
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((p) => (
-                <tr key={p.id} className="border-b last:border-0 align-top">
-                  <td className="px-4 py-3">
-                    <span className="block max-w-56 truncate font-medium" title={p.commercialName}>
-                      {p.commercialName}
-                    </span>
-                    {p.city && <span className="text-muted-foreground block text-xs">{p.city}</span>}
-                    {p.notes && (
-                      <span className="text-muted-foreground block max-w-72 truncate text-xs" title={p.notes}>
-                        {p.notes}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {p.contactName && <span className="block">{p.contactName}</span>}
-                    {p.phone && (
-                      <span className="text-muted-foreground flex items-center gap-1 text-xs">
-                        <Phone className="size-3" />
-                        {formatPhone(p.phone)}
-                      </span>
-                    )}
-                    {p.email && (
-                      <span className="text-muted-foreground text-email flex items-center gap-1 text-xs">
-                        <Mail className="size-3" />
-                        {p.email}
-                      </span>
-                    )}
-                    {p.website && (
-                      <span className="text-muted-foreground flex items-center gap-1 text-xs">
-                        <Globe className="size-3" />
-                        {p.website}
-                      </span>
-                    )}
-                    {!p.contactName && !p.phone && !p.email && !p.website && (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </td>
-                  <td className="text-muted-foreground hidden px-4 py-3 @5xl/table:table-cell">
-                    {p.source ? PROSPECT_SOURCE_LABELS[p.source as keyof typeof PROSPECT_SOURCE_LABELS] : "—"}
-                  </td>
-                  <td className="text-muted-foreground hidden px-4 py-3 @6xl/table:table-cell">
-                    {p.coverage ? PROSPECT_COVERAGE_LABELS[p.coverage as keyof typeof PROSPECT_COVERAGE_LABELS] : "—"}
-                  </td>
-                  <td className="text-muted-foreground hidden whitespace-nowrap px-4 py-3 @7xl/table:table-cell">
-                    {p.contactedOn ? shortDate(p.contactedOn) : "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    {canEdit ? (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger className="inline-flex items-center gap-1 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                          <StatusBadge status={p.status} />
-                          <ChevronDown className="text-muted-foreground size-3" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start">
-                          {PROSPECT_STATUSES.map((s) => (
-                            <DropdownMenuItem key={s.value} onClick={() => changeStatus(p, s.value)}>
-                              {s.label}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    ) : (
-                      <StatusBadge status={p.status} />
-                    )}
-                    {p.status === "descartado" && p.discardReason && (
-                      <span className="text-muted-foreground mt-1 block max-w-56 text-xs" title={p.discardReason}>
-                        {p.discardReason}
-                      </span>
-                    )}
-                  </td>
-                  {(canEdit || canDelete) && (
-                    <td className="px-2 py-3">
-                      <div className="flex items-center gap-1">
-                        {canEdit && (p.status === "en_alta" || p.status === "listo") && (
-                          <Button variant="ghost" size="icon" className="size-7" asChild>
-                            <Link
-                              href={onboardingHref(p.id)}
-                              aria-label={`Iniciar alta de ${p.commercialName}`}
-                              title="Iniciar alta de proveedor"
-                            >
-                              <ClipboardCheck className="size-3.5" />
-                            </Link>
-                          </Button>
-                        )}
-                        {canEdit && (
-                          <Button variant="ghost" size="icon" className="size-7" asChild>
-                            <Link href={`${editBase}/${p.id}/edit`} aria-label={`Editar ${p.commercialName}`}>
-                              <Pencil className="size-3.5" />
-                            </Link>
-                          </Button>
-                        )}
-                        {canDelete && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-7"
-                            aria-label={`Eliminar ${p.commercialName}`}
-                            onClick={() => setDeleting(p)}
-                          >
-                            <Trash2 className="text-destructive size-3.5" />
-                          </Button>
-                        )}
-                      </div>
-                    </td>
-                  )}
+        <ExportableTable title="Prospección de proveedores">
+          <div className="@container/table w-full overflow-x-auto rounded-md border">
+            <table className="w-full min-w-max text-sm md:min-w-0">
+              <thead>
+                <tr className="bg-muted/40 border-b">
+                  <th className="px-4 py-2 text-left font-medium">Proveedor</th>
+                  <th className="px-4 py-2 text-left font-medium">Contacto</th>
+                  <th className="hidden px-4 py-2 text-left font-medium @5xl/table:table-cell">Cómo se consiguió</th>
+                  <th className="hidden px-4 py-2 text-left font-medium @6xl/table:table-cell">Cobertura</th>
+                  <th className="hidden px-4 py-2 text-left font-medium @7xl/table:table-cell">Contacto el</th>
+                  <th className="px-4 py-2 text-left font-medium">Etapa</th>
+                  {(canEdit || canDelete) && <th className="px-2 py-2 w-16" />}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {visible.map((p) => (
+                  <tr key={p.id} className="border-b last:border-0 align-top">
+                    <td className="px-4 py-3">
+                      <span className="block max-w-56 truncate font-medium" title={p.commercialName}>
+                        {p.commercialName}
+                      </span>
+                      {p.city && <span className="text-muted-foreground block text-xs">{p.city}</span>}
+                      {p.notes && (
+                        <span className="text-muted-foreground block max-w-72 truncate text-xs" title={p.notes}>
+                          {p.notes}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {p.contactName && <span className="block">{p.contactName}</span>}
+                      {p.phone && (
+                        <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                          <Phone className="size-3" />
+                          {formatPhone(p.phone)}
+                        </span>
+                      )}
+                      {p.email && (
+                        <span className="text-muted-foreground text-email flex items-center gap-1 text-xs">
+                          <Mail className="size-3" />
+                          {p.email}
+                        </span>
+                      )}
+                      {p.website && (
+                        <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                          <Globe className="size-3" />
+                          {p.website}
+                        </span>
+                      )}
+                      {!p.contactName && !p.phone && !p.email && !p.website && (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
+                    <td className="text-muted-foreground hidden px-4 py-3 @5xl/table:table-cell">
+                      {p.source ? PROSPECT_SOURCE_LABELS[p.source as keyof typeof PROSPECT_SOURCE_LABELS] : "—"}
+                    </td>
+                    <td className="text-muted-foreground hidden px-4 py-3 @6xl/table:table-cell">
+                      {p.coverage ? PROSPECT_COVERAGE_LABELS[p.coverage as keyof typeof PROSPECT_COVERAGE_LABELS] : "—"}
+                    </td>
+                    <td className="text-muted-foreground hidden whitespace-nowrap px-4 py-3 @7xl/table:table-cell">
+                      {p.contactedOn ? shortDate(p.contactedOn) : "—"}
+                    </td>
+                    <td className="px-4 py-3">
+                      {canEdit ? (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger className="inline-flex items-center gap-1 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                            <StatusBadge status={p.status} />
+                            <ChevronDown className="text-muted-foreground size-3" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start">
+                            {PROSPECT_STATUSES.map((s) => (
+                              <DropdownMenuItem key={s.value} onClick={() => changeStatus(p, s.value)}>
+                                {s.label}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      ) : (
+                        <StatusBadge status={p.status} />
+                      )}
+                      {p.status === "descartado" && p.discardReason && (
+                        <span className="text-muted-foreground mt-1 block max-w-56 text-xs" title={p.discardReason}>
+                          {p.discardReason}
+                        </span>
+                      )}
+                    </td>
+                    {(canEdit || canDelete) && (
+                      <td className="px-2 py-3">
+                        <div className="flex items-center gap-1">
+                          {canEdit && (p.status === "en_alta" || p.status === "listo") && (
+                            <Button variant="ghost" size="icon" className="size-7" asChild>
+                              <Link
+                                href={onboardingHref(p.id)}
+                                aria-label={`Iniciar alta de ${p.commercialName}`}
+                                title="Iniciar alta de proveedor"
+                              >
+                                <ClipboardCheck className="size-3.5" />
+                              </Link>
+                            </Button>
+                          )}
+                          {canEdit && (
+                            <Button variant="ghost" size="icon" className="size-7" asChild>
+                              <Link href={`${editBase}/${p.id}/edit`} aria-label={`Editar ${p.commercialName}`}>
+                                <Pencil className="size-3.5" />
+                              </Link>
+                            </Button>
+                          )}
+                          {canDelete && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-7"
+                              aria-label={`Eliminar ${p.commercialName}`}
+                              onClick={() => setDeleting(p)}
+                            >
+                              <Trash2 className="text-destructive size-3.5" />
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </ExportableTable>
       )}
 
       <Dialog open={discarding !== null} onOpenChange={(open) => !open && setDiscarding(null)}>

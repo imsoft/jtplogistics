@@ -29,15 +29,17 @@ export const dynamic = "force-dynamic";
 
 const SHIPMENT_LABELS: Record<string, string> = {
   pending: "Pendientes",
+  in_transit: "En tránsito",
   delivered: "Entregados",
   delivered_with_delay: "Con retraso",
   not_delivered: "No entregados",
   at_risk: "En riesgo",
-  returned: "Devueltos",
+  returned: "Cerrados",
 };
 
 const SHIPMENT_ORDER = [
   "pending",
+  "in_transit",
   "at_risk",
   "delivered_with_delay",
   "not_delivered",

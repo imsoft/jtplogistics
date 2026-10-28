@@ -113,6 +113,10 @@ model User {
   canUpdateMessages Boolean       @default(false) @map("can_update_messages")
   canUpdateIdeas    Boolean       @default(false) @map("can_update_ideas")
   canUpdateRoutes   Boolean       @default(false) @map("can_update_routes")
+  /// Solo cambiar el estatus de una ruta (activa, pendiente, inactiva), sin editar el resto.
+  canChangeRouteStatus Boolean    @default(false) @map("can_change_route_status")
+  /// Recibe en campana y correo los avisos de Alta de proveedores.
+  canReceiveOnboardingAlerts Boolean @default(false) @map("can_receive_onboarding_alerts")
   canUpdateRouteLogs Boolean      @default(false) @map("can_update_route_logs")
   canUpdateUnitTypes Boolean      @default(false) @map("can_update_unit_types")
   canUpdateQuotes   Boolean       @default(false) @map("can_update_quotes")
@@ -682,6 +686,7 @@ model Setting {
 
 enum ShipmentStatus {
   pending
+  in_transit
   delivered
   delivered_with_delay
   not_delivered

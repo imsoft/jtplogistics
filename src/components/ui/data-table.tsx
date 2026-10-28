@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { flushSync } from "react-dom";
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -33,8 +34,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AppSelect } from "@/components/ui/app-select";
 import { cn } from "@/lib/utils";
+import { tableFromDom } from "@/lib/table-export";
+import { ExportMenu } from "@/components/dashboard/export/export-menu";
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
+const EMPTY_ROWS: never[] = [];
 
 function PageSizeSelect({ value, onChange }: { value: number; onChange: (size: number) => void }) {
   return (
@@ -101,6 +105,13 @@ interface DataTableProps<TData, TValue> {
    * servidor y deja de filtrar aquí. Este solo observa.
    */
   onVisibleRowsChange?: (rows: TData[]) => void;
+  /**
+   * Título del Excel/PDF. Con él aparece "Exportar": sale todo lo que pasa
+   * los filtros y la búsqueda, en todas las páginas, tal como se ve.
+   */
+  exportTitle?: string;
+  /** Modo servidor: trae todas las filas con los filtros actuales para exportar. */
+  fetchAllForExport?: () => Promise<TData[]>;
 }
 
 export function DataTable<TData, TValue>({
@@ -127,6 +138,8 @@ export function DataTable<TData, TValue>({
   onSearchChange,
   isFetching = false,
   onVisibleRowsChange,
+  exportTitle,
+  fetchAllForExport,
 }: DataTableProps<TData, TValue>) {
   const [internalSorting, setInternalSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -184,6 +197,34 @@ export function DataTable<TData, TValue>({
     onVisibleRowsChange(visibleRows.map((r) => r.original));
   }, [visibleKey, visibleRows, onVisibleRowsChange]);
 
+  // ── Exportar ──
+  // Se pintan fuera de pantalla todas las filas a exportar con las mismas
+  // celdas que la tabla, y se lee ese texto: sale formateado como se ve.
+  const exportRef = React.useRef<HTMLDivElement>(null);
+  const [exportRows, setExportRows] = React.useState<TData[] | null>(null);
+  const exportTable = useReactTable({
+    data: exportRows ?? EMPTY_ROWS,
+    columns,
+    getRowId,
+    getCoreRowModel: getCoreRowModel(),
+    filterFns: { fuzzy: fuzzyFilter },
+    // Todas las columnas: las que se esconden por falta de espacio también
+    // salen. La de búsqueda no tiene encabezado y se descarta sola.
+  });
+  const getExportData = React.useCallback(async () => {
+    const rows = manualPagination
+      ? fetchAllForExport
+        ? await fetchAllForExport()
+        : data
+      : table.getPrePaginationRowModel().rows.map((r) => r.original);
+    flushSync(() => setExportRows(rows));
+    try {
+      return tableFromDom(exportRef.current);
+    } finally {
+      setExportRows(null);
+    }
+  }, [manualPagination, fetchAllForExport, data, table]);
+
   const filterKey =
     filterColumn ??
     (columns.find((c) => "accessorKey" in c && typeof (c as { accessorKey?: string }).accessorKey === "string") as
@@ -194,7 +235,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="w-full min-w-0 space-y-4">
-      {(showSearch || toolbar) && (
+      {(showSearch || toolbar || exportTitle) && (
         <div className="flex flex-wrap items-center gap-2 py-2">
           {isManualSearch ? (
             <Input
@@ -218,6 +259,35 @@ export function DataTable<TData, TValue>({
             />
           ) : null}
           {toolbar}
+          {exportTitle && (
+            <div className="sm:ml-auto">
+              <ExportMenu title={exportTitle} getData={getExportData} />
+            </div>
+          )}
+        </div>
+      )}
+      {exportRows && (
+        <div ref={exportRef} aria-hidden className="pointer-events-none fixed top-0 -left-[99999px] w-[1800px]">
+          <table>
+            <thead>
+              {exportTable.getHeaderGroups().map((hg) => (
+                <tr key={hg.id}>
+                  {hg.headers.map((h) => (
+                    <th key={h.id}>{h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}</th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody>
+              {exportTable.getRowModel().rows.map((row) => (
+                <tr key={row.id}>
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
       <div

@@ -8,6 +8,7 @@ import { formatPhone } from "@/lib/utils";
 
 const SHIPMENT_STATUS_LABEL: Record<ShipmentStatus, string> = {
   pending: "Pendiente",
+  in_transit: "En tránsito",
   delivered: "Entregado",
   delivered_with_delay: "Entregado con retraso",
   not_delivered: "No entregado",

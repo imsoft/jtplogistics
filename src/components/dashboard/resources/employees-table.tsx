@@ -167,6 +167,7 @@ export function EmployeesTable({
   return (
     <>
       <DataTable<Employee, unknown>
+      exportTitle="Colaboradores"
         columns={getColumns()}
         data={filtered}
         filterColumn="search"
@@ -205,7 +206,7 @@ export function EmployeesTable({
               onClick={() => setDialogOpen(true)}
             >
               <FileDown className="size-4" />
-              Exportar Excel
+              Elegir campos
             </Button>
           </>
         }

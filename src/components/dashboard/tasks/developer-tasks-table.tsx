@@ -75,6 +75,7 @@ export function DeveloperTasksTable() {
 
   return (
     <DataTable
+      exportTitle="Mis tareas"
       columns={columns}
       data={displayTasks}
       filterColumn="search"

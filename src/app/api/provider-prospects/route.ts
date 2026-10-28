@@ -2,6 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
 import { requireProspectAccess } from "@/lib/prospect-auth";
+import { alertProspectReady } from "@/lib/provider-onboarding-alerts-server";
 import {
   PROSPECT_COVERAGE_VALUES,
   PROSPECT_SOURCE_VALUES,
@@ -144,8 +145,9 @@ export async function POST(request: Request) {
         ...(data.status ? { status: data.status as never } : {}),
         createdById: session.user.id,
       },
-      select: { id: true, status: true },
+      select: { id: true, status: true, commercialName: true, legalName: true },
     });
+    void alertProspectReady(created, null, session.user);
 
     void logAudit({
       resource: "provider_prospect",

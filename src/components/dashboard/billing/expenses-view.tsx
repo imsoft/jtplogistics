@@ -25,6 +25,7 @@ import { formatMxn, formatMxnLive, parseMxn } from "@/lib/utils";
 import { normalizeSearch } from "@/lib/search";
 import { EXPENSE_CATEGORIES, r2, toMxn, type Currency } from "@/lib/billing";
 import { money, shortDay, todayKey, useBankAccounts, type BankAccountRow } from "./billing-shared";
+import { ExportableTable } from "@/components/dashboard/export/exportable-table";
 
 interface Expense {
   id: string;
@@ -140,50 +141,52 @@ export function ExpensesView({ canCreate, canUpdate, canDelete }: { canCreate: b
           {rows.length === 0 ? "Todavía no hay gastos registrados." : "No hay gastos en este periodo o con esa búsqueda."}
         </p>
       ) : (
-        <div className="@container/table w-full overflow-x-auto rounded-md border">
-          <table className="w-full min-w-max text-sm md:min-w-0">
-            <thead>
-              <tr className="bg-muted/40 border-b">
-                <th className="px-4 py-2 text-left font-medium">Fecha</th>
-                <th className="px-4 py-2 text-left font-medium">Categoría</th>
-                <th className="px-4 py-2 text-left font-medium">Descripción</th>
-                <th className="hidden px-4 py-2 text-left font-medium @3xl/table:table-cell">Cuenta</th>
-                <th className="px-4 py-2 text-right font-medium">Total</th>
-                {(canUpdate || canDelete) && <th className="w-16 px-2 py-2" />}
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((e) => (
-                <tr key={e.id} className="border-b align-top last:border-0">
-                  <td className="px-4 py-3 whitespace-nowrap">{shortDay(e.date)}</td>
-                  <td className="px-4 py-3">{e.category}</td>
-                  <td className="px-4 py-3">
-                    <span className="block max-w-72 truncate" title={e.description}>{e.description}</span>
-                    {e.providerName && <span className="text-muted-foreground block text-xs">{e.providerName}</span>}
-                  </td>
-                  <td className="text-muted-foreground hidden px-4 py-3 @3xl/table:table-cell">{e.bankAccountName ?? "—"}</td>
-                  <td className="px-4 py-3 text-right whitespace-nowrap tabular-nums">{money(e.total, e.currency)}</td>
-                  {(canUpdate || canDelete) && (
-                    <td className="px-2 py-3">
-                      <div className="flex gap-1">
-                        {canUpdate && (
-                          <Button variant="ghost" size="icon" className="size-7" aria-label="Editar gasto" onClick={() => setEditing(e)}>
-                            <Pencil className="size-3.5" />
-                          </Button>
-                        )}
-                        {canDelete && (
-                          <Button variant="ghost" size="icon" className="size-7" aria-label="Borrar gasto" onClick={() => setDeleting(e)}>
-                            <Trash2 className="text-destructive size-3.5" />
-                          </Button>
-                        )}
-                      </div>
-                    </td>
-                  )}
+        <ExportableTable title="Gastos">
+          <div className="@container/table w-full overflow-x-auto rounded-md border">
+            <table className="w-full min-w-max text-sm md:min-w-0">
+              <thead>
+                <tr className="bg-muted/40 border-b">
+                  <th className="px-4 py-2 text-left font-medium">Fecha</th>
+                  <th className="px-4 py-2 text-left font-medium">Categoría</th>
+                  <th className="px-4 py-2 text-left font-medium">Descripción</th>
+                  <th className="hidden px-4 py-2 text-left font-medium @3xl/table:table-cell">Cuenta</th>
+                  <th className="px-4 py-2 text-right font-medium">Total</th>
+                  {(canUpdate || canDelete) && <th className="w-16 px-2 py-2" />}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {visible.map((e) => (
+                  <tr key={e.id} className="border-b align-top last:border-0">
+                    <td className="px-4 py-3 whitespace-nowrap">{shortDay(e.date)}</td>
+                    <td className="px-4 py-3">{e.category}</td>
+                    <td className="px-4 py-3">
+                      <span className="block max-w-72 truncate" title={e.description}>{e.description}</span>
+                      {e.providerName && <span className="text-muted-foreground block text-xs">{e.providerName}</span>}
+                    </td>
+                    <td className="text-muted-foreground hidden px-4 py-3 @3xl/table:table-cell">{e.bankAccountName ?? "—"}</td>
+                    <td className="px-4 py-3 text-right whitespace-nowrap tabular-nums">{money(e.total, e.currency)}</td>
+                    {(canUpdate || canDelete) && (
+                      <td className="px-2 py-3">
+                        <div className="flex gap-1">
+                          {canUpdate && (
+                            <Button variant="ghost" size="icon" className="size-7" aria-label="Editar gasto" onClick={() => setEditing(e)}>
+                              <Pencil className="size-3.5" />
+                            </Button>
+                          )}
+                          {canDelete && (
+                            <Button variant="ghost" size="icon" className="size-7" aria-label="Borrar gasto" onClick={() => setDeleting(e)}>
+                              <Trash2 className="text-destructive size-3.5" />
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </ExportableTable>
       )}
 
       <Dialog open={editing !== null} onOpenChange={(o) => !o && setEditing(null)}>

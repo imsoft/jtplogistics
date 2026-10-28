@@ -67,6 +67,10 @@ const PERMISSION_FIELDS = [
   { key: "canManageSchedules", label: "Checador: capturar horarios" },
   // Solo lectura: indicadores de cotizaciones de todo el equipo.
   { key: "canViewQuoteKpis", label: "KPIs de cotizaciones: ver" },
+  // Solo el estatus de la ruta (pricing), sin poder editar el resto.
+  { key: "canChangeRouteStatus", label: "Rutas: cambiar estatus (activa, pendiente, inactiva)" },
+  // Prospecto listo para alta, alta nueva, alta completa y cambios de contrato.
+  { key: "canReceiveOnboardingAlerts", label: "Alta de proveedores: recibir avisos (campana y correo)" },
 ];
 
 const PERM_ICONS: Record<string, React.ElementType> = {

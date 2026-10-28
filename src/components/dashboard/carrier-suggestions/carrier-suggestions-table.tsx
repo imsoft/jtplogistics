@@ -113,6 +113,7 @@ export function CarrierSuggestionsTable({ mode }: CarrierSuggestionsTableProps) 
 
   return (
     <DataTable
+      exportTitle="Sugerencias de transportistas"
       columns={columns}
       data={rows}
       filterColumn="search"

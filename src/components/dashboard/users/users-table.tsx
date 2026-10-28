@@ -85,6 +85,7 @@ export function UsersTable({
 
   return (
     <DataTable<User, unknown>
+      exportTitle="Usuarios"
       columns={columns}
       data={filteredUsers}
       filterColumn="search"
