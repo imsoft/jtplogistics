@@ -115,7 +115,7 @@ function DocChip({
       title={canEdit ? `${label}. Clic para cambiar.` : label}
       aria-label={label}
       className={cn(
-        "inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[11px] font-medium leading-none transition-colors",
+        "inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase leading-none tracking-wide transition-colors",
         DOC_TONE[status],
         canEdit && "hover:ring-2 hover:ring-ring/40"
       )}
@@ -320,15 +320,24 @@ export function OnboardingsTable({
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-2">
-        <Input value={search} onChange={(e) => setSearch(e.target.value)} className="w-full sm:max-w-xs" aria-label="Buscar proveedor" />
-        <AppSelect value={stage} onValueChange={(v) => setStage((v || "all") as OnboardingStage | "all")} options={stageOptions} className="w-full sm:w-44" />
-        <AppSelect
-          value={contract}
-          onValueChange={(v) => setContract((v || "all") as ContractStatus | "all")}
-          options={[{ value: "all", label: "Todos los contratos" }, ...CONTRACT_STATUSES.map((c) => ({ value: c.value, label: c.label }))]}
-          className="w-full sm:w-72"
-        />
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+        <div className="w-full space-y-1.5 sm:max-w-xs">
+          <Label htmlFor="onboarding-search" className="text-muted-foreground text-xs">Buscar</Label>
+          <Input id="onboarding-search" value={search} onChange={(e) => setSearch(e.target.value)} />
+        </div>
+        <div className="w-full space-y-1.5 sm:w-44">
+          <Label className="text-muted-foreground text-xs">Alta</Label>
+          <AppSelect value={stage} onValueChange={(v) => setStage((v || "all") as OnboardingStage | "all")} options={stageOptions} className="w-full" />
+        </div>
+        <div className="w-full space-y-1.5 sm:w-72">
+          <Label className="text-muted-foreground text-xs">Contrato</Label>
+          <AppSelect
+            value={contract}
+            onValueChange={(v) => setContract((v || "all") as ContractStatus | "all")}
+            options={[{ value: "all", label: "Todos los contratos" }, ...CONTRACT_STATUSES.map((c) => ({ value: c.value, label: c.label }))]}
+            className="w-full"
+          />
+        </div>
       </div>
 
       {visible.length === 0 ? (
@@ -337,15 +346,15 @@ export function OnboardingsTable({
         </p>
       ) : (
         <div className="@container/table w-full overflow-x-auto rounded-md border">
-          <table className="w-full min-w-max text-sm md:min-w-0">
+          <table className="w-full min-w-max text-xs font-medium tracking-wide md:min-w-0">
             <thead>
-              <tr className="bg-muted/40 border-b">
-                <th className="px-4 py-2 text-left font-medium">Proveedor</th>
-                <th className="hidden px-4 py-2 text-left font-medium @3xl/table:table-cell">Inicio</th>
-                <th className="px-4 py-2 text-left font-medium">Expediente</th>
-                <th className="px-4 py-2 text-left font-medium">Alta</th>
-                <th className="px-4 py-2 text-left font-medium">Contrato</th>
-                <th className="hidden px-4 py-2 text-left font-medium @6xl/table:table-cell">Autoriza</th>
+              <tr className="bg-primary/[0.07] border-b">
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary">Proveedor</th>
+                <th className="hidden px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary @3xl/table:table-cell">Inicio</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary">Expediente</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary">Alta</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary">Contrato</th>
+                <th className="hidden px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary @6xl/table:table-cell">Autoriza</th>
                 {(canEdit || canDelete) && <th className="w-24 px-2 py-2" />}
               </tr>
             </thead>
@@ -357,7 +366,7 @@ export function OnboardingsTable({
                 return (
                   <tr key={r.id} className={cn("border-b align-top last:border-0", st === "on_hold" && "bg-gray-50 dark:bg-gray-900/40")}>
                     <td className="px-4 py-3">
-                      <span className="block max-w-52 truncate font-medium min-[1440px]:max-w-64" title={r.legalName}>{r.legalName}</span>
+                      <span className="block max-w-52 truncate font-semibold min-[1440px]:max-w-64" title={r.legalName}>{r.legalName}</span>
                       <span className="text-muted-foreground block max-w-52 truncate text-xs min-[1440px]:max-w-64" title={r.commercialName}>{r.commercialName}</span>
                       {st === "on_hold" && r.holdReason && (
                         <span className="mt-1 block max-w-52 text-xs text-gray-700 min-[1440px]:max-w-64 dark:text-gray-300" title={r.holdReason}>{r.holdReason}</span>
