@@ -7,7 +7,8 @@ import { useEffect, useRef } from "react";
  * dispara una ráfaga nueva. Respeta `prefers-reduced-motion`.
  */
 
-const COLORS = ["#2563eb", "#f59e0b", "#ec4899", "#10b981", "#8b5cf6", "#ef4444"];
+// La paleta de la plataforma: azules de JTP, verde y ámbar.
+const COLORS = ["#1447e6", "#60a5fa", "#93c5fd", "#16a34a", "#f59e0b"];
 const PARTICLES_PER_BURST = 140;
 const GRAVITY = 0.32;
 const DRAG = 0.992;

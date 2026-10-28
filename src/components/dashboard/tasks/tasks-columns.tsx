@@ -42,7 +42,7 @@ function CopyButton({ text }: { text: string }) {
 }
 
 const STATUS_BADGE: Record<Task["status"], string> = {
-  pending: "bg-yellow-100 text-yellow-800",
+  pending: "bg-amber-100 text-amber-800",
   in_progress: "bg-blue-100 text-blue-800",
   completed: "bg-green-100 text-green-800",
 };

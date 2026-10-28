@@ -12,10 +12,10 @@ export const MURAL_KIND_LABELS: Record<MuralItemKind, string> = {
 
 export const MURAL_KIND_COLORS: Record<MuralItemKind, string> = {
   event: "bg-blue-100 text-blue-700",
-  training: "bg-violet-100 text-violet-700",
+  training: "bg-blue-200 text-blue-900",
   vacation: "bg-amber-100 text-amber-700",
-  birthday: "bg-pink-100 text-pink-700",
-  anniversary: "bg-emerald-100 text-emerald-700",
+  birthday: "bg-green-100 text-green-700",
+  anniversary: "bg-slate-200 text-slate-800",
 };
 
 /**
@@ -45,11 +45,11 @@ export const MURAL_KIND_ACCENTS: Record<MuralItemKind, MuralKindAccent> = {
     header: "bg-blue-100 text-blue-800",
   },
   training: {
-    soft: "bg-violet-50 text-violet-600",
-    dot: "bg-violet-400",
-    ring: "ring-violet-200",
-    panel: "border-violet-200 bg-violet-50/60",
-    header: "bg-violet-100 text-violet-800",
+    soft: "bg-blue-100 text-blue-800",
+    dot: "bg-blue-700",
+    ring: "ring-blue-400",
+    panel: "border-blue-300 bg-blue-100/50",
+    header: "bg-blue-200 text-blue-900",
   },
   vacation: {
     soft: "bg-amber-50 text-amber-600",
@@ -59,18 +59,18 @@ export const MURAL_KIND_ACCENTS: Record<MuralItemKind, MuralKindAccent> = {
     header: "bg-amber-100 text-amber-800",
   },
   birthday: {
-    soft: "bg-pink-50 text-pink-600",
-    dot: "bg-pink-400",
-    ring: "ring-pink-200",
-    panel: "border-pink-200 bg-pink-50/60",
-    header: "bg-pink-100 text-pink-800",
+    soft: "bg-green-50 text-green-600",
+    dot: "bg-green-400",
+    ring: "ring-green-200",
+    panel: "border-green-200 bg-green-50/60",
+    header: "bg-green-100 text-green-800",
   },
   anniversary: {
-    soft: "bg-emerald-50 text-emerald-600",
-    dot: "bg-emerald-400",
-    ring: "ring-emerald-200",
-    panel: "border-emerald-200 bg-emerald-50/60",
-    header: "bg-emerald-100 text-emerald-800",
+    soft: "bg-slate-100 text-slate-700",
+    dot: "bg-slate-500",
+    ring: "ring-slate-300",
+    panel: "border-slate-200 bg-slate-50/80",
+    header: "bg-slate-200 text-slate-800",
   },
 };
 

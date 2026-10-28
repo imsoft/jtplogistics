@@ -30,7 +30,7 @@ export const CONTRACT_STATUSES = [
   { value: "requested_legal", label: "Solicitado a jurídico", badgeClass: "bg-amber-100 text-amber-900" },
   { value: "sent_to_provider", label: "Enviado al proveedor, pendiente de firma", badgeClass: "bg-blue-100 text-blue-800" },
   { value: "received_signed", label: "Recibido firmado", badgeClass: "bg-green-100 text-green-800" },
-  { value: "docs_updated", label: "Actualización de documentos", badgeClass: "bg-indigo-100 text-indigo-800" },
+  { value: "docs_updated", label: "Actualización de documentos", badgeClass: "bg-blue-200 text-blue-900" },
 ] as const;
 export type ContractStatus = (typeof CONTRACT_STATUSES)[number]["value"];
 export const CONTRACT_STATUS_VALUES = CONTRACT_STATUSES.map((c) => c.value) as readonly string[];

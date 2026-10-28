@@ -176,8 +176,8 @@ const SEMAFORO = [
   },
   {
     color: "Amarillo",
-    dot: "bg-yellow-400",
-    ring: "border-yellow-400/40 bg-yellow-50 dark:bg-yellow-500/10",
+    dot: "bg-amber-400",
+    ring: "border-amber-400/40 bg-amber-50 dark:bg-amber-500/10",
     meaning: "Tu tarifa está ligeramente arriba del objetivo.",
     action: "Sigues cerca. Si puedes ajustar, mejoras tu posición.",
   },

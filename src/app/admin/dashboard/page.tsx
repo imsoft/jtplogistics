@@ -213,7 +213,7 @@ export default async function DashboardPage() {
             Finanzas de {monthLabel}
           </CardTitle>
           {monthMargin >= 0 ? (
-            <TrendingUp className="size-4 text-emerald-600" />
+            <TrendingUp className="size-4 text-green-600" />
           ) : (
             <TrendingDown className="size-4 text-destructive" />
           )}
@@ -242,7 +242,7 @@ export default async function DashboardPage() {
               </p>
               <p
                 className={`mt-1 text-2xl font-bold tracking-tight ${
-                  monthMargin >= 0 ? "text-emerald-600" : "text-destructive"
+                  monthMargin >= 0 ? "text-green-600" : "text-destructive"
                 }`}
               >
                 {fmtMxn(monthMargin)}

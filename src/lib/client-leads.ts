@@ -20,7 +20,7 @@ export type LeadActivityType = "llamada" | "correo" | "whatsapp" | "reunion" | "
 export const LEAD_STAGES: { value: LeadStage; label: string; badgeClass: string }[] = [
   { value: "prospecto", label: "Prospecto", badgeClass: "bg-gray-100 text-gray-800" },
   { value: "contactado", label: "Contactado", badgeClass: "bg-blue-100 text-blue-800" },
-  { value: "cotizado", label: "Cotizado", badgeClass: "bg-indigo-100 text-indigo-800" },
+  { value: "cotizado", label: "Cotizado", badgeClass: "bg-blue-200 text-blue-900" },
   { value: "negociacion", label: "En negociación", badgeClass: "bg-amber-100 text-amber-800" },
   { value: "ganado", label: "Ganado", badgeClass: "bg-green-100 text-green-800" },
   { value: "perdido", label: "Perdido", badgeClass: "bg-red-100 text-red-800" },

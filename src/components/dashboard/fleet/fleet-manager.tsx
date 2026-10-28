@@ -108,12 +108,12 @@ export function FleetManager({ carrierId, compact = false }: { carrierId?: strin
         className={cn(
           "flex items-start gap-3 rounded-lg border p-4 text-sm",
           readiness.ready
-            ? "border-emerald-500/40 bg-emerald-500/5"
+            ? "border-green-500/40 bg-green-500/5"
             : "border-amber-500/40 bg-amber-500/5"
         )}
       >
         {readiness.ready ? (
-          <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+          <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-green-600" />
         ) : (
           <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-600" />
         )}

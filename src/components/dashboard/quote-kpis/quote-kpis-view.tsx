@@ -41,10 +41,10 @@ const KIND_OPTIONS = [
   { value: "maritima", label: "Solo marítimas" },
 ];
 
-// Dos primeras posiciones de la paleta categórica validada; en modo oscuro
+// Azul de JTP y verde (lo ganado), los de la paleta de la plataforma; en modo oscuro
 // tienen su propio paso, no una inversión automática.
 const SERIES_STYLE =
-  "[--kpi-1:#2a78d6] [--kpi-2:#eb6834] dark:[--kpi-1:#3987e5] dark:[--kpi-2:#d95926]";
+  "[--kpi-1:#1447e6] [--kpi-2:#16a34a] dark:[--kpi-1:#3b82f6] dark:[--kpi-2:#22c55e]";
 
 const pct = (v: number) => `${Math.round(v * 1000) / 10}%`;
 const money = (v: number) => `$${formatMxn(v)}`;

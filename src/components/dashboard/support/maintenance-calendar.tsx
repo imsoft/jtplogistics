@@ -39,14 +39,14 @@ export interface CalendarMaintenance {
 
 const STATUS_STYLES: Record<string, string> = {
   scheduled: "bg-blue-100 text-blue-800",
-  done: "bg-emerald-100 text-emerald-800",
+  done: "bg-green-100 text-green-800",
   cancelled: "bg-muted text-muted-foreground",
 };
 
 /** El color de la píldora dentro del día. */
 const CHIP_STYLES: Record<string, string> = {
   scheduled: "bg-blue-100 text-blue-900 hover:bg-blue-200",
-  done: "bg-emerald-100 text-emerald-900 hover:bg-emerald-200",
+  done: "bg-green-100 text-green-900 hover:bg-green-200",
   cancelled: "bg-muted text-muted-foreground hover:bg-muted/80",
 };
 
@@ -158,7 +158,7 @@ export function MaintenanceCalendar({
           <span className="size-3 rounded-sm bg-blue-200" /> Programado
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="size-3 rounded-sm bg-emerald-200" /> Realizado
+          <span className="size-3 rounded-sm bg-green-200" /> Realizado
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span className="size-3 rounded-sm bg-muted" /> Cancelado

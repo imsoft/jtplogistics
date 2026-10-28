@@ -21,7 +21,7 @@ export const BILLING_KIND_LABELS: Record<BillingKind, { plural: string; singular
 };
 
 export const DOCUMENT_STATUS: Record<DocumentStatus, { label: string; badgeClass: string }> = {
-  borrador: { label: "Borrador", badgeClass: "bg-violet-100 text-violet-800" },
+  borrador: { label: "Borrador", badgeClass: "border border-dashed border-gray-300 bg-white text-gray-700" },
   pendiente: { label: "Pendiente", badgeClass: "bg-blue-100 text-blue-800" },
   parcial: { label: "Pago parcial", badgeClass: "bg-amber-100 text-amber-800" },
   pagada: { label: "Pagada", badgeClass: "bg-green-100 text-green-800" },

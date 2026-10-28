@@ -272,7 +272,7 @@ export function DocumentForm({
   return (
     <form onSubmit={handleSubmit} className="min-w-0 space-y-6">
       {startedAsDraft && (
-        <div className="rounded-lg border border-violet-500/40 bg-violet-500/5 p-4 text-sm">
+        <div className="rounded-lg border border-primary/40 bg-primary/5 p-4 text-sm">
           <p className="font-medium">Borrador</p>
           <p className="text-muted-foreground">
             {kind === "receivable"
@@ -308,7 +308,7 @@ export function DocumentForm({
                   />
                 </label>
               </Button>
-              {xml && <span className="text-sm text-emerald-700 dark:text-emerald-500">Datos tomados del XML.</span>}
+              {xml && <span className="text-sm text-green-700 dark:text-green-500">Datos tomados del XML.</span>}
             </div>
             {files.length > 0 && (
               <ul className="space-y-1 text-sm">

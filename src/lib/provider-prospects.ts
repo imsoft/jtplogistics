@@ -25,7 +25,7 @@ export const PROSPECT_STATUSES: {
   { value: "pendiente", label: "Pendiente de prospectar", badgeClass: "bg-gray-100 text-gray-800" },
   { value: "prospectando", label: "Prospectando", badgeClass: "bg-blue-100 text-blue-800" },
   { value: "negociando", label: "Negociando", badgeClass: "bg-amber-100 text-amber-800" },
-  { value: "en_alta", label: "En proceso de alta", badgeClass: "bg-indigo-100 text-indigo-800" },
+  { value: "en_alta", label: "En proceso de alta", badgeClass: "bg-blue-200 text-blue-900" },
   { value: "listo", label: "Listo para operar", badgeClass: "bg-green-100 text-green-800" },
   { value: "descartado", label: "Descartado", badgeClass: "bg-red-100 text-red-800" },
 ];

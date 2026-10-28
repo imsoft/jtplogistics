@@ -365,7 +365,7 @@ export default async function CollaboratorDashboard() {
                 </p>
                 <p
                   className={`mt-1 text-2xl font-bold tracking-tight ${
-                    monthMargin >= 0 ? "text-emerald-600" : "text-destructive"
+                    monthMargin >= 0 ? "text-green-600" : "text-destructive"
                   }`}
                 >
                   {fmtMxn(monthMargin)}

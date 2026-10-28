@@ -364,7 +364,7 @@ export function RoutesBulkImport() {
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <span className="font-medium">{routes.length} rutas detectadas</span>
             {unknownCount > 0 && (
-              <Badge variant="outline" className="gap-1 border-yellow-500 text-yellow-600">
+              <Badge variant="outline" className="gap-1 border-amber-500 text-amber-600">
                 <AlertCircle className="size-3" />
                 {unknownCount} con tipo desconocido
               </Badge>
@@ -419,7 +419,7 @@ export function RoutesBulkImport() {
                         variant="secondary"
                         className={
                           route.hasUnknownUnitType
-                            ? "border border-yellow-400 bg-yellow-50 text-yellow-700"
+                            ? "border border-amber-400 bg-amber-50 text-amber-700"
                             : ""
                         }
                         title={
@@ -430,7 +430,7 @@ export function RoutesBulkImport() {
                       >
                         {unitLabel(route.unitType)}
                         {route.hasUnknownUnitType && (
-                          <AlertCircle className="ml-1 size-3 text-yellow-500" />
+                          <AlertCircle className="ml-1 size-3 text-amber-500" />
                         )}
                       </Badge>
                     </td>

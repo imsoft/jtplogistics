@@ -85,8 +85,8 @@ export function CelebrationGreeting() {
         aria-label={isBirthday ? "Ver felicitación de cumpleaños" : "Ver felicitación de aniversario"}
         className="relative"
       >
-        <Icon className="size-5 text-pink-500" />
-        <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-pink-500" />
+        <Icon className="size-5 text-primary" />
+        <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-primary" />
       </Button>
 
       {open && <ConfettiBurst runKey={confettiKey} />}
@@ -103,8 +103,8 @@ export function CelebrationGreeting() {
               priority
             />
 
-            <div className="flex size-16 items-center justify-center rounded-full bg-pink-100">
-              <Icon className="size-8 text-pink-500" />
+            <div className="flex size-16 items-center justify-center rounded-full bg-primary/10">
+              <Icon className="size-8 text-primary" />
             </div>
 
             <div className="space-y-2">

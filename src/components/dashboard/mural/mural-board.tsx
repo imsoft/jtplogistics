@@ -259,7 +259,7 @@ function KindRow({
                     <span className="font-semibold">{leaves}</span>
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <PlaneLanding className="size-3.5 shrink-0 text-emerald-600" />
+                    <PlaneLanding className="size-3.5 shrink-0 text-green-600" />
                     <span className="text-muted-foreground">Regresa</span>
                     <span className="font-semibold">{returns}</span>
                   </span>
@@ -541,10 +541,10 @@ export function MuralBoard({ basePath }: MuralBoardProps) {
 
       {/* ── Lo de hoy: lo primero que se ve al entrar ── */}
       {todayItems && todayItems.length > 0 && (
-        <section className="overflow-hidden rounded-2xl border border-amber-200/80 bg-linear-to-br from-amber-50 via-rose-50/70 to-background p-5 sm:p-6">
+        <section className="overflow-hidden rounded-2xl border border-primary/20 bg-linear-to-br from-primary/10 via-blue-50/60 to-background p-5 sm:p-6">
           <div className="flex items-center gap-2">
-            <Sparkles className="size-5 text-amber-500" />
-            <h2 className="text-base font-bold tracking-wide text-amber-900 sm:text-lg">
+            <Sparkles className="size-5 text-primary" />
+            <h2 className="text-base font-bold tracking-wide text-primary sm:text-lg">
               Hoy en JTP
             </h2>
           </div>

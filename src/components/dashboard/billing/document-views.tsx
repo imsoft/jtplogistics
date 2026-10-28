@@ -213,7 +213,7 @@ export function DocumentDetailView({
       </div>
 
       {doc.draft && !cancelled && (
-        <div className="rounded-lg border border-violet-500/40 bg-violet-500/5 p-4 text-sm">
+        <div className="rounded-lg border border-primary/40 bg-primary/5 p-4 text-sm">
           <p className="font-medium">Todavía no es factura</p>
           <p className="text-muted-foreground">
             {doc.kind === "receivable"

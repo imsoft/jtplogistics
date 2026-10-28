@@ -60,13 +60,13 @@ export const SHIPMENT_STATUS_CONFIG: Record<
   },
   delivered_with_delay: {
     label: "Entregado con retraso",
-    badgeClass: "bg-purple-100 text-purple-800",
-    rowClass: "bg-purple-50",
+    badgeClass: "bg-amber-100 text-amber-800",
+    rowClass: "bg-amber-50",
   },
   not_delivered: {
     label: "No entregado",
-    badgeClass: "bg-orange-100 text-orange-800",
-    rowClass: "bg-orange-50",
+    badgeClass: "bg-red-200 text-red-900",
+    rowClass: "bg-red-50",
   },
   at_risk: {
     label: "En riesgo",
@@ -75,8 +75,8 @@ export const SHIPMENT_STATUS_CONFIG: Record<
   },
   returned: {
     label: "Cerrado",
-    badgeClass: "bg-pink-100 text-pink-800",
-    rowClass: "bg-pink-50",
+    badgeClass: "bg-green-100 text-green-800",
+    rowClass: "bg-green-50",
   },
 };
 

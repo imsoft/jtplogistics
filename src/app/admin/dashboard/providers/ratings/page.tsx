@@ -94,7 +94,7 @@ function ScoreBar({ label, value, color }: { label: string; value: number | null
 
 function ScoreBadge({ score }: { score: number }) {
   const color =
-    score >= 90 ? "bg-emerald-100 text-emerald-800" :
+    score >= 90 ? "bg-green-100 text-green-800" :
     score >= 75 ? "bg-blue-100 text-blue-800" :
     score >= 58 ? "bg-amber-100 text-amber-800" :
     "bg-red-100 text-red-800";
@@ -279,12 +279,12 @@ function CarrierCard({
               <ScoreBar
                 label="Sin incidencias"
                 value={carrier.incidentFreeScore}
-                color="bg-emerald-500"
+                color="bg-green-500"
               />
               <ScoreBar
                 label="Tasa de entrega"
                 value={carrier.deliveryRateScore}
-                color="bg-violet-500"
+                color="bg-blue-500"
               />
             </div>
           </div>
@@ -296,7 +296,7 @@ function CarrierCard({
               {carrier.delivered} entregado{carrier.delivered !== 1 ? "s" : ""}
             </span>
             <span className="flex items-center gap-1">
-              <span className="size-2 rounded-full bg-purple-400 inline-block" />
+              <span className="size-2 rounded-full bg-amber-400 inline-block" />
               {carrier.deliveredWithDelay} con retraso
             </span>
             <span className="flex items-center gap-1">
@@ -305,7 +305,7 @@ function CarrierCard({
             </span>
             {carrier.withIncident > 0 && (
               <span className="flex items-center gap-1">
-                <span className="size-2 rounded-full bg-amber-400 inline-block" />
+                <span className="size-2 rounded-full bg-gray-400 inline-block" />
                 {carrier.withIncident} incidencia{carrier.withIncident !== 1 ? "s" : ""}
               </span>
             )}
@@ -430,7 +430,7 @@ export default function CarrierRatingsPage() {
             <Card>
               <CardContent className="px-4 py-4">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">4–5 estrellas</p>
-                <p className="mt-1 text-2xl font-bold text-emerald-600">{topCarriers}</p>
+                <p className="mt-1 text-2xl font-bold text-green-600">{topCarriers}</p>
               </CardContent>
             </Card>
             <Card>

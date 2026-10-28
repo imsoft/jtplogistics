@@ -34,7 +34,7 @@ function RouteTooltip({ active, payload }: { active?: boolean; payload?: { paylo
       <p className="text-muted-foreground">Viajes: {d.count}</p>
       <p className="text-muted-foreground">Venta total: {fmtMxn(d.totalSale)}</p>
       <p className="text-muted-foreground">Costo total: {fmtMxn(d.totalCost)}</p>
-      <p className={`font-medium ${d.margin >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+      <p className={`font-medium ${d.margin >= 0 ? "text-green-600" : "text-destructive"}`}>
         Margen: {fmtMxn(d.margin)}
       </p>
     </div>
@@ -116,7 +116,7 @@ export default function FinancesAnalyticsPage() {
             <Card>
               <CardContent className="px-4 py-4">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Rutas rentables</p>
-                <p className="mt-1 text-2xl font-bold text-emerald-600">
+                <p className="mt-1 text-2xl font-bold text-green-600">
                   {data.routeMargins.filter((r) => r.margin > 0).length}
                 </p>
               </CardContent>
@@ -130,7 +130,7 @@ export default function FinancesAnalyticsPage() {
             <Card>
               <CardContent className="px-4 py-4">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Margen total</p>
-                <p className={`mt-1 text-2xl font-bold ${data.routeMargins.reduce((s, r) => s + r.margin, 0) >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+                <p className={`mt-1 text-2xl font-bold ${data.routeMargins.reduce((s, r) => s + r.margin, 0) >= 0 ? "text-green-600" : "text-destructive"}`}>
                   {fmtMxn(data.routeMargins.reduce((s, r) => s + r.margin, 0))}
                 </p>
               </CardContent>
@@ -241,7 +241,7 @@ export default function FinancesAnalyticsPage() {
                       tickFormatter={(v: string) => v.length > 30 ? v.slice(0, 28) + "…" : v}
                     />
                     <Tooltip content={<LegalTooltip />} />
-                    <Bar dataKey="count" fill="hsl(221 83% 53%)" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="count" fill="#1447e6" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )}

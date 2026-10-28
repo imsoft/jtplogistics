@@ -69,7 +69,7 @@ export function CartaPorteCard({
             </ul>
           </div>
         ) : (
-          <p className="rounded-lg border border-emerald-500/40 bg-emerald-500/5 p-3 text-sm font-medium">Completa: lista para timbrar cuando esté el PAC.</p>
+          <p className="rounded-lg border border-green-500/40 bg-green-500/5 p-3 text-sm font-medium">Completa: lista para timbrar cuando esté el PAC.</p>
         )}
         <div className="grid gap-x-8 lg:grid-cols-2">
           <div>

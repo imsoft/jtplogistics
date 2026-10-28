@@ -76,7 +76,7 @@ const CONTRACT_BY_VALUE = Object.fromEntries(CONTRACT_STATUSES.map((c) => [c.val
 const STAGE_TONE: Record<OnboardingStage, string> = {
   in_progress: "bg-blue-100 text-blue-800",
   complete: "bg-green-100 text-green-800",
-  on_hold: "bg-purple-100 text-purple-900",
+  on_hold: "bg-gray-200 text-gray-800",
 };
 
 const DOC_TONE: Record<DocStatus, string> = {
@@ -355,12 +355,12 @@ export function OnboardingsTable({
                 const progress = docProgress(r.docs);
                 const c = CONTRACT_BY_VALUE[r.contractStatus];
                 return (
-                  <tr key={r.id} className={cn("border-b align-top last:border-0", st === "on_hold" && "bg-purple-50/60 dark:bg-purple-950/20")}>
+                  <tr key={r.id} className={cn("border-b align-top last:border-0", st === "on_hold" && "bg-gray-50 dark:bg-gray-900/40")}>
                     <td className="px-4 py-3">
                       <span className="block max-w-52 truncate font-medium min-[1440px]:max-w-64" title={r.legalName}>{r.legalName}</span>
                       <span className="text-muted-foreground block max-w-52 truncate text-xs min-[1440px]:max-w-64" title={r.commercialName}>{r.commercialName}</span>
                       {st === "on_hold" && r.holdReason && (
-                        <span className="mt-1 block max-w-52 text-xs text-purple-900 min-[1440px]:max-w-64 dark:text-purple-200" title={r.holdReason}>{r.holdReason}</span>
+                        <span className="mt-1 block max-w-52 text-xs text-gray-700 min-[1440px]:max-w-64 dark:text-gray-300" title={r.holdReason}>{r.holdReason}</span>
                       )}
                     </td>
                     <td className="text-muted-foreground hidden whitespace-nowrap px-4 py-3 @3xl/table:table-cell">{shortDate(r.startedOn)}</td>
@@ -409,7 +409,7 @@ export function OnboardingsTable({
                               </Button>
                             ) : (
                               <Button variant="ghost" size="icon" className="size-7" aria-label="Detener alta" title="Detener" onClick={() => { setHoldReason(""); setHolding(r); }}>
-                                <PauseCircle className="size-3.5 text-purple-700" />
+                                <PauseCircle className="size-3.5 text-gray-600" />
                               </Button>
                             )
                           )}

@@ -72,7 +72,7 @@ export default function GlobalError({
               fontSize: "0.875rem",
               fontWeight: 600,
               color: "#ffffff",
-              background: "#3b46e0",
+              background: "#1447e6",
             }}
           >
             Reintentar
