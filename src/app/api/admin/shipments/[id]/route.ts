@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { incidentAllowsIncidentType } from "@/lib/incident-yes-no";
 import { adminHandler } from "@/lib/api-handler";
 import { logAudit, diffObjects } from "@/lib/audit-log";
 import { shipmentDeleteBlock, shipmentLockReason, LOCK_TEXT } from "@/lib/shipment-lock";
@@ -153,6 +154,9 @@ export function PATCH(
     if (comments !== undefined) data.comments = (comments as string)?.trim() || null;
     if (incident !== undefined) data.incident = (incident as string)?.trim() || null;
     if (incidentType !== undefined) data.incidentType = (incidentType as string)?.trim() || null;
+    // Sin incidencia no hay tipo de incidencia (con la incidencia que quede guardada).
+    const finalIncident = incident !== undefined ? (data.incident as string | null) : shipment.incident;
+    if (!incidentAllowsIncidentType(finalIncident ?? "")) data.incidentType = null;
     if (status !== undefined) {
       if (status && VALID_STATUSES.includes(status as (typeof VALID_STATUSES)[number])) data.status = status;
     }

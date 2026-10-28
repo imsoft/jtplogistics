@@ -1,5 +1,6 @@
 import { Prisma, ShipmentStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { incidentAllowsIncidentType } from "@/lib/incident-yes-no";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 import { logAudit } from "@/lib/audit-log";
 import { findFinanceForShipment } from "@/lib/finance-shipment-match";
@@ -201,7 +202,8 @@ export async function POST(request: Request) {
         phone: phone?.trim() || null,
         comments: comments?.trim() || null,
         incident: incident?.trim() || null,
-        incidentType: incidentType?.trim() || null,
+        // Sin incidencia no hay tipo de incidencia.
+        incidentType: incidentAllowsIncidentType(incident ?? "") ? incidentType?.trim() || null : null,
         ...tariffs.data,
         deliveryOutcome: isDeliveryOutcome(status) ? status : null,
         ...(status && validStatuses.includes(status) && { status: status as "pending" }),

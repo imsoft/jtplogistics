@@ -53,7 +53,12 @@ export function AppSelect({ value, onValueChange, options, disabled, className, 
       disabled={disabled}
       autoHighlight
     >
-      <ComboboxInput showClear={!!selected} className={cn("w-full", className)} />
+      {/* Desactivada se tiene que notar: atenuada y sin poder abrirse, como
+          los campos de texto desactivados. */}
+      <ComboboxInput
+        showClear={!!selected}
+        className={cn("w-full", disabled && "pointer-events-none cursor-not-allowed bg-muted/40 opacity-50", className)}
+      />
       <ComboboxContent container={container}>
         <ComboboxEmpty>Sin resultados.</ComboboxEmpty>
         <ComboboxList>
