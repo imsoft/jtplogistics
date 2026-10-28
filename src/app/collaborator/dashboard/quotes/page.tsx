@@ -65,7 +65,8 @@ export default function CollaboratorQuotesPage() {
           initialQuotes={quotes}
           apiEndpoint="/api/collaborator/generated-quotes"
           editBase="/collaborator/dashboard/quotes"
-          canUpdateStatus={false}
+          // Mismo permiso que pide la API para cambiar el estado de sus cotizaciones.
+          canUpdateStatus={permissions.canUpdateQuotes}
           canEdit={permissions.canUpdateQuotes}
           canDelete={permissions.canDeleteQuotes}
         />
