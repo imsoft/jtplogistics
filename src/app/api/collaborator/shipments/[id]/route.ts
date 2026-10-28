@@ -1,4 +1,10 @@
 import { prisma } from "@/lib/db";
+import { readExtraCosts } from "@/lib/shipment-extras";
+
+/** Costos extra en texto para la bitácora: "Maniobras $1,500/$1,000; …". */
+function extrasText(v: unknown): string {
+  return readExtraCosts(v).map((x) => `${x.concept} $${x.sale ?? 0}/$${x.cost ?? 0}`).join("; ");
+}
 import { incidentAllowsIncidentType } from "@/lib/incident-yes-no";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 import { logAudit, diffObjects } from "@/lib/audit-log";
@@ -23,6 +29,9 @@ function toJson(s: {
   unit: string | null;
   phone: string | null;
   comments: string | null;
+  originAddress?: string | null;
+  destinationAddress?: string | null;
+  extraCosts?: unknown;
   incident: string | null;
   incidentType: string | null;
   sale?: number | null;
@@ -47,6 +56,9 @@ function toJson(s: {
     unit: s.unit,
     phone: s.phone,
     comments: s.comments,
+    originAddress: s.originAddress ?? null,
+    destinationAddress: s.destinationAddress ?? null,
+    extraCosts: readExtraCosts(s.extraCosts),
     incident: s.incident,
     incidentType: s.incidentType,
     sale: s.sale ?? null,
@@ -104,6 +116,9 @@ const SHIPMENT_LABELS: Record<string, string> = {
   unit: "Unidad",
   phone: "Celular",
   comments: "Comentarios",
+  originAddress: "Dirección de origen",
+  destinationAddress: "Dirección de destino",
+  extraCosts: "Costos extra",
   incident: "Incidencia",
   incidentType: "Tipo de incidencia",
   status: "Estado",
@@ -134,7 +149,7 @@ export async function PATCH(
     const {
       eco, client, origin, destination, product,
       pickupDate, deliveryDate, legalName, operatorName,
-      truck, trailer, unit, phone, comments, incident, incidentType, status,
+      truck, trailer, unit, phone, comments, incident, incidentType, status, originAddress, destinationAddress,
       _confirmedEmail,
     } = body as Record<string, string | null | undefined>;
 
@@ -188,6 +203,8 @@ export async function PATCH(
     if (unit !== undefined) data.unit = (unit as string)?.trim() || null;
     if (phone !== undefined) data.phone = (phone as string)?.trim() || null;
     if (comments !== undefined) data.comments = (comments as string)?.trim() || null;
+    if (originAddress !== undefined) data.originAddress = (originAddress as string)?.trim() || null;
+    if (destinationAddress !== undefined) data.destinationAddress = (destinationAddress as string)?.trim() || null;
     if (incident !== undefined) data.incident = (incident as string)?.trim() || null;
     if (incidentType !== undefined) data.incidentType = (incidentType as string)?.trim() || null;
     // Sin incidencia no hay tipo de incidencia (con la incidencia que quede guardada).
@@ -220,8 +237,8 @@ export async function PATCH(
     }
 
     const changes = diffObjects(
-      shipment as unknown as Record<string, unknown>,
-      updated as unknown as Record<string, unknown>,
+      { ...shipment, extraCosts: extrasText(shipment.extraCosts) } as unknown as Record<string, unknown>,
+      { ...updated, extraCosts: extrasText(updated.extraCosts) } as unknown as Record<string, unknown>,
       SHIPMENT_LABELS
     );
     if (changes.length > 0) {

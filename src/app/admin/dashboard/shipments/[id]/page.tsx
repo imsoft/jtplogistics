@@ -14,7 +14,7 @@ import { useIncidentTypes } from "@/hooks/use-incident-types";
 import { formatIncidentYesNo } from "@/lib/incident-yes-no";
 import { formatMxn, formatPhone } from "@/lib/utils";
 import { getIncidentTypeLabel } from "@/lib/incident-type-label";
-import { SHIPMENT_STATUS_CONFIG } from "@/components/dashboard/resources/shipments-table";
+import { SHIPMENT_STATUS_CONFIG, shipmentStatusDisplay } from "@/components/dashboard/resources/shipments-table";
 import { ShipmentTimeline } from "@/components/dashboard/resources/shipment-timeline";
 import { ShipmentBillingCard } from "@/components/dashboard/billing/shipment-billing-card";
 import type { Shipment } from "@/types/shipment.types";
@@ -72,9 +72,9 @@ export default function ShipmentProfilePage() {
               <h1 className="page-heading truncate">{title}</h1>
               <Badge
                 variant="outline"
-                className={`shrink-0 whitespace-nowrap text-xs font-medium border-0 ${SHIPMENT_STATUS_CONFIG[shipment.status]?.badgeClass ?? ""}`}
+                className={`shrink-0 whitespace-nowrap text-xs font-medium border-0 ${shipmentStatusDisplay(shipment.status, shipment.incident).badgeClass}`}
               >
-                {SHIPMENT_STATUS_CONFIG[shipment.status]?.label ?? shipment.status}
+                {shipmentStatusDisplay(shipment.status, shipment.incident).label}
               </Badge>
             </div>
             {shipment.legalName && (

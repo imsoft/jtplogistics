@@ -1,6 +1,7 @@
 import type { Finance, Shipment } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { financeMatchesShipment } from "@/lib/finance-shipment-match";
+import { shipmentTotals } from "@/lib/shipment-tariffs";
 
 /** Los datos del embarque que se copian a su registro de finanzas. */
 function financeData(s: Shipment) {
@@ -9,12 +10,13 @@ function financeData(s: Shipment) {
     client: s.client,
     origin: s.origin,
     destination: s.destination,
-    sale: s.sale,
+    // Finanzas guarda el total: tarifa base más costos extra.
+    sale: shipmentTotals(s).sale,
     product: s.product,
     pickupDate: s.pickupDate,
     deliveryDate: s.deliveryDate,
     legalName: s.legalName,
-    cost: s.cost,
+    cost: shipmentTotals(s).cost,
     operatorName: s.operatorName,
     truck: s.truck,
     trailer: s.trailer,
@@ -60,8 +62,8 @@ export async function syncShipmentFinance(shipment: Shipment, closedStatus: stri
       where: { id: existing.id },
       data: {
         shipmentId: shipment.id,
-        ...(shipment.sale != null && { sale: shipment.sale }),
-        ...(shipment.cost != null && { cost: shipment.cost }),
+        ...(shipmentTotals(shipment).sale != null && { sale: shipmentTotals(shipment).sale }),
+        ...(shipmentTotals(shipment).cost != null && { cost: shipmentTotals(shipment).cost }),
       },
     });
   }

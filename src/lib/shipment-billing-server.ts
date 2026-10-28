@@ -4,6 +4,8 @@
  */
 
 import { prisma } from "@/lib/db";
+import { shipmentTotals } from "@/lib/shipment-tariffs";
+import { readExtraCosts } from "@/lib/shipment-extras";
 import type { OperatorData, VehicleData } from "@/lib/carrier-fleet";
 import {
   carrierMatches,
@@ -37,8 +39,10 @@ export async function loadShipmentBillingContext(id: string) {
     operatorName: row.operatorName,
     truck: row.truck,
     trailer: row.trailer,
-    sale: row.sale,
-    cost: row.cost,
+    // Total con costos extra: es lo que se factura y lo que se paga.
+    sale: shipmentTotals(row).sale,
+    cost: shipmentTotals(row).cost,
+    extraConcepts: readExtraCosts(row.extraCosts).map((x) => x.concept),
     status: row.status,
   };
 

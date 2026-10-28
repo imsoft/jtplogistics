@@ -13,6 +13,7 @@ import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 import { ClientViewActions } from "@/components/dashboard/clients/client-view-actions";
 import { ClientAssignedRoutesCard } from "@/components/dashboard/clients/client-assigned-routes-card";
+import { ClientLocationsCard } from "@/components/dashboard/clients/client-locations-card";
 import { type AssignedRoute, clientRoutesEndpoint } from "@/components/dashboard/clients/client-routes";
 import { formatPhone } from "@/lib/utils";
 import type { Client } from "@/types/client.types";
@@ -153,6 +154,8 @@ export default function CollaboratorClientProfilePage() {
       </div>
 
       <ClientAssignedRoutesCard routes={routes} loaded={routesLoaded} canAssign={canAssign} />
+
+      <ClientLocationsCard clientId={id} routes={routes} loaded={routesLoaded} canEdit={canAssign} />
     </div>
   );
 }

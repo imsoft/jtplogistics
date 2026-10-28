@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/db";
+import { effectiveTariffs } from "@/lib/shipment-tariffs";
+import { readExtraCosts } from "@/lib/shipment-extras";
 import { adminHandler } from "@/lib/api-handler";
 import { findFinanceForShipment } from "@/lib/finance-shipment-match";
 import type { FinanceListRow } from "@/types/finance.types";
@@ -24,6 +26,10 @@ function rowFromShipmentAndFinance(
     incidentType: string | null;
     sale?: number | null;
     cost?: number | null;
+    extraCosts?: unknown;
+    originAddress?: string | null;
+    destinationAddress?: string | null;
+    evidenceReceivedOn?: Date | null;
     status: string;
     createdAt: Date;
   },
@@ -39,8 +45,14 @@ function rowFromShipmentAndFinance(
     origin: shipment.origin,
     destination: shipment.destination,
     // La tarifa se captura en el embarque; los registros viejos la traen de Finanzas.
-    sale: shipment.sale ?? finance?.sale ?? null,
-    cost: shipment.cost ?? finance?.cost ?? null,
+    // Total: tarifa base más costos extra (los registros viejos, de Finanzas).
+    ...effectiveTariffs(shipment, finance),
+    baseSale: shipment.sale ?? null,
+    baseCost: shipment.cost ?? null,
+    extraCosts: readExtraCosts(shipment.extraCosts),
+    originAddress: shipment.originAddress ?? null,
+    destinationAddress: shipment.destinationAddress ?? null,
+    evidenceReceivedOn: shipment.evidenceReceivedOn ? shipment.evidenceReceivedOn.toISOString().slice(0, 10) : null,
     product: shipment.product,
     pickupDate: shipment.pickupDate?.toISOString() ?? null,
     deliveryDate: shipment.deliveryDate?.toISOString() ?? null,

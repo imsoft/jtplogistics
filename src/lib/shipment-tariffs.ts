@@ -8,6 +8,8 @@
  * sin incidencias): la tarifa suele confirmarse justo al cerrar.
  */
 
+import { extraCostsError, extrasSum, readExtraCosts, withExtras, type ExtraCost } from "@/lib/shipment-extras";
+
 const TARIFF_KEYS = ["sale", "cost"] as const;
 export type TariffKey = (typeof TARIFF_KEYS)[number];
 
@@ -23,8 +25,16 @@ export function parseTariff(value: unknown): number | null | undefined | "invali
 /** Las tarifas que trae el cuerpo; error si alguna no es un número válido. */
 export function readTariffs(
   body: Record<string, unknown>
-): { ok: true; data: Partial<Record<TariffKey, number | null>> } | { ok: false; error: string } {
-  const data: Partial<Record<TariffKey, number | null>> = {};
+): { ok: true; data: Partial<Record<TariffKey, number | null>> & { extraCosts?: ExtraCost[] } } | { ok: false; error: string } {
+  const data: Partial<Record<TariffKey, number | null>> & { extraCosts?: ExtraCost[] } = {};
+  // Costos extra: van con las tarifas (los mismos permisos y se pueden
+  // capturar aunque el embarque esté bloqueado).
+  if (body.extraCosts !== undefined) {
+    const extras = readExtraCosts(body.extraCosts);
+    const err = extraCostsError(extras);
+    if (err) return { ok: false, error: err };
+    data.extraCosts = extras;
+  }
   for (const key of TARIFF_KEYS) {
     const v = parseTariff(body[key]);
     if (v === "invalid") {
@@ -41,7 +51,7 @@ export function readTariffs(
  */
 export function isTariffOnlyBody(body: Record<string, unknown>): boolean {
   const keys = Object.keys(body).filter((k) => k !== "_confirmedEmail");
-  return keys.length > 0 && keys.every((k) => (TARIFF_KEYS as readonly string[]).includes(k));
+  return keys.length > 0 && keys.every((k) => (TARIFF_KEYS as readonly string[]).includes(k) || k === "extraCosts");
 }
 
 /** Quién puede ver y capturar tarifas. */
@@ -50,15 +60,25 @@ export function canManageTariffs(user: { role?: string | null }, me?: { canViewF
   return user.role === "collaborator" && Boolean(me?.canViewFinances);
 }
 
-/** La tarifa que se muestra: la del embarque y, si no tiene, la del registro de finanzas. */
+/**
+ * La tarifa total que se muestra: la base del embarque más sus costos extra.
+ * Si el embarque no tiene base, la del registro de finanzas (que ya guarda el
+ * total al cerrar), para los registros viejos.
+ */
 export function effectiveTariffs(
-  shipment: { sale?: number | null; cost?: number | null },
+  shipment: { sale?: number | null; cost?: number | null; extraCosts?: unknown },
   finance: { sale: number | null; cost: number | null } | null | undefined
 ): { sale: number | null; cost: number | null } {
+  const extra = extrasSum(readExtraCosts(shipment.extraCosts));
   return {
-    sale: shipment.sale ?? finance?.sale ?? null,
-    cost: shipment.cost ?? finance?.cost ?? null,
+    sale: shipment.sale != null ? withExtras(shipment.sale, extra.sale) : finance?.sale ?? withExtras(null, extra.sale),
+    cost: shipment.cost != null ? withExtras(shipment.cost, extra.cost) : finance?.cost ?? withExtras(null, extra.cost),
   };
+}
+
+/** Tarifa total del embarque (base + extras), sin mirar finanzas. */
+export function shipmentTotals(shipment: { sale?: number | null; cost?: number | null; extraCosts?: unknown }) {
+  return effectiveTariffs(shipment, null);
 }
 
 export const TARIFF_AUDIT_LABELS: Record<TariffKey, string> = {

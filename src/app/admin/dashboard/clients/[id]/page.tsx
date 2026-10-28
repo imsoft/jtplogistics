@@ -8,6 +8,7 @@ import { ChevronLeft, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClientAssignedRoutesCard } from "@/components/dashboard/clients/client-assigned-routes-card";
+import { ClientLocationsCard } from "@/components/dashboard/clients/client-locations-card";
 import { type AssignedRoute, clientRoutesEndpoint } from "@/components/dashboard/clients/client-routes";
 import { Badge } from "@/components/ui/badge";
 import { InfoRow } from "@/components/dashboard/users/info-row";
@@ -158,6 +159,8 @@ export default function ClientProfilePage() {
       )}
 
       <ClientAssignedRoutesCard routes={routes} loaded={routesLoaded} canAssign />
+
+      <ClientLocationsCard clientId={id} routes={routes} loaded={routesLoaded} canEdit />
     </div>
   );
 }

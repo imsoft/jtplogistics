@@ -22,7 +22,7 @@ export interface Finance {
 }
 
 /** Fila de la tabla de finanzas: un embarque + tarifas del registro financiero si existe. `id` = id del embarque. */
-export interface FinanceListRow {
+export interface FinanceListRow extends Partial<FinanceRowExtras> {
   id: string;
   shipmentId: string;
   financeId: string | null;
@@ -50,6 +50,18 @@ export interface FinanceListRow {
 
 /** Detalle en `/finances/[id]` donde `id` es el embarque. */
 export type FinanceShipmentDetail = FinanceListRow;
+
+/** Lo que trae cada fila además de lo de la tabla (lo usa la ficha). */
+export interface FinanceRowExtras {
+  /** Tarifas base, sin costos extra. */
+  baseSale: number | null;
+  baseCost: number | null;
+  extraCosts: { concept: string; sale: number | null; cost: number | null }[];
+  originAddress: string | null;
+  destinationAddress: string | null;
+  /** "YYYY-MM-DD" o null. */
+  evidenceReceivedOn: string | null;
+}
 
 export interface FinanceFormData {
   eco: string;

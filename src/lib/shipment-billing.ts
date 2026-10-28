@@ -27,6 +27,8 @@ export interface BillingShipment {
   trailer: string | null;
   sale: number | null;
   cost: number | null;
+  /** Conceptos de los costos extra (ya sumados en sale/cost), para el concepto de la factura. */
+  extraConcepts?: string[];
   status: string;
 }
 
@@ -143,7 +145,8 @@ export function cartaPorteSnapshot(s: BillingShipment, carrier: BillingCarrier |
 
 function concept(s: BillingShipment) {
   const route = [s.origin, s.destination].filter(Boolean).join(" – ");
-  return `Servicio de flete${route ? ` ${route}` : ""}${s.eco ? ` · ECO ${s.eco}` : ""}`;
+  const extras = s.extraConcepts?.length ? ` · Incluye: ${s.extraConcepts.join(", ")}` : "";
+  return `Servicio de flete${route ? ` ${route}` : ""}${s.eco ? ` · ECO ${s.eco}` : ""}${extras}`;
 }
 
 /**

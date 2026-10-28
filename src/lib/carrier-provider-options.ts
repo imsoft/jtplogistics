@@ -29,3 +29,16 @@ export function carrierProviderSelectOptions(carriers: User[]): string[] {
   });
   return [...new Set(options)].sort((a, b) => a.localeCompare(b, "es"));
 }
+
+/** La cuenta del transportista detrás de cada etiqueta del Select (la misma regla de colisión). */
+export function carrierByOption(carriers: User[]): Map<string, User> {
+  const primaries = carriers.map((u) => carrierPrimaryLabel(u));
+  const counts = new Map<string, number>();
+  for (const p of primaries) counts.set(p, (counts.get(p) ?? 0) + 1);
+  const map = new Map<string, User>();
+  carriers.forEach((u, i) => {
+    const base = primaries[i]!;
+    map.set(((counts.get(base) ?? 0) > 1 ? `${base} (${u.email})` : base).toLowerCase(), u);
+  });
+  return map;
+}

@@ -23,6 +23,9 @@ export interface Shipment {
   unit: string | null;
   phone: string | null;
   comments: string | null;
+  originAddress?: string | null;
+  destinationAddress?: string | null;
+  extraCosts?: { concept: string; sale: number | null; cost: number | null }[];
   incident: string | null;
   incidentType: string | null;
   status: ShipmentStatus;
@@ -49,10 +52,13 @@ export interface ShipmentFormData {
   unit: string;
   phone: string;
   comments: string;
+  originAddress: string;
+  destinationAddress: string;
   incident: string;
   incidentType: string;
   status: ShipmentStatus;
   /** Solo los manda quien puede capturar tarifas. */
   sale?: string;
   cost?: string;
+  extraCosts?: { concept: string; sale: string; cost: string }[];
 }

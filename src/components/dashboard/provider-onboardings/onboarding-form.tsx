@@ -148,7 +148,7 @@ export function OnboardingForm({
                       aria-checked={active}
                       onClick={() => set("docs")({ ...form.docs, [d.key]: s.value })}
                       className={cn(
-                        "inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium transition-colors",
+                        "inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium uppercase tracking-wide transition-colors",
                         active ? DOC_TONE[s.value] || "bg-primary text-primary-foreground border-primary" : "text-muted-foreground hover:bg-accent"
                       )}
                     >

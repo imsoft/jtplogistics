@@ -18,7 +18,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { formatMxn, formatPhone } from "@/lib/utils";
-import { formatIncidentYesNo } from "@/lib/incident-yes-no";
+import { formatIncidentYesNo, incidentAllowsIncidentType } from "@/lib/incident-yes-no";
 import { getIncidentTypeLabel } from "@/lib/incident-type-label";
 import { useIncidentTypes } from "@/hooks/use-incident-types";
 import type { Shipment, ShipmentStatus } from "@/types/shipment.types";
@@ -80,6 +80,17 @@ export const SHIPMENT_STATUS_CONFIG: Record<
   },
 };
 
+/**
+ * Cómo se pinta el estado de un embarque. Un cerrado con incidencia se pinta
+ * en ámbar (atención) para distinguirlo del cerrado limpio, que va en verde.
+ */
+export function shipmentStatusDisplay(status: string, incident?: string | null) {
+  if (status === "returned" && incidentAllowsIncidentType(incident ?? "")) {
+    return { label: "Cerrado con incidencia", badgeClass: "bg-amber-100 text-amber-800", rowClass: "bg-amber-50" };
+  }
+  return SHIPMENT_STATUS_CONFIG[status as ShipmentStatus] ?? { label: status, badgeClass: "", rowClass: "" };
+}
+
 const STATUS_FILTER_ALL = "all" as const;
 
 function getColumns(incidentTypes: { value: string; label: string }[], showSale: boolean): ColumnDef<Shipment>[] {
@@ -100,8 +111,7 @@ function getColumns(incidentTypes: { value: string; label: string }[], showSale:
       accessorKey: "status",
       header: ({ column }) => <SortableColumnHeader column={column} title="Estado" />,
       cell: ({ row }) => {
-        const status = row.getValue<ShipmentStatus>("status");
-        const config = SHIPMENT_STATUS_CONFIG[status] ?? SHIPMENT_STATUS_CONFIG.pending;
+        const config = shipmentStatusDisplay(row.getValue<ShipmentStatus>("status"), row.original.incident);
         return (
           <Badge variant="outline" className={`whitespace-nowrap text-xs font-medium border-0 ${config.badgeClass}`}>
             {config.label}
@@ -272,7 +282,7 @@ function getColumns(incidentTypes: { value: string; label: string }[], showSale:
 }
 
 function getRowClassName(shipment: Shipment): string {
-  return SHIPMENT_STATUS_CONFIG[shipment.status]?.rowClass ?? "";
+  return shipmentStatusDisplay(shipment.status, shipment.incident).rowClass;
 }
 
 interface ShipmentsTableProps {

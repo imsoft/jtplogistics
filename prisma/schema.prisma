@@ -425,8 +425,26 @@ model Client {
   clientRoutes ClientRoute[]
   leads        ClientLead[]
   billingDocuments BillingDocument[]
+  locations    ClientLocation[]
 
   @@map("clients")
+}
+
+/// Dirección donde se carga (origen) o se entrega (destino) en cada ciudad de
+/// las rutas del cliente. El embarque la toma al elegir origen y destino.
+model ClientLocation {
+  id        String   @id @default(cuid()) @map("id")
+  clientId  String   @map("client_id")
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  /// "origin" o "destination".
+  kind      String   @map("kind")
+  /// La ciudad tal como está en la ruta.
+  city      String   @map("city")
+  address   String   @map("address")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([clientId, kind, city])
+  @@map("client_locations")
 }
 
 model ClientRoute {
@@ -721,6 +739,13 @@ model Shipment {
   /// Se conserva al cerrar el embarque: el estado "Cerrado" ya no lo dice y la
   /// calificación de transportistas lo necesita.
   deliveryOutcome String?       @map("delivery_outcome")
+  /// Direcciones de carga y entrega (se proponen de la ficha del cliente).
+  originAddress      String?    @map("origin_address")
+  destinationAddress String?    @map("destination_address")
+  /// Costos extra: [{ concept, sale, cost }]. Se suman a la venta y a la compra.
+  extraCosts      Json          @default("[]") @map("extra_costs")
+  /// Día en que se recibieron las evidencias de entrega.
+  evidenceReceivedOn DateTime?  @db.Date @map("evidence_received_on")
   status         ShipmentStatus @default(pending) @map("status")
   billingDocuments BillingDocument[]
   finance        Finance?

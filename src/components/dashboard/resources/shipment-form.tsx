@@ -11,9 +11,12 @@ import { SHIPMENT_STATUS_CONFIG } from "@/components/dashboard/resources/shipmen
 import { useUnitTypes } from "@/hooks/use-unit-types";
 import { useIncidentTypes } from "@/hooks/use-incident-types";
 import { getIncidentSelectOptions, incidentAllowsIncidentType } from "@/lib/incident-yes-no";
-import { carrierProviderSelectOptions } from "@/lib/carrier-provider-options";
+import { carrierByOption, carrierProviderSelectOptions } from "@/lib/carrier-provider-options";
 import { shipmentLockReason } from "@/lib/shipment-lock";
 import { formatMxn, formatMxnLive, parseMxn } from "@/lib/utils";
+import { Plus, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { InstructionLetterButton } from "@/components/dashboard/resources/instruction-letter-button";
 import type { Route } from "@/types/route.types";
 import type { Shipment, ShipmentFormData, ShipmentStatus } from "@/types/shipment.types";
 import type { Client } from "@/types/client.types";
@@ -74,6 +77,20 @@ export function ShipmentForm({
   const [unit, setUnit] = useState(initialValues.unit ?? "");
   const [phone, setPhone] = useState(initialValues.phone ?? "");
   const [comments, setComments] = useState(initialValues.comments ?? "");
+  // Direcciones: se proponen de la ficha del cliente mientras no se escriban a mano.
+  const [originAddress, setOriginAddress] = useState(initialValues.originAddress ?? "");
+  const [destinationAddress, setDestinationAddress] = useState(initialValues.destinationAddress ?? "");
+  const [originAddressTouched, setOriginAddressTouched] = useState(Boolean(initialValues.originAddress));
+  const [destinationAddressTouched, setDestinationAddressTouched] = useState(Boolean(initialValues.destinationAddress));
+  const [locations, setLocations] = useState<{ kind: string; city: string; address: string }[]>([]);
+  // Costos extra (maniobras, estadías…): se suman a venta y compra.
+  const [extras, setExtras] = useState<{ concept: string; sale: string; cost: string }[]>(
+    (initialValues.extraCosts ?? []).map((x) => ({
+      concept: x.concept,
+      sale: x.sale != null ? formatMxn(x.sale) : "",
+      cost: x.cost != null ? formatMxn(x.cost) : "",
+    }))
+  );
   const [incident, setIncident] = useState(initialValues.incident ?? "");
   const [incidentType, setIncidentType] = useState(initialValues.incidentType ?? "");
   const [status, setStatus] = useState<ShipmentStatus>(initialValues.status ?? "pending");
@@ -82,6 +99,9 @@ export function ShipmentForm({
   // Tarifa acordada con el cliente para esta ruta (Clientes → rutas asignadas).
   const [agreed, setAgreed] = useState<{ key: string; value: number | null } | null>(null);
   const [saleTouched, setSaleTouched] = useState(initialValues.sale != null);
+  // Tarifa pactada con el transportista para esta ruta (su target).
+  const [agreedCost, setAgreedCost] = useState<{ key: string; value: number | null } | null>(null);
+  const [costTouched, setCostTouched] = useState(initialValues.cost != null);
   // Cerrado, o ya asentado sin incidencias: de solo lectura (salvo desbloqueo).
   // El "sin incidencias" se mira sobre lo guardado, no sobre lo que se está
   // eligiendo ahora: cambiar el select no debe congelar el formulario.
@@ -245,6 +265,63 @@ export function ShipmentForm({
     };
   }, [showTariffs, clients, client, origin, destination, unit, saleTouched]);
 
+  // Direcciones del cliente (ficha del cliente → direcciones de origen y destino).
+  const clientRecord = clients.find((x) => x.name.trim().toLowerCase() === client.trim().toLowerCase());
+  const clientId = clientRecord?.id;
+  useEffect(() => {
+    if (!clientId) {
+      setLocations([]);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/clients/${clientId}/locations`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((rows) => !cancelled && setLocations(Array.isArray(rows) ? rows : []))
+      .catch(() => !cancelled && setLocations([]));
+    return () => {
+      cancelled = true;
+    };
+  }, [clientId]);
+  const addressFor = useCallback(
+    (kind: "origin" | "destination", city: string) =>
+      locations.find((l) => l.kind === kind && l.city.trim().toLowerCase() === city.trim().toLowerCase())?.address ?? "",
+    [locations]
+  );
+  useEffect(() => {
+    if (!originAddressTouched) setOriginAddress(origin ? addressFor("origin", origin) : "");
+  }, [origin, addressFor, originAddressTouched]);
+  useEffect(() => {
+    if (!destinationAddressTouched) setDestinationAddress(destination ? addressFor("destination", destination) : "");
+  }, [destination, addressFor, destinationAddressTouched]);
+
+  // Propone la tarifa de compra pactada con el transportista para esta ruta.
+  const carrierMap = useMemo(() => carrierByOption(carriers), [carriers]);
+  const carrierId = carrierMap.get(legalName.trim().toLowerCase())?.id;
+  useEffect(() => {
+    if (!showTariffs || !carrierId || !origin.trim() || !destination.trim()) return;
+    const key = `${carrierId}|${origin}|${destination}|${unit}`;
+    let cancelled = false;
+    const qs = new URLSearchParams({ carrierId, origin, destination, unitType: unit });
+    fetch(`/api/shipment-carrier-rate?${qs}`)
+      .then((r) => (r.ok ? r.json() : { cost: null }))
+      .then((d: { cost: number | null }) => {
+        if (cancelled) return;
+        setAgreedCost({ key, value: d.cost });
+        if (d.cost != null && !costTouched) setCost(formatMxn(d.cost));
+      })
+      .catch(() => !cancelled && setAgreedCost({ key, value: null }));
+    return () => {
+      cancelled = true;
+    };
+  }, [showTariffs, carrierId, origin, destination, unit, costTouched]);
+  const agreedCostValue = agreedCost && agreedCost.key === `${carrierId}|${origin}|${destination}|${unit}` ? agreedCost.value : null;
+
+  // Totales con costos extra.
+  const extrasSale = extras.reduce((s, x) => s + (parseMxn(x.sale) ?? 0), 0);
+  const extrasCost = extras.reduce((s, x) => s + (parseMxn(x.cost) ?? 0), 0);
+  const totalSale = (parseMxn(sale) ?? 0) + extrasSale;
+  const totalCost = (parseMxn(cost) ?? 0) + extrasCost;
+
   // Solo vale la tarifa propuesta para el cliente y la ruta que están elegidos ahora.
   const agreedClient = clients.find((x) => x.name.trim().toLowerCase() === client.trim().toLowerCase());
   const agreedSale =
@@ -252,7 +329,9 @@ export function ShipmentForm({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const tariffs = showTariffs ? { sale: sale.trim(), cost: cost.trim() } : {};
+    const tariffs = showTariffs
+      ? { sale: sale.trim(), cost: cost.trim(), extraCosts: extras.filter((x) => x.concept.trim() || x.sale.trim() || x.cost.trim()) }
+      : {};
     // Bloqueado desde que se abrió: lo único que se puede guardar son las tarifas.
     if (lockedAtLoad && showTariffs) {
       onSubmit(tariffs as ShipmentFormData);
@@ -274,6 +353,8 @@ export function ShipmentForm({
       unit,
       phone,
       comments,
+      originAddress,
+      destinationAddress,
       incident,
       incidentType: canPickIncidentType ? incidentType : "",
       status,
@@ -330,6 +411,20 @@ export function ShipmentForm({
         <div className="space-y-2">
           <Label htmlFor="shipment-product">Producto</Label>
           <Input id="shipment-product" value={product} disabled={isClosed} onChange={(e) => setProduct(e.target.value)} />
+          {!isClosed && (clientRecord?.productTypes?.length ?? 0) > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {clientRecord!.productTypes.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setProduct(p)}
+                  className="bg-primary/10 text-primary hover:bg-primary/20 rounded px-1.5 py-0.5 text-[11px] font-medium uppercase tracking-wide"
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-pickupDate">Recolección</Label>
@@ -386,15 +481,43 @@ export function ShipmentForm({
           <Input id="shipment-phone" value={phone} disabled={isClosed} onChange={(e) => setPhone(e.target.value)} />
         </div>
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="shipment-comments">Comentarios</Label>
-        <Textarea
-          id="shipment-comments"
-          value={comments}
-          disabled={isClosed}
-          onChange={(e) => setComments(e.target.value)}
-          rows={3}
-        />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="shipment-originAddress">Dirección de origen (carga)</Label>
+          <Textarea
+            id="shipment-originAddress"
+            rows={2}
+            value={originAddress}
+            disabled={isClosed}
+            onChange={(e) => {
+              setOriginAddressTouched(true);
+              setOriginAddress(e.target.value);
+            }}
+          />
+          <p className="text-muted-foreground text-xs">
+            {origin && clientId && !addressFor("origin", origin)
+              ? "Este cliente no tiene dirección guardada en esta ciudad; captúrala en su ficha para que salga sola."
+              : "Se toma de la ficha del cliente; puedes ajustarla para este embarque."}
+          </p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="shipment-destinationAddress">Dirección de destino (entrega)</Label>
+          <Textarea
+            id="shipment-destinationAddress"
+            rows={2}
+            value={destinationAddress}
+            disabled={isClosed}
+            onChange={(e) => {
+              setDestinationAddressTouched(true);
+              setDestinationAddress(e.target.value);
+            }}
+          />
+          <p className="text-muted-foreground text-xs">
+            {destination && clientId && !addressFor("destination", destination)
+              ? "Este cliente no tiene dirección guardada en esta ciudad; captúrala en su ficha para que salga sola."
+              : "Se toma de la ficha del cliente; puedes ajustarla para este embarque."}
+          </p>
+        </div>
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-2">
@@ -420,6 +543,16 @@ export function ShipmentForm({
             className="w-full"
           />
         </div>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="shipment-comments">Comentarios</Label>
+        <Textarea
+          id="shipment-comments"
+          value={comments}
+          disabled={isClosed}
+          onChange={(e) => setComments(e.target.value)}
+          rows={3}
+        />
       </div>
       {showTariffs && (
         <div className="space-y-3 rounded-lg border p-4">
@@ -472,12 +605,88 @@ export function ShipmentForm({
               <Label htmlFor="shipment-cost">Tarifa de compra (precio del transportista)</Label>
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground text-sm">$</span>
-                <Input id="shipment-cost" inputMode="decimal" value={cost} onChange={(e) => setCost(formatMxnLive(e.target.value))} />
+                <Input
+                  id="shipment-cost"
+                  inputMode="decimal"
+                  value={cost}
+                  onChange={(e) => {
+                    setCostTouched(true);
+                    setCost(formatMxnLive(e.target.value));
+                  }}
+                />
               </div>
+              {agreedCostValue != null && (
+                <p className="text-muted-foreground text-xs">
+                  {parseMxn(cost) === agreedCostValue ? (
+                    "Es la tarifa pactada con el transportista para esta ruta."
+                  ) : (
+                    <>
+                      Tarifa pactada con el transportista para esta ruta: ${formatMxn(agreedCostValue)}.{" "}
+                      <button
+                        type="button"
+                        className="text-primary font-medium underline-offset-2 hover:underline"
+                        onClick={() => {
+                          setCostTouched(true);
+                          setCost(formatMxn(agreedCostValue));
+                        }}
+                      >
+                        Usarla
+                      </button>
+                    </>
+                  )}
+                </p>
+              )}
             </div>
+          </div>
+
+          <div className="space-y-2 border-t pt-3">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="text-sm font-semibold">Costos extra</p>
+                <p className="text-muted-foreground text-xs">Maniobras, estadías, casetas… Se suman a la venta y a la compra.</p>
+              </div>
+              <Button type="button" variant="outline" size="sm" onClick={() => setExtras((l) => [...l, { concept: "", sale: "", cost: "" }])}>
+                <Plus className="size-4" />
+                Agregar
+              </Button>
+            </div>
+            {extras.map((x, i) => (
+              <div key={i} className="grid grid-cols-1 items-end gap-2 sm:grid-cols-[2fr_1fr_1fr_auto]">
+                <div className="space-y-1">
+                  <Label htmlFor={`extra-concept-${i}`} className="text-xs">Concepto</Label>
+                  <Input id={`extra-concept-${i}`} value={x.concept} onChange={(e) => setExtras((l) => l.map((y, j) => (j === i ? { ...y, concept: e.target.value } : y)))} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor={`extra-sale-${i}`} className="text-xs">Venta ($)</Label>
+                  <Input id={`extra-sale-${i}`} inputMode="decimal" value={x.sale} onChange={(e) => setExtras((l) => l.map((y, j) => (j === i ? { ...y, sale: formatMxnLive(e.target.value) } : y)))} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor={`extra-cost-${i}`} className="text-xs">Compra ($)</Label>
+                  <Input id={`extra-cost-${i}`} inputMode="decimal" value={x.cost} onChange={(e) => setExtras((l) => l.map((y, j) => (j === i ? { ...y, cost: formatMxnLive(e.target.value) } : y)))} />
+                </div>
+                <Button type="button" variant="ghost" size="icon" aria-label="Quitar costo extra" onClick={() => setExtras((l) => l.filter((_, j) => j !== i))}>
+                  <Trash2 className="text-destructive size-4" />
+                </Button>
+              </div>
+            ))}
+            {extras.length > 0 && (
+              <p className="text-sm">
+                Total venta: <b className="tabular-nums">${formatMxn(totalSale)}</b> · Total compra: <b className="tabular-nums">${formatMxn(totalCost)}</b> · Margen:{" "}
+                <b className={`tabular-nums ${totalSale - totalCost < 0 ? "text-destructive" : "text-green-700"}`}>${formatMxn(totalSale - totalCost)}</b>
+              </p>
+            )}
           </div>
         </div>
       )}
+      <div className="flex justify-end">
+        <InstructionLetterButton
+          data={{
+            eco, client, product, pickupDate, deliveryDate, legalName, operatorName, phone, truck, trailer,
+            unit: unitOptions.find((u) => u.value === unit)?.label ?? unit,
+            origin, destination, originAddress, destinationAddress, comments,
+          }}
+        />
+      </div>
       <FormActions
         submitLabel={submitLabel}
         cancelHref={cancelHref}

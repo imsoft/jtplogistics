@@ -13,9 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FINANCE_TARIFF_COST_LABEL, FINANCE_TARIFF_SALE_LABEL } from "@/lib/constants/finance-tariff-labels";
 import { formatMxn } from "@/lib/utils";
-import { SHIPMENT_STATUS_CONFIG } from "@/components/dashboard/resources/shipments-table";
+import { shipmentStatusDisplay } from "@/components/dashboard/resources/shipments-table";
 import type { FinanceListRow } from "@/types/finance.types";
-import type { ShipmentStatus } from "@/types/shipment.types";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 import { RowDeleteDialog } from "@/components/dashboard/resources/row-delete-dialog";
 
@@ -47,7 +46,7 @@ function getColumns(): ColumnDef<FinanceListRow>[] {
       header: ({ column }) => <SortableColumnHeader column={column} title="Estado" />,
       cell: ({ row }) => {
         const status = row.getValue<string>("status");
-        const cfg = SHIPMENT_STATUS_CONFIG[status as ShipmentStatus];
+        const cfg = shipmentStatusDisplay(status, row.original.incident);
         return (
           <Badge
             variant="outline"
