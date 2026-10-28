@@ -11,7 +11,6 @@ import {
   Lightbulb,
   LifeBuoy,
   PauseCircle,
-  Ship,
   Smartphone,
   Truck,
   UserRound,
@@ -257,7 +256,7 @@ export default async function CollaboratorDashboard() {
             label="Embarques por atender"
             value={fmtInt(shipmentsAttention)}
             hint="pendientes, en riesgo o no entregados"
-            icon={<Ship className="size-5" />}
+            icon={<Truck className="size-5" />}
             href={`${BASE}/shipments`}
             accent={shipmentsAttention > 0}
           />

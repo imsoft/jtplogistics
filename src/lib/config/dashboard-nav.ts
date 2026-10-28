@@ -21,7 +21,7 @@ import { Users } from "lucide-react";
 import { Copy } from "lucide-react";
 import { MessageSquare } from "lucide-react";
 import { ScrollText } from "lucide-react";
-import { Ship } from "lucide-react";
+import { Building2 } from "lucide-react";
 import { Anchor } from "lucide-react";
 import { DollarSign } from "lucide-react";
 import { BarChart3, Handshake, HandCoins, ReceiptText, Landmark, Wallet, FileBarChart } from "lucide-react";
@@ -58,7 +58,7 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
     items: [
       { title: "Clientes", href: "/admin/dashboard/clients", icon: Users },
       { title: "CRM de clientes", href: "/admin/dashboard/client-leads", icon: Handshake },
-      { title: "Proveedores", href: "/admin/dashboard/providers", icon: Truck },
+      { title: "Proveedores", href: "/admin/dashboard/providers", icon: Building2 },
       { title: "Prospección de proveedores", href: "/admin/dashboard/prospects", icon: Search },
       { title: "Alta de proveedores", href: "/admin/dashboard/provider-onboardings", icon: ClipboardCheck },
     ],
@@ -66,7 +66,7 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
   {
     label: "Finanzas",
     items: [
-      { title: "Tabla de embarques", href: "/admin/dashboard/shipments", icon: Ship },
+      { title: "Tabla de embarques", href: "/admin/dashboard/shipments", icon: Truck },
       { title: "Tabla de finanzas", href: "/admin/dashboard/finances", icon: DollarSign },
       { title: "Cuentas por cobrar", href: "/admin/dashboard/billing/receivables", icon: HandCoins },
       { title: "Cuentas por pagar", href: "/admin/dashboard/billing/payables", icon: ReceiptText },

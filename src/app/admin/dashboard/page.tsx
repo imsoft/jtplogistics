@@ -2,7 +2,7 @@ import Link from "next/link";
 import {
   Route,
   Users,
-  Truck,
+  Building2,
   Package,
   FileText,
   ListTodo,
@@ -162,7 +162,7 @@ export default async function DashboardPage() {
           label="Transportistas"
           value={fmtInt(carriers)}
           hint="con acceso al sistema"
-          icon={<Truck className="size-5" />}
+          icon={<Building2 className="size-5" />}
           href="/admin/dashboard/users"
         />
         <StatCard

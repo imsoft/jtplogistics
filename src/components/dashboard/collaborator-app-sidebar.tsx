@@ -29,7 +29,7 @@ import {
   MailCheck,
   ClipboardList,
   Network,
-  Ship,
+  Building2,
   DollarSign,
   Anchor,
   LayoutPanelTop,
@@ -98,7 +98,7 @@ const allNavGroups: PermNavGroup[] = [
   {
     label: "Finanzas",
     items: [
-      { title: "Embarques", href: `${BASE}/shipments`, icon: Ship, permission: "canViewShipments" },
+      { title: "Embarques", href: `${BASE}/shipments`, icon: Truck, permission: "canViewShipments" },
       { title: "Finanzas", href: `${BASE}/finances`, icon: DollarSign, permission: "canViewFinances" },
       { title: "Cuentas por cobrar", href: `${BASE}/billing/receivables`, icon: HandCoins, permission: "canViewBilling" },
       { title: "Cuentas por pagar", href: `${BASE}/billing/payables`, icon: ReceiptText, permission: "canViewBilling" },
@@ -112,7 +112,7 @@ const allNavGroups: PermNavGroup[] = [
     items: [
       { title: "Clientes", href: `${BASE}/clients`, icon: Users, permission: "canViewClients" },
       { title: "CRM de clientes", href: `${BASE}/client-leads`, icon: Handshake, permission: "canViewClientLeads" },
-      { title: "Proveedores", href: `${BASE}/providers`, icon: Truck, permission: "canViewProviders" },
+      { title: "Proveedores", href: `${BASE}/providers`, icon: Building2, permission: "canViewProviders" },
       { title: "Prospección de proveedores", href: `${BASE}/prospects`, icon: Search, permission: "canViewProviderProspects" },
       { title: "Alta de proveedores", href: `${BASE}/provider-onboardings`, icon: ClipboardCheck, permission: "canViewProviderOnboardings" },
     ],
