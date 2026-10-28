@@ -267,7 +267,7 @@ export function DataTable<TData, TValue>({
         </div>
       )}
       {exportRows && (
-        <div ref={exportRef} aria-hidden className="pointer-events-none fixed top-0 -left-[99999px] w-[1800px]">
+        <div ref={exportRef} aria-hidden className="pointer-events-none fixed top-0 left-[-99999px] w-[1800px]">
           <table>
             <thead>
               {exportTable.getHeaderGroups().map((hg) => (
