@@ -70,9 +70,9 @@ export function useServerTable<T>({
 
   const [data, setData] = useState<T[]>([]);
   const [total, setTotal] = useState(0);
-  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isFetching, setIsFetching] = useState(false);
+  // Petición que ya terminó (y su error): si no es la actual, hay una en curso.
+  const [settled, setSettled] = useState<{ key: string; error: string | null } | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
 
   // Los filtros cuentan por su contenido, no por su identidad.
@@ -85,9 +85,15 @@ export function useServerTable<T>({
   }, [search, searchDebounceMs]);
 
   // Al cambiar búsqueda, orden o filtros, volver a la primera página.
-  useEffect(() => {
+  const [pageResetDeps, setPageResetDeps] = useState({ debouncedSearch, filtersKey, sorting });
+  if (
+    pageResetDeps.debouncedSearch !== debouncedSearch ||
+    pageResetDeps.filtersKey !== filtersKey ||
+    pageResetDeps.sorting !== sorting
+  ) {
+    setPageResetDeps({ debouncedSearch, filtersKey, sorting });
     setPageIndex(0);
-  }, [debouncedSearch, filtersKey, sorting]);
+  }
 
   const buildQuery = useCallback(
     (extra?: Record<string, string>) => {
@@ -110,15 +116,16 @@ export function useServerTable<T>({
     [debouncedSearch, sorting, filtersKey]
   );
 
+  const qs = buildQuery({
+    page: String(pageIndex + 1),
+    pageSize: String(pageSize),
+  });
+  const requestKey = `${endpoint}?${qs}#${reloadToken}#${errorMessage}`;
+  const isFetching = settled?.key !== requestKey;
+  const error = settled?.key === requestKey ? settled.error : null;
+
   useEffect(() => {
     let cancelled = false;
-    setIsFetching(true);
-    setError(null);
-
-    const qs = buildQuery({
-      page: String(pageIndex + 1),
-      pageSize: String(pageSize),
-    });
 
     fetch(`${endpoint}?${qs}`)
       .then(async (res) => {
@@ -129,21 +136,20 @@ export function useServerTable<T>({
         if (cancelled) return;
         setData(json.data);
         setTotal(json.total);
+        setSettled({ key: requestKey, error: null });
       })
       .catch((e) => {
-        if (!cancelled) setError(e instanceof Error ? e.message : errorMessage);
+        if (!cancelled) setSettled({ key: requestKey, error: e instanceof Error ? e.message : errorMessage });
       })
       .finally(() => {
-        if (!cancelled) {
-          setIsFetching(false);
-          setIsLoading(false);
-        }
+        if (!cancelled) setIsLoading(false);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [endpoint, pageIndex, pageSize, buildQuery, reloadToken, errorMessage]);
+    // buildQuery sigue en las dependencias para volver a pedir igual que antes.
+  }, [endpoint, qs, requestKey, buildQuery, errorMessage]);
 
   const setSorting = useCallback<OnChangeFn<SortingState>>((updater) => {
     setSortingState((prev) =>

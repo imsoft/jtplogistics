@@ -38,15 +38,26 @@ export function HolidaysCard() {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState<"add" | "preload" | string | null>(null);
 
-  const load = useCallback(() => {
-    setHolidays(null);
+  const fetchHolidays = useCallback(() => {
     fetch(`/api/time-clock/holidays?year=${year}`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d: { holidays: Holiday[] }) => setHolidays(d.holidays))
       .catch(() => setHolidays([]));
   }, [year]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { fetchHolidays(); }, [fetchHolidays]);
+
+  // Recarga tras una acción: vuelve el esqueleto mientras llega la lista.
+  function load() {
+    setHolidays(null);
+    fetchHolidays();
+  }
+
+  // Cambiar de año también vuelve al esqueleto; la carga la hace el efecto.
+  function changeYear(delta: number) {
+    setHolidays(null);
+    setYear((y) => y + delta);
+  }
 
   async function add() {
     setBusy("add");
@@ -118,11 +129,11 @@ export function HolidaysCard() {
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setYear((y) => y - 1)} aria-label="Año anterior">
+          <Button variant="outline" size="sm" onClick={() => changeYear(-1)} aria-label="Año anterior">
             ‹
           </Button>
           <span className="w-14 text-center font-semibold tabular-nums">{year}</span>
-          <Button variant="outline" size="sm" onClick={() => setYear((y) => y + 1)} aria-label="Año siguiente">
+          <Button variant="outline" size="sm" onClick={() => changeYear(1)} aria-label="Año siguiente">
             ›
           </Button>
           <Button variant="outline" size="sm" onClick={preload} disabled={busy !== null} className="ml-auto">

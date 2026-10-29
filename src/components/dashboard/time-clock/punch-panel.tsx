@@ -93,10 +93,15 @@ export function PunchPanel({ variant = "full" }: { variant?: "full" | "compact" 
   // El reloj de pantalla es solo para el colaborador: late cada segundo para
   // que se vea vivo. La hora que cuenta la pone el servidor al registrar la
   // marca, así que este puede ir unos segundos corrido sin consecuencia.
+  // El primer latido va en un timeout inmediato para no fijar estado en el efecto.
   useEffect(() => {
-    setNow(new Date());
-    const t = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(t);
+    const tick = () => setNow(new Date());
+    const first = setTimeout(tick, 0);
+    const t = setInterval(tick, 1000);
+    return () => {
+      clearTimeout(first);
+      clearInterval(t);
+    };
   }, []);
 
   const load = useCallback(() => {

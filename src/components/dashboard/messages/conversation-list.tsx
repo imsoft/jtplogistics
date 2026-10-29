@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { MessageSquare } from "lucide-react";
 import { CardListSkeleton } from "@/components/ui/skeletons";
 
@@ -43,26 +43,27 @@ function initials(name: string) {
 export function ConversationList({ selectedCarrierId, onSelect, initialCarrierId }: ConversationListProps) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [autoSelected, setAutoSelected] = useState(false);
+  // La autoselección ocurre una sola vez; no se pinta, así que basta un ref.
+  const autoSelectedRef = useRef(false);
 
-  const fetchConversations = useCallback(async () => {
-    const res = await fetch("/api/messages/conversations");
-    if (res.ok) {
-      const data: Conversation[] = await res.json();
-      setConversations(data);
-      setIsLoaded(true);
-    }
-  }, []);
+  const fetchConversations = useCallback(() =>
+    fetch("/api/messages/conversations").then(async (res) => {
+      if (res.ok) {
+        const data: Conversation[] = await res.json();
+        setConversations(data);
+        setIsLoaded(true);
+      }
+    }), []);
 
   // Auto-seleccionar cuando carga si viene de notificación
   useEffect(() => {
-    if (!isLoaded || autoSelected || !initialCarrierId || selectedCarrierId) return;
+    if (!isLoaded || autoSelectedRef.current || !initialCarrierId || selectedCarrierId) return;
     const conv = conversations.find((c) => c.carrierId === initialCarrierId);
     if (conv) {
       onSelect(conv.carrierId, conv.carrierName);
-      setAutoSelected(true);
+      autoSelectedRef.current = true;
     }
-  }, [isLoaded, autoSelected, initialCarrierId, selectedCarrierId, conversations, onSelect]);
+  }, [isLoaded, initialCarrierId, selectedCarrierId, conversations, onSelect]);
 
   useEffect(() => {
     fetchConversations();

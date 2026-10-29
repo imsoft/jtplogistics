@@ -42,15 +42,15 @@ export function VendorQuotesTable() {
   const [selectedOrigin, setSelectedOrigin] = useState<string | null>(null);
   const [selectedDestination, setSelectedDestination] = useState<string | null>(null);
 
-  const loadRoutes = useCallback(async () => {
-    const [data, utRes] = await Promise.all([
+  const loadRoutes = useCallback(() =>
+    Promise.all([
       fetchRoutes(),
       fetch("/api/unit-types").then((r) => (r.ok ? r.json() : [])),
-    ]);
-    setRoutes(data.routes);
-    setUnitTypes(utRes);
-    setIsLoaded(true);
-  }, []);
+    ]).then(([data, utRes]) => {
+      setRoutes(data.routes);
+      setUnitTypes(utRes);
+      setIsLoaded(true);
+    }), []);
 
   useEffect(() => {
     loadRoutes();
@@ -103,12 +103,16 @@ export function VendorQuotesTable() {
     );
   }, [selectedRoute, unitTypes]);
 
+  // Al cambiar de ruta se ajusta el resumen durante el render, no en el efecto.
+  const [prevRouteId, setPrevRouteId] = useState(selectedRouteId);
+  if (prevRouteId !== selectedRouteId) {
+    setPrevRouteId(selectedRouteId);
+    if (!selectedRouteId) setStats(null);
+    else setIsLoadingSummary(true);
+  }
+
   useEffect(() => {
-    if (!selectedRouteId) {
-      setStats(null);
-      return;
-    }
-    setIsLoadingSummary(true);
+    if (!selectedRouteId) return;
     fetchSummary(selectedRouteId).then((summary) => {
       setStats(summary);
       setIsLoadingSummary(false);

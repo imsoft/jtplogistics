@@ -33,15 +33,18 @@ export default function QuoteTermsPage() {
   const [error, setError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    const res = await fetch("/api/admin/quote-config");
-    if (!res.ok) {
-      setLoadError("No se pudieron cargar los textos. Recarga la página.");
-      return;
-    }
-    const data: QuoteConfig = await res.json();
-    setConfig(data);
-  }, []);
+  const load = useCallback(
+    () =>
+      fetch("/api/admin/quote-config").then(async (res) => {
+        if (!res.ok) {
+          setLoadError("No se pudieron cargar los textos. Recarga la página.");
+          return;
+        }
+        const data: QuoteConfig = await res.json();
+        setConfig(data);
+      }),
+    []
+  );
 
   useEffect(() => { load(); }, [load]);
 

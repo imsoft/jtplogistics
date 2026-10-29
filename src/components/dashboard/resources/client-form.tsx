@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormActions } from "@/components/ui/form-actions";
@@ -44,9 +44,12 @@ export function ClientForm({
     (initialValues.productTypes ?? []).join(", ")
   );
 
-  useEffect(() => {
+  // Si cambian los tipos de producto iniciales, se reinicia el campo.
+  const [prevProductTypes, setPrevProductTypes] = useState(initialValues.productTypes);
+  if (initialValues.productTypes !== prevProductTypes) {
+    setPrevProductTypes(initialValues.productTypes);
     setProductTypesInput((initialValues.productTypes ?? []).join(", "));
-  }, [initialValues.productTypes]);
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

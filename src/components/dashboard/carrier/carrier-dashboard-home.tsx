@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useEffect, useState, useCallback } from "react";
+import { useMemo, useEffect, useState } from "react";
 import Link from "next/link";
 import { Truck, Route } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,25 +40,22 @@ export function CarrierDashboardHome() {
   // Un usuario de la empresa sin permiso de tarifas no tiene rutas que ver.
   const [noRates, setNoRates] = useState(false);
 
-  const load = useCallback(async () => {
-    setError(null);
-    try {
-      const res = await fetch("/api/carrier/routes");
-      if (res.status === 403) {
-        setNoRates(true);
-        return;
-      }
-      if (!res.ok) throw new Error("No se pudieron cargar tus rutas.");
-      const json = (await res.json()) as CarrierRoutesResponse;
-      setData(json);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Error al cargar las rutas.");
-    }
-  }, []);
-
+  // Solo se carga al montar: el error ya arranca en null.
   useEffect(() => {
-    void load();
-  }, [load]);
+    fetch("/api/carrier/routes")
+      .then(async (res) => {
+        if (res.status === 403) {
+          setNoRates(true);
+          return;
+        }
+        if (!res.ok) throw new Error("No se pudieron cargar tus rutas.");
+        const json = (await res.json()) as CarrierRoutesResponse;
+        setData(json);
+      })
+      .catch((e) => {
+        setError(e instanceof Error ? e.message : "Error al cargar las rutas.");
+      });
+  }, []);
 
   const unitLabelMap = useMemo(() => {
     const m: Record<string, string> = {};

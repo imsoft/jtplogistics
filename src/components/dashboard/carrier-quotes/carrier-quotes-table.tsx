@@ -172,27 +172,27 @@ export function CarrierQuotesTable({
   const builderRef = useRef<HTMLDivElement>(null);
 
   // ── Load data ──
-  const loadRoutes = useCallback(async () => {
-    const [data, utRes, numRes, profileRes] = await Promise.all([
+  const loadRoutes = useCallback(() =>
+    Promise.all([
       fetchQuotes(apiEndpoint),
       fetch("/api/unit-types").then((r) => r.ok ? r.json() : []),
       // En modo edición se conserva el número existente.
       isEditing ? Promise.resolve(null) : fetch("/api/generated-quotes/next-number").then((r) => r.ok ? r.json() : null),
       // Datos del usuario actual: al crear una cotización, él es quien firma.
       fetch("/api/profile").then((r) => (r.ok ? r.json() : null)),
-    ]);
-    setRoutes(data.routes);
-    setRestricted(data.restricted === true);
-    setUnitTypes(utRes);
-    if (profileRes) {
-      setCurrentUser({
-        name: profileRes.name ?? "",
-        position: profileRes.position ?? null,
-      });
-    }
-    if (!isEditing && numRes?.quoteNumber) setQuoteNumber(numRes.quoteNumber);
-    setIsLoaded(true);
-  }, [apiEndpoint, isEditing]);
+    ]).then(([data, utRes, numRes, profileRes]) => {
+      setRoutes(data.routes);
+      setRestricted(data.restricted === true);
+      setUnitTypes(utRes);
+      if (profileRes) {
+        setCurrentUser({
+          name: profileRes.name ?? "",
+          position: profileRes.position ?? null,
+        });
+      }
+      if (!isEditing && numRes?.quoteNumber) setQuoteNumber(numRes.quoteNumber);
+      setIsLoaded(true);
+    }), [apiEndpoint, isEditing]);
 
   useEffect(() => { loadRoutes(); }, [loadRoutes]);
 
@@ -237,12 +237,20 @@ export function CarrierQuotesTable({
   const routeTarget = selectedRoute?.target ?? null;
 
   // ── Load carriers when route changes ──
-  useEffect(() => {
+  // Al cambiar de ruta se limpia lo capturado durante el render, no en el efecto.
+  const carriersKey = `${apiEndpoint}|${selectedRouteId ?? ""}`;
+  const [prevCarriersKey, setPrevCarriersKey] = useState(carriersKey);
+  if (prevCarriersKey !== carriersKey) {
+    setPrevCarriersKey(carriersKey);
     setFinalPrice(null);
     setManualCost(null);
     setServerSuggested(null);
-    if (!selectedRouteId) { setCarriers([]); return; }
-    setIsLoadingCarriers(true);
+    if (!selectedRouteId) setCarriers([]);
+    else setIsLoadingCarriers(true);
+  }
+
+  useEffect(() => {
+    if (!selectedRouteId) return;
     fetchQuotes(apiEndpoint, selectedRouteId).then((data) => {
       setCarriers(data.carriers);
       setServerSuggested(data.suggestedPrice ?? null);

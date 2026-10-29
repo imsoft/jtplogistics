@@ -158,6 +158,7 @@ export function DataTable<TData, TValue>({
     []
   );
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Table no es memoizable; el compilador se salta este componente a propósito
   const table = useReactTable({
     data,
     columns,

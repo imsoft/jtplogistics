@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -20,12 +20,15 @@ export default function AdminProfilePage() {
   const [name, setName] = useState("");
   const [birthDate, setBirthDate] = useState("");
 
-  useEffect(() => {
+  // Inicializa el formulario cuando llegan los datos del perfil.
+  const [loadedData, setLoadedData] = useState(data);
+  if (data !== loadedData) {
+    setLoadedData(data);
     if (data) {
       setName(data.name);
       setBirthDate(data.birthDate ?? "");
     }
-  }, [data]);
+  }
 
   async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault();

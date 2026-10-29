@@ -44,18 +44,24 @@ export function UsersTable({
   const [error, setError] = useState<string | null>(null);
   const [roleFilter, setRoleFilter] = useState<RoleFilter>(defaultRole ?? "all");
 
-  const loadUsers = useCallback(async () => {
+  // Al cambiar de endpoint se limpia el error anterior antes de volver a cargar.
+  const [errorEndpoint, setErrorEndpoint] = useState(apiEndpoint);
+  if (errorEndpoint !== apiEndpoint) {
+    setErrorEndpoint(apiEndpoint);
     setError(null);
-    try {
-      const data = await fetchUsers(apiEndpoint);
-      setUsers(data);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Error al cargar usuarios");
-      setUsers([]);
-    } finally {
-      setIsLoaded(true);
-    }
-  }, [apiEndpoint]);
+  }
+
+  const loadUsers = useCallback(
+    () =>
+      fetchUsers(apiEndpoint)
+        .then((data) => setUsers(data))
+        .catch((e) => {
+          setError(e instanceof Error ? e.message : "Error al cargar usuarios");
+          setUsers([]);
+        })
+        .finally(() => setIsLoaded(true)),
+    [apiEndpoint]
+  );
 
   useEffect(() => {
     loadUsers();

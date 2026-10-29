@@ -47,13 +47,13 @@ export function ChatWindow({ carrierId, currentUserId, title, initialText }: Cha
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const fetchMessages = useCallback(async () => {
-    const res = await fetch(`/api/messages?carrierId=${carrierId}`);
-    if (res.ok) {
-      const data: ChatMessage[] = await res.json();
-      setMessages(data);
-    }
-  }, [carrierId]);
+  const fetchMessages = useCallback(() =>
+    fetch(`/api/messages?carrierId=${carrierId}`).then(async (res) => {
+      if (res.ok) {
+        const data: ChatMessage[] = await res.json();
+        setMessages(data);
+      }
+    }), [carrierId]);
 
   // Carga inicial + polling cada 4 s
   useEffect(() => {

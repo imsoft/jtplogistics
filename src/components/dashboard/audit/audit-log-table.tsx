@@ -145,28 +145,35 @@ export function AuditLogTable() {
   const [resourceFilter, setResourceFilter] = useState<string>("__all__");
   const take = 25;
 
-  const fetchLogs = useCallback(async (s: number, resource: string) => {
+  const fetchLogs = useCallback((s: number, resource: string) => {
     const params = new URLSearchParams({ skip: String(s), take: String(take) });
     if (resource !== "__all__") params.set("resource", resource);
-    const res = await fetch(`/api/admin/audit-logs?${params}`);
-    if (!res.ok) {
-      setLoadError("No se pudo cargar la bitácora. Recarga la página.");
+    return fetch(`/api/admin/audit-logs?${params}`).then(async (res) => {
+      if (!res.ok) {
+        setLoadError("No se pudo cargar la bitácora. Recarga la página.");
+        setIsLoaded(true);
+        return;
+      }
+      setLoadError(null);
+      const data = await res.json();
+      setLogs((prev) => s === 0 ? data.logs : [...prev, ...data.logs]);
+      setTotal(data.total);
       setIsLoaded(true);
-      return;
-    }
-    setLoadError(null);
-    const data = await res.json();
-    setLogs((prev) => s === 0 ? data.logs : [...prev, ...data.logs]);
-    setTotal(data.total);
-    setIsLoaded(true);
+    });
   }, []);
 
   useEffect(() => {
+    fetchLogs(0, resourceFilter);
+  }, [fetchLogs, resourceFilter]);
+
+  // Cambiar el filtro reinicia la paginación y vuelve al esqueleto.
+  function handleResourceFilterChange(value: string) {
+    if (value === resourceFilter) return;
+    setResourceFilter(value);
     setSkip(0);
     setLogs([]);
     setIsLoaded(false);
-    fetchLogs(0, resourceFilter);
-  }, [fetchLogs, resourceFilter]);
+  }
 
   function loadMore() {
     const next = skip + take;
@@ -184,7 +191,7 @@ export function AuditLogTable() {
       <div className="flex items-center gap-3">
         <AppSelect
           value={resourceFilter}
-          onValueChange={setResourceFilter}
+          onValueChange={handleResourceFilterChange}
           options={[{value: "__all__", label: "Todos"}, ...Object.entries(RESOURCE_LABELS).map(([value, label]) => ({value, label}))]}
           className="w-50"
         />

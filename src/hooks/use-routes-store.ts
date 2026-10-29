@@ -17,22 +17,27 @@ export function useRoutesStore() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadRoutes = useCallback(async () => {
-    setError(null);
-    try {
-      const data = await fetchRoutes();
-      setRoutes(data);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Error al cargar las rutas");
-      setRoutes([]);
-    } finally {
-      setIsLoaded(true);
-    }
-  }, []);
+  // Los setState van en los callbacks de la promesa, no en el cuerpo del efecto.
+  const fetchAll = useCallback(
+    () =>
+      fetchRoutes()
+        .then((data) => setRoutes(data))
+        .catch((e) => {
+          setError(e instanceof Error ? e.message : "Error al cargar las rutas");
+          setRoutes([]);
+        })
+        .finally(() => setIsLoaded(true)),
+    []
+  );
 
   useEffect(() => {
-    loadRoutes();
-  }, [loadRoutes]);
+    fetchAll();
+  }, [fetchAll]);
+
+  const loadRoutes = useCallback(() => {
+    setError(null);
+    return fetchAll();
+  }, [fetchAll]);
 
   const addRoute = useCallback(
     async (data: RouteFormData): Promise<Route | null> => {

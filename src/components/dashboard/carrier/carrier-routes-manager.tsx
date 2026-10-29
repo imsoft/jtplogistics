@@ -158,51 +158,58 @@ export function CarrierRoutesManager({
     [allRoutes]
   );
 
-  const loadRoutes = useCallback(async () => {
-    const data = await fetchCarrierRoutes();
-    setCanEditRoutes(data.canEditRoutes);
-    setCanAddRoutes(data.canAddRoutes);
-    setCanCapture(data.canCapture !== false);
-    setAllRoutes(data.routes);
+  const loadRoutes = useCallback(() =>
+    fetchCarrierRoutes().then((data) => {
+      setCanEditRoutes(data.canEditRoutes);
+      setCanAddRoutes(data.canAddRoutes);
+      setCanCapture(data.canCapture !== false);
+      setAllRoutes(data.routes);
 
-    // Load selections for the current unitType page
-    const savedSelected = new Set<string>();
-    const savedTargets: Record<string, string> = {};
-    const savedVolumes: Record<string, string> = {};
-    const savedStatuses: Record<string, TargetStatus | null> = {};
-    const savedApproved: Record<string, boolean> = {};
-    const savedRequested: Record<string, boolean> = {};
-    for (const r of data.routes) {
-      const sel = r.selections?.find((s) => s.unitType === unitType);
-      if (sel) {
-        savedSelected.add(r.id);
-        if (sel.carrierTarget != null) savedTargets[r.id] = formatMxn(sel.carrierTarget);
-        if (sel.carrierWeeklyVolume != null) savedVolumes[r.id] = String(sel.carrierWeeklyVolume);
-        savedStatuses[r.id] = sel.targetStatus ?? null;
-        savedApproved[r.id] = sel.editUnlockApproved;
-        savedRequested[r.id] = sel.editUnlockRequested;
+      // Load selections for the current unitType page
+      const savedSelected = new Set<string>();
+      const savedTargets: Record<string, string> = {};
+      const savedVolumes: Record<string, string> = {};
+      const savedStatuses: Record<string, TargetStatus | null> = {};
+      const savedApproved: Record<string, boolean> = {};
+      const savedRequested: Record<string, boolean> = {};
+      for (const r of data.routes) {
+        const sel = r.selections?.find((s) => s.unitType === unitType);
+        if (sel) {
+          savedSelected.add(r.id);
+          if (sel.carrierTarget != null) savedTargets[r.id] = formatMxn(sel.carrierTarget);
+          if (sel.carrierWeeklyVolume != null) savedVolumes[r.id] = String(sel.carrierWeeklyVolume);
+          savedStatuses[r.id] = sel.targetStatus ?? null;
+          savedApproved[r.id] = sel.editUnlockApproved;
+          savedRequested[r.id] = sel.editUnlockRequested;
+        }
       }
-    }
-    setSelected(savedSelected);
-    setOriginalSelected(savedSelected);
-    setTargetByRouteId(savedTargets);
-    setOriginalTargetByRouteId(savedTargets);
-    setWeeklyVolumeByRouteId(savedVolumes);
-    setOriginalVolumeByRouteId(savedVolumes);
-    setStatusByRouteId(savedStatuses);
-    setUnlockApprovedByRouteId(savedApproved);
-    setUnlockRequestedByRouteId(savedRequested);
+      setSelected(savedSelected);
+      setOriginalSelected(savedSelected);
+      setTargetByRouteId(savedTargets);
+      setOriginalTargetByRouteId(savedTargets);
+      setWeeklyVolumeByRouteId(savedVolumes);
+      setOriginalVolumeByRouteId(savedVolumes);
+      setStatusByRouteId(savedStatuses);
+      setUnlockApprovedByRouteId(savedApproved);
+      setUnlockRequestedByRouteId(savedRequested);
 
-    // Abrir en "Pactadas" sin tener ninguna dejaría la pantalla vacía y sin
-    // pistas: en ese caso se muestra el catálogo completo.
-    if (defaultAgreement === "agreed" && savedSelected.size === 0) {
-      setFilterAgreement("all");
-    }
-    setIsLoaded(true);
-  }, [unitType, defaultAgreement]);
+      // Abrir en "Pactadas" sin tener ninguna dejaría la pantalla vacía y sin
+      // pistas: en ese caso se muestra el catálogo completo.
+      if (defaultAgreement === "agreed" && savedSelected.size === 0) {
+        setFilterAgreement("all");
+      }
+      setIsLoaded(true);
+    }), [unitType, defaultAgreement]);
+
+  // Al cambiar de tipo de unidad vuelve el esqueleto mientras llegan sus rutas.
+  const loadKey = `${unitType}|${defaultAgreement}`;
+  const [prevLoadKey, setPrevLoadKey] = useState(loadKey);
+  if (prevLoadKey !== loadKey) {
+    setPrevLoadKey(loadKey);
+    setIsLoaded(false);
+  }
 
   useEffect(() => {
-    setIsLoaded(false);
     loadRoutes();
   }, [loadRoutes]);
 

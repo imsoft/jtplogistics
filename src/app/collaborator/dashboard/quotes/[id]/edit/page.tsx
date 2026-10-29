@@ -23,29 +23,32 @@ export default function EditQuotePage() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    const res = await fetch(`/api/collaborator/generated-quotes/${id}`);
-    if (!res.ok) {
-      setError("No se pudo cargar la cotización.");
-      setIsLoaded(true);
-      return;
-    }
-    const data = await res.json();
-    setQuote({
-      id: data.id,
-      quoteNumber: data.quoteNumber,
-      company: data.company,
-      contact: data.contact,
-      phone: data.phone ?? "",
-      email: data.email ?? null,
-      validUntil: data.validUntil,
-      rows: data.rows ?? [],
-      creatorName: data.creatorName,
-      creatorPosition: data.creatorPosition ?? undefined,
-      status: data.status,
-    });
-    setIsLoaded(true);
-  }, [id]);
+  const load = useCallback(
+    () =>
+      fetch(`/api/collaborator/generated-quotes/${id}`).then(async (res) => {
+        if (!res.ok) {
+          setError("No se pudo cargar la cotización.");
+          setIsLoaded(true);
+          return;
+        }
+        const data = await res.json();
+        setQuote({
+          id: data.id,
+          quoteNumber: data.quoteNumber,
+          company: data.company,
+          contact: data.contact,
+          phone: data.phone ?? "",
+          email: data.email ?? null,
+          validUntil: data.validUntil,
+          rows: data.rows ?? [],
+          creatorName: data.creatorName,
+          creatorPosition: data.creatorPosition ?? undefined,
+          status: data.status,
+        });
+        setIsLoaded(true);
+      }),
+    [id]
+  );
 
   useEffect(() => {
     load();

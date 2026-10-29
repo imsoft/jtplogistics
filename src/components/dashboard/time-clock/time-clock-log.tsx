@@ -118,9 +118,7 @@ export function TimeClockLog({ canCorrect = false }: { canCorrect?: boolean }) {
   const [holidays, setHolidays] = useState<Map<string, string>>(new Map());
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(() => {
-    setRows(null);
-    setError(null);
+  const fetchLog = useCallback(() => {
     fetch(`/api/time-clock/log?from=${from}&to=${to}`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d: { rows: Row[]; holidays?: { date: string; name: string }[] }) => {
@@ -130,7 +128,23 @@ export function TimeClockLog({ canCorrect = false }: { canCorrect?: boolean }) {
       .catch(() => { setRows([]); setError("No se pudo cargar el registro."); });
   }, [from, to]);
 
-  useEffect(() => { load(); }, [load]);
+  // Al cambiar el rango se limpia durante el render; la carga la hace el efecto.
+  const rangeKey = `${from}|${to}`;
+  const [prevRangeKey, setPrevRangeKey] = useState(rangeKey);
+  if (prevRangeKey !== rangeKey) {
+    setPrevRangeKey(rangeKey);
+    setRows(null);
+    setError(null);
+  }
+
+  useEffect(() => { fetchLog(); }, [fetchLog]);
+
+  // Recarga tras una corrección: vuelve el esqueleto mientras llega el registro.
+  function load() {
+    setRows(null);
+    setError(null);
+    fetchLog();
+  }
 
   const [exporting, setExporting] = useState(false);
 

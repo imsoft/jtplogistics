@@ -35,15 +35,6 @@ const TYPE_CONFIG: Record<ResultType, { label: string; icon: React.ElementType }
 
 const GROUP_ORDER: ResultType[] = ["route", "carrier", "employee", "client", "vendor"];
 
-function useDebounce<T>(value: T, delay: number): T {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(t);
-  }, [value, delay]);
-  return debounced;
-}
-
 export function GlobalSearch() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -52,7 +43,9 @@ export function GlobalSearch() {
   const router = useRouter();
   const abortRef = useRef<AbortController | null>(null);
 
-  const debouncedQuery = useDebounce(query, 250);
+  const [debouncedQuery, setDebouncedQuery] = useState(query);
+  // Última consulta buscada: solo se vuelve a buscar si el texto cambió.
+  const searchedRef = useRef(query);
 
   // Atajo de teclado Cmd+K / Ctrl+K
   useEffect(() => {
@@ -67,12 +60,14 @@ export function GlobalSearch() {
   }, []);
 
   // Limpiar al cerrar
-  useEffect(() => {
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
     if (!open) {
       setQuery("");
       setResults([]);
     }
-  }, [open]);
+  }
 
   const search = useCallback(async (q: string) => {
     if (q.length < 2) {
@@ -94,9 +89,16 @@ export function GlobalSearch() {
     }
   }, []);
 
+  // Debounce: la búsqueda se lanza desde el timer, no en el cuerpo del efecto.
   useEffect(() => {
-    search(debouncedQuery);
-  }, [debouncedQuery, search]);
+    const t = setTimeout(() => {
+      setDebouncedQuery(query);
+      if (searchedRef.current === query) return;
+      searchedRef.current = query;
+      search(query);
+    }, 250);
+    return () => clearTimeout(t);
+  }, [query, search]);
 
   function handleSelect(href: string) {
     setOpen(false);

@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import Link from "next/link";
 import { ChevronLeft, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -41,10 +40,9 @@ export default function CollaboratorShipmentProfilePage() {
   const unitTypes = useUnitTypes();
   const incidentTypes = useIncidentTypes();
 
-  const unitLabel = useMemo(() => {
-    if (!shipment?.unit?.trim()) return null;
-    return unitTypes.find((t) => t.value === shipment.unit)?.label ?? shipment.unit;
-  }, [shipment?.unit, unitTypes]);
+  const unitLabel = shipment?.unit?.trim()
+    ? unitTypes.find((t) => t.value === shipment.unit)?.label ?? shipment.unit
+    : null;
 
   if (!isLoaded) return <ResourceDetailSkeleton />;
   if (error || !shipment) return <p className="text-destructive py-6 text-sm">{error ?? "No encontrado"}</p>;

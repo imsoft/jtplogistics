@@ -65,11 +65,14 @@ export function UnitTypesManager({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  const load = useCallback(async () => {
-    const res = await fetch(apiBase);
-    if (res.ok) setUnitTypes(await res.json());
-    setIsLoaded(true);
-  }, [apiBase]);
+  const load = useCallback(
+    () =>
+      fetch(apiBase).then(async (res) => {
+        if (res.ok) setUnitTypes(await res.json());
+        setIsLoaded(true);
+      }),
+    [apiBase]
+  );
 
   useEffect(() => { load(); }, [load]);
 

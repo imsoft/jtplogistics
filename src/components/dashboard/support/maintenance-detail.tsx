@@ -38,16 +38,16 @@ export function MaintenanceDetail({ id }: { id: string }) {
   const [saved, setSaved] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const load = useCallback(async () => {
-    const res = await fetch(`/api/developer/maintenance/${id}`);
-    if (!res.ok) { setIsLoaded(true); return; }
-    const data = (await res.json()) as Detail;
-    setItem(data);
-    setFindings(data.findings ?? "");
-    setPerformedAt(isoDay(data.performedAt ?? new Date().toISOString()));
-    setPhotos(data.photos ?? []);
-    setIsLoaded(true);
-  }, [id]);
+  const load = useCallback(() =>
+    fetch(`/api/developer/maintenance/${id}`).then(async (res) => {
+      if (!res.ok) { setIsLoaded(true); return; }
+      const data = (await res.json()) as Detail;
+      setItem(data);
+      setFindings(data.findings ?? "");
+      setPerformedAt(isoDay(data.performedAt ?? new Date().toISOString()));
+      setPhotos(data.photos ?? []);
+      setIsLoaded(true);
+    }), [id]);
 
   useEffect(() => { load(); }, [load]);
 

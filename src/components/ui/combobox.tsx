@@ -278,11 +278,11 @@ function ComboboxChip({
   )
 }
 
+// El input no admite hijos: se quitan del tipo en lugar de descartarlos.
 function ComboboxChipsInput({
   className,
-  children,
   ...props
-}: ComboboxPrimitive.Input.Props) {
+}: Omit<ComboboxPrimitive.Input.Props, "children">) {
   return (
     <ComboboxPrimitive.Input
       data-slot="combobox-chip-input"

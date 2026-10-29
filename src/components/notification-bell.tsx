@@ -45,10 +45,14 @@ export function NotificationBell() {
   const router = useRouter();
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const fetchNotifications = useCallback(async () => {
-    const res = await fetch("/api/notifications");
-    if (res.ok) setNotifications(await res.json());
-  }, []);
+  // El setState va en el callback de la promesa, no en el cuerpo del efecto.
+  const fetchNotifications = useCallback(
+    () =>
+      fetch("/api/notifications").then(async (res) => {
+        if (res.ok) setNotifications(await res.json());
+      }),
+    []
+  );
 
   // Polling cada 15 s
   useEffect(() => {

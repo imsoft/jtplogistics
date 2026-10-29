@@ -124,14 +124,10 @@ export default function CarrierProfilePage() {
     persons: [],
   });
 
-  useEffect(() => {
-    async function loadNotes() {
-      const res = await fetch("/api/carrier/notes");
-      if (res.ok) {
-        const { notes } = await res.json() as { notes: string };
-        setForm((prev) => ({ ...prev, notes: notes ?? DEFAULT_NOTES }));
-      }
-    }
+  // Inicializa el formulario cuando llegan los datos del perfil.
+  const [loadedData, setLoadedData] = useState(data);
+  if (data !== loadedData) {
+    setLoadedData(data);
     if (data) {
       setForm((prev) => ({
         ...prev,
@@ -152,8 +148,18 @@ export default function CarrierProfilePage() {
           }))
         ),
       }));
-      void loadNotes();
     }
+  }
+
+  useEffect(() => {
+    async function loadNotes() {
+      const res = await fetch("/api/carrier/notes");
+      if (res.ok) {
+        const { notes } = await res.json() as { notes: string };
+        setForm((prev) => ({ ...prev, notes: notes ?? DEFAULT_NOTES }));
+      }
+    }
+    if (data) void loadNotes();
   }, [data]);
 
   function field<K extends keyof FormState>(key: K) {

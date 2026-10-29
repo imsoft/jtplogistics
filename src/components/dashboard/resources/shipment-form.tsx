@@ -78,8 +78,8 @@ export function ShipmentForm({
   const [phone, setPhone] = useState(initialValues.phone ?? "");
   const [comments, setComments] = useState(initialValues.comments ?? "");
   // Direcciones: se proponen de la ficha del cliente mientras no se escriban a mano.
-  const [originAddress, setOriginAddress] = useState(initialValues.originAddress ?? "");
-  const [destinationAddress, setDestinationAddress] = useState(initialValues.destinationAddress ?? "");
+  const [originAddressInput, setOriginAddress] = useState(initialValues.originAddress ?? "");
+  const [destinationAddressInput, setDestinationAddress] = useState(initialValues.destinationAddress ?? "");
   const [originAddressTouched, setOriginAddressTouched] = useState(Boolean(initialValues.originAddress));
   const [destinationAddressTouched, setDestinationAddressTouched] = useState(Boolean(initialValues.destinationAddress));
   const [locations, setLocations] = useState<{ routeId: string | null; kind: string; city: string; address: string }[]>([]);
@@ -92,7 +92,11 @@ export function ShipmentForm({
     }))
   );
   const [incident, setIncident] = useState(initialValues.incident ?? "");
-  const [incidentType, setIncidentType] = useState(initialValues.incidentType ?? "");
+  // Si la incidencia guardada no admite tipo, se arranca sin él (el onChange
+  // de la incidencia lo limpia en los demás casos).
+  const [incidentType, setIncidentType] = useState(
+    incidentAllowsIncidentType(initialValues.incident ?? "") ? initialValues.incidentType ?? "" : ""
+  );
   const [status, setStatus] = useState<ShipmentStatus>(initialValues.status ?? "pending");
   const [sale, setSale] = useState(initialValues.sale != null ? formatMxn(initialValues.sale) : "");
   const [cost, setCost] = useState(initialValues.cost != null ? formatMxn(initialValues.cost) : "");
@@ -235,10 +239,6 @@ export function ShipmentForm({
 
   const canPickIncidentType = incidentAllowsIncidentType(incident);
 
-  useEffect(() => {
-    if (!incidentAllowsIncidentType(incident)) setIncidentType("");
-  }, [incident]);
-
   const onOriginChange = useCallback(
     (v: string) => {
       setOrigin(v);
@@ -278,11 +278,10 @@ export function ShipmentForm({
   // Direcciones del cliente (ficha del cliente → direcciones de origen y destino).
   const clientRecord = clients.find((x) => x.name.trim().toLowerCase() === client.trim().toLowerCase());
   const clientId = clientRecord?.id;
+  // Sin cliente no hay direcciones.
+  if (!clientId && locations.length > 0) setLocations([]);
   useEffect(() => {
-    if (!clientId) {
-      setLocations([]);
-      return;
-    }
+    if (!clientId) return;
     let cancelled = false;
     fetch(`/api/clients/${clientId}/locations`)
       .then((r) => (r.ok ? r.json() : []))
@@ -303,14 +302,9 @@ export function ShipmentForm({
   );
   const originChoices = addressesFor("origin");
   const destinationChoices = addressesFor("destination");
-  useEffect(() => {
-    if (!originAddressTouched) setOriginAddress(originChoices[0] ?? "");
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- se recalcula cuando cambian las opciones
-  }, [originChoices.join("|"), originAddressTouched]);
-  useEffect(() => {
-    if (!destinationAddressTouched) setDestinationAddress(destinationChoices[0] ?? "");
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- se recalcula cuando cambian las opciones
-  }, [destinationChoices.join("|"), destinationAddressTouched]);
+  // Mientras no se toque el campo, se propone la primera dirección.
+  const originAddress = originAddressTouched ? originAddressInput : originChoices[0] ?? "";
+  const destinationAddress = destinationAddressTouched ? destinationAddressInput : destinationChoices[0] ?? "";
 
   // Propone la tarifa de compra pactada con el transportista para esta ruta.
   const carrierMap = useMemo(() => carrierByOption(carriers), [carriers]);

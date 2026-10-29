@@ -22,23 +22,26 @@ export default function VendorProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const load = useCallback(async () => {
-    const [profileRes, notesRes] = await Promise.all([
-      fetch("/api/profile"),
-      fetch("/api/vendor/notes"),
-    ]);
-    if (!profileRes.ok) return;
-    const data = await profileRes.json();
-    setName(data.name ?? "");
-    setEmail(data.email ?? "");
-    setBirthDate(data.birthDate ?? "");
-    setImage(data.image ?? null);
-    if (notesRes.ok) {
-      const notesData = await notesRes.json();
-      setNotes(notesData.notes ?? DEFAULT_NOTES);
-    }
-    setIsLoaded(true);
-  }, []);
+  const load = useCallback(
+    () =>
+      Promise.all([
+        fetch("/api/profile"),
+        fetch("/api/vendor/notes"),
+      ]).then(async ([profileRes, notesRes]) => {
+        if (!profileRes.ok) return;
+        const data = await profileRes.json();
+        setName(data.name ?? "");
+        setEmail(data.email ?? "");
+        setBirthDate(data.birthDate ?? "");
+        setImage(data.image ?? null);
+        if (notesRes.ok) {
+          const notesData = await notesRes.json();
+          setNotes(notesData.notes ?? DEFAULT_NOTES);
+        }
+        setIsLoaded(true);
+      }),
+    []
+  );
 
   useEffect(() => { load(); }, [load]);
 

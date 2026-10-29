@@ -130,33 +130,41 @@ export function RouteLogTable({
   const [error, setError] = useState<string | null>(null);
   const take = 25;
 
-  const fetchLogs = useCallback(async (s: number) => {
+  const fetchLogs = useCallback((s: number) => {
     const params = new URLSearchParams({ skip: String(s), take: String(take) });
     if (routeId) params.set("routeId", routeId);
-    const res = await fetch(`${apiEndpoint}?${params}`);
-    // Antes solo se regresaba sin avisar: el esqueleto de carga se quedaba
-    // para siempre. Pasa, por ejemplo, con quien puede editar rutas pero no
-    // tiene permiso de ver el historial.
-    if (!res.ok) {
-      setError(
-        res.status === 403
-          ? "No tienes permiso para ver el historial de cambios."
-          : "No se pudo cargar el historial."
-      );
+    return fetch(`${apiEndpoint}?${params}`).then(async (res) => {
+      // Antes solo se regresaba sin avisar: el esqueleto de carga se quedaba
+      // para siempre. Pasa, por ejemplo, con quien puede editar rutas pero no
+      // tiene permiso de ver el historial.
+      if (!res.ok) {
+        setError(
+          res.status === 403
+            ? "No tienes permiso para ver el historial de cambios."
+            : "No se pudo cargar el historial."
+        );
+        setIsLoaded(true);
+        return;
+      }
+      const data = await res.json();
+      setLogs((prev) => s === 0 ? data.logs : [...prev, ...data.logs]);
+      setTotal(data.total);
       setIsLoaded(true);
-      return;
-    }
-    const data = await res.json();
-    setLogs((prev) => s === 0 ? data.logs : [...prev, ...data.logs]);
-    setTotal(data.total);
-    setIsLoaded(true);
+    });
   }, [routeId, apiEndpoint]);
 
-  useEffect(() => {
+  // Si cambia la ruta o el endpoint se reinicia el historial durante el render.
+  const logsKey = `${apiEndpoint}|${routeId ?? ""}`;
+  const [prevLogsKey, setPrevLogsKey] = useState(logsKey);
+  if (prevLogsKey !== logsKey) {
+    setPrevLogsKey(logsKey);
     setSkip(0);
     setLogs([]);
     setError(null);
     setIsLoaded(false);
+  }
+
+  useEffect(() => {
     fetchLogs(0);
   }, [fetchLogs]);
 

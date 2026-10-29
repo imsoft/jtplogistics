@@ -63,11 +63,14 @@ export default function IncidentTypesPage() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  const load = useCallback(async () => {
-    const res = await fetch("/api/admin/incident-types");
-    if (res.ok) setIncidentTypes(await res.json());
-    setIsLoaded(true);
-  }, []);
+  const load = useCallback(
+    () =>
+      fetch("/api/admin/incident-types").then(async (res) => {
+        if (res.ok) setIncidentTypes(await res.json());
+        setIsLoaded(true);
+      }),
+    []
+  );
 
   useEffect(() => {
     load();

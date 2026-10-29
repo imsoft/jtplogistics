@@ -40,19 +40,20 @@ export function QuoteComments({ quoteId }: QuoteCommentsProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const loadComments = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/admin/generated-quotes/${quoteId}/comments`);
-      if (res.ok) {
-        const data = await res.json();
-        setComments(data.comments);
-      }
-    } catch (e) {
-      console.error("Error al cargar comentarios:", e);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [quoteId]);
+  const loadComments = useCallback(() =>
+    fetch(`/api/admin/generated-quotes/${quoteId}/comments`)
+      .then(async (res) => {
+        if (res.ok) {
+          const data = await res.json();
+          setComments(data.comments);
+        }
+      })
+      .catch((e) => {
+        console.error("Error al cargar comentarios:", e);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      }), [quoteId]);
 
   useEffect(() => {
     loadComments();

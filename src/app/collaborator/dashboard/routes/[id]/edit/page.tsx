@@ -23,16 +23,19 @@ export default function EditCollaboratorRoutePage() {
     }
   }, [permissionsLoaded, permissions, router]);
 
-  const load = useCallback(async () => {
-    const res = await fetch(`/api/routes/${id}`);
-    if (!res.ok) {
-      setError("No se pudo cargar la ruta.");
-      setIsLoaded(true);
-      return;
-    }
-    setRoute(await res.json());
-    setIsLoaded(true);
-  }, [id]);
+  const load = useCallback(
+    () =>
+      fetch(`/api/routes/${id}`).then(async (res) => {
+        if (!res.ok) {
+          setError("No se pudo cargar la ruta.");
+          setIsLoaded(true);
+          return;
+        }
+        setRoute(await res.json());
+        setIsLoaded(true);
+      }),
+    [id]
+  );
 
   useEffect(() => {
     if (permissionsLoaded && permissions?.canUpdateRoutes) load();

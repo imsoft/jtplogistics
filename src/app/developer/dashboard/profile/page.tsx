@@ -18,20 +18,23 @@ export default function DeveloperProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const load = useCallback(async () => {
-    const res = await fetch("/api/profile");
-    if (!res.ok) {
-      setError("No se pudo cargar tu perfil. Recarga la página.");
-      setIsLoaded(true);
-      return;
-    }
-    const data = await res.json();
-    setName(data.name ?? "");
-    setEmail(data.email ?? "");
-    setBirthDate(data.birthDate ?? "");
-    setImage(data.image ?? null);
-    setIsLoaded(true);
-  }, []);
+  const load = useCallback(
+    () =>
+      fetch("/api/profile").then(async (res) => {
+        if (!res.ok) {
+          setError("No se pudo cargar tu perfil. Recarga la página.");
+          setIsLoaded(true);
+          return;
+        }
+        const data = await res.json();
+        setName(data.name ?? "");
+        setEmail(data.email ?? "");
+        setBirthDate(data.birthDate ?? "");
+        setImage(data.image ?? null);
+        setIsLoaded(true);
+      }),
+    []
+  );
 
   useEffect(() => { load(); }, [load]);
 
