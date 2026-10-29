@@ -82,7 +82,7 @@ export function ShipmentForm({
   const [destinationAddress, setDestinationAddress] = useState(initialValues.destinationAddress ?? "");
   const [originAddressTouched, setOriginAddressTouched] = useState(Boolean(initialValues.originAddress));
   const [destinationAddressTouched, setDestinationAddressTouched] = useState(Boolean(initialValues.destinationAddress));
-  const [locations, setLocations] = useState<{ kind: string; city: string; address: string }[]>([]);
+  const [locations, setLocations] = useState<{ routeId: string | null; kind: string; city: string; address: string }[]>([]);
   // Costos extra (maniobras, estadías…): se suman a venta y compra.
   const [extras, setExtras] = useState<{ concept: string; sale: string; cost: string }[]>(
     (initialValues.extraCosts ?? []).map((x) => ({
@@ -111,6 +111,16 @@ export function ShipmentForm({
   const lockedAtLoad = shipmentLockReason(initialValues) !== null && !unlocked;
 
   const [routes, setRoutes] = useState<Route[]>([]);
+
+  // Embarque nuevo: propone el siguiente ECO consecutivo (se puede cambiar).
+  useEffect(() => {
+    if (initialValues.id || initialValues.eco) return;
+    fetch("/api/shipments/next-eco")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { eco?: string } | null) => d?.eco && setEco((cur) => cur || d.eco!))
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo al abrir
+  }, []);
   const [clients, setClients] = useState<Client[]>([]);
   const [carriers, setCarriers] = useState<User[]>([]);
   const unitTypes = useUnitTypes();
@@ -282,17 +292,25 @@ export function ShipmentForm({
       cancelled = true;
     };
   }, [clientId]);
-  const addressFor = useCallback(
-    (kind: "origin" | "destination", city: string) =>
-      locations.find((l) => l.kind === kind && l.city.trim().toLowerCase() === city.trim().toLowerCase())?.address ?? "",
-    [locations]
+  // Las direcciones van por ruta: las de las rutas con este origen y destino.
+  const routeIds = useMemo(() => {
+    const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+    return new Set(routes.filter((r) => origin && destination && same(r.origin, origin) && same(r.destination, destination)).map((r) => r.id));
+  }, [routes, origin, destination]);
+  const addressesFor = useCallback(
+    (kind: "origin" | "destination") => [...new Set(locations.filter((l) => l.kind === kind && l.routeId && routeIds.has(l.routeId)).map((l) => l.address))],
+    [locations, routeIds]
   );
+  const originChoices = addressesFor("origin");
+  const destinationChoices = addressesFor("destination");
   useEffect(() => {
-    if (!originAddressTouched) setOriginAddress(origin ? addressFor("origin", origin) : "");
-  }, [origin, addressFor, originAddressTouched]);
+    if (!originAddressTouched) setOriginAddress(originChoices[0] ?? "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- se recalcula cuando cambian las opciones
+  }, [originChoices.join("|"), originAddressTouched]);
   useEffect(() => {
-    if (!destinationAddressTouched) setDestinationAddress(destination ? addressFor("destination", destination) : "");
-  }, [destination, addressFor, destinationAddressTouched]);
+    if (!destinationAddressTouched) setDestinationAddress(destinationChoices[0] ?? "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- se recalcula cuando cambian las opciones
+  }, [destinationChoices.join("|"), destinationAddressTouched]);
 
   // Propone la tarifa de compra pactada con el transportista para esta ruta.
   const carrierMap = useMemo(() => carrierByOption(carriers), [carriers]);
@@ -316,11 +334,6 @@ export function ShipmentForm({
   }, [showTariffs, carrierId, origin, destination, unit, costTouched]);
   const agreedCostValue = agreedCost && agreedCost.key === `${carrierId}|${origin}|${destination}|${unit}` ? agreedCost.value : null;
 
-  // Totales con costos extra.
-  const extrasSale = extras.reduce((s, x) => s + (parseMxn(x.sale) ?? 0), 0);
-  const extrasCost = extras.reduce((s, x) => s + (parseMxn(x.cost) ?? 0), 0);
-  const totalSale = (parseMxn(sale) ?? 0) + extrasSale;
-  const totalCost = (parseMxn(cost) ?? 0) + extrasCost;
 
   // Solo vale la tarifa propuesta para el cliente y la ruta que están elegidos ahora.
   const agreedClient = clients.find((x) => x.name.trim().toLowerCase() === client.trim().toLowerCase());
@@ -382,7 +395,11 @@ export function ShipmentForm({
           <Label htmlFor="shipment-client">Cliente</Label>
           <AppSelect
             value={clientValue}
-            onValueChange={setClient}
+            onValueChange={(v) => {
+              setClient(v);
+              // Otro cliente: su tarifa acordada sustituye a la anterior.
+              setSaleTouched(false);
+            }}
             options={clientOptions.map((clientName) => ({value: clientName, label: clientName}))}
             disabled={isClosed || clientOptions.length === 0}
             className="w-full"
@@ -413,16 +430,22 @@ export function ShipmentForm({
           <Input id="shipment-product" value={product} disabled={isClosed} onChange={(e) => setProduct(e.target.value)} />
           {!isClosed && (clientRecord?.productTypes?.length ?? 0) > 0 && (
             <div className="flex flex-wrap gap-1">
-              {clientRecord!.productTypes.map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setProduct(p)}
-                  className="bg-primary/10 text-primary hover:bg-primary/20 rounded px-1.5 py-0.5 text-[11px] font-medium uppercase tracking-wide"
-                >
-                  {p}
-                </button>
-              ))}
+              {clientRecord!.productTypes.map((p) => {
+                // Puede mover varios: cada clic agrega o quita el producto de la lista.
+                const list = product.split(",").map((x) => x.trim()).filter(Boolean);
+                const on = list.some((x) => x.toLowerCase() === p.toLowerCase());
+                return (
+                  <button
+                    key={p}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => setProduct((on ? list.filter((x) => x.toLowerCase() !== p.toLowerCase()) : [...list, p]).join(", "))}
+                    className={`rounded px-1.5 py-0.5 text-[11px] font-medium uppercase tracking-wide ${on ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"}`}
+                  >
+                    {p}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
@@ -452,7 +475,11 @@ export function ShipmentForm({
           <Label htmlFor="shipment-legalName">Proveedor (transportista)</Label>
           <AppSelect
             value={carrierValue}
-            onValueChange={setLegalName}
+            onValueChange={(v) => {
+              setLegalName(v);
+              // Otro transportista: su tarifa pactada sustituye a la anterior.
+              setCostTouched(false);
+            }}
             options={carrierOptions.map((name) => ({value: name, label: name}))}
             disabled={isClosed || carrierOptions.length === 0}
             className="w-full"
@@ -484,6 +511,17 @@ export function ShipmentForm({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="shipment-originAddress">Dirección de origen (carga)</Label>
+          {originChoices.length > 1 && !isClosed && (
+            <AppSelect
+              value={originChoices.includes(originAddress) ? originAddress : ""}
+              onValueChange={(v) => {
+                setOriginAddressTouched(true);
+                setOriginAddress(v);
+              }}
+              options={originChoices.map((a) => ({ value: a, label: a }))}
+              className="w-full"
+            />
+          )}
           <Textarea
             id="shipment-originAddress"
             rows={2}
@@ -495,13 +533,24 @@ export function ShipmentForm({
             }}
           />
           <p className="text-muted-foreground text-xs">
-            {origin && clientId && !addressFor("origin", origin)
-              ? "Este cliente no tiene dirección guardada en esta ciudad; captúrala en su ficha para que salga sola."
+            {originChoices.length === 0
+              ? (clientId && origin ? "Este cliente no tiene direcciones guardadas para esta ruta; captúralas en su ficha para que salgan solas." : "Se toma de la ficha del cliente; puedes ajustarla para este embarque.")
               : "Se toma de la ficha del cliente; puedes ajustarla para este embarque."}
           </p>
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-destinationAddress">Dirección de destino (entrega)</Label>
+          {destinationChoices.length > 1 && !isClosed && (
+            <AppSelect
+              value={destinationChoices.includes(destinationAddress) ? destinationAddress : ""}
+              onValueChange={(v) => {
+                setDestinationAddressTouched(true);
+                setDestinationAddress(v);
+              }}
+              options={destinationChoices.map((a) => ({ value: a, label: a }))}
+              className="w-full"
+            />
+          )}
           <Textarea
             id="shipment-destinationAddress"
             rows={2}
@@ -513,8 +562,8 @@ export function ShipmentForm({
             }}
           />
           <p className="text-muted-foreground text-xs">
-            {destination && clientId && !addressFor("destination", destination)
-              ? "Este cliente no tiene dirección guardada en esta ciudad; captúrala en su ficha para que salga sola."
+            {destinationChoices.length === 0
+              ? (clientId && destination ? "Este cliente no tiene direcciones guardadas para esta ruta; captúralas en su ficha para que salgan solas." : "Se toma de la ficha del cliente; puedes ajustarla para este embarque.")
               : "Se toma de la ficha del cliente; puedes ajustarla para este embarque."}
           </p>
         </div>
@@ -669,12 +718,6 @@ export function ShipmentForm({
                 </Button>
               </div>
             ))}
-            {extras.length > 0 && (
-              <p className="text-sm">
-                Total venta: <b className="tabular-nums">${formatMxn(totalSale)}</b> · Total compra: <b className="tabular-nums">${formatMxn(totalCost)}</b> · Margen:{" "}
-                <b className={`tabular-nums ${totalSale - totalCost < 0 ? "text-destructive" : "text-green-700"}`}>${formatMxn(totalSale - totalCost)}</b>
-              </p>
-            )}
           </div>
         </div>
       )}

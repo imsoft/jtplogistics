@@ -27,6 +27,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Pencil, Trash2, Check, X, Plus } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { INCIDENT_COLORS, incidentBadgeClass } from "@/lib/constants/incident-colors";
 import { toast } from "sonner";
 import type { IncidentTypeDef } from "@/types/incident-type.types";
 import { SortableUnitTypeRow } from "@/components/dashboard/unit-types/sortable-unit-type-row";
@@ -41,6 +43,20 @@ export default function IncidentTypesPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   const [deleteTarget, setDeleteTarget] = useState<IncidentTypeDef | null>(null);
+
+  async function setColor(id: string, color: string) {
+    const prev = incidentTypes;
+    setIncidentTypes((list) => list.map((t) => (t.id === id ? { ...t, color } : t)));
+    const res = await fetch(`/api/admin/incident-types/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ color }),
+    });
+    if (!res.ok) {
+      setIncidentTypes(prev);
+      toast.error("No se pudo cambiar el color.");
+    }
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -191,6 +207,24 @@ export default function IncidentTypesPage() {
                         </>
                       ) : (
                         <>
+                          {/* El color de la insignia de este tipo en tablas y fichas. */}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger
+                              className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring ${incidentBadgeClass(t.color)}`}
+                              aria-label={`Color de ${t.name}`}
+                              title="Cambiar color"
+                            >
+                              {INCIDENT_COLORS.find((c) => c.key === t.color)?.label ?? "Sin color"}
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start">
+                              {INCIDENT_COLORS.map((c) => (
+                                <DropdownMenuItem key={c.key} onClick={() => setColor(t.id, c.key)}>
+                                  <span className={`size-3 rounded-full ${c.dot}`} />
+                                  {c.label}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                           <span className="flex-1 font-medium">{t.name}</span>
                           <span className="text-muted-foreground hidden shrink-0 font-mono text-xs sm:inline">{t.value}</span>
                           <Button

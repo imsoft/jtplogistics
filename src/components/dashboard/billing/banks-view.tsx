@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ChevronLeft, FileUp, Landmark, Loader2, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import { KIND_SLUG, money, shortDay, todayKey, type BankAccountRow } from "./bil
 import { StatementImportDialog } from "./statement-import-dialog";
 import { ExportableTable } from "@/components/dashboard/export/exportable-table";
 import { DatePicker } from "@/components/ui/date-picker";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 /** Cuentas de banco con su saldo y movimientos sin conciliar. */
 export function BanksView({ basePath, canCreate }: { basePath: string; canCreate: boolean }) {
@@ -273,6 +274,8 @@ export function BankDetailView({
   const [importing, setImporting] = useState(false);
   const [onlyPending, setOnlyPending] = useState(false);
   const [fullHistory, setFullHistory] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const router = useRouter();
 
   const load = useCallback(() => {
     fetch(`/api/billing/banks/${id}${fullHistory ? "?history=all" : ""}`)
@@ -304,6 +307,16 @@ export function BankDetailView({
     }
     toast.success("Movimiento borrado.");
     load();
+  }
+
+  async function removeAccount() {
+    const res = await fetch(`/api/billing/banks/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      toast.error(((await res.json().catch(() => ({}))) as { error?: string }).error ?? "No se pudo borrar la cuenta.");
+      return;
+    }
+    toast.success("Cuenta borrada.");
+    router.push(basePath);
   }
 
   if (error) return <p className="text-destructive py-6 text-sm">{error}</p>;
@@ -345,7 +358,20 @@ export function BankDetailView({
               Editar cuenta
             </Button>
           )}
+          {canDelete && (
+            <Button variant="destructive" onClick={() => setDeleting(true)}>
+              <Trash2 className="size-4" />
+              Eliminar cuenta
+            </Button>
+          )}
         </div>
+        <DeleteConfirmDialog
+          open={deleting}
+          onOpenChange={setDeleting}
+          title={`¿Eliminar la cuenta ${data.name}?`}
+          description="Se borra con todo: sus movimientos y los cobros y pagos registrados con ella. Las facturas que se pagaron con esta cuenta vuelven a quedar con saldo pendiente. No se puede deshacer."
+          onConfirm={removeAccount}
+        />
       </div>
 
       <Card>

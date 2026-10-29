@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-server";
 import { logAudit } from "@/lib/audit-log";
+import { isIncidentColor } from "@/lib/constants/incident-colors";
 
 export async function PATCH(
   request: NextRequest,
@@ -11,13 +12,16 @@ export async function PATCH(
     const session = await requireAdmin();
     const { id } = await params;
     const body = await request.json();
-    const name = body.name ? String(body.name).trim() : undefined;
+    const name = body.name !== undefined ? String(body.name ?? "").trim() : undefined;
+    // Color de la insignia: una clave de la gama, o null para quitarlo.
+    const color = body.color === null ? null : isIncidentColor(body.color) ? body.color : undefined;
 
-    if (!name) return Response.json({ error: "El nombre es requerido" }, { status: 400 });
+    if (name === "") return Response.json({ error: "El nombre es requerido" }, { status: 400 });
+    if (name === undefined && color === undefined) return Response.json({ error: "Nada que cambiar" }, { status: 400 });
 
     const updated = await prisma.incidentTypeDef.update({
       where: { id },
-      data: { name },
+      data: { ...(name !== undefined && { name }), ...(color !== undefined && { color }) },
     });
 
     void logAudit({
@@ -32,6 +36,7 @@ export async function PATCH(
     return Response.json({
       id: updated.id,
       name: updated.name,
+      color: updated.color,
       value: updated.value,
       sortOrder: updated.sortOrder,
       createdAt: updated.createdAt.toISOString(),

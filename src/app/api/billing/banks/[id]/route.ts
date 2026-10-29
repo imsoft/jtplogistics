@@ -119,19 +119,31 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 }
 
-/** DELETE — solo cuentas sin movimientos; las demás se desactivan. */
+/**
+ * DELETE — borra la cuenta con todo lo que tiene: movimientos, cobros y pagos
+ * registrados con ella (las facturas que pagaron vuelven a quedar con saldo).
+ * Los gastos se quedan, solo pierden la cuenta.
+ */
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireBilling("delete");
     const { id } = await params;
     const account = await prisma.bankAccount.findUnique({ where: { id }, include: { _count: { select: { movements: true, payments: true } } } });
     if (!account) return Response.json({ error: "No encontrado" }, { status: 404 });
-    if (account._count.movements > 0 || account._count.payments > 0) {
-      return Response.json({ error: "La cuenta tiene movimientos: desactívala en lugar de borrarla." }, { status: 400 });
-    }
-    await prisma.bankAccount.delete({ where: { id } });
-    void logAudit({ resource: "bank_account", resourceId: id, resourceLabel: account.name, action: "deleted", userId: session.user.id, userName: session.user.name });
-    return Response.json({ ok: true });
+    await prisma.$transaction([
+      // Los pagos van primero: la cuenta no se deja borrar mientras tenga pagos.
+      prisma.billingPayment.deleteMany({ where: { bankAccountId: id } }),
+      prisma.bankAccount.delete({ where: { id } }),
+    ]);
+    void logAudit({
+      resource: "bank_account",
+      resourceId: id,
+      resourceLabel: `${account.name} · ${account._count.movements} movimiento${account._count.movements === 1 ? "" : "s"}, ${account._count.payments} cobro${account._count.payments === 1 ? "" : "s"}/pago${account._count.payments === 1 ? "" : "s"}`,
+      action: "deleted",
+      userId: session.user.id,
+      userName: session.user.name,
+    });
+    return Response.json({ ok: true, movements: account._count.movements, payments: account._count.payments });
   } catch (e) {
     return failure(e, "bank DELETE");
   }

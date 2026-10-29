@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { CheckCircle2, ChevronLeft, Circle, Loader2 } from "lucide-react";
+import { CheckCircle2, ChevronLeft, Circle, FileText, Loader2, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,10 +13,12 @@ import { ResourceDetailSkeleton } from "@/components/ui/skeletons";
 import { useIncidentTypes } from "@/hooks/use-incident-types";
 import { useUnitTypes } from "@/hooks/use-unit-types";
 import { formatIncidentYesNo } from "@/lib/incident-yes-no";
-import { getIncidentTypeLabel } from "@/lib/incident-type-label";
+import { IncidentTypeBadge } from "@/components/dashboard/resources/incident-type-badge";
 import { formatMxn, formatPhone } from "@/lib/utils";
 import { shipmentStatusDisplay } from "@/components/dashboard/resources/shipments-table";
+import { KIND_SLUG, useBillingPerms } from "@/components/dashboard/billing/billing-shared";
 import type { FinanceShipmentDetail } from "@/types/finance.types";
+import type { PurchaseOrderData } from "./purchase-order-pdf";
 
 function fmtDate(iso: string | null | undefined) {
   if (!iso) return null;
@@ -62,7 +64,6 @@ export function FinanceDetailView({ panel, canMarkEvidence }: { panel: "admin" |
       .catch(() => setError("No se pudo cargar el embarque."));
   }, [api, id]);
 
-  const incidentTypeLabel = row?.incidentType?.trim() ? getIncidentTypeLabel(row.incidentType, incidentTypes) : null;
   const unitLabel = row?.unit?.trim() ? unitTypes.find((t) => t.value === row.unit)?.label ?? row.unit : null;
 
   async function toggleEvidence() {
@@ -91,7 +92,6 @@ export function FinanceDetailView({ panel, canMarkEvidence }: { panel: "admin" |
   const title = [row.eco, row.origin, row.destination].filter(Boolean).join(" – ") || "Embarque";
   const status = shipmentStatusDisplay(row.status, row.incident);
   const extras = row.extraCosts ?? [];
-  const margin = row.sale != null && row.cost != null ? row.sale - row.cost : null;
 
   return (
     <div className="min-w-0 space-y-6">
@@ -133,6 +133,27 @@ export function FinanceDetailView({ panel, canMarkEvidence }: { panel: "admin" |
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-muted-foreground text-sm font-semibold uppercase tracking-wider">Embarque</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-x-8 px-4 pb-4 lg:grid-cols-2">
+          <div>
+            <InfoRow label="ECO" value={row.eco} />
+            <InfoRow label="Origen" value={row.origin} />
+            <InfoRow label="Destino" value={row.destination} />
+            <InfoRow label="Producto" value={row.product} />
+          </div>
+          <div>
+            <InfoRow label="Recolección" value={fmtDate(row.pickupDate)} />
+            <InfoRow label="Entrega" value={fmtDate(row.deliveryDate)} />
+            <InfoRow label="Incidencia" value={row.incident ? formatIncidentYesNo(row.incident) : null} />
+            <InfoRow label="Tipo de incidencia" value={row.incidentType ? <IncidentTypeBadge value={row.incidentType} types={incidentTypes} /> : null} />
+            <InfoRow label="Comentarios" value={row.comments} />
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader className="pb-2">
@@ -143,6 +164,7 @@ export function FinanceDetailView({ panel, canMarkEvidence }: { panel: "admin" |
             <TariffRows label="Tarifa de venta" base={row.baseSale} total={row.sale} extras={extras.map((x) => ({ concept: x.concept, amount: x.sale }))} />
             <InfoRow label="Dirección de carga" value={row.originAddress} />
             <InfoRow label="Dirección de entrega" value={row.destinationAddress} />
+            <InvoiceAction shipmentId={row.id} panel={panel} />
           </CardContent>
         </Card>
 
@@ -158,31 +180,132 @@ export function FinanceDetailView({ panel, canMarkEvidence }: { panel: "admin" |
             <InfoRow label="Tracto" value={row.truck} />
             <InfoRow label="Caja" value={row.trailer} />
             <InfoRow label="Unidad" value={unitLabel} />
+            <PurchaseOrderButton row={row} unitLabel={unitLabel} />
           </CardContent>
         </Card>
       </div>
+    </div>
+  );
+}
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-muted-foreground text-sm font-semibold uppercase tracking-wider">Embarque</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-x-8 px-4 pb-4 lg:grid-cols-2">
-          <div>
-            <InfoRow label="ECO" value={row.eco} />
-            <InfoRow label="Origen" value={row.origin} />
-            <InfoRow label="Destino" value={row.destination} />
-            <InfoRow label="Producto" value={row.product} />
-            <InfoRow label="Margen" value={margin != null ? <span className={margin < 0 ? "text-destructive" : "text-green-700"}>{money(margin)}</span> : null} />
-          </div>
-          <div>
-            <InfoRow label="Recolección" value={fmtDate(row.pickupDate)} />
-            <InfoRow label="Entrega" value={fmtDate(row.deliveryDate)} />
-            <InfoRow label="Incidencia" value={row.incident ? formatIncidentYesNo(row.incident) : null} />
-            <InfoRow label="Tipo de incidencia" value={incidentTypeLabel} />
-            <InfoRow label="Comentarios" value={row.comments} />
-          </div>
-        </CardContent>
-      </Card>
+interface ShipmentInvoicing {
+  blocked: string | null;
+  receivable: { reason: string | null };
+  documents: { id: string; kind: "receivable" | "payable" }[];
+}
+
+/** "Convertir a factura": arma el borrador de la factura al cliente con las tarifas del embarque. */
+function InvoiceAction({ shipmentId, panel }: { shipmentId: string; panel: "admin" | "collaborator" }) {
+  const perms = useBillingPerms(panel);
+  const router = useRouter();
+  const [data, setData] = useState<ShipmentInvoicing | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!perms.canView) return;
+    fetch(`/api/billing/shipments/${shipmentId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: ShipmentInvoicing | null) => setData(d))
+      .catch(() => setData(null));
+  }, [perms.canView, shipmentId]);
+
+  if (!perms.isLoaded || !perms.canView || !data) return null;
+  const invoices = `/${panel}/dashboard/billing/${KIND_SLUG.receivable}`;
+  const existing = data.documents.find((d) => d.kind === "receivable");
+  const reason = data.blocked ?? data.receivable.reason;
+
+  async function convert() {
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/billing/shipments/${shipmentId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kinds: ["receivable"] }),
+      });
+      const d = (await res.json().catch(() => ({}))) as { error?: string; documents?: { id: string }[] };
+      if (!res.ok || !d.documents?.[0]) throw new Error(d.error ?? "No se pudo crear la factura.");
+      toast.success("Factura en borrador creada.");
+      router.push(`${invoices}/${d.documents[0].id}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo crear la factura.");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="pt-4">
+      {existing ? (
+        <Button variant="outline" asChild>
+          <Link href={`${invoices}/${existing.id}`}>
+            <Receipt className="size-4" />
+            Ver factura
+          </Link>
+        </Button>
+      ) : perms.canCreate ? (
+        <>
+          <Button onClick={convert} disabled={busy || Boolean(reason)}>
+            {busy ? <Loader2 className="size-4 animate-spin" /> : <Receipt className="size-4" />}
+            Convertir a factura
+          </Button>
+          {reason && <p className="text-muted-foreground mt-2 text-xs">{reason}</p>}
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+/** "Generar orden de compra": PDF para el transportista con la tarifa de compra. */
+function PurchaseOrderButton({ row, unitLabel }: { row: FinanceShipmentDetail; unitLabel: string | null }) {
+  const [busy, setBusy] = useState(false);
+
+  async function generate() {
+    const baseCost = row.baseCost ?? row.cost;
+    if (!row.legalName?.trim() || baseCost == null) {
+      toast.error("Para la orden de compra faltan el transportista o la tarifa de compra.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const data: PurchaseOrderData = {
+        eco: row.eco ?? "",
+        legalName: row.legalName,
+        client: row.client ?? "",
+        product: row.product ?? "",
+        unit: unitLabel ?? "",
+        pickupDate: row.pickupDate ?? "",
+        deliveryDate: row.deliveryDate ?? "",
+        origin: row.origin ?? "",
+        destination: row.destination ?? "",
+        originAddress: row.originAddress ?? "",
+        destinationAddress: row.destinationAddress ?? "",
+        operatorName: row.operatorName ?? "",
+        truck: row.truck ?? "",
+        trailer: row.trailer ?? "",
+        baseCost,
+        extras: (row.extraCosts ?? []).filter((x) => x.cost).map((x) => ({ concept: x.concept, amount: x.cost! })),
+      };
+      const [{ pdf }, { PurchaseOrderPdf }] = await Promise.all([import("@react-pdf/renderer"), import("./purchase-order-pdf")]);
+      const blob = await pdf(<PurchaseOrderPdf data={data} logoUrl={`${window.location.origin}/images/logo/jtp-logistics.png`} />).toBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `orden-de-compra${row.eco ? `-${row.eco.replace(/[^\w-]+/g, "")}` : ""}.pdf`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    } catch (e) {
+      console.error(e);
+      toast.error("No se pudo generar la orden de compra.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="pt-4">
+      <Button variant="outline" onClick={generate} disabled={busy}>
+        {busy ? <Loader2 className="size-4 animate-spin" /> : <FileText className="size-4" />}
+        Generar orden de compra
+      </Button>
     </div>
   );
 }

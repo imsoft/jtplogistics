@@ -11,9 +11,9 @@ import { LOCK_TEXT, shipmentLockReason } from "@/lib/shipment-lock";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { useUnitTypes } from "@/hooks/use-unit-types";
 import { useIncidentTypes } from "@/hooks/use-incident-types";
+import { IncidentTypeBadge } from "@/components/dashboard/resources/incident-type-badge";
 import { formatIncidentYesNo } from "@/lib/incident-yes-no";
 import { formatMxn, formatPhone } from "@/lib/utils";
-import { getIncidentTypeLabel } from "@/lib/incident-type-label";
 import { SHIPMENT_STATUS_CONFIG, shipmentStatusDisplay } from "@/components/dashboard/resources/shipments-table";
 import { ShipmentTimeline } from "@/components/dashboard/resources/shipment-timeline";
 import { ShipmentBillingCard } from "@/components/dashboard/billing/shipment-billing-card";
@@ -43,11 +43,6 @@ export default function ShipmentProfilePage() {
     if (!shipment?.unit?.trim()) return null;
     return unitTypes.find((t) => t.value === shipment.unit)?.label ?? shipment.unit;
   }, [shipment?.unit, unitTypes]);
-
-  const incidentTypeLabel = useMemo(() => {
-    if (!shipment?.incidentType?.trim()) return null;
-    return getIncidentTypeLabel(shipment.incidentType, incidentTypes);
-  }, [shipment?.incidentType, incidentTypes]);
 
   if (!isLoaded) return <ResourceDetailSkeleton />;
   if (error || !shipment) return <p className="text-destructive py-6 text-sm">{error ?? "No encontrado"}</p>;
@@ -171,7 +166,7 @@ export default function ShipmentProfilePage() {
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                   Tipo de incidencia
                 </h3>
-                <p className="text-sm whitespace-pre-wrap">{incidentTypeLabel}</p>
+                <IncidentTypeBadge value={shipment.incidentType} types={incidentTypes} />
               </div>
             )}
           </CardContent>

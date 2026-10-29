@@ -81,7 +81,6 @@ export function QuoteDetailView({
   const display = getQuoteDisplayStatus(quote.status, quote.validUntil);
   const status = QUOTE_STATUS_CONFIG[display];
   const rows = Array.isArray(quote.rows) ? quote.rows : [];
-  const total = rows.reduce((s, r) => s + (Number(r.cost) || 0), 0);
 
   return (
     <div className="min-w-0 space-y-6">
@@ -159,14 +158,6 @@ export function QuoteDetailView({
                         </tr>
                       ))}
                     </tbody>
-                    {rows.length > 1 && (
-                      <tfoot>
-                        <tr className="border-t">
-                          <td colSpan={4} className="text-muted-foreground px-3 py-2.5 text-right">Suma de las rutas</td>
-                          <td className="whitespace-nowrap px-3 py-2.5 text-right font-semibold tabular-nums">${formatMxn(total)}</td>
-                        </tr>
-                      </tfoot>
-                    )}
                   </table>
                 </div>
               )}

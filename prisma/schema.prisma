@@ -302,6 +302,8 @@ model IncidentTypeDef {
   id        String   @id @default(cuid()) @map("id")
   name      String   @map("name")
   value     String   @unique @map("value")
+  /// Color de la insignia (clave de INCIDENT_COLORS); vacío = gris.
+  color     String?  @map("color")
   sortOrder Int      @default(0) @map("sort_order")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -328,6 +330,7 @@ model Route {
   updatedAt        DateTime           @updatedAt @map("updated_at")
   carrierRoutes    CarrierRoute[]
   clientRoutes     ClientRoute[]
+  clientLocations  ClientLocation[]
   unitTargets      RouteUnitTarget[]
 
   @@map("routes")
@@ -430,12 +433,14 @@ model Client {
   @@map("clients")
 }
 
-/// Dirección donde se carga (origen) o se entrega (destino) en cada ciudad de
-/// las rutas del cliente. El embarque la toma al elegir origen y destino.
+/// Direcciones donde se carga (origen) o se entrega (destino) en cada ruta del
+/// cliente; una ciudad puede tener varias. El embarque las ofrece al elegir la ruta.
 model ClientLocation {
   id        String   @id @default(cuid()) @map("id")
   clientId  String   @map("client_id")
   client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  routeId   String?  @map("route_id")
+  route     Route?   @relation(fields: [routeId], references: [id], onDelete: Cascade)
   /// "origin" o "destination".
   kind      String   @map("kind")
   /// La ciudad tal como está en la ruta.
@@ -443,7 +448,7 @@ model ClientLocation {
   address   String   @map("address")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@unique([clientId, kind, city])
+  @@index([clientId, routeId])
   @@map("client_locations")
 }
 

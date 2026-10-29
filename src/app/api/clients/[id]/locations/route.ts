@@ -4,9 +4,9 @@ import { hasModuleAccess, requireModuleAccess } from "@/lib/module-access";
 import { logAudit } from "@/lib/audit-log";
 
 /**
- * Direcciones de carga (origen) y entrega (destino) del cliente, una por
- * ciudad. Las lee quien ve Clientes o quien captura embarques (el formulario
- * de embarque las propone); las edita quien edita Clientes.
+ * Direcciones de carga (origen) y entrega (destino) del cliente, por ruta y
+ * varias por ciudad. Las lee quien ve Clientes o quien captura embarques (el
+ * formulario de embarque las ofrece); las edita quien edita Clientes.
  */
 
 const KINDS = ["origin", "destination"] as const;
@@ -28,8 +28,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     const { id } = await params;
     const rows = await prisma.clientLocation.findMany({
       where: { clientId: id },
-      orderBy: [{ kind: "asc" }, { city: "asc" }],
-      select: { kind: true, city: true, address: true },
+      orderBy: [{ kind: "asc" }, { address: "asc" }],
+      select: { id: true, routeId: true, kind: true, city: true, address: true },
     });
     return Response.json(rows);
   } catch (e) {
@@ -37,7 +37,11 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   }
 }
 
-/** PUT { locations: [{ kind, city, address }] } — guarda las que traen dirección y borra las que quedan vacías. */
+/**
+ * PUT { locations: [{ routeId, kind, address }] } — reemplaza todas las
+ * direcciones del cliente. Cada una va ligada a una ruta suya; la ciudad se
+ * toma de la ruta (origen o destino).
+ */
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireModuleAccess("Clients", "update");
@@ -47,26 +51,35 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
     const body = (await req.json().catch(() => ({}))) as { locations?: unknown };
     if (!Array.isArray(body.locations)) return Response.json({ error: "Datos inválidos" }, { status: 400 });
-    const items = body.locations
-      .map((x) => x as Record<string, unknown>)
-      .filter((x) => KINDS.includes(x.kind as never) && typeof x.city === "string" && x.city.trim())
-      .map((x) => ({
-        kind: x.kind as string,
-        city: (x.city as string).trim(),
-        address: typeof x.address === "string" ? x.address.trim().slice(0, 500) : "",
-      }));
 
-    await prisma.$transaction(
-      items.map((x) =>
-        x.address
-          ? prisma.clientLocation.upsert({
-              where: { clientId_kind_city: { clientId: id, kind: x.kind, city: x.city } },
-              create: { clientId: id, kind: x.kind, city: x.city, address: x.address },
-              update: { address: x.address },
-            })
-          : prisma.clientLocation.deleteMany({ where: { clientId: id, kind: x.kind, city: x.city } })
-      )
-    );
+    const routes = await prisma.route.findMany({
+      where: { clientRoutes: { some: { clientId: id } } },
+      select: { id: true, origin: true, destination: true },
+    });
+    const byId = new Map(routes.map((r) => [r.id, r]));
+    const list = body.locations.map((x) => x as Record<string, unknown>);
+    // Se reemplaza todo: una fila que no cuadra rechaza el guardado en lugar de perderse.
+    if (list.some((x) => !KINDS.includes(x.kind as never) || typeof x.routeId !== "string" || !byId.has(x.routeId) || typeof x.address !== "string")) {
+      return Response.json({ error: "Alguna dirección no corresponde a una ruta del cliente. Recarga la página e intenta de nuevo." }, { status: 400 });
+    }
+    const items = list
+      .filter((x) => (x.address as string).trim())
+      .slice(0, 500)
+      .map((x) => {
+        const route = byId.get(x.routeId as string)!;
+        return {
+          clientId: id,
+          routeId: route.id,
+          kind: x.kind as string,
+          city: x.kind === "origin" ? route.origin : route.destination,
+          address: (x.address as string).trim().slice(0, 500),
+        };
+      });
+
+    await prisma.$transaction([
+      prisma.clientLocation.deleteMany({ where: { clientId: id } }),
+      prisma.clientLocation.createMany({ data: items }),
+    ]);
 
     void logAudit({
       resource: "client",
@@ -75,7 +88,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       action: "updated",
       userId: session.user.id,
       userName: session.user.name,
-      changes: [{ field: "locations", label: "Direcciones de origen y destino", from: null, to: `${items.filter((x) => x.address).length} capturadas` }],
+      changes: [{ field: "locations", label: "Direcciones de origen y destino", from: null, to: `${items.length} capturadas` }],
     });
     return Response.json({ ok: true });
   } catch (e) {

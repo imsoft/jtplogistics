@@ -21,6 +21,7 @@ import { formatMxn, formatPhone } from "@/lib/utils";
 import { formatIncidentYesNo, incidentAllowsIncidentType } from "@/lib/incident-yes-no";
 import { getIncidentTypeLabel } from "@/lib/incident-type-label";
 import { useIncidentTypes } from "@/hooks/use-incident-types";
+import { IncidentTypeBadge } from "@/components/dashboard/resources/incident-type-badge";
 import type { Shipment, ShipmentStatus } from "@/types/shipment.types";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -93,7 +94,7 @@ export function shipmentStatusDisplay(status: string, incident?: string | null) 
 
 const STATUS_FILTER_ALL = "all" as const;
 
-function getColumns(incidentTypes: { value: string; label: string }[], showSale: boolean): ColumnDef<Shipment>[] {
+function getColumns(incidentTypes: { value: string; label: string; color?: string | null }[], showSale: boolean): ColumnDef<Shipment>[] {
   const columns: ColumnDef<Shipment>[] = [
     {
       id: "search",
@@ -229,19 +230,8 @@ function getColumns(incidentTypes: { value: string; label: string }[], showSale:
       meta: { className: "hidden @5xl/table:table-cell" },
       header: ({ column }) => <SortableColumnHeader column={column} title="Tipo de incidencia" />,
       cell: ({ row }) => {
-        const v = row.getValue<string | null>("incidentType")?.trim();
-        if (!v) return <span className="text-muted-foreground">—</span>;
-        const display = getIncidentTypeLabel(v, incidentTypes);
-        return (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="block max-w-35 cursor-default truncate sm:max-w-45">{display}</span>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-xs whitespace-pre-wrap">
-              {display}
-            </TooltipContent>
-          </Tooltip>
-        );
+        // Cada tipo con el color que se le eligió en "Tipos de incidencia".
+        return <IncidentTypeBadge value={row.getValue<string | null>("incidentType")} types={incidentTypes} />;
       },
     },
     {

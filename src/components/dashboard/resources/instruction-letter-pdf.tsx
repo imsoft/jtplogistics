@@ -45,7 +45,12 @@ const s = StyleSheet.create({
   stops: { flexDirection: "row", gap: 10 },
   stop: { flex: 1, backgroundColor: COLORS.background, borderRadius: 6, padding: 10 },
   stopTitle: { fontSize: 8.5, fontFamily: "Helvetica-Bold", color: COLORS.blue, textTransform: "uppercase", marginBottom: 4 },
-  city: { fontSize: 12, fontFamily: "Helvetica-Bold", marginBottom: 3 },
+  city: { fontSize: 13, fontFamily: "Helvetica-Bold", marginBottom: 5 },
+  addressLabel: { fontSize: 7.5, color: COLORS.muted, textTransform: "uppercase", marginBottom: 2 },
+  address: { fontSize: 11, fontFamily: "Helvetica-Bold", lineHeight: 1.35 },
+  ecoBox: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: COLORS.blue, borderRadius: 6, paddingVertical: 10, paddingHorizontal: 14, marginBottom: 12 },
+  ecoLabel: { fontSize: 9, fontFamily: "Helvetica-Bold", color: "#FFFFFF", textTransform: "uppercase", letterSpacing: 1.5 },
+  ecoValue: { fontSize: 26, fontFamily: "Helvetica-Bold", color: "#FFFFFF" },
   box: { borderWidth: 0.6, borderColor: COLORS.border, borderRadius: 4, padding: 9, minHeight: 50, lineHeight: 1.4 },
   list: { marginTop: 2, lineHeight: 1.45 },
   signs: { flexDirection: "row", justifyContent: "space-between", marginTop: 34 },
@@ -71,8 +76,13 @@ export function InstructionLetterPdf({ data, logoUrl }: { data: InstructionLette
           <Image src={logoUrl} style={s.logo} />
           <View style={s.headRight}>
             <Text style={s.title}>Carta de instrucciones</Text>
-            <Text style={s.muted}>{data.eco ? `ECO ${pdfUpper(data.eco)} · ` : ""}Emitida el {today.getDate()} de {MONTHS[today.getMonth()]} de {today.getFullYear()}</Text>
+            <Text style={s.muted}>Emitida el {today.getDate()} de {MONTHS[today.getMonth()]} de {today.getFullYear()}</Text>
           </View>
+        </View>
+
+        <View style={s.ecoBox}>
+          <Text style={s.ecoLabel}>Número ECO</Text>
+          <Text style={s.ecoValue}>{pdfUpper(v(data.eco))}</Text>
         </View>
 
         <Text>
@@ -95,12 +105,14 @@ export function InstructionLetterPdf({ data, logoUrl }: { data: InstructionLette
             <View style={s.stop}>
               <Text style={s.stopTitle}>Origen · carga</Text>
               <Text style={s.city}>{pdfUpper(v(data.origin))}</Text>
-              <Text>{v(data.originAddress)}</Text>
+              <Text style={s.addressLabel}>Dirección de carga</Text>
+              <Text style={s.address}>{v(data.originAddress)}</Text>
             </View>
             <View style={s.stop}>
               <Text style={s.stopTitle}>Destino · entrega</Text>
               <Text style={s.city}>{pdfUpper(v(data.destination))}</Text>
-              <Text>{v(data.destinationAddress)}</Text>
+              <Text style={s.addressLabel}>Dirección de entrega</Text>
+              <Text style={s.address}>{v(data.destinationAddress)}</Text>
             </View>
           </View>
         </View>

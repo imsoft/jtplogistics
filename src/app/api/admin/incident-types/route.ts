@@ -4,10 +4,11 @@ import { requireAdmin } from "@/lib/auth-server";
 import { logAudit } from "@/lib/audit-log";
 import { incidentTypeDefOrderBy } from "@/lib/prisma/incident-type-order";
 
-function toJson(t: { id: string; name: string; value: string; sortOrder: number; createdAt: Date }) {
+function toJson(t: { id: string; name: string; value: string; sortOrder: number; createdAt: Date; color?: string | null }) {
   return {
     id: t.id,
     name: t.name,
+    color: t.color ?? null,
     value: t.value,
     sortOrder: t.sortOrder,
     createdAt: t.createdAt.toISOString(),
