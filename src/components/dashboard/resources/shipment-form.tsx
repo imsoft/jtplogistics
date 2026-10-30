@@ -408,6 +408,18 @@ export function ShipmentForm({
             disabled={isClosed || originOptions.length === 0}
             className="w-full"
           />
+          <AddressList
+            label="Dirección de carga"
+            city={origin}
+            choices={originChoices}
+            value={originAddress}
+            disabled={isClosed}
+            hasClient={Boolean(clientId)}
+            onSelect={(v) => {
+              setOriginAddressTouched(true);
+              setOriginAddress(v);
+            }}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-destination">Destino</Label>
@@ -418,12 +430,25 @@ export function ShipmentForm({
             disabled={isClosed || !origin.trim() || destinationOptions.length === 0}
             className="w-full"
           />
+          <AddressList
+            label="Dirección de entrega"
+            city={destination}
+            choices={destinationChoices}
+            value={destinationAddress}
+            disabled={isClosed}
+            hasClient={Boolean(clientId)}
+            onSelect={(v) => {
+              setDestinationAddressTouched(true);
+              setDestinationAddress(v);
+            }}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-product">Producto</Label>
           <Input id="shipment-product" value={product} disabled={isClosed} onChange={(e) => setProduct(e.target.value)} />
           {!isClosed && (clientRecord?.productTypes?.length ?? 0) > 0 && (
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap items-center gap-1">
+              <span className="text-muted-foreground mr-1 text-[11px] uppercase tracking-wide">Productos de {clientRecord!.name}:</span>
               {clientRecord!.productTypes.map((p) => {
                 // Puede mover varios: cada clic agrega o quita el producto de la lista.
                 const list = product.split(",").map((x) => x.trim()).filter(Boolean);
@@ -441,6 +466,9 @@ export function ShipmentForm({
                 );
               })}
             </div>
+          )}
+          {!isClosed && clientRecord && clientRecord.productTypes.length === 0 && (
+            <p className="text-muted-foreground text-xs">Este cliente no tiene productos capturados en su perfil. Puedes escribir varios separados por coma.</p>
           )}
         </div>
         <div className="space-y-2">
@@ -500,66 +528,6 @@ export function ShipmentForm({
         <div className="space-y-2">
           <Label htmlFor="shipment-phone">Celular</Label>
           <Input id="shipment-phone" value={phone} disabled={isClosed} onChange={(e) => setPhone(e.target.value)} />
-        </div>
-      </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="shipment-originAddress">Dirección de origen (carga)</Label>
-          {originChoices.length > 1 && !isClosed && (
-            <AppSelect
-              value={originChoices.includes(originAddress) ? originAddress : ""}
-              onValueChange={(v) => {
-                setOriginAddressTouched(true);
-                setOriginAddress(v);
-              }}
-              options={originChoices.map((a) => ({ value: a, label: a }))}
-              className="w-full"
-            />
-          )}
-          <Textarea
-            id="shipment-originAddress"
-            rows={2}
-            value={originAddress}
-            disabled={isClosed}
-            onChange={(e) => {
-              setOriginAddressTouched(true);
-              setOriginAddress(e.target.value);
-            }}
-          />
-          <p className="text-muted-foreground text-xs">
-            {originChoices.length === 0
-              ? (clientId && origin ? "Este cliente no tiene direcciones guardadas para esta ruta; captúralas en su ficha para que salgan solas." : "Se toma de la ficha del cliente; puedes ajustarla para este embarque.")
-              : "Se toma de la ficha del cliente; puedes ajustarla para este embarque."}
-          </p>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="shipment-destinationAddress">Dirección de destino (entrega)</Label>
-          {destinationChoices.length > 1 && !isClosed && (
-            <AppSelect
-              value={destinationChoices.includes(destinationAddress) ? destinationAddress : ""}
-              onValueChange={(v) => {
-                setDestinationAddressTouched(true);
-                setDestinationAddress(v);
-              }}
-              options={destinationChoices.map((a) => ({ value: a, label: a }))}
-              className="w-full"
-            />
-          )}
-          <Textarea
-            id="shipment-destinationAddress"
-            rows={2}
-            value={destinationAddress}
-            disabled={isClosed}
-            onChange={(e) => {
-              setDestinationAddressTouched(true);
-              setDestinationAddress(e.target.value);
-            }}
-          />
-          <p className="text-muted-foreground text-xs">
-            {destinationChoices.length === 0
-              ? (clientId && destination ? "Este cliente no tiene direcciones guardadas para esta ruta; captúralas en su ficha para que salgan solas." : "Se toma de la ficha del cliente; puedes ajustarla para este embarque.")
-              : "Se toma de la ficha del cliente; puedes ajustarla para este embarque."}
-          </p>
         </div>
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -730,5 +698,63 @@ export function ShipmentForm({
         isSubmitting={isSubmitting}
       />
     </form>
+  );
+}
+
+/**
+ * Direcciones del cliente para esa ciudad en la ruta elegida, como lista para
+ * marcar una. La guardada en un embarque que ya no está en la ficha se muestra
+ * también, para no perderla.
+ */
+function AddressList({
+  label,
+  city,
+  choices,
+  value,
+  disabled,
+  hasClient,
+  onSelect,
+}: {
+  label: string;
+  city: string;
+  choices: string[];
+  value: string;
+  disabled: boolean;
+  hasClient: boolean;
+  onSelect: (address: string) => void;
+}) {
+  if (!city.trim()) return null;
+  const options = value && !choices.includes(value) ? [value, ...choices] : choices;
+  if (options.length === 0) {
+    return (
+      <p className="text-muted-foreground text-xs">
+        {hasClient ? "Este cliente no tiene direcciones guardadas para esta ruta; captúralas en su ficha." : "Elige el cliente para ver sus direcciones."}
+      </p>
+    );
+  }
+  return (
+    <div className="space-y-1">
+      <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">{label}</p>
+      <ul role="radiogroup" aria-label={`${label} en ${city}`} className="divide-y rounded-md border">
+        {options.map((a) => {
+          const on = a === value;
+          return (
+            <li key={a}>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={on}
+                disabled={disabled}
+                onClick={() => onSelect(a)}
+                className={`flex w-full items-start gap-2 px-3 py-2 text-left text-sm disabled:opacity-70 ${on ? "bg-primary/[0.07] font-medium" : "hover:bg-muted/60"}`}
+              >
+                <span className={`mt-1 size-3 shrink-0 rounded-full border ${on ? "border-primary bg-primary" : "border-muted-foreground/50"}`} />
+                <span className="min-w-0 break-words">{a}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }

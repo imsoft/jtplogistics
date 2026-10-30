@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { FormActions } from "@/components/ui/form-actions";
 import { Label } from "@/components/ui/label";
 import { AppSelect } from "@/components/ui/app-select";
+import { ProductTagsField } from "@/components/dashboard/resources/product-tags-field";
 import { CFDI_USES, TAX_REGIMES } from "@/lib/sat-catalogs";
 import type { Client, ClientFormData } from "@/types/client.types";
 
@@ -40,27 +41,17 @@ export function ClientForm({
   const [address, setAddress] = useState(initialValues.address ?? "");
   const [notes, setNotes] = useState(initialValues.notes ?? "");
   const [detentionConditions, setDetentionConditions] = useState(initialValues.detentionConditions ?? "");
-  const [productTypesInput, setProductTypesInput] = useState(
-    (initialValues.productTypes ?? []).join(", ")
-  );
+  const [productTypes, setProductTypes] = useState<string[]>(initialValues.productTypes ?? []);
 
-  // Si cambian los tipos de producto iniciales, se reinicia el campo.
+  // Si cambian los productos iniciales, se reinicia el campo.
   const [prevProductTypes, setPrevProductTypes] = useState(initialValues.productTypes);
   if (initialValues.productTypes !== prevProductTypes) {
     setPrevProductTypes(initialValues.productTypes);
-    setProductTypesInput((initialValues.productTypes ?? []).join(", "));
+    setProductTypes(initialValues.productTypes ?? []);
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const productTypes = [
-      ...new Set(
-        productTypesInput
-          .split(",")
-          .map((value) => value.trim())
-          .filter(Boolean)
-      ),
-    ];
     onSubmit({
       name,
       contactName,
@@ -182,13 +173,8 @@ export function ClientForm({
           />
         </div>
 
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="client-product-types">Tipos de producto que maneja</Label>
-          <Input
-            id="client-product-types"
-            value={productTypesInput}
-            onChange={(e) => setProductTypesInput(e.target.value)}
-          />
+        <div className="sm:col-span-2">
+          <ProductTagsField id="client-product-types" value={productTypes} onChange={setProductTypes} />
         </div>
 
         <div className="space-y-2 sm:col-span-2">
