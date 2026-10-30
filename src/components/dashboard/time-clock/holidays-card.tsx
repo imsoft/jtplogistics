@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DatePicker } from "@/components/ui/date-picker";
+import { useConfirm } from "@/components/ui/confirm-provider";
 
 interface Holiday {
   id: string;
@@ -37,6 +38,7 @@ export function HolidaysCard() {
   const [date, setDate] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState<"add" | "preload" | string | null>(null);
+  const confirm = useConfirm();
 
   const fetchHolidays = useCallback(() => {
     fetch(`/api/time-clock/holidays?year=${year}`)
@@ -104,6 +106,15 @@ export function HolidaysCard() {
   }
 
   async function remove(h: Holiday) {
+    if (
+      !(await confirm({
+        title: "¿Quitar el día festivo?",
+        description: `${h.name} (${longDate(h.date)}) dejará de contar como festivo y ese día volverá a ser laborable.`,
+        confirmLabel: "Quitar",
+        destructive: true,
+      }))
+    )
+      return;
     setBusy(h.id);
     try {
       const res = await fetch(`/api/time-clock/holidays?id=${h.id}`, { method: "DELETE" });

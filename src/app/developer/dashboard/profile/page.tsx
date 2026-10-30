@@ -7,8 +7,10 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { FormSkeleton } from "@/components/ui/skeletons";
+import { SAVE_CHANGES, useConfirm } from "@/components/ui/confirm-provider";
 
 export default function DeveloperProfilePage() {
+  const confirm = useConfirm();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [birthDate, setBirthDate] = useState("");
@@ -40,6 +42,7 @@ export default function DeveloperProfilePage() {
 
   async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
+    if (!(await confirm(SAVE_CHANGES))) return;
     setError(null);
     setSuccess(false);
     setIsLoading(true);

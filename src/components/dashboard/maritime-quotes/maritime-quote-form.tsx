@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { pdf } from "@react-pdf/renderer";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { SAVE_CHANGES, useConfirm } from "@/components/ui/confirm-provider";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
@@ -65,6 +66,7 @@ interface Props {
 export function MaritimeQuoteForm({ mode, quoteId, backHref, initialInput, initialStatus, clientsEndpoint }: Props) {
   const isDraft = initialStatus === "borrador";
   const router = useRouter();
+  const confirm = useConfirm();
   const [input, setInput] = useState<MaritimeQuoteInput>(initialInput ?? emptyInput());
   const [isSaving, setIsSaving] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -144,6 +146,7 @@ export function MaritimeQuoteForm({ mode, quoteId, backHref, initialInput, initi
       toast.error(err);
       return;
     }
+    if (mode === "edit" && !(await confirm(SAVE_CHANGES))) return;
     setIsSaving(true);
     try {
       const payload = {

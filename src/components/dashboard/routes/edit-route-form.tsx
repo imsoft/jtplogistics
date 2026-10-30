@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronDown, ChevronRight, History } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { SAVE_CHANGES, useConfirm } from "@/components/ui/confirm-provider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RouteForm } from "./route-form";
 import { RouteLogTable } from "./route-log-table";
@@ -19,9 +20,11 @@ export function EditRouteForm({
   basePath?: string;
 }) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [historyOpen, setHistoryOpen] = useState(false);
 
   async function handleSubmit(data: RouteFormData) {
+    if (!(await confirm(SAVE_CHANGES))) return;
     try {
       const res = await fetch(`/api/routes/${route.id}`, {
         method: "PATCH",

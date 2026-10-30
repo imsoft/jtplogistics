@@ -22,6 +22,7 @@ import { Laptop, Smartphone, Mail, ChevronRight, Eye, Plus, Pencil, Trash2, AtSi
 import type { Employee, EmployeeFormData } from "@/types/resources.types";
 import { formatPhone } from "@/lib/utils";
 import { toast } from "sonner";
+import { SAVE_CHANGES, useConfirm } from "@/components/ui/confirm-provider";
 
 const MODULES = [
   { suffix: "Messages", label: "Mensajes" },
@@ -102,6 +103,7 @@ function LinkedResource({ href, children }: { href: string; children: React.Reac
 }
 
 export default function EditEmployeePage() {
+  const confirm = useConfirm();
   const { id } = useParams<{ id: string }>();
 
   const { data: employee, setData, isLoaded, error, isSubmitting, handleSubmit, handleDelete } =
@@ -148,13 +150,15 @@ export default function EditEmployeePage() {
       toast.error("Revisa el horario: alguna hora quedó vacía.");
       return;
     }
+    // Se confirma aquí, antes del horario, para no guardar nada si cancelan.
+    if (!(await confirm(SAVE_CHANGES))) return;
     // El horario primero: guardarlo después sería tarde, porque el guardado de
     // la ficha redirige y se perdería el cambio sin que nadie se entere.
     if (Array.isArray(schedule) && !(await saveSchedule(id, schedule))) {
       toast.error("No se pudo guardar el horario. No se guardó nada.");
       return;
     }
-    handleSubmit({ ...formData, ...permissions });
+    handleSubmit({ ...formData, ...permissions }, { skipConfirm: true });
   }
 
   if (!isLoaded) return <FormSkeleton />;

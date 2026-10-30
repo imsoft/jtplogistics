@@ -11,8 +11,10 @@ import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { useProfile } from "@/hooks/use-profile";
 import { EditJtpWhatsapp } from "@/components/dashboard/admin/edit-jtp-whatsapp";
 import { ProfileSkeleton } from "@/components/ui/skeletons";
+import { SAVE_CHANGES, useConfirm } from "@/components/ui/confirm-provider";
 
 export default function AdminProfilePage() {
+  const confirm = useConfirm();
   const { data, isFetching, fetchError } = useProfile();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +34,7 @@ export default function AdminProfilePage() {
 
   async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault();
+    if (!(await confirm(SAVE_CHANGES))) return;
     setIsLoading(true);
     setError(null);
     setSuccess(false);

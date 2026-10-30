@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { normalizePayloadToLowercase } from "@/lib/text-case";
+import { SAVE_CHANGES, useConfirm } from "@/components/ui/confirm-provider";
 
 interface UseResourceEditOptions {
   endpoint: string;
@@ -17,7 +18,8 @@ interface UseResourceEditResult<T> {
   isLoaded: boolean;
   error: string | null;
   isSubmitting: boolean;
-  handleSubmit: (formData: unknown) => Promise<void>;
+  /** `skipConfirm` cuando la página ya confirmó por su cuenta. */
+  handleSubmit: (formData: unknown, opts?: { skipConfirm?: boolean }) => Promise<void>;
   handleDelete: () => Promise<void>;
 }
 
@@ -32,6 +34,7 @@ export function useResourceEdit<T>({
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const confirm = useConfirm();
 
   useEffect(() => {
     fetch(`${endpoint}/${id}`)
@@ -45,7 +48,9 @@ export function useResourceEdit<T>({
       .catch((e) => { setError(e instanceof Error ? e.message : "Error al cargar"); setIsLoaded(true); });
   }, [id, endpoint]);
 
-  async function handleSubmit(formData: unknown) {
+  async function handleSubmit(formData: unknown, opts?: { skipConfirm?: boolean }) {
+    // Editar un registro existente siempre se confirma.
+    if (!opts?.skipConfirm && !(await confirm(SAVE_CHANGES))) return;
     setError(null);
     setIsSubmitting(true);
     try {

@@ -22,6 +22,7 @@ import { normalizeSearch } from "@/lib/search";
 import { cn } from "@/lib/utils";
 import { CardListSkeleton } from "@/components/ui/skeletons";
 import { clientRoutesEndpoint } from "./client-routes";
+import { SAVE_CHANGES, useConfirm } from "@/components/ui/confirm-provider";
 
 interface ClientRoutesDialogProps {
   clientId: string;
@@ -73,6 +74,7 @@ export function ClientRoutesDialog({ clientId, open, onOpenChange, onSave }: Cli
 }
 
 function RoutesPicker({ clientId, onOpenChange, onSave }: Omit<ClientRoutesDialogProps, "open">) {
+  const confirm = useConfirm();
   const [rows, setRows] = useState<RouteRow[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isLoaded, setIsLoaded] = useState(false);
@@ -167,6 +169,7 @@ function RoutesPicker({ clientId, onOpenChange, onSave }: Omit<ClientRoutesDialo
   }
 
   async function handleSave() {
+    if (!(await confirm({ ...SAVE_CHANGES, description: "Las rutas del cliente quedarán como las dejaste marcadas." }))) return;
     setIsSaving(true);
     try {
       const body = Array.from(selected).map((key) => {

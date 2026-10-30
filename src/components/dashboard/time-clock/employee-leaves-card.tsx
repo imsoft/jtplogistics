@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AppSelect } from "@/components/ui/app-select";
 import { LEAVE_KINDS, LEAVE_LABELS, type LeaveKind } from "@/lib/time-clock-leaves";
 import { DatePicker } from "@/components/ui/date-picker";
+import { useConfirm } from "@/components/ui/confirm-provider";
 
 interface Leave {
   id: string;
@@ -43,6 +44,7 @@ export function EmployeeLeavesCard({ userId }: { userId: string }) {
   const [endDate, setEndDate] = useState("");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
+  const confirm = useConfirm();
 
   const load = useCallback(() => {
     fetch(`/api/time-clock/leaves?userId=${userId}`)
@@ -78,6 +80,19 @@ export function EmployeeLeavesCard({ userId }: { userId: string }) {
   }
 
   async function remove(leave: Leave) {
+    const when =
+      leave.startDate === leave.endDate
+        ? `del ${longDate(leave.startDate)}`
+        : `del ${longDate(leave.startDate)} al ${longDate(leave.endDate)}`;
+    if (
+      !(await confirm({
+        title: `¿Quitar ${LEAVE_LABELS[leave.kind].toLowerCase()}?`,
+        description: `Se borra el periodo ${when} y esos días vuelven a contar como laborables.`,
+        confirmLabel: "Quitar",
+        destructive: true,
+      }))
+    )
+      return;
     setBusy(leave.id);
     try {
       const res = await fetch(`/api/time-clock/leaves?id=${leave.id}`, { method: "DELETE" });

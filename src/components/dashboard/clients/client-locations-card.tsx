@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CardListSkeleton } from "@/components/ui/skeletons";
 import type { AssignedRoute } from "./client-routes";
+import { SAVE_CHANGES, useConfirm } from "@/components/ui/confirm-provider";
 
 type Kind = "origin" | "destination";
 interface Row {
@@ -26,6 +27,7 @@ const newKey = () => `n${++seq}`;
  * puede tener varias. Al registrar un embarque se ofrecen las de esa ruta.
  */
 export function ClientLocationsCard({ clientId, routes, loaded, canEdit }: { clientId: string; routes: AssignedRoute[]; loaded: boolean; canEdit: boolean }) {
+  const confirm = useConfirm();
   // Una ruta puede venir repetida por tipo de unidad: se agrupa por la ruta.
   const groups = useMemo(() => {
     const map = new Map<string, { routeId: string; origin: string; destination: string }>();
@@ -57,6 +59,7 @@ export function ClientLocationsCard({ clientId, routes, loaded, canEdit }: { cli
 
   async function save() {
     if (!rows) return;
+    if (!(await confirm({ ...SAVE_CHANGES, description: "Las direcciones del cliente quedarán como las capturaste." }))) return;
     setBusy(true);
     try {
       const locations = rows.filter((r) => r.address.trim()).map(({ routeId, kind, address }) => ({ routeId, kind, address: address.trim() }));

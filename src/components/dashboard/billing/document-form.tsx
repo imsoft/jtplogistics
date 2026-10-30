@@ -15,6 +15,7 @@ import { formatMxn, formatMxnLive, parseMxn } from "@/lib/utils";
 import { BILLING_KIND_LABELS, IVA_WITHHOLDING_OPTIONS, computeTotals, type BillingKind } from "@/lib/billing";
 import { money, todayKey, uploadAttachment, type BillingAttachmentRow, type BillingDocument, type UploadedAttachment } from "./billing-shared";
 import { DatePicker } from "@/components/ui/date-picker";
+import { useConfirm } from "@/components/ui/confirm-provider";
 
 export interface DocumentFormData {
   /** Borrador armado desde un embarque: el folio llega al emitir la factura. */
@@ -155,6 +156,7 @@ export function DocumentForm({
   const [parties, setParties] = useState<{ name: string; rfc: string | null; clientId: string | null; creditDays?: number | null }[]>([]);
   // Archivos subidos mientras se captura; se ligan a la factura al guardarla.
   const [files, setFiles] = useState<BillingAttachmentRow[]>([]);
+  const confirm = useConfirm();
   const [xml, setXml] = useState<NonNullable<UploadedAttachment["fields"]> | null>(null);
   const [uploading, setUploading] = useState(false);
   const lockedByXml = Boolean(lockedAmounts);
@@ -236,8 +238,17 @@ export function DocumentForm({
   }
 
   async function removeFile(id: string) {
-    await fetch(`/api/billing/attachments/${id}`, { method: "DELETE" }).catch(() => null);
     const removed = files.find((f) => f.id === id);
+    if (
+      !(await confirm({
+        title: "¿Quitar el archivo?",
+        description: `Se borra ${removed?.fileName ?? "el archivo"} del servidor y habrá que subirlo de nuevo si lo necesitas.`,
+        confirmLabel: "Quitar",
+        destructive: true,
+      }))
+    )
+      return;
+    await fetch(`/api/billing/attachments/${id}`, { method: "DELETE" }).catch(() => null);
     setFiles((prev) => prev.filter((f) => f.id !== id));
     if (removed?.kind === "xml") setXml(null);
   }

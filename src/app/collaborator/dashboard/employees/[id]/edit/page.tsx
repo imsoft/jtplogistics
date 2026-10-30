@@ -15,8 +15,10 @@ import {
 import { EmployeeLeavesCard } from "@/components/dashboard/time-clock/employee-leaves-card";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 import type { Employee } from "@/types/resources.types";
+import { SAVE_CHANGES, useConfirm } from "@/components/ui/confirm-provider";
 
 export default function CollaboratorEditEmployeePage() {
+  const confirm = useConfirm();
   const { id } = useParams<{ id: string }>();
   const { permissions } = useCollaboratorPermissions();
 
@@ -36,13 +38,15 @@ export default function CollaboratorEditEmployeePage() {
       toast.error("Revisa el horario: alguna hora quedó vacía.");
       return;
     }
+    // Se confirma aquí, antes del horario, para no guardar nada si cancelan.
+    if (!(await confirm(SAVE_CHANGES))) return;
     // El horario primero: guardarlo después sería tarde, porque el guardado de
     // la ficha redirige y se perdería el cambio sin que nadie se entere.
     if (Array.isArray(schedule) && !(await saveSchedule(id, schedule))) {
       toast.error("No se pudo guardar el horario. No se guardó nada.");
       return;
     }
-    handleSubmit(formData);
+    handleSubmit(formData, { skipConfirm: true });
   }
 
   if (!isLoaded) return <FormSkeleton />;

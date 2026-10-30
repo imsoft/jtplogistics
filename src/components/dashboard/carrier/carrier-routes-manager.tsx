@@ -14,6 +14,7 @@ import { formatMxnLive, formatMxn, parseMxn } from "@/lib/utils";
 import { useUnitTypes } from "@/hooks/use-unit-types";
 import { toast } from "sonner";
 import { DataTableSkeleton } from "@/components/ui/skeletons";
+import { SAVE_CHANGES, useConfirm } from "@/components/ui/confirm-provider";
 
 interface RouteSelection {
   unitType: string;
@@ -108,6 +109,7 @@ export function CarrierRoutesManager({
   showSemaforo,
   defaultAgreement = "all",
 }: CarrierRoutesManagerProps) {
+  const confirm = useConfirm();
   const { unitType } = useParams<{ unitType: string }>();
   const router = useRouter();
   const [allRoutes, setAllRoutes] = useState<CarrierRouteRow[]>([]);
@@ -354,6 +356,7 @@ export function CarrierRoutesManager({
   }
 
   async function handleSubmit() {
+    if (!(await confirm({ ...SAVE_CHANGES, description: "Tus rutas y volúmenes quedarán como los dejaste marcados." }))) return;
     setIsSaving(true);
     try {
       // Only send selected routes for THIS unit type page

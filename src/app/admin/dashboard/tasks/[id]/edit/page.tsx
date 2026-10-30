@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { SAVE_CHANGES, useConfirm } from "@/components/ui/confirm-provider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { TaskForm } from "@/components/dashboard/tasks/task-form";
 import { toast } from "sonner";
@@ -13,6 +14,7 @@ import { FormSkeleton } from "@/components/ui/skeletons";
 
 export default function EditTaskPage() {
   const router = useRouter();
+  const confirm = useConfirm();
   const { id } = useParams<{ id: string }>();
   const [task, setTask] = useState<Task | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,6 +29,7 @@ export default function EditTaskPage() {
   }, [id]);
 
   async function handleSubmit(data: TaskFormData) {
+    if (!(await confirm(SAVE_CHANGES))) return;
     setIsSubmitting(true);
     try {
       const res = await fetch(`/api/admin/tasks/${id}`, {

@@ -21,6 +21,7 @@ import { StatementImportDialog } from "./statement-import-dialog";
 import { ExportableTable } from "@/components/dashboard/export/exportable-table";
 import { DatePicker } from "@/components/ui/date-picker";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { useConfirm } from "@/components/ui/confirm-provider";
 
 /** Cuentas de banco con su saldo y movimientos sin conciliar. */
 export function BanksView({ basePath, canCreate }: { basePath: string; canCreate: boolean }) {
@@ -276,6 +277,7 @@ export function BankDetailView({
   const [fullHistory, setFullHistory] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const router = useRouter();
+  const confirm = useConfirm();
 
   const load = useCallback(() => {
     fetch(`/api/billing/banks/${id}${fullHistory ? "?history=all" : ""}`)
@@ -300,6 +302,15 @@ export function BankDetailView({
   }
 
   async function remove(m: Movement) {
+    if (
+      !(await confirm({
+        title: "¿Borrar el movimiento?",
+        description: `Se borra "${m.concept}" del ${shortDay(m.date)} por ${money(m.amount, data?.currency ?? "MXN")} y el saldo de la cuenta se recalcula.`,
+        confirmLabel: "Borrar",
+        destructive: true,
+      }))
+    )
+      return;
     const res = await fetch(`/api/billing/movements/${m.id}`, { method: "DELETE" });
     if (!res.ok) {
       toast.error(((await res.json().catch(() => ({}))) as { error?: string }).error ?? "No se pudo borrar.");

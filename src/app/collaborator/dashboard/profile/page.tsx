@@ -9,8 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { ProfileSkeleton } from "@/components/ui/skeletons";
+import { SAVE_CHANGES, useConfirm } from "@/components/ui/confirm-provider";
 
 export default function CollaboratorProfilePage() {
+  const confirm = useConfirm();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [birthDate, setBirthDate] = useState("");
@@ -46,6 +48,7 @@ export default function CollaboratorProfilePage() {
 
   async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
+    if (!(await confirm(SAVE_CHANGES))) return;
     setError(null);
     setSuccess(false);
     setIsLoading(true);

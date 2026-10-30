@@ -14,6 +14,7 @@ import { formatMxnLive, parseMxn } from "@/lib/utils";
 import { IVA_WITHHOLDING_OPTIONS, computeTotals } from "@/lib/billing";
 import { money, shortDay, todayKey, uploadAttachment, type BillingAttachmentRow, type BillingDocument, type UploadedAttachment } from "./billing-shared";
 import { DatePicker } from "@/components/ui/date-picker";
+import { useConfirm } from "@/components/ui/confirm-provider";
 
 const IVA_OPTIONS = [
   { value: "0.16", label: "16 %" },
@@ -150,6 +151,7 @@ function CreditNoteForm({ doc, onClose, onSaved }: { doc: BillingDocument; onClo
   const [xml, setXml] = useState<NonNullable<UploadedAttachment["fields"]> | null>(null);
   const [uploading, setUploading] = useState(false);
   const [busy, setBusy] = useState(false);
+  const confirm = useConfirm();
   const container = useRef<HTMLDivElement | null>(null);
 
   const parsed = parseMxn(subtotal);
@@ -187,8 +189,17 @@ function CreditNoteForm({ doc, onClose, onSaved }: { doc: BillingDocument; onClo
   }
 
   async function removeFile(id: string) {
-    await fetch(`/api/billing/attachments/${id}`, { method: "DELETE" }).catch(() => null);
     const removed = files.find((f) => f.id === id);
+    if (
+      !(await confirm({
+        title: "¿Quitar el archivo?",
+        description: `Se borra ${removed?.fileName ?? "el archivo"} del servidor y habrá que subirlo de nuevo si lo necesitas.`,
+        confirmLabel: "Quitar",
+        destructive: true,
+      }))
+    )
+      return;
+    await fetch(`/api/billing/attachments/${id}`, { method: "DELETE" }).catch(() => null);
     setFiles((prev) => prev.filter((f) => f.id !== id));
     if (removed?.kind === "xml") setXml(null);
   }

@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { useProfile } from "@/hooks/use-profile";
 import { FormSkeleton } from "@/components/ui/skeletons";
+import { SAVE_CHANGES, useConfirm } from "@/components/ui/confirm-provider";
 
 const PHONE_LABELS = ["Oficina", "Celular", "Casa", "Principal", "Otro"] as const;
 const EMAIL_LABELS = ["Principal", "Operaciones", "Cotizaciones", "Ventas", "Otro"] as const;
@@ -102,6 +103,7 @@ function flattenPersons(persons: PersonInput[]): FlatContact[] {
 }
 
 export default function CarrierProfilePage() {
+  const confirm = useConfirm();
   const { data, isFetching, fetchError } = useProfile();
   // Un usuario agregado sin permiso sobre la empresa ve sus datos, pero no los
   // cambia: el servidor los ignoraría de todos modos.
@@ -234,6 +236,7 @@ export default function CarrierProfilePage() {
 
   async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault();
+    if (!(await confirm(SAVE_CHANGES))) return;
     setError(null);
     setSuccess(false);
     setIsLoading(true);

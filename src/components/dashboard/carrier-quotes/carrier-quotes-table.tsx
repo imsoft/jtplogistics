@@ -9,6 +9,7 @@ import { pdf } from "@react-pdf/renderer";
 import { Plus, Trash2, FileText, Loader2, Settings, Send, Save } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
+import { SAVE_CHANGES, useConfirm } from "@/components/ui/confirm-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -125,6 +126,7 @@ export function CarrierQuotesTable({
   clientsEndpoint,
 }: CarrierQuotesTableProps) {
   const router = useRouter();
+  const confirm = useConfirm();
   const isEditing = !!editQuote;
   const isDraft = editQuote?.status === "borrador";
 
@@ -380,6 +382,7 @@ export function CarrierQuotesTable({
       if (!contact.trim()) { setQuoteError("Ingresa el nombre del contacto."); return; }
     }
     if (quoteRows.length === 0) { setQuoteError("Agrega al menos una ruta."); return; }
+    if (!(await confirm(SAVE_CHANGES))) return;
     setIsSaving(true);
     try {
       const res = await fetch(`${updateEndpoint}/${editQuote.id}`, {

@@ -8,8 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { FormSkeleton } from "@/components/ui/skeletons";
+import { SAVE_CHANGES, useConfirm } from "@/components/ui/confirm-provider";
 
 export default function VendorProfilePage() {
+  const confirm = useConfirm();
   const DEFAULT_NOTES = "- Estadías\n- Reparto";
 
   const [name, setName] = useState("");
@@ -47,6 +49,7 @@ export default function VendorProfilePage() {
 
   async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
+    if (!(await confirm(SAVE_CHANGES))) return;
     setError(null);
     setSuccess(false);
     setIsLoading(true);

@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { AppSelect } from "@/components/ui/app-select";
 import type { CarrierRating } from "@/app/api/admin/carriers/ratings/route";
+import { useConfirm } from "@/components/ui/confirm-provider";
 
 // ── Star display ─────────────────────────────────────────────────────────────
 
@@ -123,6 +124,7 @@ function ManualRatingEditor({
   const [notes, setNotes] = useState(carrier.manualNotes ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const confirm = useConfirm();
 
   const dirty =
     stars !== (carrier.manualStars ?? 0) ||
@@ -160,6 +162,15 @@ function ManualRatingEditor({
   }
 
   async function handleClear() {
+    if (
+      !(await confirm({
+        title: "¿Quitar la calificación manual?",
+        description: `${carrier.legalName} se quedará solo con la calificación automática; las notas que escribiste se pierden.`,
+        confirmLabel: "Quitar",
+        destructive: true,
+      }))
+    )
+      return;
     setSaving(true);
     setError(null);
     try {

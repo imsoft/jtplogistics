@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SAVE_CHANGES, useConfirm } from "@/components/ui/confirm-provider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormSkeleton } from "@/components/ui/skeletons";
 import { TaskForm } from "@/components/dashboard/tasks/task-form";
@@ -14,6 +15,7 @@ import type { Task, TaskFormData } from "@/types/task.types";
 
 export default function EditCollaboratorTaskPage() {
   const router = useRouter();
+  const confirm = useConfirm();
   const { id } = useParams<{ id: string }>();
   const { permissions, isLoaded: permissionsLoaded } = useCollaboratorPermissions();
   const [task, setTask] = useState<Task | null>(null);
@@ -40,6 +42,7 @@ export default function EditCollaboratorTaskPage() {
   }, [permissionsLoaded, permissions, id]);
 
   async function handleSubmit(data: TaskFormData) {
+    if (!(await confirm(SAVE_CHANGES))) return;
     setIsSubmitting(true);
     try {
       const res = await fetch(`/api/collaborator/tasks/${id}`, {

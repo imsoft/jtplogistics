@@ -50,6 +50,7 @@ import {
 import { FollowUpCell, StageBadge } from "./leads-table";
 import { shortDay, todayKey, type LeadDetail } from "./lead-types";
 import { DatePicker } from "@/components/ui/date-picker";
+import { useConfirm } from "@/components/ui/confirm-provider";
 
 const ACTIVITY_ICONS: Record<LeadActivityType, React.ElementType> = {
   llamada: Phone,
@@ -388,6 +389,7 @@ function ActivityForm({ lead, onSaved }: { lead: LeadDetail; onSaved: () => void
 
 function DeleteActivityButton({ leadId, activityId, onDeleted }: { leadId: string; activityId: string; onDeleted: () => void }) {
   const [busy, setBusy] = useState(false);
+  const confirm = useConfirm();
   return (
     <Button
       variant="ghost"
@@ -396,6 +398,15 @@ function DeleteActivityButton({ leadId, activityId, onDeleted }: { leadId: strin
       aria-label="Borrar actividad"
       disabled={busy}
       onClick={async () => {
+        if (
+          !(await confirm({
+            title: "¿Borrar la actividad?",
+            description: "Desaparece del historial del prospecto y no se puede recuperar.",
+            confirmLabel: "Borrar",
+            destructive: true,
+          }))
+        )
+          return;
         setBusy(true);
         try {
           const res = await fetch(`/api/client-leads/${leadId}/activities/${activityId}`, { method: "DELETE" });

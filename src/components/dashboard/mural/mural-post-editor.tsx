@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ResourceNewPage } from "@/components/dashboard/resources/resource-new-page";
 import { FormSkeleton } from "@/components/ui/skeletons";
+import { SAVE_CHANGES, useConfirm } from "@/components/ui/confirm-provider";
 import { MuralPostForm } from "@/components/dashboard/mural/mural-post-form";
 import type { MuralPost, MuralPostFormData } from "@/types/mural.types";
 
@@ -70,6 +71,7 @@ export function MuralPostCreate({ basePath }: { basePath: string }) {
 
 export function MuralPostEdit({ id, basePath }: { id: string; basePath: string }) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [post, setPost] = useState<MuralPost | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -87,6 +89,7 @@ export function MuralPostEdit({ id, basePath }: { id: string; basePath: string }
   }, [id]);
 
   async function handleSubmit(data: MuralPostFormData) {
+    if (!(await confirm(SAVE_CHANGES))) return;
     setError(null);
     setIsSubmitting(true);
     const result = await submitPost(`/api/mural/posts/${id}`, "PATCH", data);
