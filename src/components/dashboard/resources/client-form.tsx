@@ -67,7 +67,8 @@ export function ClientForm({
       address,
       notes,
       detentionConditions,
-      productTypes,
+      // Sin filas vacías ni repetidos (sin distinguir mayúsculas).
+      productTypes: productTypes.map((x) => x.trim()).filter((x, i, a) => x && a.findIndex((y) => y.toLowerCase() === x.toLowerCase()) === i),
     });
   }
 
