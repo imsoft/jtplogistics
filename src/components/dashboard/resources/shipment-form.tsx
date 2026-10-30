@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { FormActions } from "@/components/ui/form-actions";
 import { Label } from "@/components/ui/label";
 import { AppSelect } from "@/components/ui/app-select";
+import { AppMultiSelect } from "@/components/ui/app-multi-select";
 import { SHIPMENT_STATUS_CONFIG } from "@/components/dashboard/resources/shipments-table";
 import { useUnitTypes } from "@/hooks/use-unit-types";
 import { useIncidentTypes } from "@/hooks/use-incident-types";
@@ -445,31 +446,19 @@ export function ShipmentForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-product">Producto</Label>
-          <Input id="shipment-product" value={product} disabled={isClosed} onChange={(e) => setProduct(e.target.value)} />
-          {!isClosed && (clientRecord?.productTypes?.length ?? 0) > 0 && (
-            <div className="flex flex-wrap items-center gap-1">
-              <span className="text-muted-foreground mr-1 text-[11px] uppercase tracking-wide">Productos de {clientRecord!.name}:</span>
-              {clientRecord!.productTypes.map((p) => {
-                // Puede mover varios: cada clic agrega o quita el producto de la lista.
-                const list = product.split(",").map((x) => x.trim()).filter(Boolean);
-                const on = list.some((x) => x.toLowerCase() === p.toLowerCase());
-                return (
-                  <button
-                    key={p}
-                    type="button"
-                    aria-pressed={on}
-                    onClick={() => setProduct((on ? list.filter((x) => x.toLowerCase() !== p.toLowerCase()) : [...list, p]).join(", "))}
-                    className={`rounded px-1.5 py-0.5 text-[11px] font-medium uppercase tracking-wide ${on ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"}`}
-                  >
-                    {p}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-          {!isClosed && clientRecord && clientRecord.productTypes.length === 0 && (
-            <p className="text-muted-foreground text-xs">Este cliente no tiene productos capturados en su perfil. Puedes escribir varios separados por coma.</p>
-          )}
+          <AppMultiSelect
+            id="shipment-product"
+            value={splitList(product, ", ")}
+            onValueChange={(list) => setProduct(list.join(", "))}
+            options={clientRecord?.productTypes ?? []}
+            allowCustom
+            disabled={isClosed}
+          />
+          <p className="text-muted-foreground text-xs">
+            {clientRecord && clientRecord.productTypes.length === 0
+              ? "Este cliente no tiene productos capturados en su perfil; escribe el producto y agrégalo con Enter."
+              : "Puede llevar varios; también puedes escribir uno y agregarlo con Enter."}
+          </p>
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-pickupDate">Recolección</Label>
@@ -701,31 +690,14 @@ export function ShipmentForm({
   );
 }
 
-/**
- * Direcciones del cliente para esa ciudad en la ruta elegida, como lista para
- * marcar una. La guardada en un embarque que ya no está en la ficha se muestra
- * también, para no perderla.
- */
-function AddressList({
-  label,
-  city,
-  choices,
-  value,
-  disabled,
-  hasClient,
-  onSelect,
-}: {
-  label: string;
-  city: string;
-  choices: string[];
-  value: string;
-  disabled: boolean;
-  hasClient: boolean;
-  onSelect: (address: string) => void;
-}) {
+/** Separador con el que se guardan varias direcciones en un mismo campo. */
+const ADDRESS_SEP = "; ";
+const splitList = (value: string, sep: string) => value.split(sep.trim()).map((x) => x.trim()).filter(Boolean);
+
+/** Direcciones del cliente para esa ciudad en la ruta elegida; puede marcar varias. */
+function AddressList({ label, city, choices, value, disabled, hasClient, onSelect }: { label: string; city: string; choices: string[]; value: string; disabled: boolean; hasClient: boolean; onSelect: (address: string) => void }) {
   if (!city.trim()) return null;
-  const options = value && !choices.includes(value) ? [value, ...choices] : choices;
-  if (options.length === 0) {
+  if (choices.length === 0 && !value) {
     return (
       <p className="text-muted-foreground text-xs">
         {hasClient ? "Este cliente no tiene direcciones guardadas para esta ruta; captúralas en su ficha." : "Elige el cliente para ver sus direcciones."}
@@ -735,26 +707,7 @@ function AddressList({
   return (
     <div className="space-y-1">
       <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">{label}</p>
-      <ul role="radiogroup" aria-label={`${label} en ${city}`} className="divide-y rounded-md border">
-        {options.map((a) => {
-          const on = a === value;
-          return (
-            <li key={a}>
-              <button
-                type="button"
-                role="radio"
-                aria-checked={on}
-                disabled={disabled}
-                onClick={() => onSelect(a)}
-                className={`flex w-full items-start gap-2 px-3 py-2 text-left text-sm disabled:opacity-70 ${on ? "bg-primary/[0.07] font-medium" : "hover:bg-muted/60"}`}
-              >
-                <span className={`mt-1 size-3 shrink-0 rounded-full border ${on ? "border-primary bg-primary" : "border-muted-foreground/50"}`} />
-                <span className="min-w-0 break-words">{a}</span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+      <AppMultiSelect value={splitList(value, ADDRESS_SEP)} onValueChange={(list) => onSelect(list.join(ADDRESS_SEP))} options={choices} disabled={disabled} />
     </div>
   );
 }
