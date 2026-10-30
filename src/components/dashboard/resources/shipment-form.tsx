@@ -262,10 +262,11 @@ export function ShipmentForm({
         if (cancelled || !Array.isArray(rows)) return;
         const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
         const matches = rows.filter((r) => same(r.origin, origin) && same(r.destination, destination) && r.clientTarget != null);
-        const best = matches.find((r) => unit && r.unitType === unit) ?? matches[0];
+        // Con unidad elegida solo vale la tarifa de esa unidad: si no la tiene, no se propone nada.
+        const best = unit ? matches.find((r) => r.unitType === unit) ?? null : matches[0];
         const target = best?.clientTarget ?? null;
         setAgreed({ key, value: target });
-        if (target != null && !saleTouched) setSale(formatMxn(target));
+        if (!saleTouched) setSale(target != null ? formatMxn(target) : "");
       })
       .catch(() => {
         if (!cancelled) setAgreed({ key, value: null });
@@ -319,7 +320,7 @@ export function ShipmentForm({
       .then((d: { cost: number | null }) => {
         if (cancelled) return;
         setAgreedCost({ key, value: d.cost });
-        if (d.cost != null && !costTouched) setCost(formatMxn(d.cost));
+        if (!costTouched) setCost(d.cost != null ? formatMxn(d.cost) : "");
       })
       .catch(() => !cancelled && setAgreedCost({ key, value: null }));
     return () => {
