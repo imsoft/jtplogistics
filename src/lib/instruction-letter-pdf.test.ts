@@ -35,7 +35,7 @@ describe("InstructionLetterPdf", () => {
       logoUrl: logoPath,
     });
 
-    const buffer = await renderToBuffer(doc);
+    const buffer = await renderToBuffer(doc as any);
     const fs = await import("fs");
     fs.writeFileSync("/tmp/generated_instruction_letter.pdf", buffer);
     expect(buffer.length).toBeGreaterThan(1000);
