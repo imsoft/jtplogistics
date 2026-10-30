@@ -227,8 +227,6 @@ const s = StyleSheet.create({
     fontFamily: "Helvetica",
   },
   outerFrame: {
-    borderWidth: 1.2,
-    borderColor: C.black,
     height: "100%",
     paddingHorizontal: 16,
     paddingTop: 12,
