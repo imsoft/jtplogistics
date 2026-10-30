@@ -7,7 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { FormActions } from "@/components/ui/form-actions";
 import { Label } from "@/components/ui/label";
 import { AppSelect } from "@/components/ui/app-select";
-import { AppMultiSelect } from "@/components/ui/app-multi-select";
 import { SHIPMENT_STATUS_CONFIG } from "@/components/dashboard/resources/shipments-table";
 import { useUnitTypes } from "@/hooks/use-unit-types";
 import { useIncidentTypes } from "@/hooks/use-incident-types";
@@ -446,19 +445,20 @@ export function ShipmentForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-product">Producto</Label>
-          <AppMultiSelect
-            id="shipment-product"
-            value={splitList(product, ", ")}
-            onValueChange={(list) => setProduct(list.join(", "))}
-            options={clientRecord?.productTypes ?? []}
-            allowCustom
-            disabled={isClosed}
-          />
-          <p className="text-muted-foreground text-xs">
-            {clientRecord && clientRecord.productTypes.length === 0
-              ? "Este cliente no tiene productos capturados en su perfil; escribe el producto y agrégalo con Enter."
-              : "Puede llevar varios; también puedes escribir uno y agregarlo con Enter."}
-          </p>
+          {(clientRecord?.productTypes.length ?? 0) > 0 ? (
+            <AppSelect
+              value={product}
+              onValueChange={setProduct}
+              options={[...clientRecord!.productTypes, ...(product && !clientRecord!.productTypes.includes(product) ? [product] : [])].map((x) => ({ value: x, label: x }))}
+              disabled={isClosed}
+              className="w-full"
+            />
+          ) : (
+            <Input id="shipment-product" value={product} disabled={isClosed} onChange={(e) => setProduct(e.target.value)} />
+          )}
+          {clientRecord && clientRecord.productTypes.length === 0 && !isClosed && (
+            <p className="text-muted-foreground text-xs">Este cliente no tiene productos capturados en su perfil; captúralos ahí para elegirlos aquí.</p>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-pickupDate">Recolección</Label>
@@ -690,11 +690,8 @@ export function ShipmentForm({
   );
 }
 
-/** Separador con el que se guardan varias direcciones en un mismo campo. */
-const ADDRESS_SEP = "; ";
-const splitList = (value: string, sep: string) => value.split(sep.trim()).map((x) => x.trim()).filter(Boolean);
 
-/** Direcciones del cliente para esa ciudad en la ruta elegida; puede marcar varias. */
+/** Direcciones del cliente para esa ciudad en la ruta elegida; se elige una. La guardada que ya no esté en la ficha también se ofrece. */
 function AddressList({ label, city, choices, value, disabled, hasClient, onSelect }: { label: string; city: string; choices: string[]; value: string; disabled: boolean; hasClient: boolean; onSelect: (address: string) => void }) {
   if (!city.trim()) return null;
   if (choices.length === 0 && !value) {
@@ -707,7 +704,13 @@ function AddressList({ label, city, choices, value, disabled, hasClient, onSelec
   return (
     <div className="space-y-1">
       <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">{label}</p>
-      <AppMultiSelect value={splitList(value, ADDRESS_SEP)} onValueChange={(list) => onSelect(list.join(ADDRESS_SEP))} options={choices} disabled={disabled} />
+      <AppSelect
+        value={value}
+        onValueChange={onSelect}
+        options={[...choices, ...(value && !choices.includes(value) ? [value] : [])].map((a) => ({ value: a, label: a }))}
+        disabled={disabled}
+        className="w-full"
+      />
     </div>
   );
 }
