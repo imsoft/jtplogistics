@@ -679,6 +679,10 @@ export function ShipmentForm({
             eco, client, product, pickupDate, deliveryDate, legalName, operatorName, phone, truck, trailer,
             unit: unitOptions.find((u) => u.value === unit)?.label ?? unit,
             origin, destination, originAddress, destinationAddress, comments,
+            originContact: clientRecord?.contactName || client || "",
+            destinationContact: clientRecord?.contactName || client || "",
+            originPhone: clientRecord?.phone || phone || "",
+            destinationPhone: clientRecord?.phone || phone || "",
           }}
         />
       </div>

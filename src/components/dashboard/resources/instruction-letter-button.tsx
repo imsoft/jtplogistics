@@ -23,7 +23,7 @@ export function InstructionLetterButton({ data }: { data: InstructionLetterData 
     setBusy(true);
     try {
       const [{ pdf }, { InstructionLetterPdf }] = await Promise.all([import("@react-pdf/renderer"), import("./instruction-letter-pdf")]);
-      const blob = await pdf(<InstructionLetterPdf data={data} logoUrl={`${window.location.origin}/images/logo/jtp-logistics.png`} />).toBlob();
+      const blob = await pdf(<InstructionLetterPdf data={data} logoUrl={`${window.location.origin}/images/logo/jtp-instruction-logo.jpg`} />).toBlob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
