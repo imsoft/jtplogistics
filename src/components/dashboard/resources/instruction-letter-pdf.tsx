@@ -164,7 +164,7 @@ function parseLocation(
     }
   }
 
-  let contact = explicit.contact?.trim() || fallbackContact?.trim() || "";
+  const contact = explicit.contact?.trim() || fallbackContact?.trim() || "";
   let phone = explicit.phone?.trim() || fallbackPhone?.trim() || "";
   let cp = explicit.cp?.trim() || "";
 

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { FormActions } from "@/components/ui/form-actions";
+import { FormSection } from "@/components/ui/form-section";
 import { Label } from "@/components/ui/label";
 import { AppSelect } from "@/components/ui/app-select";
 import { SHIPMENT_STATUS_CONFIG } from "@/components/dashboard/resources/shipments-table";
@@ -14,7 +15,7 @@ import { getIncidentSelectOptions, incidentAllowsIncidentType } from "@/lib/inci
 import { carrierByOption, carrierProviderSelectOptions } from "@/lib/carrier-provider-options";
 import { shipmentLockReason } from "@/lib/shipment-lock";
 import { formatMxn, formatMxnLive, parseMxn } from "@/lib/utils";
-import { Plus, Trash2 } from "lucide-react";
+import { CalendarDays, CircleCheck, CircleDollarSign, MapPin, Plus, Trash2, TriangleAlert, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InstructionLetterButton } from "@/components/dashboard/resources/instruction-letter-button";
 import type { Route } from "@/types/route.types";
@@ -370,8 +371,8 @@ export function ShipmentForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <form onSubmit={handleSubmit} className="w-full space-y-4 sm:space-y-5">
+      <FormSection icon={MapPin} title="Cliente y ruta" description="Quién envía, de dónde a dónde y qué se mueve." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="space-y-2">
           <Label htmlFor="shipment-status">Estado</Label>
           <AppSelect
@@ -461,6 +462,9 @@ export function ShipmentForm({
             <p className="text-muted-foreground text-xs">Este cliente no tiene productos capturados en su perfil; captúralos ahí para elegirlos aquí.</p>
           )}
         </div>
+      </FormSection>
+
+      <FormSection icon={CalendarDays} title="Fechas" description="Cuándo se recoge y cuándo se entrega." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="space-y-2">
           <Label htmlFor="shipment-pickupDate">Recolección</Label>
           <DatePicker
@@ -479,11 +483,10 @@ export function ShipmentForm({
             onChange={(value) => setDeliveryDate(value)}
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="shipment-operatorName">Nombre operador</Label>
-          <Input id="shipment-operatorName" value={operatorName} disabled={isClosed} onChange={(e) => setOperatorName(e.target.value)} />
-        </div>
-        <div className="space-y-2 sm:col-span-2 lg:col-span-2">
+      </FormSection>
+
+      <FormSection icon={Truck} title="Transportista y unidad" description="Quién lo mueve y con qué equipo." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="shipment-legalName">Proveedor (transportista)</Label>
           <AppSelect
             value={carrierValue}
@@ -498,14 +501,6 @@ export function ShipmentForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="shipment-truck">Tracto</Label>
-          <Input id="shipment-truck" value={truck} disabled={isClosed} onChange={(e) => setTruck(e.target.value)} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="shipment-trailer">Caja</Label>
-          <Input id="shipment-trailer" value={trailer} disabled={isClosed} onChange={(e) => setTrailer(e.target.value)} />
-        </div>
-        <div className="space-y-2">
           <Label htmlFor="shipment-unit">Unidad</Label>
           <AppSelect
             value={unit}
@@ -516,11 +511,26 @@ export function ShipmentForm({
           />
         </div>
         <div className="space-y-2">
+          <Label htmlFor="shipment-operatorName">Nombre operador</Label>
+          <Input id="shipment-operatorName" value={operatorName} disabled={isClosed} onChange={(e) => setOperatorName(e.target.value)} />
+        </div>
+        <div className="space-y-2">
           <Label htmlFor="shipment-phone">Celular</Label>
           <Input id="shipment-phone" value={phone} disabled={isClosed} onChange={(e) => setPhone(e.target.value)} />
         </div>
-      </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label htmlFor="shipment-truck">Tracto</Label>
+            <Input id="shipment-truck" value={truck} disabled={isClosed} onChange={(e) => setTruck(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="shipment-trailer">Caja</Label>
+            <Input id="shipment-trailer" value={trailer} disabled={isClosed} onChange={(e) => setTrailer(e.target.value)} />
+          </div>
+        </div>
+      </FormSection>
+
+      <FormSection icon={TriangleAlert} title="Incidencias y comentarios" description="Solo si algo salió distinto a lo planeado." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="shipment-incident">Incidencia</Label>
           <AppSelect
@@ -543,9 +553,9 @@ export function ShipmentForm({
             disabled={isClosed || !canPickIncidentType}
             className="w-full"
           />
+          {!canPickIncidentType && !isClosed && <p className="text-muted-foreground text-xs">Se activa si hubo incidencia.</p>}
         </div>
-      </div>
-      <div className="space-y-2">
+        <div className="space-y-2 sm:col-span-2">
         <Label htmlFor="shipment-comments">Comentarios</Label>
         <Textarea
           id="shipment-comments"
@@ -554,17 +564,20 @@ export function ShipmentForm({
           onChange={(e) => setComments(e.target.value)}
           rows={3}
         />
-      </div>
+        </div>
+      </FormSection>
+
       {showTariffs && (
-        <div className="space-y-3 rounded-lg border p-4">
-          <div>
-            <p className="text-sm font-semibold">Tarifas</p>
-            <p className="text-muted-foreground text-xs">
-              {lockedAtLoad
-                ? "El embarque está bloqueado, pero las tarifas sí se pueden capturar."
-                : "Solo las ven dirección y quien tiene acceso a Finanzas. Al cerrar el embarque pasan a la tabla de finanzas."}
-            </p>
-          </div>
+        <FormSection
+          icon={CircleDollarSign}
+          title="Tarifas"
+          description={
+            lockedAtLoad
+              ? "El embarque está bloqueado, pero las tarifas sí se pueden capturar."
+              : "Solo las ven dirección y quien tiene acceso a Finanzas. Al cerrar el embarque pasan a la tabla de finanzas."
+          }
+          aside={<span className="shrink-0 rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-800">Confidencial</span>}
+        >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="shipment-sale">Tarifa de venta (precio al cliente)</Label>
@@ -581,9 +594,12 @@ export function ShipmentForm({
                 />
               </div>
               {agreedSale != null && (
-                <p className="text-muted-foreground text-xs">
+                <p className={`flex items-center gap-1 text-xs ${parseMxn(sale) === agreedSale ? "text-green-700" : "text-muted-foreground"}`}>
                   {parseMxn(sale) === agreedSale ? (
-                    "Es la tarifa acordada con el cliente para esta ruta."
+                    <>
+                      <CircleCheck className="size-3.5 shrink-0" aria-hidden />
+                      Es la tarifa acordada con el cliente para esta ruta y unidad.
+                    </>
                   ) : (
                     <>
                       Tarifa acordada con el cliente para esta ruta: ${formatMxn(agreedSale)}.{" "}
@@ -617,9 +633,12 @@ export function ShipmentForm({
                 />
               </div>
               {agreedCostValue != null && (
-                <p className="text-muted-foreground text-xs">
+                <p className={`flex items-center gap-1 text-xs ${parseMxn(cost) === agreedCostValue ? "text-green-700" : "text-muted-foreground"}`}>
                   {parseMxn(cost) === agreedCostValue ? (
-                    "Es la tarifa pactada con el transportista para esta ruta."
+                    <>
+                      <CircleCheck className="size-3.5 shrink-0" aria-hidden />
+                      Es la tarifa pactada con el transportista para esta ruta y unidad.
+                    </>
                   ) : (
                     <>
                       Tarifa pactada con el transportista para esta ruta: ${formatMxn(agreedCostValue)}.{" "}
@@ -639,11 +658,10 @@ export function ShipmentForm({
               )}
             </div>
           </div>
-
-          <div className="space-y-2 border-t pt-3">
+          <div className="mt-5 space-y-3 border-t pt-4">
             <div className="flex items-center justify-between gap-2">
               <div>
-                <p className="text-sm font-semibold">Costos extra</p>
+                <p className="text-xs font-bold uppercase tracking-wide">Costos extra</p>
                 <p className="text-muted-foreground text-xs">Maniobras, estadías, casetas… Se suman a la venta y a la compra.</p>
               </div>
               <Button type="button" variant="outline" size="sm" onClick={() => setExtras((l) => [...l, { concept: "", sale: "", cost: "" }])}>
@@ -671,25 +689,27 @@ export function ShipmentForm({
               </div>
             ))}
           </div>
-        </div>
+        </FormSection>
       )}
-      <div className="flex justify-end">
-        <InstructionLetterButton
-          data={{
-            eco, client, product, pickupDate, deliveryDate, legalName, operatorName, phone, truck, trailer,
-            unit: unitOptions.find((u) => u.value === unit)?.label ?? unit,
-            origin, destination, originAddress, destinationAddress, comments,
-            originContact: clientRecord?.contactName || client || "",
-            destinationContact: clientRecord?.contactName || client || "",
-            originPhone: clientRecord?.phone || phone || "",
-            destinationPhone: clientRecord?.phone || phone || "",
-          }}
-        />
-      </div>
+
       <FormActions
+        sticky
         submitLabel={submitLabel}
         cancelHref={cancelHref}
         isSubmitting={isSubmitting}
+        leading={
+          <InstructionLetterButton
+            data={{
+              eco, client, product, pickupDate, deliveryDate, legalName, operatorName, phone, truck, trailer,
+              unit: unitOptions.find((u) => u.value === unit)?.label ?? unit,
+              origin, destination, originAddress, destinationAddress, comments,
+              originContact: clientRecord?.contactName || client || "",
+              destinationContact: clientRecord?.contactName || client || "",
+              originPhone: clientRecord?.phone || phone || "",
+              destinationPhone: clientRecord?.phone || phone || "",
+            }}
+          />
+        }
       />
     </form>
   );

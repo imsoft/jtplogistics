@@ -35,7 +35,8 @@ describe("InstructionLetterPdf", () => {
       logoUrl: logoPath,
     });
 
-    const buffer = await renderToBuffer(doc as any);
+    // renderToBuffer pide un <Document>; el componente lo regresa, pero su tipo no lo dice.
+    const buffer = await renderToBuffer(doc as unknown as Parameters<typeof renderToBuffer>[0]);
     const fs = await import("fs");
     fs.writeFileSync("/tmp/generated_instruction_letter.pdf", buffer);
     expect(buffer.length).toBeGreaterThan(1000);
