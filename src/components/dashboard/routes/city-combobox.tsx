@@ -16,7 +16,7 @@ import { MEXICO_STATES_CITIES } from "@/lib/data/mexico-cities";
 
 interface CityComboboxProps {
   id: string;
-  label: string;
+  label: React.ReactNode;
   placeholder?: string;
   value: string | null;
   onValueChange: (value: string | null) => void;

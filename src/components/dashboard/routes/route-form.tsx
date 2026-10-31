@@ -1,19 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
+import { FormActions } from "@/components/ui/form-actions";
+import { FormSection, RequiredText } from "@/components/ui/form-section";
 import { AppSelect } from "@/components/ui/app-select";
 import { CityCombobox } from "./city-combobox";
 import { parseCityValue, findCityValue } from "@/lib/data/mexico-cities";
 import { ROUTE_STATUS_OPTIONS } from "@/lib/constants/route-status";
 import { UNIT_TYPE_FALLBACK } from "@/lib/constants/unit-type";
 import { formatMxn, formatMxnLive, parseMxn } from "@/lib/utils";
-import { TriangleAlert } from "lucide-react";
+import { Megaphone, MapPin, Plus, Trash2, TriangleAlert, Truck } from "lucide-react";
 import type { RouteFormData, RouteStatus, UnitType } from "@/types/route.types";
 
 const defaultFormData: RouteFormData = {
@@ -144,71 +144,70 @@ export function RouteForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-5">
-      <Card>
-        <CardContent className="pt-6 space-y-5">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <CityCombobox
-              id="route-origin"
-              label="Origen"
-              value={origin}
-              onValueChange={setOrigin}
-              name="origin"
-              required
-            />
-            <CityCombobox
-              id="route-destination"
-              label="Destino"
-              value={destination}
-              onValueChange={(v) => {
-                setDestination(v);
-                setDestinationState(parseCityValue(v).state);
-              }}
-              name="destination"
-              required
-            />
-            <div className="space-y-2">
-              <Label htmlFor="route-destination-state">Estado del destino</Label>
-              <Input
-                id="route-destination-state"
-                type="text"
-                value={destinationState}
-                readOnly
-                className="w-full bg-muted/50 cursor-default text-muted-foreground"
-              />
-            </div>
+    <form onSubmit={handleSubmit} className="w-full space-y-4 sm:space-y-5">
+      <FormSection icon={MapPin} title="Ruta" description="De dónde a dónde. Las ciudades vienen del catálogo de México por estado." className="space-y-4">
+        <div className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+        <CityCombobox
+          id="route-origin"
+          label={<RequiredText>Origen</RequiredText>}
+          value={origin}
+          onValueChange={setOrigin}
+          name="origin"
+          required
+        />
+        <CityCombobox
+          id="route-destination"
+          label={<RequiredText>Destino</RequiredText>}
+          value={destination}
+          onValueChange={(v) => {
+            setDestination(v);
+            setDestinationState(parseCityValue(v).state);
+          }}
+          name="destination"
+          required
+        />
+        <div className="space-y-2">
+          <Label htmlFor="route-destination-state">Estado del destino</Label>
+          <Input
+            id="route-destination-state"
+            type="text"
+            value={destinationState}
+            readOnly
+            className="w-full bg-muted/50 cursor-default text-muted-foreground"
+          />
+        </div>
+        </div>
+        {isDuplicate && (
+          <div className="flex items-start gap-2 rounded-lg border border-amber-400/50 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+            <span>
+              La ruta <strong>{originCity} → {destCity}</strong> ya está dada de alta.
+            </span>
           </div>
+        )}
+        <div className="space-y-2">
+          <Label htmlFor="route-description">Descripción <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+          <Textarea
+            id="route-description"
+            name="description"
+            defaultValue={values.description}
+            rows={3}
+            className="resize-none"
+          />
+        </div>
+      </FormSection>
 
-          {isDuplicate && (
-            <div className="flex items-start gap-2 rounded-lg border border-amber-400/50 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              <TriangleAlert className="mt-0.5 size-4 shrink-0" />
-              <span>
-                La ruta <strong>{originCity} → {destCity}</strong> ya está dada de alta.
-              </span>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor="route-description">Descripción <span className="text-muted-foreground font-normal">(opcional)</span></Label>
-            <Textarea
-              id="route-description"
-              name="description"
-              defaultValue={values.description}
-              rows={3}
-              className="resize-none"
-            />
-          </div>
-
+      <FormSection icon={Truck} title="Tipos de unidad y target" description="Una fila por tipo de unidad con su target." className="space-y-3">
+        <div className="text-muted-foreground hidden grid-cols-[1fr_1fr_auto] gap-3 text-xs font-semibold uppercase tracking-wide sm:grid">
+          <span>Tipo de unidad</span>
+          <span>Target ($)</span>
+          <span className="w-9" />
+        </div>
           <div className="space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <Label>Tipos de unidad y target</Label>
-              <Button type="button" variant="outline" onClick={addUnitTargetRow}>
-                Agregar tipo
-              </Button>
-            </div>
-            <div className="space-y-3">
-              {unitTargets.map((row, index) => (
-                <div key={`${row.unitType}-${index}`} className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_auto]">
+            {unitTargets.map((row, index) => (
+              <div key={`${row.unitType}-${index}`} className="grid grid-cols-[1fr_auto] gap-3 sm:grid-cols-[1fr_1fr_auto]">
+                {/* En celular el tipo ocupa la fila y debajo van el target y el bote. */}
+                <div className="col-span-2 sm:col-span-1">
                   <AppSelect
                     value={row.unitType}
                     onValueChange={(v) =>
@@ -217,77 +216,87 @@ export function RouteForm({
                     options={unitTypeOptions}
                     className="w-full"
                   />
-                  <Input
-                    type="text"
-                    inputMode="decimal"
-                    value={row.targetDisplay}
-                    onChange={(e) =>
-                      setUnitTargets((prev) =>
-                        prev.map((item, i) => (i === index ? { ...item, targetDisplay: formatMxnLive(e.target.value) } : item))
-                      )
-                    }
-                    onBlur={() =>
-                      setUnitTargets((prev) =>
-                        prev.map((item, i) => {
-                          if (i !== index) return item;
-                          const parsed = parseMxn(item.targetDisplay);
-                          return { ...item, targetDisplay: parsed != null ? formatMxn(parsed) : "" };
-                        })
-                      )
-                    }
-                    className="w-full"
-                  />
-                  <Button type="button" variant="outline" onClick={() => removeUnitTargetRow(index)} disabled={unitTargets.length <= 1}>
-                    Quitar
-                  </Button>
                 </div>
-              ))}
-            </div>
-            {duplicateUnitTypes.length > 0 && (
-              <p className="text-sm text-destructive">
-                No repitas tipos de unidad en la misma ruta.
-              </p>
-            )}
+                <Input
+                  type="text"
+                  inputMode="decimal"
+                  aria-label={`Target ${index + 1}`}
+                  value={row.targetDisplay}
+                  onChange={(e) =>
+                    setUnitTargets((prev) =>
+                      prev.map((item, i) => (i === index ? { ...item, targetDisplay: formatMxnLive(e.target.value) } : item))
+                    )
+                  }
+                  onBlur={() =>
+                    setUnitTargets((prev) =>
+                      prev.map((item, i) => {
+                        if (i !== index) return item;
+                        const parsed = parseMxn(item.targetDisplay);
+                        return { ...item, targetDisplay: parsed != null ? formatMxn(parsed) : "" };
+                      })
+                    )
+                  }
+                  className="w-full"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label={`Quitar tipo de unidad ${index + 1}`}
+                  onClick={() => removeUnitTargetRow(index)}
+                  disabled={unitTargets.length <= 1}
+                >
+                  <Trash2 className="text-destructive size-4" />
+                </Button>
+              </div>
+            ))}
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="route-weekly-volume">
-                Volumen mensual <span className="text-muted-foreground font-normal">(opcional)</span>
-              </Label>
-              <Input
-                id="route-weekly-volume"
-                name="weeklyVolume"
-                type="number"
-                inputMode="numeric"
-                min={0}
-                defaultValue={initialValues.weeklyVolume ?? ""}
-                className="w-full"
-              />
-              <p className="text-xs text-muted-foreground">
-                Visible para los transportistas cuando la ruta está activa.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label>Estado</Label>
-              <AppSelect
-                value={status}
-                onValueChange={(v) => setStatus(v as RouteStatus)}
-                options={ROUTE_STATUS_OPTIONS}
-                className="w-full"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          {duplicateUnitTypes.length > 0 && (
+            <p className="text-sm text-destructive">
+              No repitas tipos de unidad en la misma ruta.
+            </p>
+          )}
+        <Button type="button" variant="outline" size="sm" onClick={addUnitTargetRow}>
+          <Plus className="size-4" />
+          Agregar tipo de unidad
+        </Button>
+      </FormSection>
 
-      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <Button type="button" variant="outline" asChild className="w-full sm:w-auto">
-          <Link href={cancelHref}>Cancelar</Link>
-        </Button>
-        <Button type="submit" className="w-full sm:w-auto" disabled={isDuplicate || duplicateUnitTypes.length > 0}>
-          {submitLabel}
-        </Button>
-      </div>
+      <FormSection icon={Megaphone} title="Volumen y estado" description="Lo que ven los transportistas de esta ruta." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="route-weekly-volume">
+            Volumen mensual <span className="text-muted-foreground font-normal">(opcional)</span>
+          </Label>
+          <Input
+            id="route-weekly-volume"
+            name="weeklyVolume"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            defaultValue={initialValues.weeklyVolume ?? ""}
+            className="w-full"
+          />
+          <p className="text-xs text-muted-foreground">
+            Visible para los transportistas cuando la ruta está activa.
+          </p>
+        </div>
+        <div className="space-y-2">
+          <Label>Estado</Label>
+          <AppSelect
+            value={status}
+            onValueChange={(v) => setStatus(v as RouteStatus)}
+            options={ROUTE_STATUS_OPTIONS}
+            className="w-full"
+          />
+        </div>
+      </FormSection>
+
+      <FormActions
+        sticky
+        submitLabel={submitLabel}
+        cancelHref={cancelHref}
+        submitDisabled={isDuplicate || duplicateUnitTypes.length > 0}
+      />
     </form>
   );
 }

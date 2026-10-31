@@ -74,35 +74,25 @@ export function EditRouteForm({
           )}
         </div>
       </div>
-      <Card>
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-base sm:text-lg">Datos de la ruta</CardTitle>
-          <CardDescription className="text-xs sm:text-sm">
-            Modifica origen, destino, descripción o estado. Los combos muestran ciudades de México por estado.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <RouteForm
-            initialValues={{
-              origin: route.origin,
-              destination: route.destination,
-              destinationState: route.destinationState ?? "",
-              description: route.description ?? "",
-              target: route.target,
-              weeklyVolume: route.weeklyVolume,
-              unitType: route.unitType,
-              unitTargets:
-                route.unitTargets && route.unitTargets.length > 0
-                  ? route.unitTargets
-                  : [{ unitType: route.unitType, target: route.target }],
-              status: route.status,
-            }}
-            submitLabel="Guardar cambios"
-            cancelHref={basePath}
-            onSubmit={handleSubmit}
-          />
-        </CardContent>
-      </Card>
+      <RouteForm
+        initialValues={{
+          origin: route.origin,
+          destination: route.destination,
+          destinationState: route.destinationState ?? "",
+          description: route.description ?? "",
+          target: route.target,
+          weeklyVolume: route.weeklyVolume,
+          unitType: route.unitType,
+          unitTargets:
+            route.unitTargets && route.unitTargets.length > 0
+              ? route.unitTargets
+              : [{ unitType: route.unitType, target: route.target }],
+          status: route.status,
+        }}
+        submitLabel="Guardar cambios"
+        cancelHref={basePath}
+        onSubmit={handleSubmit}
+      />
 
       <Card>
         <CardHeader
