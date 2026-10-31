@@ -11,6 +11,8 @@ import { FormActions } from "@/components/ui/form-actions";
 import { CoverImageUpload } from "@/components/ui/cover-image-upload";
 import { MURAL_ENTRY_TYPES, MURAL_KIND_LABELS } from "@/lib/constants/mural";
 import type { MuralEntry, MuralEntryFormData } from "@/types/mural.types";
+import { FormSection, RequiredText } from "@/components/ui/form-section";
+import { BellRing, CalendarDays, FileText } from "lucide-react";
 
 interface MuralPerson {
   id: string;
@@ -77,10 +79,12 @@ export function MuralEntryForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <form onSubmit={handleSubmit} className="w-full space-y-4 sm:space-y-5">
+      <FormSection icon={CalendarDays} title="Evento" description="Qué es, cuándo y dónde." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor="type">Tipo *</Label>
+          <Label htmlFor="type">
+            <RequiredText>Tipo</RequiredText>
+          </Label>
           <AppSelect
             value={type}
             onValueChange={(v) => {
@@ -96,12 +100,16 @@ export function MuralEntryForm({
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="title">Título *</Label>
+          <Label htmlFor="title">
+            <RequiredText>Título</RequiredText>
+          </Label>
           <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="startDate">Fecha de inicio *</Label>
+          <Label htmlFor="startDate">
+            <RequiredText>Fecha de inicio</RequiredText>
+          </Label>
           <DatePicker
             id="startDate"
             value={startDate}
@@ -141,8 +149,10 @@ export function MuralEntryForm({
             />
           </div>
         )}
+      </FormSection>
 
-        <div className="space-y-1.5 sm:col-span-2">
+      <FormSection icon={FileText} title="Detalles" description="Lo que hay que saber y una imagen." className="grid grid-cols-1 gap-4">
+        <div className="space-y-1.5">
           <Label htmlFor="description">Descripción</Label>
           <Textarea
             id="description"
@@ -152,7 +162,7 @@ export function MuralEntryForm({
           />
         </div>
 
-        <div className="space-y-1.5 sm:col-span-2">
+        <div className="space-y-1.5">
           <Label>Imagen</Label>
           <CoverImageUpload
             currentImage={imageUrl || null}
@@ -163,10 +173,11 @@ export function MuralEntryForm({
             }}
           />
         </div>
-      </div>
+      </FormSection>
 
       {showNotifyToggle && (
-        <div className="flex items-start justify-between gap-4 rounded-lg border p-4">
+        <FormSection icon={BellRing} title="Aviso" description="Si se manda correo a los colaboradores.">
+        <div className="flex items-start justify-between gap-4">
           <div className="space-y-0.5">
             <Label htmlFor="notify">Notificar por correo</Label>
             <p className="text-xs text-muted-foreground">
@@ -177,9 +188,10 @@ export function MuralEntryForm({
           </div>
           <Switch id="notify" checked={notifyByEmail} onCheckedChange={setNotifyByEmail} />
         </div>
+        </FormSection>
       )}
 
-      <FormActions submitLabel={submitLabel} cancelHref={cancelHref} isSubmitting={isSubmitting} />
+      <FormActions sticky submitLabel={submitLabel} cancelHref={cancelHref} isSubmitting={isSubmitting} />
     </form>
   );
 }

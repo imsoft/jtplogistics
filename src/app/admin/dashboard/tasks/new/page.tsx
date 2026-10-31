@@ -5,7 +5,6 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { TaskForm } from "@/components/dashboard/tasks/task-form";
 import { toast } from "sonner";
 import type { TaskFormData } from "@/types/task.types";
@@ -50,22 +49,12 @@ export default function NewTaskPage() {
           </p>
         </div>
       </div>
-      <Card>
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-base sm:text-lg">Datos de la tarea</CardTitle>
-          <CardDescription className="text-xs sm:text-sm">
-            Describe la tarea y selecciona el estado inicial.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <TaskForm
-            submitLabel="Crear tarea"
-            cancelHref="/admin/dashboard/tasks"
-            onSubmit={handleSubmit}
-            isSubmitting={isSubmitting}
-          />
-        </CardContent>
-      </Card>
+      <TaskForm
+        submitLabel="Crear tarea"
+        cancelHref="/admin/dashboard/tasks"
+        onSubmit={handleSubmit}
+        isSubmitting={isSubmitting}
+      />
     </div>
   );
 }

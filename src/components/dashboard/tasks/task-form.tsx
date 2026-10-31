@@ -8,6 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { AppSelect } from "@/components/ui/app-select";
 import { TASK_STATUS_OPTIONS } from "@/lib/constants/task-status";
 import type { TaskFormData, TaskStatus } from "@/types/task.types";
+import { ActionBar } from "@/components/ui/form-actions";
+import { FormSection, RequiredText } from "@/components/ui/form-section";
+import { ListTodo } from "lucide-react";
 
 interface TaskFormProps {
   initialValues?: Partial<TaskFormData>;
@@ -39,10 +42,12 @@ export function TaskForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-6">
-      <div className="space-y-4">
+    <form onSubmit={handleSubmit} className="w-full space-y-4 sm:space-y-5">
+      <FormSection icon={ListTodo} title="Tarea" description="Qué hay que hacer y en qué va." className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="task-description">Descripción</Label>
+          <Label htmlFor="task-description">
+            <RequiredText>Descripción</RequiredText>
+          </Label>
           <Textarea
             id="task-description"
             name="description"
@@ -64,16 +69,16 @@ export function TaskForm({
             className="w-full"
           />
         </div>
-      </div>
+      </FormSection>
 
-      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+      <ActionBar sticky>
         <Button type="button" variant="outline" asChild className="w-full sm:w-auto" disabled={isSubmitting}>
           <Link href={cancelHref}>Cancelar</Link>
         </Button>
         <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting}>
           {isSubmitting ? "Guardando…" : submitLabel}
         </Button>
-      </div>
+      </ActionBar>
     </form>
   );
 }

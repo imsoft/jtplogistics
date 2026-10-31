@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormSkeleton } from "@/components/ui/skeletons";
 import { TaskForm } from "@/components/dashboard/tasks/task-form";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
@@ -64,22 +63,12 @@ export default function NewCollaboratorTaskPage() {
           </p>
         </div>
       </div>
-      <Card>
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-base sm:text-lg">Datos de la tarea</CardTitle>
-          <CardDescription className="text-xs sm:text-sm">
-            Describe la tarea y selecciona el estado inicial.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <TaskForm
-            submitLabel="Crear tarea"
-            cancelHref="/collaborator/dashboard/tasks"
-            onSubmit={handleSubmit}
-            isSubmitting={isSubmitting}
-          />
-        </CardContent>
-      </Card>
+      <TaskForm
+        submitLabel="Crear tarea"
+        cancelHref="/collaborator/dashboard/tasks"
+        onSubmit={handleSubmit}
+        isSubmitting={isSubmitting}
+      />
     </div>
   );
 }

@@ -9,6 +9,8 @@ import { FormActions } from "@/components/ui/form-actions";
 import { CoverImageUpload } from "@/components/ui/cover-image-upload";
 import { LexicalEditor } from "@/components/ui/lexical-editor";
 import type { MuralPost, MuralPostFormData } from "@/types/mural.types";
+import { FormSection, RequiredText } from "@/components/ui/form-section";
+import { Eye, FileText, Newspaper } from "lucide-react";
 
 interface MuralPostFormProps {
   initialValues?: Partial<MuralPost>;
@@ -49,10 +51,12 @@ export function MuralPostForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-6">
-      <div className="grid grid-cols-1 gap-4">
+    <form onSubmit={handleSubmit} className="w-full space-y-4 sm:space-y-5">
+      <FormSection icon={Newspaper} title="Publicación" description="Título, resumen y portada." className="grid grid-cols-1 gap-4">
         <div className="space-y-1.5">
-          <Label htmlFor="title">Título *</Label>
+          <Label htmlFor="title">
+            <RequiredText>Título</RequiredText>
+          </Label>
           <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
         </div>
 
@@ -80,14 +84,13 @@ export function MuralPostForm({
             }}
           />
         </div>
+      </FormSection>
 
-        <div className="space-y-1.5">
-          <Label>Contenido</Label>
-          <LexicalEditor value={contentJson} onChange={setContentJson} minHeight={280} />
-        </div>
-      </div>
+      <FormSection icon={FileText} title="Contenido" description="El texto completo de la publicación.">
+        <LexicalEditor value={contentJson} onChange={setContentJson} minHeight={280} />
+      </FormSection>
 
-      <div className="space-y-3">
+      <FormSection icon={Eye} title="Visibilidad" description="Quién la ve y si se avisa por correo." className="space-y-3">
         <div className="flex items-start justify-between gap-4 rounded-lg border p-4">
           <div className="space-y-0.5">
             <Label htmlFor="published">Publicar</Label>
@@ -109,9 +112,9 @@ export function MuralPostForm({
             <Switch id="notify" checked={notifyByEmail} onCheckedChange={setNotifyByEmail} />
           </div>
         )}
-      </div>
+      </FormSection>
 
-      <FormActions submitLabel={submitLabel} cancelHref={cancelHref} isSubmitting={isSubmitting} />
+      <FormActions sticky submitLabel={submitLabel} cancelHref={cancelHref} isSubmitting={isSubmitting} />
     </form>
   );
 }

@@ -6,7 +6,6 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SAVE_CHANGES, useConfirm } from "@/components/ui/confirm-provider";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormSkeleton } from "@/components/ui/skeletons";
 import { TaskForm } from "@/components/dashboard/tasks/task-form";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
@@ -84,27 +83,17 @@ export default function EditCollaboratorTaskPage() {
           </p>
         </div>
       </div>
-      <Card>
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-base sm:text-lg">Datos de la tarea</CardTitle>
-          <CardDescription className="text-xs sm:text-sm">
-            Modifica la descripción o el estado de la tarea.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <TaskForm
-            initialValues={{
-              title: task.title,
-              description: task.description ?? "",
-              status: task.status,
-            }}
-            submitLabel="Guardar cambios"
-            cancelHref="/collaborator/dashboard/tasks"
-            onSubmit={handleSubmit}
-            isSubmitting={isSubmitting}
-          />
-        </CardContent>
-      </Card>
+      <TaskForm
+        initialValues={{
+          title: task.title,
+          description: task.description ?? "",
+          status: task.status,
+        }}
+        submitLabel="Guardar cambios"
+        cancelHref="/collaborator/dashboard/tasks"
+        onSubmit={handleSubmit}
+        isSubmitting={isSubmitting}
+      />
     </div>
   );
 }

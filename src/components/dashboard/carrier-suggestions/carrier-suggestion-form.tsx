@@ -9,6 +9,8 @@ import type {
   CarrierSuggestion,
   CarrierSuggestionFormData,
 } from "@/types/carrier-suggestion.types";
+import { FormSection, RequiredText } from "@/components/ui/form-section";
+import { MessageSquarePlus } from "lucide-react";
 
 interface CarrierSuggestionFormProps {
   initialValues?: Partial<CarrierSuggestion>;
@@ -34,9 +36,12 @@ export function CarrierSuggestionForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-6">
+    <form onSubmit={handleSubmit} className="w-full space-y-4 sm:space-y-5">
+      <FormSection icon={MessageSquarePlus} title="Sugerencia" description="Cuéntanos qué mejorarías." className="space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="cs-title">Título *</Label>
+        <Label htmlFor="cs-title">
+          <RequiredText>Título</RequiredText>
+        </Label>
         <Input
           id="cs-title"
           value={title}
@@ -53,7 +58,8 @@ export function CarrierSuggestionForm({
           rows={6}
         />
       </div>
-      <FormActions submitLabel={submitLabel} cancelHref={cancelHref} isSubmitting={isSubmitting} />
+      </FormSection>
+      <FormActions sticky submitLabel={submitLabel} cancelHref={cancelHref} isSubmitting={isSubmitting} />
     </form>
   );
 }

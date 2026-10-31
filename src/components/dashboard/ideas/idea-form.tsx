@@ -8,6 +8,8 @@ import { AppSelect } from "@/components/ui/app-select";
 import { FormActions } from "@/components/ui/form-actions";
 import { IDEA_CATEGORIES } from "@/lib/constants/idea-category";
 import type { Idea } from "@/types/idea.types";
+import { FormSection, RequiredText } from "@/components/ui/form-section";
+import { Lightbulb } from "lucide-react";
 
 interface IdeaFormProps {
   initialValues?: Partial<Idea>;
@@ -34,10 +36,12 @@ export function IdeaForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <form onSubmit={handleSubmit} className="w-full space-y-4 sm:space-y-5">
+      <FormSection icon={Lightbulb} title="Idea" description="Qué propones y de qué tema es." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor="title">Título *</Label>
+          <Label htmlFor="title">
+            <RequiredText>Título</RequiredText>
+          </Label>
           <Input
             id="title"
             value={title}
@@ -65,9 +69,10 @@ export function IdeaForm({
             rows={5}
           />
         </div>
-      </div>
+      </FormSection>
 
       <FormActions
+        sticky
         submitLabel={submitLabel}
         cancelHref={cancelHref}
         isSubmitting={isSubmitting}
