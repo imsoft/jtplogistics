@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Route as RouteIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormSection } from "@/components/ui/form-section";
 import { Badge } from "@/components/ui/badge";
 import { useUnitTypes } from "@/hooks/use-unit-types";
 import { ROUTE_STATUS_LABELS } from "@/lib/constants/route-status";
@@ -100,14 +100,12 @@ export function ClientRoutesEditorCard({ editor }: { editor: Editor }) {
   if (!routesLoaded || routes.length === 0) return null;
 
   return (
-    <Card>
-      <CardHeader className="pb-3 flex flex-row items-center justify-between">
-        <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          Tarifas y volumen por ruta ({routes.length})
-        </CardTitle>
-        <RouteIcon className="size-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent className="px-0 pb-0">
+    <FormSection
+      icon={RouteIcon}
+      title={`Tarifas y volumen por ruta (${routes.length})`}
+      description="Lo acordado con el cliente en cada ruta. Al registrar un embarque se propone esta tarifa."
+      className="p-0 sm:p-0"
+    >
         <div className="space-y-0">
           {groupByUnitType(routes).map(([ut, items]) => (
             <div key={ut}>
@@ -167,7 +165,6 @@ export function ClientRoutesEditorCard({ editor }: { editor: Editor }) {
             </div>
           ))}
         </div>
-      </CardContent>
-    </Card>
+    </FormSection>
   );
 }

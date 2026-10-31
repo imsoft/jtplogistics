@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormActions } from "@/components/ui/form-actions";
+import { FormSection } from "@/components/ui/form-section";
+import { Building2, Package, ReceiptText, UserRound } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { AppSelect } from "@/components/ui/app-select";
 import { ProductTagsField } from "@/components/dashboard/resources/product-tags-field";
@@ -73,10 +75,14 @@ export function ClientForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <form onSubmit={handleSubmit} className="w-full space-y-4 sm:space-y-5">
+      <FormSection icon={Building2} title="Empresa" description="Cómo se llama el cliente y dónde está." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="client-name">Razón social</Label>
+          <Label htmlFor="client-name">
+            <span>
+              Razón social<span className="text-destructive" aria-hidden>*</span>
+            </span>
+          </Label>
           <Input
             id="client-name"
             value={name}
@@ -92,46 +98,55 @@ export function ClientForm({
             onChange={(e) => setRfc(e.target.value)}
           />
         </div>
-        <div className="space-y-3 rounded-lg border p-4 sm:col-span-2">
-          <div>
-            <p className="text-sm font-semibold">Datos para facturar</p>
-            <p className="text-muted-foreground text-xs">
-              Tal como vienen en la constancia de situación fiscal del cliente. Sin ellos no se le puede timbrar factura (CFDI 4.0).
-            </p>
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="space-y-2 sm:col-span-2">
-              <Label>Régimen fiscal</Label>
-              <AppSelect value={taxRegime} onValueChange={setTaxRegime} options={TAX_REGIMES} className="w-full" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="client-fiscalZip">Código postal fiscal</Label>
-              <Input
-                id="client-fiscalZip"
-                inputMode="numeric"
-                maxLength={5}
-                value={fiscalZip}
-                onChange={(e) => setFiscalZip(e.target.value.replace(/\D/g, ""))}
-              />
-            </div>
-            <div className="space-y-2 sm:col-span-3">
-              <Label>Uso del CFDI</Label>
-              <AppSelect value={cfdiUse} onValueChange={setCfdiUse} options={CFDI_USES} className="w-full" />
-              <p className="text-muted-foreground text-xs">El que pide el cliente. Para fletes casi siempre es G03, gastos en general.</p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="client-creditDays">Días de crédito</Label>
-              <Input
-                id="client-creditDays"
-                inputMode="numeric"
-                maxLength={3}
-                value={creditDays}
-                onChange={(e) => setCreditDays(e.target.value.replace(/\D/g, ""))}
-              />
-              <p className="text-muted-foreground text-xs">Con ellos se calcula cuándo vence cada factura. Vacío: 30 días.</p>
-            </div>
-          </div>
+        <div className="space-y-2 sm:col-span-2">
+          <Label htmlFor="client-address">Dirección</Label>
+          <Input
+            id="client-address"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+          />
         </div>
+      </FormSection>
+
+      <FormSection
+        icon={ReceiptText}
+        title="Datos para facturar"
+        description="Tal como vienen en la constancia de situación fiscal del cliente. Sin ellos no se le puede timbrar factura (CFDI 4.0)."
+        className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-3"
+      >
+        <div className="space-y-2 sm:col-span-2">
+          <Label>Régimen fiscal</Label>
+          <AppSelect value={taxRegime} onValueChange={setTaxRegime} options={TAX_REGIMES} className="w-full" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="client-fiscalZip">Código postal fiscal</Label>
+          <Input
+            id="client-fiscalZip"
+            inputMode="numeric"
+            maxLength={5}
+            value={fiscalZip}
+            onChange={(e) => setFiscalZip(e.target.value.replace(/\D/g, ""))}
+          />
+        </div>
+        <div className="space-y-2 sm:col-span-2">
+          <Label>Uso del CFDI</Label>
+          <AppSelect value={cfdiUse} onValueChange={setCfdiUse} options={CFDI_USES} className="w-full" />
+          <p className="text-muted-foreground text-xs">El que pide el cliente. Para fletes casi siempre es G03, gastos en general.</p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="client-creditDays">Días de crédito</Label>
+          <Input
+            id="client-creditDays"
+            inputMode="numeric"
+            maxLength={3}
+            value={creditDays}
+            onChange={(e) => setCreditDays(e.target.value.replace(/\D/g, ""))}
+          />
+          <p className="text-muted-foreground text-xs">Con ellos se calcula cuándo vence cada factura. Vacío: 30 días.</p>
+        </div>
+      </FormSection>
+
+      <FormSection icon={UserRound} title="Contacto" description="Con quién se habla en el cliente." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="client-contactName">Nombre de contacto</Label>
           <Input
@@ -157,28 +172,20 @@ export function ClientForm({
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
-        <div className="space-y-2 sm:col-span-2">
+        <div className="space-y-2">
           <Label htmlFor="client-phone">Teléfono</Label>
           <Input
             id="client-phone"
+            type="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
           />
         </div>
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="client-address">Dirección</Label>
-          <Input
-            id="client-address"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-          />
-        </div>
+      </FormSection>
 
-        <div className="sm:col-span-2">
-          <ProductTagsField id="client-product-types" value={productTypes} onChange={setProductTypes} />
-        </div>
-
-        <div className="space-y-2 sm:col-span-2">
+      <FormSection icon={Package} title="Operación" description="Qué mueve el cliente y cómo se le trabaja." className="space-y-5">
+        <ProductTagsField id="client-product-types" value={productTypes} onChange={setProductTypes} />
+        <div className="space-y-2">
           <Label htmlFor="client-detentionConditions">Condiciones de estadías</Label>
           <Textarea
             id="client-detentionConditions"
@@ -187,7 +194,7 @@ export function ClientForm({
             rows={3}
           />
         </div>
-        <div className="space-y-2 sm:col-span-2">
+        <div className="space-y-2">
           <Label htmlFor="client-notes">Notas</Label>
           <Textarea
             id="client-notes"
@@ -196,9 +203,10 @@ export function ClientForm({
             rows={3}
           />
         </div>
-      </div>
+      </FormSection>
+
       {children}
-      <FormActions submitLabel={submitLabel} cancelHref={cancelHref} isSubmitting={isSubmitting} />
+      <FormActions sticky submitLabel={submitLabel} cancelHref={cancelHref} isSubmitting={isSubmitting} />
     </form>
   );
 }
