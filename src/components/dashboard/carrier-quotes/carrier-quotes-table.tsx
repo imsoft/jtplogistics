@@ -6,11 +6,12 @@ import { toast } from "sonner";
 import { DataTableSkeleton } from "@/components/ui/skeletons";
 import Link from "next/link";
 import { pdf } from "@react-pdf/renderer";
-import { Plus, Trash2, FileText, Loader2, Settings, Send, Save } from "lucide-react";
+import { Building2, FileText, ListChecks, Loader2, Plus, Save, Search, Send, Settings, Trash2, Truck } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { SAVE_CHANGES, useConfirm } from "@/components/ui/confirm-provider";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormSection } from "@/components/ui/form-section";
+import { ActionBar } from "@/components/ui/form-actions";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -591,8 +592,9 @@ export function CarrierQuotesTable({
   if (!isLoaded) return <DataTableSkeleton />;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-5">
       {/* ─── SECCIÓN 1: FILTROS ─────────────────────────────────────────────── */}
+      <FormSection icon={Search} title="Buscar ruta" description="Elige origen, destino y tipo de unidad." className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_auto]">
         <CityCombobox
           id="qb-origin"
@@ -607,7 +609,7 @@ export function CarrierQuotesTable({
           onValueChange={setSelectedDestination}
         />
         <div className="space-y-2">
-          <Label className="text-xs font-medium">Tipo de unidad</Label>
+          <Label>Tipo de unidad</Label>
           <AppSelect
             value={selectedUnitType}
             onValueChange={handleUnitTypeChange}
@@ -618,17 +620,18 @@ export function CarrierQuotesTable({
         {!restricted && (
           <>
             <div className="space-y-2">
-              <Label className="text-xs font-medium">Buscar</Label>
+              <Label>Buscar</Label>
               <Input value={search} onChange={(e) => setSearch(e.target.value)} disabled={!selectedRouteId} />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-medium">Target vs. ruta</Label>
+              <Label>Target vs. ruta</Label>
               <AppSelect value={filterPrice} onValueChange={(v) => setFilterPrice(v || "all")} options={[{value: "all", label: "Todos"}, {value: "below", label: "Por debajo del target"}, {value: "above", label: "Por encima del target"}]} disabled={!selectedRouteId || routeTarget == null} className="w-full" />
             </div>
           </>
         )}
         <div className="space-y-2">
-          <Label className="invisible text-xs font-medium">_</Label>
+          {/* Solo alinea el botón con los campos; en celular sobra. */}
+          <Label className="invisible hidden sm:flex" aria-hidden>_</Label>
           <Button type="button" variant="outline" onClick={handleClear} className="w-full">Limpiar</Button>
         </div>
       </div>
@@ -643,8 +646,10 @@ export function CarrierQuotesTable({
           . Puedes cotizarla igualmente.
         </p>
       )}
+      </FormSection>
 
       {/* ─── SECCIÓN 2: TRANSPORTISTAS Y PRECIO ─────────────────────────────── */}
+      <FormSection icon={Truck} title="Transportistas y precio" description="Lo que cobran los transportistas en esta ruta y el precio para el cliente." className="space-y-4">
       {!hasCityPair ? (
         <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
           Elige origen y destino para continuar.
@@ -671,13 +676,11 @@ export function CarrierQuotesTable({
             </p>
           )}
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                {baseSource === "carriers" ? "Resumen de targets" : "Precio"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          <div className="space-y-3">
+            <p className="text-xs font-bold uppercase tracking-wide">
+              {baseSource === "carriers" ? "Resumen de targets" : "Precio"}
+            </p>
+            <div>
               <div className="grid gap-4 sm:grid-cols-3">
                 {/* Costo: el promedio de los transportistas, el target de la ruta
                     o, si no hay nada, el que se capture aquí. */}
@@ -776,26 +779,30 @@ export function CarrierQuotesTable({
                   Agregar ruta a cotización
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       )}
+      </FormSection>
 
       {/* ─── SECCIÓN 3: COTIZACIÓN ──────────────────────────────────────────── */}
-      <div ref={builderRef} className="space-y-6 pt-2">
-        {showTermsLink && (
-          <div className="flex justify-end">
-            <Button variant="ghost" size="sm" asChild className="shrink-0 text-muted-foreground">
-              <Link href={termsPath}>
-                <Settings className="size-3.5" />
-                Textos legales
-              </Link>
-            </Button>
-          </div>
-        )}
-
-        {/* Datos del cliente */}
-        <div className="grid gap-4 sm:grid-cols-2">
+      <div ref={builderRef} className="scroll-mt-4 space-y-4 sm:space-y-5">
+        <FormSection
+          icon={FileText}
+          title="Datos de la cotización"
+          description="Número y hasta cuándo es válida."
+          aside={
+            showTermsLink ? (
+              <Button variant="ghost" size="sm" asChild className="shrink-0 text-muted-foreground">
+                <Link href={termsPath}>
+                  <Settings className="size-3.5" />
+                  Textos legales
+                </Link>
+              </Button>
+            ) : undefined
+          }
+          className="grid gap-4 sm:grid-cols-2"
+        >
           <div className="space-y-2">
             <Label htmlFor="qb-num">No. Cotización</Label>
             <Input id="qb-num" value={quoteNumber} disabled className="bg-muted" />
@@ -808,6 +815,9 @@ export function CarrierQuotesTable({
               onChange={(value) => setValidUntil(value)}
             />
           </div>
+        </FormSection>
+
+        <FormSection icon={Building2} title="Cliente" description="A quién va dirigida. Puedes elegir un cliente registrado o escribir los datos." className="grid gap-4 sm:grid-cols-2">
           {clientsEndpoint && (
             <ClientPicker
               endpoint={clientsEndpoint}
@@ -845,11 +855,10 @@ export function CarrierQuotesTable({
               Aparece en el PDF debajo del teléfono. Puede quedarse vacío.
             </p>
           </div>
-        </div>
+        </FormSection>
 
         {/* Rutas de la cotización */}
-        <div className="space-y-3">
-          <Label>Rutas incluidas</Label>
+        <FormSection icon={ListChecks} title={`Rutas incluidas (${quoteRows.length})`} description="Las que salen en el PDF. Se agregan desde Transportistas y precio." className="space-y-3">
 
           {quoteRows.length > 0 && (
             <div className="rounded-lg border overflow-hidden">
@@ -894,7 +903,7 @@ export function CarrierQuotesTable({
           {quoteRows.length === 0 && (
             <p className="text-sm text-muted-foreground">No hay rutas agregadas.</p>
           )}
-        </div>
+        </FormSection>
 
         {quoteError && <p className="text-sm text-destructive">{quoteError}</p>}
 
@@ -906,7 +915,7 @@ export function CarrierQuotesTable({
         )}
 
         {isEditing ? (
-          <div className="flex justify-end gap-3 pb-4">
+          <ActionBar sticky>
             <Button type="button" variant="outline" asChild>
               <Link href={listPath}>Cancelar</Link>
             </Button>
@@ -918,9 +927,9 @@ export function CarrierQuotesTable({
               {isSaving ? <Loader2 className="size-4 animate-spin" /> : null}
               {isSaving ? "Guardando…" : "Guardar cambios"}
             </Button>
-          </div>
+          </ActionBar>
         ) : (
-          <div className="flex flex-col justify-end gap-3 pb-4 sm:flex-row">
+          <ActionBar sticky>
             {allowDraft && (
               <Button
                 type="button"
@@ -941,7 +950,7 @@ export function CarrierQuotesTable({
               {isGenerating ? <Loader2 className="size-4 animate-spin" /> : <FileText className="size-4" />}
               {isGenerating ? "Generando PDF…" : "Descargar cotización PDF"}
             </Button>
-          </div>
+          </ActionBar>
         )}
       </div>
 
