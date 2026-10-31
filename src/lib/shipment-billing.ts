@@ -195,7 +195,10 @@ export function planShipmentBilling(
   if (!s.cost || s.cost <= 0) payable = { plan: null, reason: "Falta la tarifa de compra del embarque." };
   else if (!s.legalName?.trim()) payable = { plan: null, reason: "El embarque no tiene transportista." };
   else {
-    const totals = computeTotals({ subtotal: s.cost, ivaRate: 0.16, withholdingRate: 0 });
+    // JTP es persona moral: al pagar un flete retiene el 4 % de IVA, sea el
+    // transportista persona física o moral.
+    const withholdingRate = 0.04;
+    const totals = computeTotals({ subtotal: s.cost, ivaRate: 0.16, withholdingRate });
     payable = {
       plan: {
         kind: "payable",
@@ -203,7 +206,7 @@ export function planShipmentBilling(
         partyRfc: carrier?.rfc ?? null,
         clientId: null,
         ivaRate: 0.16,
-        withholdingRate: 0,
+        withholdingRate,
         ...totals,
         concept: concept(s),
         reference: s.eco,

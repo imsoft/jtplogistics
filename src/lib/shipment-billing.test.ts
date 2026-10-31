@@ -42,11 +42,15 @@ describe("planShipmentBilling", () => {
     expect(p.blocked).toBeNull();
     expect(p.receivable.plan).toMatchObject({ partyName: "Aceros del Bajío SA de CV", clientId: "k1", subtotal: 50000, iva: 8000, ivaWithheld: 2000, total: 56000, reference: "ECO-77" });
     expect(p.receivable.plan?.concept).toBe("Servicio de flete Guadalajara – Monterrey · ECO ECO-77");
-    expect(p.payable.plan).toMatchObject({ partyName: "Transportes Pérez SA de CV", partyRfc: "TPE010101AB1", subtotal: 40000, total: 46400 });
+    expect(p.payable.plan).toMatchObject({ partyName: "Transportes Pérez SA de CV", partyRfc: "TPE010101AB1", subtotal: 40000, iva: 6400, ivaWithheld: 1600, total: 44800, withholdingRate: 0.04 });
   });
   it("persona física: sin retención", () => {
     const client = { id: "k1", name: "Aceros del Bajío", legalName: null, rfc: "PEJJ800101AB1", taxRegime: "612", fiscalZip: "44100", cfdiUse: "G03" };
     expect(planShipmentBilling(shipment, client, null).receivable.plan?.ivaWithheld).toBe(0);
+  });
+  it("al pagarle a un transportista persona física también se retiene el 4 %", () => {
+    const fisica = { ...carrier(), rfc: "PEJJ800101AB1" };
+    expect(planShipmentBilling(shipment, null, fisica).payable.plan).toMatchObject({ ivaWithheld: 1600, total: 44800 });
   });
   it("explica por qué no sale cada lado", () => {
     const p = planShipmentBilling({ ...shipment, sale: null, cost: 0, status: "pending" }, null, null);

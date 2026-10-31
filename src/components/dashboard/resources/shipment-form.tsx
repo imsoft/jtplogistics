@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { FormActions } from "@/components/ui/form-actions";
-import { FormSection } from "@/components/ui/form-section";
+import { FormSection, RequiredText } from "@/components/ui/form-section";
+import { missingShipmentFields, missingShipmentMessage } from "@/lib/shipment-required";
 import { Label } from "@/components/ui/label";
 import { AppSelect } from "@/components/ui/app-select";
 import { SHIPMENT_STATUS_CONFIG } from "@/components/dashboard/resources/shipments-table";
@@ -114,6 +115,7 @@ export function ShipmentForm({
   // isClosed también se prende al elegir "Cerrado" en el formulario; para saber
   // si solo se pueden guardar tarifas importa cómo estaba al abrirlo.
   const lockedAtLoad = shipmentLockReason(initialValues) !== null && !unlocked;
+  const [missingError, setMissingError] = useState("");
 
   const [routes, setRoutes] = useState<Route[]>([]);
 
@@ -338,6 +340,10 @@ export function ShipmentForm({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    // Con el embarque bloqueado solo se guardan tarifas: ahí no se exigen los básicos.
+    const missing = lockedAtLoad && showTariffs ? [] : missingShipmentFields({ client, origin, destination, unit });
+    setMissingError(missingShipmentMessage(missing));
+    if (missing.length > 0) return;
     const tariffs = showTariffs
       ? { sale: sale.trim(), cost: cost.trim(), extraCosts: extras.filter((x) => x.concept.trim() || x.sale.trim() || x.cost.trim()) }
       : {};
@@ -388,7 +394,9 @@ export function ShipmentForm({
           <Input id="shipment-eco" value={eco} disabled={isClosed} onChange={(e) => setEco(e.target.value)} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="shipment-client">Cliente</Label>
+          <Label htmlFor="shipment-client">
+            <RequiredText>Cliente</RequiredText>
+          </Label>
           <AppSelect
             value={clientValue}
             onValueChange={(v) => {
@@ -402,7 +410,9 @@ export function ShipmentForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="shipment-origin">Origen</Label>
+          <Label htmlFor="shipment-origin">
+            <RequiredText>Origen</RequiredText>
+          </Label>
           <AppSelect
             value={origin}
             onValueChange={onOriginChange}
@@ -424,7 +434,9 @@ export function ShipmentForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="shipment-destination">Destino</Label>
+          <Label htmlFor="shipment-destination">
+            <RequiredText>Destino</RequiredText>
+          </Label>
           <AppSelect
             value={destination}
             onValueChange={setDestination}
@@ -501,7 +513,9 @@ export function ShipmentForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="shipment-unit">Unidad</Label>
+          <Label htmlFor="shipment-unit">
+            <RequiredText>Unidad</RequiredText>
+          </Label>
           <AppSelect
             value={unit}
             onValueChange={setUnit}
@@ -690,6 +704,12 @@ export function ShipmentForm({
             ))}
           </div>
         </FormSection>
+      )}
+
+      {missingError && (
+        <p role="alert" className="text-destructive text-sm font-medium">
+          {missingError}
+        </p>
       )}
 
       <FormActions

@@ -47,7 +47,7 @@ export function NewDocumentView({ kind, basePath }: { kind: BillingKind; basePat
       backLabel={`Volver a ${labels.plural.toLowerCase()}`}
       error={error}
     >
-      <DocumentForm kind={kind} initialValues={emptyDocumentForm(kind)} submitLabel="Guardar factura" cancelHref={basePath} onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+      <DocumentForm kind={kind} initialValues={emptyDocumentForm()} submitLabel="Guardar factura" cancelHref={basePath} onSubmit={handleSubmit} isSubmitting={isSubmitting} />
     </ResourceNewPage>
   );
 }

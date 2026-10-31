@@ -8,6 +8,7 @@ import { findFinanceForShipment } from "@/lib/finance-shipment-match";
 import { financesForShipments } from "@/lib/shipment-tariffs-server";
 import { readTariffs, canManageTariffs, effectiveTariffs } from "@/lib/shipment-tariffs";
 import { isDeliveryOutcome } from "@/lib/shipment-outcome";
+import { missingShipmentFields, missingShipmentMessage } from "@/lib/shipment-required";
 
 /** Campos sobre los que aplica la búsqueda de texto (server-side). */
 const SEARCH_FIELDS = [
@@ -156,6 +157,9 @@ export function POST(request: Request) {
       pickupDate, deliveryDate, legalName, operatorName,
       truck, trailer, unit, phone, comments, incident, incidentType, status, originAddress, destinationAddress,
     } = body as Record<string, string | undefined>;
+
+    const missing = missingShipmentFields({ client, origin, destination, unit });
+    if (missing.length > 0) return Response.json({ error: missingShipmentMessage(missing) }, { status: 400 });
 
     const tariffs = readTariffs(body as Record<string, unknown>);
     if (!tariffs.ok) return Response.json({ error: tariffs.error }, { status: 400 });
