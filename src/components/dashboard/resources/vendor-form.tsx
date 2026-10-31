@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { FormActions } from "@/components/ui/form-actions";
+import { FormSection, RequiredText } from "@/components/ui/form-section";
+import { KeyRound, UserRound } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
 import type { Vendor, VendorFormData } from "@/types/resources.types";
@@ -37,26 +39,17 @@ export function VendorForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <form onSubmit={handleSubmit} className="w-full space-y-4 sm:space-y-5">
+      <FormSection icon={UserRound} title="Datos personales" description="Quién es el vendedor." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="v-name">Nombre completo</Label>
+          <Label htmlFor="v-name">
+            <RequiredText>Nombre completo</RequiredText>
+          </Label>
           <Input
             id="v-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="v-email">Correo electrónico</Label>
-          <Input
-            id="v-email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            disabled={!isNew}
           />
         </div>
         <div className="space-y-2">
@@ -68,15 +61,6 @@ export function VendorForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="v-password">{isNew ? "Contraseña" : "Nueva contraseña (opcional)"}</Label>
-          <PasswordInput
-            id="v-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required={isNew}
-          />
-        </div>
-        <div className="space-y-2">
           <Label htmlFor="v-birthDate">Fecha de nacimiento</Label>
           <DatePicker
             id="v-birthDate"
@@ -84,8 +68,36 @@ export function VendorForm({
             onChange={(value) => setBirthDate(value)}
           />
         </div>
-      </div>
-      <FormActions submitLabel={submitLabel} cancelHref={cancelHref} isSubmitting={isSubmitting} />
+      </FormSection>
+
+      <FormSection icon={KeyRound} title="Acceso a la plataforma" description="Con este correo y contraseña entra a la plataforma." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="v-email">
+            {isNew ? <RequiredText>Correo electrónico</RequiredText> : "Correo electrónico"}
+          </Label>
+          <Input
+            id="v-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            disabled={!isNew}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="v-password">
+            {isNew ? <RequiredText>Contraseña</RequiredText> : "Nueva contraseña (opcional)"}
+          </Label>
+          <PasswordInput
+            id="v-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required={isNew}
+          />
+        </div>
+      </FormSection>
+
+      <FormActions sticky submitLabel={submitLabel} cancelHref={cancelHref} isSubmitting={isSubmitting} />
     </form>
   );
 }

@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { FormActions } from "@/components/ui/form-actions";
+import { FormSection, RequiredText } from "@/components/ui/form-section";
+import { Mail, Users } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { SecretInput } from "@/components/ui/secret-input";
 import { AppSelect } from "@/components/ui/app-select";
@@ -41,10 +43,12 @@ export function EmailForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <form onSubmit={handleSubmit} className="w-full space-y-4 sm:space-y-5">
+      <FormSection icon={Mail} title="Cuenta" description="El correo, su tipo y la contraseña." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="em-email">Correo electrónico</Label>
+          <Label htmlFor="em-email">
+            <RequiredText>Correo electrónico</RequiredText>
+          </Label>
           <Input
             id="em-email"
             type="email"
@@ -73,15 +77,19 @@ export function EmailForm({
             onChange={(v) => { setPasswordTouched(true); setPassword(v); }}
           />
         </div>
-        <div className="sm:col-span-2">
+      </FormSection>
+
+      <FormSection icon={Users} title="Personas" description="Quién usa esta cuenta." >
+        <div>
           <EmployeeMultiSelect
             label="Asignados"
             value={assigneeIds}
             onChange={setAssigneeIds}
           />
         </div>
-      </div>
-      <FormActions submitLabel={submitLabel} cancelHref={cancelHref} isSubmitting={isSubmitting} />
+      </FormSection>
+
+      <FormActions sticky submitLabel={submitLabel} cancelHref={cancelHref} isSubmitting={isSubmitting} />
     </form>
   );
 }

@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormActions } from "@/components/ui/form-actions";
+import { FormSection, RequiredText } from "@/components/ui/form-section";
+import { ClipboardList, Laptop as LaptopIcon, UserRound } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { SecretInput } from "@/components/ui/secret-input";
 import { AppSelect } from "@/components/ui/app-select";
@@ -59,10 +61,12 @@ export function LaptopForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <form onSubmit={handleSubmit} className="w-full space-y-4 sm:space-y-5">
+      <FormSection icon={LaptopIcon} title="Equipo" description="Qué laptop es." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="space-y-2">
-          <Label htmlFor="lap-name">Nombre / Identificador</Label>
+          <Label htmlFor="lap-name">
+            <RequiredText>Nombre / Identificador</RequiredText>
+          </Label>
           <Input
             id="lap-name"
             value={name}
@@ -110,6 +114,9 @@ export function LaptopForm({
             onChange={(e) => setColor(e.target.value)}
           />
         </div>
+      </FormSection>
+
+      <FormSection icon={UserRound} title="Acceso y asignación" description="Su contraseña, en qué estado está y quién la usa." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="space-y-2">
           <Label htmlFor="lap-password">Contraseña</Label>
           <SecretInput
@@ -150,6 +157,9 @@ export function LaptopForm({
             onChange={(e) => setMaintenanceProvider(e.target.value)}
           />
         </div>
+      </FormSection>
+
+      <FormSection icon={ClipboardList} title="Detalles y foto" description="Lo que trae y lo que hay que saber del equipo." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="lap-accessories">Accesorios</Label>
           <Textarea
@@ -175,8 +185,8 @@ export function LaptopForm({
             value={observations}
             onChange={(e) => setObservations(e.target.value)}
             rows={2}
-            placeholder="Recomendaciones del proveedor, garantías, etc."
           />
+          <p className="text-muted-foreground text-xs">Recomendaciones del proveedor, garantías, etc.</p>
         </div>
         <div className="sm:col-span-2">
           <DeviceImageUpload
@@ -189,8 +199,9 @@ export function LaptopForm({
             }}
           />
         </div>
-      </div>
-      <FormActions submitLabel={submitLabel} cancelHref={cancelHref} isSubmitting={isSubmitting} />
+      </FormSection>
+
+      <FormActions sticky submitLabel={submitLabel} cancelHref={cancelHref} isSubmitting={isSubmitting} />
     </form>
   );
 }

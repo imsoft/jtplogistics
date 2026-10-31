@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormActions } from "@/components/ui/form-actions";
+import { FormSection, RequiredText } from "@/components/ui/form-section";
+import { ClipboardList, Smartphone, UserRound } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { SecretInput } from "@/components/ui/secret-input";
 import { EmployeeSelect } from "./employee-select";
@@ -59,10 +61,12 @@ export function PhoneForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <form onSubmit={handleSubmit} className="w-full space-y-4 sm:space-y-5">
+      <FormSection icon={Smartphone} title="Equipo" description="Qué celular es y su línea." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="space-y-2">
-          <Label htmlFor="ph-name">Nombre / Identificador</Label>
+          <Label htmlFor="ph-name">
+            <RequiredText>Nombre / Identificador</RequiredText>
+          </Label>
           <Input
             id="ph-name"
             value={name}
@@ -84,33 +88,6 @@ export function PhoneForm({
             id="ph-number"
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="ph-password">Contraseña / PIN</Label>
-          <SecretInput
-            id="ph-password"
-            type="phone"
-            resourceId={initialValues.id}
-            hasPassword={initialValues.hasPassword}
-            value={password}
-            onChange={(v) => { setPasswordTouched(true); setPassword(v); }}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="ph-imei">IMEI</Label>
-          <Input
-            id="ph-imei"
-            value={imei}
-            onChange={(e) => setImei(formatIMEI(e.target.value))}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="ph-serial">No. de serie</Label>
-          <Input
-            id="ph-serial"
-            value={serialNumber}
-            onChange={(e) => setSerialNumber(e.target.value)}
           />
         </div>
         <div className="space-y-2">
@@ -137,6 +114,36 @@ export function PhoneForm({
             onChange={(e) => setColor(e.target.value)}
           />
         </div>
+        <div className="space-y-2">
+          <Label htmlFor="ph-imei">IMEI</Label>
+          <Input
+            id="ph-imei"
+            value={imei}
+            onChange={(e) => setImei(formatIMEI(e.target.value))}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="ph-serial">No. de serie</Label>
+          <Input
+            id="ph-serial"
+            value={serialNumber}
+            onChange={(e) => setSerialNumber(e.target.value)}
+          />
+        </div>
+      </FormSection>
+
+      <FormSection icon={UserRound} title="Acceso y asignación" description="Su PIN y quién lo usa." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-2">
+          <Label htmlFor="ph-password">Contraseña / PIN</Label>
+          <SecretInput
+            id="ph-password"
+            type="phone"
+            resourceId={initialValues.id}
+            hasPassword={initialValues.hasPassword}
+            value={password}
+            onChange={(v) => { setPasswordTouched(true); setPassword(v); }}
+          />
+        </div>
         <EmployeeSelect
           label="Asignado a"
           value={assignedToId}
@@ -157,6 +164,9 @@ export function PhoneForm({
             onChange={(e) => setMaintenanceProvider(e.target.value)}
           />
         </div>
+      </FormSection>
+
+      <FormSection icon={ClipboardList} title="Observaciones y foto" description="Lo que hay que saber del equipo." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="ph-observations">Observaciones</Label>
           <Textarea
@@ -164,8 +174,8 @@ export function PhoneForm({
             value={observations}
             onChange={(e) => setObservations(e.target.value)}
             rows={2}
-            placeholder="Recomendaciones del proveedor, garantías, etc."
           />
+          <p className="text-muted-foreground text-xs">Recomendaciones del proveedor, garantías, etc.</p>
         </div>
         <div className="sm:col-span-2">
           <DeviceImageUpload
@@ -178,8 +188,9 @@ export function PhoneForm({
             }}
           />
         </div>
-      </div>
-      <FormActions submitLabel={submitLabel} cancelHref={cancelHref} isSubmitting={isSubmitting} />
+      </FormSection>
+
+      <FormActions sticky submitLabel={submitLabel} cancelHref={cancelHref} isSubmitting={isSubmitting} />
     </form>
   );
 }
