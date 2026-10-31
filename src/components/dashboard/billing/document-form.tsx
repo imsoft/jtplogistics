@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { FileText, Loader2, Paperclip, X } from "lucide-react";
+import { Building2, Calculator, FileText, FileUp, Loader2, NotebookText, Paperclip, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ActionBar } from "@/components/ui/form-actions";
+import { FormSection, RequiredText } from "@/components/ui/form-section";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -282,7 +283,7 @@ export function DocumentForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="min-w-0 space-y-6">
+    <form onSubmit={handleSubmit} className="min-w-0 space-y-4 sm:space-y-5">
       {startedAsDraft && (
         <div className="rounded-lg border border-primary/40 bg-primary/5 p-4 text-sm">
           <p className="font-medium">Borrador</p>
@@ -294,14 +295,12 @@ export function DocumentForm({
         </div>
       )}
       {!lockedByXml && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">XML y PDF de la factura</CardTitle>
-            <CardDescription>
-              Sube el XML y la factura se llena sola: {labels.party.toLowerCase()}, RFC, folio, folio fiscal e importes. El PDF queda guardado junto con ella.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        <FormSection
+          icon={FileUp}
+          title="XML y PDF de la factura"
+          description={`Sube el XML y la factura se llena sola: ${labels.party.toLowerCase()}, RFC, folio, folio fiscal e importes. El PDF queda guardado junto con ella.`}
+          className="space-y-3"
+        >
             <div className="flex flex-wrap items-center gap-3">
               <Button type="button" variant="outline" disabled={uploading} asChild>
                 <label className="cursor-pointer">
@@ -336,18 +335,19 @@ export function DocumentForm({
                 ))}
               </ul>
             )}
-          </CardContent>
-        </Card>
+        </FormSection>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">{labels.party} y folio</CardTitle>
-          <CardDescription>Los datos tal como vienen en la factura (XML o PDF).</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <FormSection
+        icon={Building2}
+        title={`${labels.party} y folio`}
+        description="Los datos tal como vienen en la factura (XML o PDF)."
+        className="grid gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3"
+      >
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="doc-party">{labels.party}</Label>
+            <Label htmlFor="doc-party">
+              <RequiredText>{labels.party}</RequiredText>
+            </Label>
             <Input id="doc-party" list="doc-parties" value={form.partyName} onChange={(e) => onPartyChange(e.target.value)} required />
             <datalist id="doc-parties">
               {parties.map((p) => (
@@ -370,7 +370,9 @@ export function DocumentForm({
             <Input id="doc-series" value={form.series} onChange={(e) => set("series")(e.target.value)} disabled={fromXml} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="doc-folio">Folio</Label>
+            <Label htmlFor="doc-folio">
+              {!startedAsDraft && !fromXml ? <RequiredText>Folio</RequiredText> : "Folio"}
+            </Label>
             <Input id="doc-folio" value={form.folio} onChange={(e) => set("folio")(e.target.value)} required={!startedAsDraft && !fromXml} disabled={fromXml} />
           </div>
           <div className="space-y-2">
@@ -378,11 +380,15 @@ export function DocumentForm({
             <Input id="doc-uuid" value={form.uuid} onChange={(e) => set("uuid")(e.target.value)} disabled={fromXml} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="doc-issue">Fecha de la factura</Label>
+            <Label htmlFor="doc-issue">
+              <RequiredText>Fecha de la factura</RequiredText>
+            </Label>
             <DatePicker id="doc-issue" value={form.issueDate} onChange={(v) => onIssueDateChange(v)} required disabled={fromXml} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="doc-due">Vence</Label>
+            <Label htmlFor="doc-due">
+              <RequiredText>Vence</RequiredText>
+            </Label>
             <DatePicker id="doc-due" value={form.dueDate} onChange={(v) => set("dueDate")(v)} required />
             {partyDays != null && (
               <p className="text-muted-foreground text-xs">
@@ -409,15 +415,14 @@ export function DocumentForm({
               className="w-full"
             />
           </div>
-        </CardContent>
-      </Card>
+      </FormSection>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Importes</CardTitle>
-          {fromXml && <CardDescription>Son los del XML: no se cambian a mano.</CardDescription>}
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <FormSection
+        icon={Calculator}
+        title="Importes"
+        description={fromXml ? "Son los del XML: no se cambian a mano." : "Subtotal, impuestos y retenciones."}
+        className="grid gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-4"
+      >
           <div className="space-y-2">
             <Label>Moneda</Label>
             <AppSelect
@@ -439,7 +444,9 @@ export function DocumentForm({
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="doc-subtotal">Subtotal</Label>
+            <Label htmlFor="doc-subtotal">
+              <RequiredText>Subtotal</RequiredText>
+            </Label>
             <Input id="doc-subtotal" inputMode="decimal" value={form.subtotal} onChange={(e) => set("subtotal")(formatMxnLive(e.target.value))} required disabled={fromXml} />
           </div>
           <div className="space-y-2">
@@ -463,14 +470,9 @@ export function DocumentForm({
               <span className="text-muted-foreground">Escribe el subtotal para ver el total.</span>
             )}
           </div>
-        </CardContent>
-      </Card>
+      </FormSection>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Detalle</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
+      <FormSection icon={NotebookText} title="Detalle" description="Concepto, referencia y notas internas." className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="doc-concept">Concepto</Label>
             <Input id="doc-concept" value={form.concept} onChange={(e) => set("concept")(e.target.value)} />
@@ -489,32 +491,31 @@ export function DocumentForm({
             <Switch id="doc-alegra" checked={form.fromAlegra} onCheckedChange={(v) => set("fromAlegra")(Boolean(v))} />
             <Label htmlFor="doc-alegra">Viene de Alegra</Label>
           </div>
-        </CardContent>
-      </Card>
+      </FormSection>
 
       {error && <p className="text-destructive text-sm font-medium">{error}</p>}
 
-      <div className="flex justify-end gap-3">
-        <Button type="button" variant="outline" asChild>
+      <ActionBar sticky>
+        <Button type="button" variant="outline" asChild className="w-full sm:w-auto">
           <Link href={cancelHref}>Cancelar</Link>
         </Button>
         {startedAsDraft ? (
           <>
-            <Button type="button" variant="outline" disabled={isSubmitting} onClick={() => submit(true)}>
+            <Button type="button" variant="outline" disabled={isSubmitting} onClick={() => submit(true)} className="w-full sm:w-auto">
               Guardar borrador
             </Button>
-            <Button type="button" disabled={isSubmitting} onClick={() => submit(false)}>
+            <Button type="button" disabled={isSubmitting} onClick={() => submit(false)} className="w-full sm:w-auto">
               {isSubmitting && <Loader2 className="size-4 animate-spin" />}
               {kind === "receivable" ? "Registrar factura emitida" : "Registrar factura recibida"}
             </Button>
           </>
         ) : (
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
             {isSubmitting && <Loader2 className="size-4 animate-spin" />}
             {submitLabel}
           </Button>
         )}
-      </div>
+      </ActionBar>
     </form>
   );
 }
