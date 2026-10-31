@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
+import { Building2, Handshake, Loader2, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AppSelect } from "@/components/ui/app-select";
+import { ActionBar } from "@/components/ui/form-actions";
+import { FormSection, RequiredText } from "@/components/ui/form-section";
 import {
   PROSPECT_COVERAGES,
   PROSPECT_SOURCES,
@@ -82,10 +84,12 @@ export function ProspectForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <form onSubmit={handleSubmit} className="w-full space-y-4 sm:space-y-5">
+      <FormSection icon={Building2} title="Proveedor" description="Quién es y desde dónde opera." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="p-name">Nombre comercial</Label>
+          <Label htmlFor="p-name">
+            <RequiredText>Nombre comercial</RequiredText>
+          </Label>
           <Input id="p-name" value={form.commercialName} onChange={(e) => set("commercialName")(e.target.value)} required />
         </div>
         <div className="space-y-2">
@@ -94,21 +98,32 @@ export function ProspectForm({
           <p className="text-muted-foreground text-xs">Hace falta al darlo de alta como proveedor.</p>
         </div>
         <div className="space-y-2">
+          <Label htmlFor="p-web">Página de internet</Label>
+          <Input id="p-web" value={form.website} onChange={(e) => set("website")(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="p-city">Origen</Label>
+          <Input id="p-city" value={form.city} onChange={(e) => set("city")(e.target.value)} />
+          <p className="text-muted-foreground text-xs">La ciudad desde donde opera: Guadalajara, CDMX, Querétaro…</p>
+        </div>
+      </FormSection>
+
+      <FormSection icon={UserRound} title="Contacto" description="Con quién se habla." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
+        <div className="space-y-2">
           <Label htmlFor="p-contact">Contacto</Label>
           <Input id="p-contact" value={form.contactName} onChange={(e) => set("contactName")(e.target.value)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="p-phone">Teléfono</Label>
-          <Input id="p-phone" value={form.phone} onChange={(e) => set("phone")(e.target.value)} />
+          <Input id="p-phone" type="tel" value={form.phone} onChange={(e) => set("phone")(e.target.value)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="p-email">Correo</Label>
           <Input id="p-email" type="email" value={form.email} onChange={(e) => set("email")(e.target.value)} />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="p-web">Página de internet</Label>
-          <Input id="p-web" value={form.website} onChange={(e) => set("website")(e.target.value)} />
-        </div>
+      </FormSection>
+
+      <FormSection icon={Handshake} title="Prospección" description="Cómo llegó, qué cubre y en qué va." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label>Cómo se consiguió</Label>
           <AppSelect
@@ -128,11 +143,6 @@ export function ProspectForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="p-city">Origen</Label>
-          <Input id="p-city" value={form.city} onChange={(e) => set("city")(e.target.value)} />
-          <p className="text-muted-foreground text-xs">La ciudad desde donde opera: Guadalajara, CDMX, Querétaro…</p>
-        </div>
-        <div className="space-y-2">
           <Label htmlFor="p-date">Fecha de contacto</Label>
           <DatePicker id="p-date" value={form.contactedOn} onChange={(v) => set("contactedOn")(v)} />
         </div>
@@ -145,35 +155,35 @@ export function ProspectForm({
             className="w-full"
           />
         </div>
-      </div>
-
-      {form.status === "descartado" && (
-        <div className="space-y-2">
-          <Label htmlFor="p-discard">Por qué se descarta</Label>
-          <Textarea id="p-discard" rows={2} value={form.discardReason} onChange={(e) => set("discardReason")(e.target.value)} />
-          <p className="text-muted-foreground text-xs">
-            Teléfono equivocado, no le interesa, no corre nuestras rutas, documentos incompletos…
-          </p>
+        {form.status === "descartado" && (
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="p-discard">
+              <RequiredText>Por qué se descarta</RequiredText>
+            </Label>
+            <Textarea id="p-discard" rows={2} value={form.discardReason} onChange={(e) => set("discardReason")(e.target.value)} />
+            <p className="text-muted-foreground text-xs">
+              Teléfono equivocado, no le interesa, no corre nuestras rutas, documentos incompletos…
+            </p>
+          </div>
+        )}
+        <div className="space-y-2 sm:col-span-2">
+          <Label htmlFor="p-notes">Comentarios</Label>
+          <Textarea id="p-notes" rows={4} value={form.notes} onChange={(e) => set("notes")(e.target.value)} />
+          <p className="text-muted-foreground text-xs">Tarifas pactadas, en qué va la negociación, lo que haya que recordar.</p>
         </div>
-      )}
-
-      <div className="space-y-2">
-        <Label htmlFor="p-notes">Comentarios</Label>
-        <Textarea id="p-notes" rows={4} value={form.notes} onChange={(e) => set("notes")(e.target.value)} />
-        <p className="text-muted-foreground text-xs">Tarifas pactadas, en qué va la negociación, lo que haya que recordar.</p>
-      </div>
+      </FormSection>
 
       {error && <p className="text-destructive text-sm font-medium">{error}</p>}
 
-      <div className="flex justify-end gap-3">
-        <Button type="button" variant="outline" asChild>
+      <ActionBar sticky>
+        <Button type="button" variant="outline" asChild className="w-full sm:w-auto">
           <Link href={cancelHref}>Cancelar</Link>
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
           {isSubmitting && <Loader2 className="size-4 animate-spin" />}
           {submitLabel}
         </Button>
-      </div>
+      </ActionBar>
     </form>
   );
 }
