@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
+import { Building2, CalendarClock, Loader2, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ActionBar } from "@/components/ui/form-actions";
+import { FormSection, RequiredText } from "@/components/ui/form-section";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -123,137 +124,136 @@ export function LeadForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="min-w-0 space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Empresa y contacto</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="space-y-2 sm:col-span-2 lg:col-span-1">
-            <Label htmlFor="lead-company">Empresa</Label>
-            <Input id="lead-company" required {...text("companyName")} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="lead-industry">Giro</Label>
-            <Input id="lead-industry" {...text("industry")} />
-            <p className="text-muted-foreground text-xs">Alimentos, autopartes, retail…</p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="lead-city">Ciudad</Label>
-            <Input id="lead-city" {...text("city")} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="lead-rfc">RFC</Label>
-            <Input id="lead-rfc" maxLength={13} {...text("rfc")} />
-            <p className="text-muted-foreground text-xs">12 caracteres si es empresa, 13 si es persona física.</p>
-          </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="lead-address">Dirección</Label>
-            <Input id="lead-address" {...text("address")} />
-            <p className="text-muted-foreground text-xs">Calle, número, colonia, código postal.</p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="lead-contact">Nombre de contacto</Label>
-            <Input id="lead-contact" {...text("contactName")} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="lead-position">Puesto</Label>
-            <Input id="lead-position" {...text("position")} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="lead-phone">Teléfono</Label>
-            <Input id="lead-phone" type="tel" inputMode="tel" {...text("phone")} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="lead-email">Correo</Label>
-            <Input id="lead-email" type="email" className="text-email" {...text("email")} />
-          </div>
-          <div className="space-y-2">
-            <Label>Cómo llegó</Label>
-            <AppSelect
-              value={form.source}
-              onValueChange={set("source")}
-              options={LEAD_SOURCES.map((s) => ({ value: s.value, label: s.label }))}
-              className="w-full"
-            />
-          </div>
-        </CardContent>
-      </Card>
+    <form onSubmit={handleSubmit} className="min-w-0 space-y-4 sm:space-y-5">
+      <FormSection icon={Building2} title="Empresa" description="A quién le queremos vender y dónde está." className="grid gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-2 sm:col-span-2 lg:col-span-1">
+          <Label htmlFor="lead-company">
+            <RequiredText>Empresa</RequiredText>
+          </Label>
+          <Input id="lead-company" required {...text("companyName")} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lead-industry">Giro</Label>
+          <Input id="lead-industry" {...text("industry")} />
+          <p className="text-muted-foreground text-xs">Alimentos, autopartes, retail…</p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lead-city">Ciudad</Label>
+          <Input id="lead-city" {...text("city")} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lead-rfc">RFC</Label>
+          <Input id="lead-rfc" maxLength={13} {...text("rfc")} />
+          <p className="text-muted-foreground text-xs">12 caracteres si es empresa, 13 si es persona física.</p>
+        </div>
+        <div className="space-y-2 sm:col-span-2">
+          <Label htmlFor="lead-address">Dirección</Label>
+          <Input id="lead-address" {...text("address")} />
+          <p className="text-muted-foreground text-xs">Calle, número, colonia, código postal.</p>
+        </div>
+      </FormSection>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Seguimiento</CardTitle>
-          <CardDescription>
-            Al responsable le llega un recordatorio el día del próximo seguimiento.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="space-y-2">
-            <Label>Etapa</Label>
-            <AppSelect
-              value={form.stage}
-              onValueChange={(v) => set("stage")(v || "prospecto")}
-              options={LEAD_STAGES.map((s) => ({ value: s.value, label: s.label }))}
-              className="w-full"
+      <FormSection icon={UserRound} title="Contacto" description="Con quién se habla y cómo llegó a nosotros." className="grid gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-2">
+          <Label htmlFor="lead-contact">Nombre de contacto</Label>
+          <Input id="lead-contact" {...text("contactName")} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lead-position">Puesto</Label>
+          <Input id="lead-position" {...text("position")} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lead-phone">Teléfono</Label>
+          <Input id="lead-phone" type="tel" inputMode="tel" {...text("phone")} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lead-email">Correo</Label>
+          <Input id="lead-email" type="email" className="text-email" {...text("email")} />
+        </div>
+        <div className="space-y-2">
+          <Label>Cómo llegó</Label>
+          <AppSelect
+            value={form.source}
+            onValueChange={set("source")}
+            options={LEAD_SOURCES.map((s) => ({ value: s.value, label: s.label }))}
+            className="w-full"
+          />
+        </div>
+      </FormSection>
+
+      <FormSection
+        icon={CalendarClock}
+        title="Seguimiento"
+        description="Al responsable le llega un recordatorio el día del próximo seguimiento."
+        className="grid gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3"
+      >
+        <div className="space-y-2">
+          <Label>Etapa</Label>
+          <AppSelect
+            value={form.stage}
+            onValueChange={(v) => set("stage")(v || "prospecto")}
+            options={LEAD_STAGES.map((s) => ({ value: s.value, label: s.label }))}
+            className="w-full"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Responsable</Label>
+          <AppSelect
+            value={form.ownerId}
+            onValueChange={set("ownerId")}
+            options={owners.map((o) => ({ value: o.id, label: o.name }))}
+            className="w-full"
+          />
+          <p className="text-muted-foreground text-xs">Si lo dejas vacío, quedas tú.</p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lead-estimated">Venta mensual estimada</Label>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground text-sm">$</span>
+            <Input
+              id="lead-estimated"
+              inputMode="decimal"
+              value={form.estimatedMonthly}
+              onChange={(e) => set("estimatedMonthly")(formatMxnLive(e.target.value))}
             />
           </div>
-          <div className="space-y-2">
-            <Label>Responsable</Label>
-            <AppSelect
-              value={form.ownerId}
-              onValueChange={set("ownerId")}
-              options={owners.map((o) => ({ value: o.id, label: o.name }))}
-              className="w-full"
-            />
-            <p className="text-muted-foreground text-xs">Si lo dejas vacío, quedas tú.</p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="lead-estimated">Venta mensual estimada</Label>
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground text-sm">$</span>
-              <Input
-                id="lead-estimated"
-                inputMode="decimal"
-                value={form.estimatedMonthly}
-                onChange={(e) => set("estimatedMonthly")(formatMxnLive(e.target.value))}
-              />
-            </div>
-            <p className="text-muted-foreground text-xs">Lo que facturaría al mes si se cierra, en pesos.</p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="lead-next-date">Próximo seguimiento</Label>
-            <DatePicker id="lead-next-date" value={form.nextFollowUpOn} onChange={(v) => set("nextFollowUpOn")(v)} />
-          </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="lead-next-action">Qué toca hacer</Label>
-            <Input id="lead-next-action" {...text("nextAction")} />
-            <p className="text-muted-foreground text-xs">Llamar para confirmar volumen, mandar cotización, visitar planta…</p>
-          </div>
-          {form.stage === "perdido" && (
-            <div className="space-y-2 sm:col-span-2 lg:col-span-3">
-              <Label htmlFor="lead-lost">Por qué se perdió</Label>
-              <Textarea id="lead-lost" rows={2} {...text("lostReason")} />
-            </div>
-          )}
+          <p className="text-muted-foreground text-xs">Lo que facturaría al mes si se cierra, en pesos.</p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lead-next-date">Próximo seguimiento</Label>
+          <DatePicker id="lead-next-date" value={form.nextFollowUpOn} onChange={(v) => set("nextFollowUpOn")(v)} />
+        </div>
+        <div className="space-y-2 sm:col-span-2">
+          <Label htmlFor="lead-next-action">Qué toca hacer</Label>
+          <Input id="lead-next-action" {...text("nextAction")} />
+          <p className="text-muted-foreground text-xs">Llamar para confirmar volumen, mandar cotización, visitar planta…</p>
+        </div>
+        {form.stage === "perdido" && (
           <div className="space-y-2 sm:col-span-2 lg:col-span-3">
-            <Label htmlFor="lead-notes">Notas</Label>
-            <Textarea id="lead-notes" rows={3} {...text("notes")} />
-            <p className="text-muted-foreground text-xs">Rutas que mueve, volumen, con quién trabaja hoy…</p>
+            <Label htmlFor="lead-lost">
+              <RequiredText>Por qué se perdió</RequiredText>
+            </Label>
+            <Textarea id="lead-lost" rows={2} {...text("lostReason")} />
           </div>
-        </CardContent>
-      </Card>
+        )}
+        <div className="space-y-2 sm:col-span-2 lg:col-span-3">
+          <Label htmlFor="lead-notes">Notas</Label>
+          <Textarea id="lead-notes" rows={3} {...text("notes")} />
+          <p className="text-muted-foreground text-xs">Rutas que mueve, volumen, con quién trabaja hoy…</p>
+        </div>
+      </FormSection>
 
       {error && <p className="text-destructive text-sm font-medium">{error}</p>}
 
-      <div className="flex justify-end gap-3">
-        <Button type="button" variant="outline" asChild>
+      <ActionBar sticky>
+        <Button type="button" variant="outline" asChild className="w-full sm:w-auto">
           <Link href={cancelHref}>Cancelar</Link>
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
           {isSubmitting && <Loader2 className="size-4 animate-spin" />}
           {submitLabel}
         </Button>
-      </div>
+      </ActionBar>
     </form>
   );
 }
