@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormActions } from "@/components/ui/form-actions";
-import { FormSection } from "@/components/ui/form-section";
+import { FormSection, RequiredText } from "@/components/ui/form-section";
 import { Building2, Package, ReceiptText, UserRound } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { AppSelect } from "@/components/ui/app-select";
@@ -79,9 +79,7 @@ export function ClientForm({
       <FormSection icon={Building2} title="Empresa" description="Cómo se llama el cliente y dónde está." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="client-name">
-            <span>
-              Razón social<span className="text-destructive" aria-hidden>*</span>
-            </span>
+            <RequiredText>Razón social</RequiredText>
           </Label>
           <Input
             id="client-name"

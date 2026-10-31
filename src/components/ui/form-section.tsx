@@ -38,3 +38,16 @@ export function FormSection({
     </section>
   );
 }
+
+/**
+ * Texto de una etiqueta con su asterisco de obligatorio pegado (Label usa
+ * `gap`, así que van juntos dentro de un mismo span).
+ */
+export function RequiredText({ children }: { children: React.ReactNode }) {
+  return (
+    <span>
+      {children}
+      <span className="text-destructive" aria-hidden>*</span>
+    </span>
+  );
+}

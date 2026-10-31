@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { CalendarRange, Loader2, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormSection } from "@/components/ui/form-section";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -107,16 +107,12 @@ export function EmployeeLeavesCard({ userId }: { userId: string }) {
   }
 
   return (
-    <Card>
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-left text-base sm:text-lg">Vacaciones y home office</CardTitle>
-        <CardDescription className="text-left text-xs sm:text-sm">
-          En estos días puede marcar desde donde esté, sin necesidad de estar en la
-          oficina. En home office se le siguen contando sus retardos; en los demás no
-          se le anota nada. Los cambios se guardan al momento.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-5">
+    <FormSection
+      icon={CalendarRange}
+      title="Vacaciones y home office"
+      description="En estos días puede marcar desde donde esté, sin necesidad de estar en la oficina. En home office se le siguen contando sus retardos; en los demás no se le anota nada. Los cambios se guardan al momento."
+      className="space-y-5"
+    >
         {leaves === null ? (
           <div className="space-y-2">
             <Skeleton className="h-12 w-full" />
@@ -196,7 +192,6 @@ export function EmployeeLeavesCard({ userId }: { userId: string }) {
             Programar
           </Button>
         </div>
-      </CardContent>
-    </Card>
+    </FormSection>
   );
 }

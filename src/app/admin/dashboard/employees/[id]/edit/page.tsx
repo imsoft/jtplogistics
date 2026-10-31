@@ -15,10 +15,10 @@ import {
 import { EmployeeLeavesCard } from "@/components/dashboard/time-clock/employee-leaves-card";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Laptop, Smartphone, Mail, ChevronRight, Eye, Plus, Pencil, Trash2, AtSign } from "lucide-react";
+import { Laptop, Smartphone, Mail, ChevronRight, Eye, Plus, Pencil, Trash2, AtSign, MonitorSmartphone, ShieldCheck } from "lucide-react";
+import { FormSection } from "@/components/ui/form-section";
 import type { Employee, EmployeeFormData } from "@/types/resources.types";
 import { formatPhone } from "@/lib/utils";
 import { toast } from "sonner";
@@ -207,14 +207,12 @@ export default function EditEmployeePage() {
 
             {/* Recursos vinculados */}
             {hasLinks && (
-              <Card>
-                <CardHeader className="space-y-1">
-                  <CardTitle className="text-left text-base sm:text-lg">Recursos vinculados</CardTitle>
-                  <CardDescription className="text-left text-xs sm:text-sm">
-                    Laptops, celulares y correos asignados a este colaborador.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
+              <FormSection
+                icon={MonitorSmartphone}
+                title="Recursos vinculados"
+                description="Laptops, celulares y correos asignados a este colaborador."
+                className="space-y-4"
+              >
                   {laptops.length > 0 && (
                     <div className="space-y-2">
                       <h4 className="flex items-center gap-2 text-left text-sm font-medium">
@@ -267,40 +265,35 @@ export default function EditEmployeePage() {
                       </div>
                     </div>
                   )}
-                </CardContent>
-              </Card>
+              </FormSection>
             )}
 
             {/* Permisos */}
             {permissions && (
-              <Card>
-                <CardHeader className="space-y-1">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <CardTitle className="text-left text-base sm:text-lg">Permisos</CardTitle>
-                    <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full sm:w-auto"
-                        onClick={() => setAllPermissions(false)}
-                      >
-                        Quitar todos
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="default"
-                        className="w-full sm:w-auto"
-                        onClick={() => setAllPermissions(true)}
-                      >
-                        Seleccionar todos
-                      </Button>
-                    </div>
+              <FormSection
+                icon={ShieldCheck}
+                title="Permisos"
+                description="Controla permisos por módulo para leer, crear, editar y eliminar."
+                aside={
+                  <div className="hidden gap-2 sm:flex">
+                    <Button type="button" variant="outline" size="sm" onClick={() => setAllPermissions(false)}>
+                      Quitar todos
+                    </Button>
+                    <Button type="button" size="sm" onClick={() => setAllPermissions(true)}>
+                      Seleccionar todos
+                    </Button>
                   </div>
-                  <CardDescription className="text-left text-xs sm:text-sm">
-                    Controla permisos por módulo para leer, crear, editar y eliminar.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
+                }
+              >
+                {/* En celular los botones van arriba de la lista: en el encabezado no caben. */}
+                <div className="mb-3 grid grid-cols-2 gap-2 sm:hidden">
+                  <Button type="button" variant="outline" size="sm" onClick={() => setAllPermissions(false)}>
+                    Quitar todos
+                  </Button>
+                  <Button type="button" size="sm" onClick={() => setAllPermissions(true)}>
+                    Seleccionar todos
+                  </Button>
+                </div>
                   <div className="space-y-0">
                     {PERMISSION_FIELDS.map((perm) => {
                       const Icon = getPermIcon(perm.key);
@@ -327,8 +320,7 @@ export default function EditEmployeePage() {
                       );
                     })}
                   </div>
-                </CardContent>
-              </Card>
+              </FormSection>
             )}
           </EmployeeForm>
         )}

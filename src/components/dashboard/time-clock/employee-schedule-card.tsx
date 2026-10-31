@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Moon } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Clock, Moon } from "lucide-react";
+import { FormSection } from "@/components/ui/form-section";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -106,16 +106,12 @@ export function EmployeeScheduleCard({
   }
 
   return (
-    <Card>
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-left text-base sm:text-lg">Horario</CardTitle>
-        <CardDescription className="text-left text-xs sm:text-sm">
-          Se guarda con el resto de la ficha. Los días que no marques significan que
-          no labora ese día. La entrada tiene 10 minutos de tolerancia; después de eso
-          es retardo y tiene que escribir el motivo para poder marcar.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3">
+    <FormSection
+      icon={Clock}
+      title="Horario"
+      description="Se guarda con el resto de la ficha. Los días que no marques significan que no labora ese día. La entrada tiene 10 minutos de tolerancia; después de eso es retardo y tiene que escribir el motivo para poder marcar."
+      className="space-y-3"
+    >
         {draft === null ? (
           <>
             <Skeleton className="h-9 w-full" />
@@ -174,7 +170,6 @@ export function EmployeeScheduleCard({
             })}
           </>
         )}
-      </CardContent>
-    </Card>
+    </FormSection>
   );
 }

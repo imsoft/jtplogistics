@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { FormActions } from "@/components/ui/form-actions";
+import { FormSection, RequiredText } from "@/components/ui/form-section";
+import { BriefcaseBusiness, IdCard, KeyRound, UserRound } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
 import { SecretInput } from "@/components/ui/secret-input";
@@ -84,10 +86,12 @@ export function EmployeeForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <form onSubmit={handleSubmit} className="w-full space-y-4 sm:space-y-5">
+      <FormSection icon={UserRound} title="Datos personales" description="Quién es y cómo localizarlo." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="emp-name">Nombre completo</Label>
+          <Label htmlFor="emp-name">
+            <RequiredText>Nombre completo</RequiredText>
+          </Label>
           <Input
             id="emp-name"
             value={name}
@@ -96,7 +100,42 @@ export function EmployeeForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="emp-email">Correo electrónico</Label>
+          <Label htmlFor="emp-birthDate">Fecha de nacimiento</Label>
+          <DatePicker
+            id="emp-birthDate"
+            value={birthDate}
+            onChange={(value) => setBirthDate(value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="emp-phone">Teléfono</Label>
+          <Input
+            id="emp-phone"
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="emp-address">Domicilio</Label>
+          <Input
+            id="emp-address"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+          />
+        </div>
+      </FormSection>
+
+      <FormSection
+        icon={KeyRound}
+        title="Acceso a la plataforma"
+        description={isNew ? "Con este correo y contraseña entra a la plataforma." : "Su cuenta para entrar a la plataforma."}
+        className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2"
+      >
+        <div className="space-y-2">
+          <Label htmlFor="emp-email">
+            {isNew ? <RequiredText>Correo electrónico</RequiredText> : "Correo electrónico"}
+          </Label>
           <Input
             id="emp-email"
             type="email"
@@ -117,7 +156,7 @@ export function EmployeeForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="emp-password">
-            {isNew ? "Contraseña de acceso" : "Nota de contraseña (opcional)"}
+            {isNew ? <RequiredText>Contraseña de acceso</RequiredText> : "Nota de contraseña (opcional)"}
           </Label>
           {isNew ? (
             /* En el alta esta es la contraseña de acceso: la cifra Better Auth
@@ -150,30 +189,9 @@ export function EmployeeForm({
             </p>
           ) : null}
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="emp-birthDate">Fecha de nacimiento</Label>
-          <DatePicker
-            id="emp-birthDate"
-            value={birthDate}
-            onChange={(value) => setBirthDate(value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="emp-hireDate">Fecha de ingreso</Label>
-          <DatePicker
-            id="emp-hireDate"
-            value={hireDate}
-            onChange={(value) => setHireDate(value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="emp-phone">Teléfono</Label>
-          <Input
-            id="emp-phone"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-          />
-        </div>
+      </FormSection>
+
+      <FormSection icon={BriefcaseBusiness} title="Puesto" description="Dónde trabaja dentro de JTP." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-3">
         <div className="space-y-2">
           <Label htmlFor="emp-position">Puesto</Label>
           <Input
@@ -191,6 +209,17 @@ export function EmployeeForm({
             className="w-full"
           />
         </div>
+        <div className="space-y-2">
+          <Label htmlFor="emp-hireDate">Fecha de ingreso</Label>
+          <DatePicker
+            id="emp-hireDate"
+            value={hireDate}
+            onChange={(value) => setHireDate(value)}
+          />
+        </div>
+      </FormSection>
+
+      <FormSection icon={IdCard} title="Datos fiscales y de seguridad social" description="Para nómina y trámites." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-3">
         <div className="space-y-2">
           <Label htmlFor="emp-nss">NSS</Label>
           <Input
@@ -215,17 +244,10 @@ export function EmployeeForm({
             onChange={(e) => setCurp(e.target.value)}
           />
         </div>
-        <div className="sm:col-span-2 space-y-2">
-          <Label htmlFor="emp-address">Domicilio</Label>
-          <Input
-            id="emp-address"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-          />
-        </div>
-      </div>
+      </FormSection>
+
       {children}
-      <FormActions submitLabel={submitLabel} cancelHref={cancelHref} isSubmitting={isSubmitting} />
+      <FormActions sticky submitLabel={submitLabel} cancelHref={cancelHref} isSubmitting={isSubmitting} />
     </form>
   );
 }
