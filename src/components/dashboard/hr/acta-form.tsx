@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { FileDown, Loader2 } from "lucide-react";
+import { CalendarClock, FileDown, FileWarning, Loader2, Scale, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ActionBar } from "@/components/ui/form-actions";
+import { FormSection } from "@/components/ui/form-section";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -152,13 +153,13 @@ export function ActaForm({
   }
 
   return (
-    <div className="min-w-0 space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Datos del acta</CardTitle>
-          <CardDescription>Cuándo se levanta y quién la levanta.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-3">
+    <div className="min-w-0 space-y-4 sm:space-y-5">
+      <FormSection
+        icon={CalendarClock}
+        title="Datos del acta"
+        description="Cuándo se levanta y quién la levanta."
+        className="grid gap-x-5 gap-y-4 sm:grid-cols-3"
+      >
           <Field id="a-date" label="Fecha" error={errors.date}>
             <DatePicker id="a-date" value={data.date as string} onChange={(v) => set("date")(v as never)} />
           </Field>
@@ -176,15 +177,14 @@ export function ActaForm({
           <Field id="a-title" label="Su puesto">
             <Input id="a-title" {...text("responsibleTitle")} />
           </Field>
-        </CardContent>
-      </Card>
+      </FormSection>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Colaborador</CardTitle>
-          <CardDescription>Al elegirlo se llenan su nombre y su puesto.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
+      <FormSection
+        icon={UserRound}
+        title="Colaborador"
+        description="Al elegirlo se llenan su nombre y su puesto."
+        className="grid gap-x-5 gap-y-4 sm:grid-cols-2"
+      >
           <div className="sm:col-span-2">
             <Field label="Colaborador">
               <AppSelect
@@ -210,15 +210,14 @@ export function ActaForm({
               <Textarea id="a-duties" rows={3} {...text("duties")} />
             </Field>
           </div>
-        </CardContent>
-      </Card>
+      </FormSection>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Hechos</CardTitle>
-          <CardDescription>Qué pasó y qué respondió el colaborador.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
+      <FormSection
+        icon={FileWarning}
+        title="Hechos"
+        description="Qué pasó y qué respondió el colaborador."
+        className="grid gap-x-5 gap-y-4 sm:grid-cols-2"
+      >
           <Field id="a-idate" label="Fecha de los hechos" error={errors.incidentDate}>
             <DatePicker id="a-idate" value={data.incidentDate as string} onChange={(v) => set("incidentDate")(v as never)} />
           </Field>
@@ -250,14 +249,13 @@ export function ActaForm({
               <Textarea id="a-breach" rows={2} {...text("breach")} />
             </Field>
           </div>
-        </CardContent>
-      </Card>
+      </FormSection>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Manifestación, determinación y testigos</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
+      <FormSection
+        icon={Scale}
+        title="Manifestación, determinación y testigos"
+        className="grid gap-x-5 gap-y-4 sm:grid-cols-2"
+      >
           <div className="sm:col-span-2">
             <Field
               id="a-stmt"
@@ -282,15 +280,14 @@ export function ActaForm({
           <Field id="a-w2" label="Testigo 2" help="Vacío: queda la línea para el nombre.">
             <Input id="a-w2" {...text("witness2")} />
           </Field>
-        </CardContent>
-      </Card>
+      </FormSection>
 
-      <div className="flex justify-end">
-        <Button onClick={generate} disabled={busy} size="lg">
+      <ActionBar sticky>
+        <Button onClick={generate} disabled={busy} size="lg" className="w-full sm:w-auto">
           {busy ? <Loader2 className="size-4 animate-spin" /> : <FileDown className="size-4" />}
           Generar PDF
         </Button>
-      </div>
+      </ActionBar>
     </div>
   );
 }

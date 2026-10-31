@@ -10,8 +10,9 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { ActionBar } from "@/components/ui/form-actions";
+import { FormSection } from "@/components/ui/form-section";
+import { Calculator, FileText, Landmark, ListOrdered, ReceiptText, Sigma, Wallet } from "lucide-react";
 import { ClientPicker } from "@/components/dashboard/resources/client-picker";
 import { formatMxn } from "@/lib/utils";
 import {
@@ -189,17 +190,11 @@ export function MaritimeQuoteForm({ mode, quoteId, backHref, initialInput, initi
   const rightExpenses = EXPENSE_FIELDS.filter((f) => f.column === "right");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-5">
       {/* ── Datos generales ── */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Datos generales
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Field label="Referencia">
-            <Input value={input.reference} onChange={(e) => setField("reference", e.target.value)} placeholder="202605-07" />
+      <FormSection icon={FileText} title="Datos generales" className="grid gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Field label="Referencia" help="Por ejemplo: 202605-07.">
+            <Input value={input.reference} onChange={(e) => setField("reference", e.target.value)} />
           </Field>
           {clientsEndpoint && (
             <ClientPicker
@@ -222,8 +217,8 @@ export function MaritimeQuoteForm({ mode, quoteId, backHref, initialInput, initi
           <Field label="Factura(s) No.(s)">
             <Input value={input.invoiceNumbers} onChange={(e) => setField("invoiceNumbers", e.target.value)} />
           </Field>
-          <Field label="Fecha de factura">
-            <Input value={input.invoiceDate} onChange={(e) => setField("invoiceDate", e.target.value)} placeholder="dd/mm/aaaa" />
+          <Field label="Fecha de factura" help="Como dd/mm/aaaa.">
+            <Input value={input.invoiceDate} onChange={(e) => setField("invoiceDate", e.target.value)} />
           </Field>
           <Field label="Clientes (razón social)">
             <Input value={input.clientName} onChange={(e) => setField("clientName", e.target.value)} />
@@ -231,31 +226,19 @@ export function MaritimeQuoteForm({ mode, quoteId, backHref, initialInput, initi
           <Field label="ETA">
             <Input value={input.eta} onChange={(e) => setField("eta", e.target.value)} />
           </Field>
-        </CardContent>
-      </Card>
+      </FormSection>
 
       {/* ── Fracciones ── */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Fracciones sugeridas
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
+      <FormSection icon={ListOrdered} title="Fracciones sugeridas" className="space-y-2">
           {[0, 1, 2].map((i) => (
-            <Input key={i} value={input.fractions[i] ?? ""} onChange={(e) => setFraction(i, e.target.value)} placeholder={`Fracción ${i + 1}`} />
+            <Field key={i} label={`Fracción ${i + 1}`}>
+              <Input value={input.fractions[i] ?? ""} onChange={(e) => setFraction(i, e.target.value)} />
+            </Field>
           ))}
-        </CardContent>
-      </Card>
+      </FormSection>
 
       {/* ── Valor en aduana ── */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Cálculo del valor en aduana (USD)
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <FormSection icon={Calculator} title="Cálculo del valor en aduana (USD)" className="grid gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
           <Money label="Valor Factura" value={input.invoiceValueUsd} onChange={(v) => setField("invoiceValueUsd", v)} />
           <Money label="Flete Internacional" value={input.internationalFreightUsd} onChange={(v) => setField("internationalFreightUsd", v)} />
           <Money label="Seguro" value={input.insuranceUsd} onChange={(v) => setField("insuranceUsd", v)} />
@@ -264,17 +247,10 @@ export function MaritimeQuoteForm({ mode, quoteId, backHref, initialInput, initi
           <Field label="Total Incrementables (auto)">
             <Input readOnly disabled value={`$${formatMxn(computed.totalIncrementables)}`} className="bg-muted" />
           </Field>
-        </CardContent>
-      </Card>
+      </FormSection>
 
       {/* ── Valor en aduana por fracción (ADV) ── */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Valor en aduana por fracción (moneda extranjera) → IGI
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
+      <FormSection icon={ReceiptText} title="Valor en aduana por fracción (moneda extranjera) → IGI" className="space-y-2">
           <div className="hidden grid-cols-[80px_1fr_1fr_1fr] gap-3 text-xs font-medium text-muted-foreground sm:grid">
             <span>ADV</span>
             <span>Valor (EUR/USD)</span>
@@ -297,17 +273,10 @@ export function MaritimeQuoteForm({ mode, quoteId, backHref, initialInput, initi
               </div>
             );
           })}
-        </CardContent>
-      </Card>
+      </FormSection>
 
       {/* ── Gastos e impuestos ── */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Gastos e impuestos (captura manual)
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-6 lg:grid-cols-2">
+      <FormSection icon={Wallet} title="Gastos e impuestos (captura manual)" className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-3">
             <p className="text-xs font-semibold uppercase text-muted-foreground">Columna 1</p>
             {leftExpenses.map((f) => (
@@ -320,17 +289,10 @@ export function MaritimeQuoteForm({ mode, quoteId, backHref, initialInput, initi
               <Money key={f.key} label={f.label} value={input.expenses[f.key]} onChange={(v) => setExpense(f.key, v)} />
             ))}
           </div>
-        </CardContent>
-      </Card>
+      </FormSection>
 
       {/* ── Pie del documento ── */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Restricciones y datos bancarios
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <FormSection icon={Landmark} title="Restricciones y datos bancarios" className="space-y-4">
           <Field label="Restricciones">
             <Textarea rows={2} value={input.restricciones} onChange={(e) => setField("restricciones", e.target.value)} className="resize-y" />
           </Field>
@@ -353,20 +315,17 @@ export function MaritimeQuoteForm({ mode, quoteId, backHref, initialInput, initi
               <Input value={input.aprobo} onChange={(e) => setField("aprobo", e.target.value)} />
             </Field>
           </div>
-        </CardContent>
-      </Card>
+      </FormSection>
 
       {/* ── Resumen calculado + acciones ── */}
-      <Card className="border-primary/40">
-        <CardContent className="space-y-3 py-4">
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 text-sm">
+      <FormSection icon={Sigma} title="Resumen" description="Se calcula solo con lo capturado arriba." className="grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
             <Summary label="Total valor en aduana (MXN)" value={`$${formatMxn(computed.totalPesos)}`} />
             <Summary label="Total IGI" value={`$${formatMxn(computed.totalIgi)}`} />
             <Summary label="IVA" value={`$${formatMxn(computed.iva)}`} />
             <Summary label="TOTAL A DEPOSITAR" value={`$${formatMxn(computed.totalADepositar)}`} highlight />
-          </div>
-          <Separator />
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+      </FormSection>
+
+      <ActionBar sticky>
             <Button variant="outline" onClick={handleGeneratePdf} disabled={isGenerating}>
               {isGenerating ? "Generando…" : "Generar PDF"}
             </Button>
@@ -378,18 +337,17 @@ export function MaritimeQuoteForm({ mode, quoteId, backHref, initialInput, initi
             <Button onClick={() => handleSave()} disabled={isSaving}>
               {isSaving ? "Guardando…" : mode === "new" ? "Crear cotización" : "Guardar cambios"}
             </Button>
-          </div>
-        </CardContent>
-      </Card>
+      </ActionBar>
     </div>
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, help, children }: { label: string; help?: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-xs">{label}</Label>
+      <Label>{label}</Label>
       {children}
+      {help && <p className="text-muted-foreground text-xs">{help}</p>}
     </div>
   );
 }
@@ -413,7 +371,6 @@ function Money({
         step={step}
         value={value === 0 ? "" : value}
         onChange={(e) => onChange(Number(e.target.value) || 0)}
-        placeholder="0.00"
       />
     </Field>
   );
