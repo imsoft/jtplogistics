@@ -15,7 +15,7 @@ const TEXT = COLORS.text;
 const LINE = COLORS.border;
 
 const s = StyleSheet.create({
-  page: { fontFamily: "Helvetica", fontSize: 7.5, color: TEXT, paddingTop: 24, paddingBottom: 30, paddingHorizontal: 30 },
+  page: { fontFamily: "Helvetica", fontSize: 7.5, color: TEXT, paddingTop: 24, paddingBottom: 30, paddingHorizontal: 30, textTransform: "uppercase" },
   header: { flexDirection: "row", justifyContent: "flex-end", marginBottom: 2 },
   logo: { width: 150, height: 60, objectFit: "contain" },
   title: { fontSize: 13, fontFamily: "Helvetica-Bold", textAlign: "center" },

@@ -12,6 +12,11 @@
  *
  * Límite conocido: con solo el texto no hay forma de saber que "UPM" es una
  * sigla y "POLESA" no. Las siglas que sí se conocen están en ACRONYMS.
+ *
+ * Nota (oct 2026): el cliente cambió de opinión y ahora los PDF van en
+ * MAYÚSCULAS. Cada página lleva `textTransform: "uppercase"` (ver
+ * components/pdf/pdf-text-with-emails), así que estos ajustes ya no se notan
+ * en el resultado; los correos se dejan en minúsculas con `PdfEmail`.
  */
 
 const LOCALE = "es-MX";

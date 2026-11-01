@@ -5,6 +5,7 @@ import { renderLexicalContent } from "@/lib/utils/lexical-to-pdf";
 import type { ProviderTariffData } from "@/types/provider-tariff.types";
 import { BRAND as COLORS } from "@/lib/email-layout";
 import { pdfSentence, pdfTitle, pdfUpper } from "@/lib/pdf-text-case";
+import { PdfEmail } from "@/components/pdf/pdf-text-with-emails";
 
 // La estructura del machote autorizado con los colores de la plataforma:
 // azul para las cabeceras y azul claro para las filas de tarifas.
@@ -16,7 +17,7 @@ const MUTED = COLORS.muted;
 const LINE = COLORS.border;
 
 const s = StyleSheet.create({
-  page: { fontFamily: "Helvetica", fontSize: 8, color: TEXT, paddingTop: 18, paddingBottom: 36, paddingHorizontal: 32 },
+  page: { fontFamily: "Helvetica", fontSize: 8, color: TEXT, paddingTop: 18, paddingBottom: 36, paddingHorizontal: 32, textTransform: "uppercase" },
   // ── Encabezado: logo a la izquierda, fecha y vigencia a la derecha ──
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 },
   // El PNG es cuadrado (3200x3200) con aire alrededor del logo: si la caja es
@@ -151,7 +152,7 @@ export function ProviderTariffPdf({ data, logoUrl, termsJson, issuerName, issuer
             <Text style={s.infoLabel}>Correo:</Text>
             {/* El correo se deja en minúsculas: en mayúsculas se lee peor y no
                 es como se escribe una dirección. */}
-            <Text style={s.infoValue}>{data.email.toLowerCase()}</Text>
+            <PdfEmail style={s.infoValue}>{data.email}</PdfEmail>
           </View>
         ) : null}
 

@@ -222,6 +222,7 @@ function parseLocation(
 
 const s = StyleSheet.create({
   page: {
+    textTransform: "uppercase",
     padding: 16,
     backgroundColor: C.white,
     fontFamily: "Helvetica",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, MessageSquare, Lightbulb, ClipboardList, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useVisiblePolling } from "@/hooks/use-visible-polling";
 
 interface AppNotification {
   id: string;
@@ -43,7 +44,6 @@ export function NotificationBell() {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [open, setOpen] = useState(false);
   const router = useRouter();
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // El setState va en el callback de la promesa, no en el cuerpo del efecto.
   const fetchNotifications = useCallback(
@@ -54,14 +54,8 @@ export function NotificationBell() {
     []
   );
 
-  // Polling cada 15 s
-  useEffect(() => {
-    fetchNotifications();
-    intervalRef.current = setInterval(fetchNotifications, 15000);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [fetchNotifications]);
+  // Cada 15 s, solo con la pestaña a la vista.
+  useVisiblePolling(fetchNotifications, 15000);
 
   const unread = notifications.filter((n) => !n.read).length;
 

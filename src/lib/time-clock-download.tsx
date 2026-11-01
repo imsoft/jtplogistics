@@ -239,6 +239,8 @@ export async function downloadTimeClockWord(data: TimeClockExport) {
   const doc = new Document({
     creator: COMPANY,
     title: TITLE,
+    // Igual que la plataforma y los PDF: todo el texto en mayúsculas.
+    styles: { default: { document: { run: { allCaps: true } } } },
     sections: [
       {
         properties: {
@@ -286,7 +288,7 @@ export async function downloadTimeClockPdf(data: TimeClockExport) {
   Font.registerHyphenationCallback((word) => [word]);
 
   const s = StyleSheet.create({
-    page: { fontFamily: "Helvetica", fontSize: 7, color: BRAND.text, paddingTop: 24, paddingBottom: 40, paddingHorizontal: 28 },
+    page: { fontFamily: "Helvetica", fontSize: 7, color: BRAND.text, paddingTop: 24, paddingBottom: 40, paddingHorizontal: 28, textTransform: "uppercase" },
     letterhead: { flexDirection: "row", alignItems: "center", paddingBottom: 8, marginBottom: 12, borderBottomWidth: 2, borderBottomColor: BRAND.blue },
     logo: { width: 54, height: 54, marginRight: 12 },
     title: { fontSize: 17, fontFamily: "Helvetica-Bold", color: BRAND.blue, letterSpacing: 0.6 },

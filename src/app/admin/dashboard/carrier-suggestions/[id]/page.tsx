@@ -143,7 +143,7 @@ export default function AdminCarrierSuggestionDetailPage() {
           {row.carrierEmail ? (
             <p>
               <span className="text-muted-foreground">Correo: </span>
-              {row.carrierEmail}
+              <span className="text-email">{row.carrierEmail}</span>
             </p>
           ) : null}
         </CardContent>

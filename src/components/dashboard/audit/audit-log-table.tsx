@@ -5,6 +5,7 @@ import { MoveRight, Plus, Pencil, Trash2, Eye, ChevronDown, ChevronRight } from 
 import { Button } from "@/components/ui/button";
 import { AppSelect } from "@/components/ui/app-select";
 import { DataTableSkeleton } from "@/components/ui/skeletons";
+import { TextWithEmails } from "@/components/ui/text-with-emails";
 
 interface AuditChange {
   field: string;
@@ -69,13 +70,13 @@ function ChangesDetail({ changes }: { changes: AuditChange[] }) {
         <div key={c.field} className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
           <span className="font-medium text-foreground">{c.label}:</span>
           {c.from !== null && (
-            <span className="text-muted-foreground line-through">{c.from}</span>
+            <span className="text-muted-foreground line-through"><TextWithEmails text={String(c.from)} /></span>
           )}
           {c.from !== null && c.to !== null && (
             <MoveRight className="size-3 shrink-0 text-muted-foreground" />
           )}
           {c.to !== null && (
-            <span className="text-foreground">{c.to}</span>
+            <span className="text-foreground"><TextWithEmails text={String(c.to)} /></span>
           )}
           {c.to === null && (
             <span className="text-muted-foreground italic">eliminado</span>
@@ -103,8 +104,8 @@ function LogRow({ log }: { log: AuditLogEntry }) {
         <div className="min-w-0 flex-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
           <span className={`text-xs font-semibold ${cfg.color}`}>{cfg.label}</span>
           <span className="text-xs text-muted-foreground">{resourceType}:</span>
-          <span className="text-sm font-medium truncate">{log.resourceLabel}</span>
-          <span className="text-xs text-muted-foreground">por {log.userName}</span>
+          <span className="text-sm font-medium truncate"><TextWithEmails text={log.resourceLabel} /></span>
+          <span className="text-xs text-muted-foreground">por <TextWithEmails text={log.userName} /></span>
         </div>
 
         <span className="text-xs text-muted-foreground shrink-0 whitespace-nowrap">

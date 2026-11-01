@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useVisiblePolling } from "@/hooks/use-visible-polling";
 
 export interface ChatMessage {
   id: string;
@@ -55,12 +56,8 @@ export function ChatWindow({ carrierId, currentUserId, title, initialText }: Cha
       }
     }), [carrierId]);
 
-  // Carga inicial + polling cada 4 s
-  useEffect(() => {
-    fetchMessages();
-    const interval = setInterval(fetchMessages, 4000);
-    return () => clearInterval(interval);
-  }, [fetchMessages]);
+  // Carga inicial y luego cada 4 s, solo con la pestaña a la vista.
+  useVisiblePolling(fetchMessages, 4000);
 
   // Auto-scroll al último mensaje
   useEffect(() => {

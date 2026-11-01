@@ -23,7 +23,7 @@ import {
 Font.registerHyphenationCallback((word) => [word]);
 
 const s = StyleSheet.create({
-  page: { fontFamily: "Helvetica", fontSize: 10.5, lineHeight: 1.55, color: BRAND.text, paddingTop: 92, paddingBottom: 60, paddingHorizontal: 64 },
+  page: { fontFamily: "Helvetica", fontSize: 10.5, lineHeight: 1.55, color: BRAND.text, paddingTop: 92, paddingBottom: 60, paddingHorizontal: 64, textTransform: "uppercase" },
   header: { position: "absolute", top: 26, left: 64, right: 64, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderBottomWidth: 1.5, borderBottomColor: BRAND.blue, paddingBottom: 8 },
   logo: { width: 52, height: 52 },
   headerText: { fontSize: 7.5, color: BRAND.muted, letterSpacing: 0.4, textAlign: "right" },

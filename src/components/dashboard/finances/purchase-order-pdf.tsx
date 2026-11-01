@@ -33,7 +33,7 @@ const v = (s: string) => (s?.trim() ? s.trim() : "—");
 const money = (n: number) => `$${formatMxn(n)}`;
 
 const s = StyleSheet.create({
-  page: { paddingTop: 28, paddingBottom: 48, paddingHorizontal: 40, fontFamily: "Helvetica", fontSize: 9.5, color: COLORS.text },
+  page: { paddingTop: 28, paddingBottom: 48, paddingHorizontal: 40, fontFamily: "Helvetica", fontSize: 9.5, color: COLORS.text, textTransform: "uppercase" },
   bar: { position: "absolute", top: 0, left: 0, right: 0, height: 6, backgroundColor: COLORS.blue },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
   logo: { width: 120, height: 56, objectFit: "contain" },

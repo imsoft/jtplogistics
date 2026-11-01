@@ -15,7 +15,7 @@ const LINE = "#D7DFEE";
 const RED = "#C81E1E";
 
 const s = StyleSheet.create({
-  page: { fontFamily: "Helvetica", fontSize: 8, color: TEXT, paddingTop: 20, paddingBottom: 40, paddingHorizontal: 32 },
+  page: { fontFamily: "Helvetica", fontSize: 8, color: TEXT, paddingTop: 20, paddingBottom: 40, paddingHorizontal: 32, textTransform: "uppercase" },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4 },
   logo: { width: 84, height: 84, objectFit: "contain" },
   headerRight: { alignItems: "flex-end", maxWidth: 300 },

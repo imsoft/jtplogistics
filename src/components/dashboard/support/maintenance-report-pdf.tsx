@@ -13,7 +13,7 @@ const MUTED = "#57637D";
 const LINE = "#D7DFEE";
 
 const s = StyleSheet.create({
-  page: { fontFamily: "Helvetica", fontSize: 8, color: TEXT, paddingTop: 20, paddingBottom: 40, paddingHorizontal: 32 },
+  page: { fontFamily: "Helvetica", fontSize: 8, color: TEXT, paddingTop: 20, paddingBottom: 40, paddingHorizontal: 32, textTransform: "uppercase" },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4 },
   // El PNG del logo es cuadrado: la caja también, para que no se encoja.
   logo: { width: 96, height: 96, objectFit: "contain" },

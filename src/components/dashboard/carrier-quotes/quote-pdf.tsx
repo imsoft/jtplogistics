@@ -5,6 +5,7 @@ import { BRAND as COLORS } from "@/lib/email-layout";
 import type { QuoteData } from "@/types/carrier-quote.types";
 import { renderLexicalContent } from "@/lib/utils/lexical-to-pdf";
 import { pdfSentence, pdfTitle, pdfUpper } from "@/lib/pdf-text-case";
+import { PdfEmail } from "@/components/pdf/pdf-text-with-emails";
 
 // Los mismos colores de la plataforma y de los correos.
 const BRAND = COLORS.blue;
@@ -15,7 +16,7 @@ const MUTED = COLORS.muted;
 const LINE = COLORS.border;
 
 const s = StyleSheet.create({
-  page: { fontFamily: "Helvetica", fontSize: 8, color: TEXT, paddingTop: 18, paddingBottom: 30, paddingHorizontal: 36 },
+  page: { fontFamily: "Helvetica", fontSize: 8, color: TEXT, paddingTop: 18, paddingBottom: 30, paddingHorizontal: 36, textTransform: "uppercase" },
   // ── Header ──
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 2, paddingBottom: 0 },
   // El PNG del logo es cuadrado (3200x3200): con una caja apaisada, objectFit
@@ -196,7 +197,7 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
         {data.email ? (
           <View style={[s.companyRow, { marginBottom: 10 }]}>
             <Text style={s.companyLabel}>Correo:</Text>
-            <Text style={s.companyValue}>{data.email}</Text>
+            <PdfEmail style={s.companyValue}>{data.email}</PdfEmail>
           </View>
         ) : (
           <View style={{ marginBottom: 10 }} />

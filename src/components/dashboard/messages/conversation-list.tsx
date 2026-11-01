@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { MessageSquare } from "lucide-react";
 import { CardListSkeleton } from "@/components/ui/skeletons";
+import { useVisiblePolling } from "@/hooks/use-visible-polling";
 
 export interface Conversation {
   carrierId: string;
@@ -65,11 +66,8 @@ export function ConversationList({ selectedCarrierId, onSelect, initialCarrierId
     }
   }, [isLoaded, initialCarrierId, selectedCarrierId, conversations, onSelect]);
 
-  useEffect(() => {
-    fetchConversations();
-    const interval = setInterval(fetchConversations, 4000);
-    return () => clearInterval(interval);
-  }, [fetchConversations]);
+  // Cada 4 s, solo con la pestaña a la vista.
+  useVisiblePolling(fetchConversations, 4000);
 
   if (!isLoaded) {
     return (

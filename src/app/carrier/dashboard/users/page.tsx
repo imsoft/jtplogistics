@@ -234,7 +234,7 @@ export default function CarrierUsersPage() {
         <Card>
           <CardContent className="space-y-2 py-4">
             <p className="text-destructive text-sm font-medium">
-              La cuenta de {pendingPassword.email} quedó creada, pero el correo no salió.
+              La cuenta de <span className="text-email">{pendingPassword.email}</span> quedó creada, pero el correo no salió.
               Pásale esta contraseña por otro medio o no va a poder entrar:
             </p>
             <div className="flex items-center gap-2 rounded-lg border bg-muted/50 p-3">

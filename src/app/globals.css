@@ -155,10 +155,23 @@
     text-transform: uppercase;
   }
 
+  /* El navegador les pone `text-transform: none` a botones y campos, así que
+     no heredaban la regla general: botones sueltos ("Todas", "Sin color"),
+     buscadores de los desplegables y textareas salían en minúsculas. */
+  button,
+  input,
+  select,
+  textarea,
+  optgroup {
+    text-transform: inherit;
+  }
+
   /* Excepción 1 — Correos: siempre en minúsculas, se escriban como se escriban.
-     Cubre automáticamente todos los campos de correo del formulario. */
+     Cubre automáticamente todos los campos de correo del formulario y los
+     enlaces mailto. */
   input[type="email"],
-  input[type="email"]::placeholder {
+  input[type="email"]::placeholder,
+  a[href^="mailto:"] {
     text-transform: lowercase;
   }
 

@@ -1,10 +1,11 @@
 import { Document, Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import { BRAND as COLORS } from "@/lib/email-layout";
 import type { ExportData } from "@/lib/table-export";
+import { PdfTextWithEmails } from "@/components/pdf/pdf-text-with-emails";
 
 /** PDF de cualquier tabla: logo, título, fecha, filtros y la tabla con el estilo de JTP. */
 const s = StyleSheet.create({
-  page: { paddingTop: 24, paddingBottom: 36, paddingHorizontal: 28, fontFamily: "Helvetica", fontSize: 7.5, color: COLORS.text },
+  page: { paddingTop: 24, paddingBottom: 36, paddingHorizontal: 28, fontFamily: "Helvetica", fontSize: 7.5, color: COLORS.text, textTransform: "uppercase" },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
   logo: { width: 110, height: 52, objectFit: "contain" },
   headerRight: { alignItems: "flex-end", maxWidth: 420 },
@@ -46,7 +47,9 @@ export function TablePdf({ title, data, logoUrl, subtitle }: { title: string; da
           {data.rows.map((r, i) => (
             <View key={i} style={i % 2 ? [s.row, s.zebra] : s.row} wrap={false}>
               {r.map((c, j) => (
-                <Text key={j} style={s.td}>{c}</Text>
+                <Text key={j} style={s.td}>
+                  <PdfTextWithEmails text={String(c ?? "")} />
+                </Text>
               ))}
             </View>
           ))}
