@@ -149,9 +149,9 @@ export function ChangeEmailButton({
               <div className="space-y-3">
                 <div className="rounded-lg border bg-muted/50 p-3">
                   <p className="text-xs text-muted-foreground">Antes</p>
-                  <p className="break-all text-sm lowercase line-through">{result.previousEmail}</p>
+                  <p className="break-all text-sm line-through">{result.previousEmail}</p>
                   <p className="mt-2 text-xs text-muted-foreground">Ahora</p>
-                  <p className="break-all text-base font-bold lowercase">{result.email}</p>
+                  <p className="break-all text-base font-bold">{result.email}</p>
                 </div>
 
                 <p className="text-sm text-muted-foreground">
@@ -182,7 +182,7 @@ export function ChangeEmailButton({
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>Correo actual</Label>
-                  <p className="break-all text-sm lowercase text-muted-foreground">
+                  <p className="break-all text-sm text-muted-foreground">
                     {currentEmail}
                   </p>
                 </div>

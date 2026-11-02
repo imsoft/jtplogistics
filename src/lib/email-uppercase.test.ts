@@ -16,9 +16,9 @@ describe("uppercaseEmailText", () => {
     );
   });
 
-  it("no toca las direcciones de correo", () => {
+  it("sube también las direcciones de correo", () => {
     expect(uppercaseEmailText("Escribe a software@jtp.com.mx hoy")).toBe(
-      "ESCRIBE A software@jtp.com.mx HOY"
+      "ESCRIBE A SOFTWARE@JTP.COM.MX HOY"
     );
   });
 });
@@ -38,9 +38,9 @@ describe("uppercaseEmailHtml", () => {
     expect(uppercaseEmailHtml("<p>Ruta &amp; destino</p>")).toBe("<p>RUTA &amp; DESTINO</p>");
   });
 
-  it("respeta el correo dentro del texto visible", () => {
-    expect(uppercaseEmailHtml("<p>Avisa a rh@jtp.com.mx</p>")).toBe(
-      "<p>AVISA A rh@jtp.com.mx</p>"
+  it("sube el correo del texto visible pero no el del mailto", () => {
+    expect(uppercaseEmailHtml('<p>Avisa a <a href="mailto:rh@jtp.com.mx">rh@jtp.com.mx</a></p>')).toBe(
+      '<p>AVISA A <a href="mailto:rh@jtp.com.mx">RH@JTP.COM.MX</a></p>'
     );
   });
 

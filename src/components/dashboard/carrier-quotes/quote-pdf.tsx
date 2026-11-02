@@ -5,7 +5,6 @@ import { BRAND as COLORS } from "@/lib/email-layout";
 import type { QuoteData } from "@/types/carrier-quote.types";
 import { renderLexicalContent } from "@/lib/utils/lexical-to-pdf";
 import { pdfSentence, pdfTitle, pdfUpper } from "@/lib/pdf-text-case";
-import { PdfEmail } from "@/components/pdf/pdf-text-with-emails";
 
 // Los mismos colores de la plataforma y de los correos.
 const BRAND = COLORS.blue;
@@ -197,7 +196,7 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
         {data.email ? (
           <View style={[s.companyRow, { marginBottom: 10 }]}>
             <Text style={s.companyLabel}>Correo:</Text>
-            <PdfEmail style={s.companyValue}>{data.email}</PdfEmail>
+            <Text style={s.companyValue}>{data.email}</Text>
           </View>
         ) : (
           <View style={{ marginBottom: 10 }} />

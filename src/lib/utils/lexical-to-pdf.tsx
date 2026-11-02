@@ -3,7 +3,6 @@
 import { View, Text } from "@react-pdf/renderer";
 import React from "react";
 import { sentenceCaseSegments } from "@/lib/pdf-text-case";
-import { PdfTextWithEmails } from "@/components/pdf/pdf-text-with-emails";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Style = any;
@@ -41,11 +40,7 @@ function renderInline(node: LexNode, styles: LexPdfStyles, key: number): React.R
   if (fmt & IS_ITALIC) Object.assign(base, styles.italic);
   if (fmt & IS_UNDERLINE) Object.assign(base, { textDecoration: "underline" } as Style);
 
-  return (
-    <Text key={key} style={base}>
-      <PdfTextWithEmails text={node.text ?? ""} />
-    </Text>
-  );
+  return <Text key={key} style={base}>{node.text}</Text>;
 }
 
 function renderBlock(node: LexNode, styles: LexPdfStyles, key: number): React.ReactElement | null {

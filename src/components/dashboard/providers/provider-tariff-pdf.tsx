@@ -5,7 +5,6 @@ import { renderLexicalContent } from "@/lib/utils/lexical-to-pdf";
 import type { ProviderTariffData } from "@/types/provider-tariff.types";
 import { BRAND as COLORS } from "@/lib/email-layout";
 import { pdfSentence, pdfTitle, pdfUpper } from "@/lib/pdf-text-case";
-import { PdfEmail } from "@/components/pdf/pdf-text-with-emails";
 
 // La estructura del machote autorizado con los colores de la plataforma:
 // azul para las cabeceras y azul claro para las filas de tarifas.
@@ -150,9 +149,7 @@ export function ProviderTariffPdf({ data, logoUrl, termsJson, issuerName, issuer
         {data.email ? (
           <View style={s.infoRow}>
             <Text style={s.infoLabel}>Correo:</Text>
-            {/* El correo se deja en minúsculas: en mayúsculas se lee peor y no
-                es como se escribe una dirección. */}
-            <PdfEmail style={s.infoValue}>{data.email}</PdfEmail>
+            <Text style={s.infoValue}>{data.email}</Text>
           </View>
         ) : null}
 

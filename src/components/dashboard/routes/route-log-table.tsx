@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import { MoveRight, Plus, Pencil, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataTableSkeleton } from "@/components/ui/skeletons";
-import { TextWithEmails } from "@/components/ui/text-with-emails";
 
 interface RouteChangeDiff {
   field: string;
@@ -55,13 +54,13 @@ function ChangesDetail({ changes }: { changes: RouteChangeDiff[] }) {
         <div key={c.field} className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
           <span className="font-medium text-foreground">{c.label}:</span>
           {c.from !== null && (
-            <span className="text-muted-foreground line-through"><TextWithEmails text={String(c.from)} /></span>
+            <span className="text-muted-foreground line-through">{c.from}</span>
           )}
           {c.from !== null && c.to !== null && (
             <MoveRight className="size-3 shrink-0 text-muted-foreground" />
           )}
           {c.to !== null && (
-            <span className="text-foreground"><TextWithEmails text={String(c.to)} /></span>
+            <span className="text-foreground">{c.to}</span>
           )}
           {c.to === null && (
             <span className="text-muted-foreground italic">eliminado</span>
@@ -92,7 +91,7 @@ function LogRow({ log, showRoute }: { log: RouteLogEntry; showRoute: boolean }) 
             {showRoute && (
               <span className="text-sm font-medium">{log.routeLabel}</span>
             )}
-            <span className="text-xs text-muted-foreground">por <TextWithEmails text={log.userName} /></span>
+            <span className="text-xs text-muted-foreground">por {log.userName}</span>
             <span className="text-xs text-muted-foreground ml-auto shrink-0">
               {formatDateTime(log.createdAt)}
             </span>

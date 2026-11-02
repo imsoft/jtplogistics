@@ -118,9 +118,10 @@
      Por defecto todo se muestra en MAYÚSCULAS (ver `body` en @layer base).
      Estas dos clases son las únicas excepciones: */
 
-  /* Correos electrónicos: siempre en minúsculas. */
+  /* Correos electrónicos: se ven en MAYÚSCULAS como todo lo demás (decisión
+     del cliente, oct 2026); solo se quita el espaciado extra. */
   .text-email {
-    @apply lowercase tracking-normal;
+    @apply tracking-normal;
   }
 
   /* Contraseñas: exactamente como las escribió el usuario. */
@@ -151,7 +152,8 @@
     -moz-osx-font-smoothing: grayscale;
     /* Regla general: toda la interfaz se muestra en MAYÚSCULAS. Es solo
        presentación — los valores guardados en la base de datos no cambian.
-       Las dos excepciones se marcan con `.text-email` y `.text-password`. */
+       La única excepción al mostrar son las contraseñas (`.text-password`);
+       al escribir, también los campos de correo. */
     text-transform: uppercase;
   }
 
@@ -166,13 +168,11 @@
     text-transform: inherit;
   }
 
-  /* Excepción 1 — Correos: siempre en minúsculas, se escriban como se escriban.
-     Cubre automáticamente todos los campos de correo del formulario y los
-     enlaces mailto. */
+  /* Excepción 1 — Correos: mientras se escriben se ven tal cual se teclean.
+     Ya guardados se muestran en MAYÚSCULAS como el resto. */
   input[type="email"],
-  input[type="email"]::placeholder,
-  a[href^="mailto:"] {
-    text-transform: lowercase;
+  input[type="email"]::placeholder {
+    text-transform: none;
   }
 
   /* Excepción 2 — Contraseñas: tal cual las escribió el usuario. */

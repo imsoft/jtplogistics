@@ -38,8 +38,12 @@ function outsideKept(value: string, transform: (chunk: string) => string): strin
     .replace(STRAY_MARKS, "");
 }
 
-/** Lo que nunca se toca dentro de un texto plano: URLs y correos. */
-const UNTOUCHED_IN_TEXT = /(https?:\/\/\S+|mailto:\S+|[^\s<>@]+@[^\s<>@]+\.[^\s<>@,;:]+)/gi;
+/**
+ * Lo que nunca se toca dentro de un texto plano: las URLs, que pueden dejar de
+ * funcionar con mayúsculas. Las direcciones de correo sí se suben, como todo lo
+ * demás (decisión del cliente, oct 2026); en mayúsculas siguen funcionando.
+ */
+const UNTOUCHED_IN_TEXT = /(https?:\/\/\S+|mailto:\S+)/gi;
 
 /** Etiquetas HTML y entidades: `<a href="…">` y `&amp;`. */
 const UNTOUCHED_IN_HTML = /(<[^>]*>|&[a-zA-Z]+;|&#\d+;)/g;
@@ -50,8 +54,8 @@ function upper(value: string): string {
 }
 
 /**
- * Sube el texto plano, respetando URLs y direcciones de correo, que distinguen
- * mayúsculas en la parte del path.
+ * Sube el texto plano, respetando las URLs, que distinguen mayúsculas en la
+ * parte del path.
  */
 export function uppercaseEmailText(text: string): string {
   return outsideKept(text, upperPlain);

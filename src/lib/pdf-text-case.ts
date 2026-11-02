@@ -14,9 +14,9 @@
  * sigla y "POLESA" no. Las siglas que sí se conocen están en ACRONYMS.
  *
  * Nota (oct 2026): el cliente cambió de opinión y ahora los PDF van en
- * MAYÚSCULAS. Cada página lleva `textTransform: "uppercase"` (ver
- * components/pdf/pdf-text-with-emails), así que estos ajustes ya no se notan
- * en el resultado; los correos se dejan en minúsculas con `PdfEmail`.
+ * MAYÚSCULAS, correos incluidos. Cada página lleva
+ * `textTransform: "uppercase"`, así que estos ajustes ya no se notan en el
+ * resultado.
  */
 
 const LOCALE = "es-MX";

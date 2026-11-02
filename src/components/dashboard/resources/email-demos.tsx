@@ -8,7 +8,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CardListSkeleton, EmailPreviewSkeleton } from "@/components/ui/skeletons";
-import { TextWithEmails } from "@/components/ui/text-with-emails";
 
 interface PreviewItem {
   id: string;
@@ -208,7 +207,7 @@ export function EmailDemos() {
                       <Label htmlFor={`demo-${item.id}`} className="cursor-pointer text-sm font-medium">
                         {item.label}
                       </Label>
-                      <p className="text-xs text-muted-foreground"><TextWithEmails text={item.description} /></p>
+                      <p className="text-xs text-muted-foreground">{item.description}</p>
                     </div>
                     <Button
                       variant="ghost"

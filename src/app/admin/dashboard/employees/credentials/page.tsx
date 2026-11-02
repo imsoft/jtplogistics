@@ -166,7 +166,7 @@ export default function BulkCredentialsPage() {
                 {failed.map((r) => (
                   <div key={r.id} className="rounded-lg border p-3">
                     <p className="font-medium">{r.name}</p>
-                    <p className="text-muted-foreground text-xs lowercase">{r.email}</p>
+                    <p className="text-muted-foreground text-xs">{r.email}</p>
                     {r.password && (
                       <div className="mt-2 flex items-center gap-2">
                         <code className="text-password flex-1 break-all text-base font-bold">{r.password}</code>
@@ -197,7 +197,7 @@ export default function BulkCredentialsPage() {
                 <div key={r.id} className="flex items-center gap-2 border-b px-4 py-2.5 text-sm last:border-0">
                   <Check className="size-4 shrink-0 text-green-600" />
                   <span className="font-medium">{r.name}</span>
-                  <span className="text-muted-foreground lowercase">{r.email}</span>
+                  <span className="text-muted-foreground">{r.email}</span>
                 </div>
               ))}
           </div>
@@ -214,7 +214,7 @@ export default function BulkCredentialsPage() {
                 />
                 <Label htmlFor={`u-${p.id}`} className="flex min-w-0 flex-1 flex-col items-start gap-0.5 leading-snug font-normal">
                   <span className="font-medium">{p.name}</span>
-                  <span className="text-muted-foreground text-xs lowercase">{p.email}</span>
+                  <span className="text-muted-foreground text-xs">{p.email}</span>
                 </Label>
                 <span className="text-muted-foreground shrink-0 text-xs">
                   {ROLE_LABELS[p.role] ?? p.role}
