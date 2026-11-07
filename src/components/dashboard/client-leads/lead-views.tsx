@@ -42,7 +42,7 @@ export function NewLeadView({ basePath }: { basePath: string }) {
       title="Nuevo prospecto de cliente"
       description="Una empresa a la que se le quiere vender."
       backHref={basePath}
-      backLabel="Volver al CRM"
+      backLabel="Volver a prospección de clientes"
       error={error}
     >
       <LeadForm submitLabel="Guardar prospecto" cancelHref={basePath} onSubmit={handleSubmit} isSubmitting={isSubmitting} />

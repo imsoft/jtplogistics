@@ -22,7 +22,7 @@ export const PERMISSION_MODULES = [
   { suffix: "ProviderProspects", label: "Prospección de proveedores" },
   { suffix: "ProviderOnboardings", label: "Alta de proveedores" },
   { suffix: "Clients", label: "Clientes" },
-  { suffix: "ClientLeads", label: "CRM de clientes" },
+  { suffix: "ClientLeads", label: "Prospección de clientes" },
   { suffix: "Employees", label: "Colaboradores" },
   { suffix: "Vendors", label: "Vendedores" },
   { suffix: "Laptops", label: "Laptops" },
@@ -53,6 +53,7 @@ export const PERMISSION_FIELDS = [
   "canViewQuoteKpis",
   "canChangeRouteStatus",
   "canReceiveOnboardingAlerts",
+  "canReceiveClientRouteAlerts",
 ];
 
 export const PERMISSION_LABELS: Record<string, string> = Object.fromEntries([
@@ -71,6 +72,7 @@ export const PERMISSION_LABELS: Record<string, string> = Object.fromEntries([
   ["canViewQuoteKpis", "KPIs de cotizaciones: ver"],
   ["canChangeRouteStatus", "Rutas: cambiar estatus (activa, pendiente, inactiva)"],
   ["canReceiveOnboardingAlerts", "Alta de proveedores: recibir avisos (campana y correo)"],
+  ["canReceiveClientRouteAlerts", "Clientes: aviso de ruta nueva (campana y correo)"],
 ]);
 
 /** Todo lo que cuelga de un colaborador: equipo asignado y cuentas de correo. */

@@ -11,7 +11,7 @@ export default function CollaboratorClientLeadsPage() {
 
   return (
     <ResourceListPage
-      title="CRM de clientes"
+      title="Prospección de clientes"
       description="Las empresas a las que se les quiere vender, en qué etapa va cada una y qué toca hacer."
       newHref={permissions?.canCreateClientLeads ? "/collaborator/dashboard/client-leads/new" : undefined}
       newLabel="Nuevo prospecto"

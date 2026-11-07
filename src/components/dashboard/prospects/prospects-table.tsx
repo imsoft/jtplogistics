@@ -60,6 +60,8 @@ interface Prospect {
   notes: string | null;
   discardReason: string | null;
   createdByName: string | null;
+  /** El alta que ya se abrió para este prospecto, si hay. */
+  onboardingId: string | null;
 }
 
 const STATUS_BY_VALUE = Object.fromEntries(PROSPECT_STATUSES.map((s) => [s.value, s]));
@@ -155,7 +157,7 @@ export function ProspectsTable({
     setProspects((list) => list?.map((x) => (x.id === p.id ? { ...x, status } : x)) ?? list);
     try {
       await patch(p.id, { status });
-      if (status === "en_alta") {
+      if (status === "en_alta" && !p.onboardingId) {
         // El alta no se crea sola: pide razón social y fecha de inicio.
         toast.success("Etapa actualizada. Falta abrir su alta de proveedor.", {
           action: { label: "Iniciar alta", onClick: () => router.push(onboardingHref(p.id)) },
@@ -336,7 +338,7 @@ export function ProspectsTable({
                     {(canEdit || canDelete) && (
                       <td className="px-2 py-3">
                         <div className="flex items-center gap-1">
-                          {canEdit && (p.status === "en_alta" || p.status === "listo") && (
+                          {canEdit && p.status !== "descartado" && !p.onboardingId && (
                             <Button variant="ghost" size="icon" className="size-7" asChild>
                               <Link
                                 href={onboardingHref(p.id)}

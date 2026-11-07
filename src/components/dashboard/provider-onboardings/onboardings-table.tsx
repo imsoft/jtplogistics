@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Check, ChevronDown, Circle, ClipboardCheck, Loader2, Minus, PauseCircle, Pencil, PlayCircle, Trash2 } from "lucide-react";
+import { Check, ChevronDown, Circle, ClipboardCheck, Loader2, Minus, PauseCircle, Pencil, PlayCircle, Trash2, UserRound } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +36,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { providerProfileHref } from "@/lib/provider-onboarding-account";
 import {
   CONTRACT_STATUSES,
   DOC_STATUSES,
@@ -56,6 +57,10 @@ export interface OnboardingRow {
   legalName: string;
   commercialName: string;
   prospectId: string | null;
+  email: string | null;
+  rfc: string | null;
+  /** La cuenta del proveedor, que nace sola al completar el alta. */
+  userId: string | null;
   startedOn: string;
   docs: DocRecord;
   completedOn: string | null;
@@ -157,6 +162,7 @@ export function OnboardingsTable({
   canEdit?: boolean;
   canDelete?: boolean;
 }) {
+  const panel = editBase.startsWith("/admin") ? "admin" : "collaborator";
   const [rows, setRows] = useState<OnboardingRow[] | null>(null);
   // Prospectos que ya van "En proceso de alta" sin expediente abierto: el alta
   // no se crea sola (pide razón social y fecha), así que se avisan aquí.
@@ -194,7 +200,7 @@ export function OnboardingsTable({
       if (stage !== "all" && onboardingStage(r) !== stage) return false;
       if (contract !== "all" && r.contractStatus !== contract) return false;
       if (!q) return true;
-      return [r.legalName, r.commercialName, r.altaAuthorizedBy, r.contractAuthorizedBy, r.notes, r.purchasingNotes]
+      return [r.legalName, r.commercialName, r.email, r.rfc, r.altaAuthorizedBy, r.contractAuthorizedBy, r.notes, r.purchasingNotes]
         .some((v) => (v ?? "").toLowerCase().includes(q));
     });
   }, [rows, search, stage, contract]);
@@ -205,7 +211,13 @@ export function OnboardingsTable({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    const data = (await res.json().catch(() => ({}))) as { error?: string; completedOn?: string | null; onHoldSince?: string | null };
+    const data = (await res.json().catch(() => ({}))) as {
+      error?: string;
+      completedOn?: string | null;
+      onHoldSince?: string | null;
+      userId?: string | null;
+      account?: { status: string; message: string } | null;
+    };
     if (!res.ok) throw new Error(data.error ?? "No se pudo guardar.");
     return data;
   }
@@ -219,11 +231,16 @@ export function OnboardingsTable({
       setRows((list) =>
         list?.map((x) =>
           x.id === row.id
-            ? { ...x, completedOn: data.completedOn ?? x.completedOn, onHoldSince: data.onHoldSince ?? null }
+            ? { ...x, completedOn: data.completedOn ?? x.completedOn, onHoldSince: data.onHoldSince ?? null, userId: data.userId ?? x.userId }
             : x
         ) ?? list
       );
       toast.success(okMsg);
+      // Completar el expediente puede crear la cuenta del proveedor.
+      if (data.account) {
+        if (data.account.status === "skipped") toast.warning(data.account.message, { duration: 10000 });
+        else toast.success(data.account.message, { duration: 8000 });
+      }
     } catch (e) {
       setRows(prev ?? null);
       toast.error(e instanceof Error ? e.message : "No se pudo guardar.");
@@ -372,6 +389,15 @@ export function OnboardingsTable({
                         <span className="text-muted-foreground block max-w-52 truncate text-xs min-[1440px]:max-w-64" title={r.commercialName}>{r.commercialName}</span>
                         {st === "on_hold" && r.holdReason && (
                           <span className="mt-1 block max-w-52 text-xs text-gray-700 min-[1440px]:max-w-64 dark:text-gray-300" title={r.holdReason}>{r.holdReason}</span>
+                        )}
+                        {r.userId && (
+                          <Link
+                            href={providerProfileHref(panel, r.userId)}
+                            className="text-primary mt-1 inline-flex items-center gap-1 text-xs font-semibold hover:underline"
+                          >
+                            <UserRound className="size-3" aria-hidden />
+                            Ver perfil del proveedor
+                          </Link>
                         )}
                       </td>
                       <td className="text-muted-foreground hidden whitespace-nowrap px-4 py-3 @3xl/table:table-cell">{shortDate(r.startedOn)}</td>

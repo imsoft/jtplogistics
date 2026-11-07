@@ -78,7 +78,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         action: "created",
         userId: session.user.id,
         userName: session.user.name,
-        changes: [{ field: "origin", label: "Origen", from: null, to: "CRM de clientes" }],
+        changes: [{ field: "origin", label: "Origen", from: null, to: "Prospección de clientes" }],
       });
     }
 

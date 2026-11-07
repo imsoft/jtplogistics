@@ -23,7 +23,23 @@ import { getIncidentTypeLabel } from "@/lib/incident-type-label";
 import { useIncidentTypes } from "@/hooks/use-incident-types";
 import { IncidentTypeBadge } from "@/components/dashboard/resources/incident-type-badge";
 import type { Shipment, ShipmentStatus } from "@/types/shipment.types";
-import { Trash2 } from "lucide-react";
+import { FileText, Loader2, MoreVertical, Trash2, Truck } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useUnitTypes } from "@/hooks/use-unit-types";
+import { shipmentTotal, SHIPMENT_TOTAL_FORMULA } from "@/lib/shipment-total";
+import {
+  cartaPorteFromShipment,
+  downloadCartaPorte,
+  downloadInstructionLetter,
+  instructionLetterFromShipment,
+  shipmentLetterMissing,
+} from "@/components/dashboard/resources/shipment-pdf-download";
 import { toast } from "sonner";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 import { shipmentLockReason } from "@/lib/shipment-lock";
@@ -201,6 +217,28 @@ function getColumns(incidentTypes: { value: string; label: string; color?: strin
             },
             enableSorting: false,
           } satisfies ColumnDef<Shipment>,
+          {
+            id: "total",
+            header: () => (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="cursor-help whitespace-nowrap" title={SHIPMENT_TOTAL_FORMULA}>
+                    Total
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top">{SHIPMENT_TOTAL_FORMULA}</TooltipContent>
+              </Tooltip>
+            ),
+            cell: ({ row }) => {
+              const v = shipmentTotal(row.original.cost);
+              return v != null ? (
+                <span className="whitespace-nowrap tabular-nums">${formatMxn(v)}</span>
+              ) : (
+                <span className="text-muted-foreground">—</span>
+              );
+            },
+            enableSorting: false,
+          } satisfies ColumnDef<Shipment>,
         ]
       : []),
     {
@@ -333,15 +371,38 @@ export function ShipmentsTable({
     errorMessage: "Error al cargar embarques",
   });
 
-  // La columna aparece solo cuando la API manda la tarifa (dirección, o colaborador que ve Finanzas).
+  // Tarifa de venta y Total aparecen solo cuando la API manda las tarifas (dirección, o colaborador que ve Finanzas).
   const showSale = useMemo(() => shipments.some((s) => "sale" in s), [shipments]);
   const { permissions } = useCollaboratorPermissions();
   const canDelete = isAdmin || Boolean(permissions?.canDeleteShipments);
   const [deleting, setDeleting] = useState<Shipment | null>(null);
+  const unitTypes = useUnitTypes();
+  const [generating, setGenerating] = useState<string | null>(null);
+
+  const generatePdf = useCallback(
+    async (shipment: Shipment, kind: "instructions" | "carta-porte") => {
+      const missing = shipmentLetterMissing(shipment);
+      if (missing.length) {
+        toast.error(`Para la carta falta: ${missing.join(", ")}.`);
+        return;
+      }
+      const unitLabel = unitTypes.find((u) => u.value === shipment.unit)?.label ?? shipment.unit ?? "";
+      setGenerating(shipment.id);
+      try {
+        if (kind === "instructions") await downloadInstructionLetter(instructionLetterFromShipment(shipment, unitLabel));
+        else await downloadCartaPorte(cartaPorteFromShipment(shipment, unitLabel));
+      } catch (e) {
+        console.error(e);
+        toast.error(kind === "instructions" ? "No se pudo generar la carta de instrucciones." : "No se pudo generar la carta porte.");
+      } finally {
+        setGenerating(null);
+      }
+    },
+    [unitTypes]
+  );
 
   const columns = useMemo(() => {
     const base = getColumns(incidentTypes, showSale);
-    if (!canDelete) return base;
     const actions: ColumnDef<Shipment> = {
       id: "actions",
       // Pegada al borde derecho: en laptops la tabla se recorre de lado y el
@@ -351,26 +412,51 @@ export function ShipmentsTable({
       enableHiding: false,
       header: () => <span className="sr-only">Acciones</span>,
       cell: ({ row }) => {
+        const shipment = row.original;
         // Cerrado o sin incidencias: solo dirección lo elimina.
-        if (!isAdmin && shipmentLockReason(row.original)) return null;
+        const showDelete = canDelete && (isAdmin || !shipmentLockReason(shipment));
+        const busy = generating === shipment.id;
         return (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7"
-            aria-label={`Eliminar embarque ${row.original.eco ?? ""}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              setDeleting(row.original);
-            }}
-          >
-            <Trash2 className="text-destructive size-3.5" />
-          </Button>
+          // El menú vive en un portal, pero sus clics suben por React hasta la fila.
+          <div onClick={(e) => e.stopPropagation()}>
+            <DropdownMenu modal={false}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-7"
+                  aria-label={`Acciones del embarque ${shipment.eco ?? ""}`}
+                  disabled={busy}
+                >
+                  {busy ? <Loader2 className="size-3.5 animate-spin" /> : <MoreVertical className="size-3.5" />}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={() => generatePdf(shipment, "instructions")}>
+                  <FileText className="size-4" />
+                  Carta de instrucciones
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => generatePdf(shipment, "carta-porte")}>
+                  <Truck className="size-4" />
+                  Carta porte
+                </DropdownMenuItem>
+                {showDelete && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem variant="destructive" onSelect={() => setDeleting(shipment)}>
+                      <Trash2 className="size-4" />
+                      Eliminar
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         );
       },
     };
     return [...base, actions];
-  }, [incidentTypes, showSale, canDelete, isAdmin]);
+  }, [incidentTypes, showSale, canDelete, isAdmin, generating, generatePdf]);
 
   async function deleteShipment(confirmEmail: string) {
     if (!deleting) return;

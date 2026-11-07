@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { hasModuleAccess, requireModuleAccess } from "@/lib/module-access";
 import { logAudit } from "@/lib/audit-log";
+import { sendClientRouteAlert } from "@/lib/client-route-alerts-server";
 import { routeCreatorName } from "@/lib/api/route-utils";
 
 /**
@@ -193,6 +194,24 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         data: toCreate.map((b) => ({ clientId: id, routeId: b.routeId, unitType: b.unitType })),
         skipDuplicates: true,
       });
+    }
+
+    // Aviso a quien lo tenga activado (finanzas y dirección): ruta nueva al cliente.
+    if (toCreate.length > 0) {
+      const [routes, unitTypes] = await Promise.all([
+        prisma.route.findMany({ where: { id: { in: toCreate.map((b) => b.routeId) } }, select: { id: true, origin: true, destination: true } }),
+        prisma.unitTypeDef.findMany({ select: { value: true, name: true } }),
+      ]);
+      const routeById = new Map(routes.map((r) => [r.id, r]));
+      const unitName = new Map(unitTypes.map((u) => [u.value, u.name]));
+      void sendClientRouteAlert(
+        { id, name: client.name },
+        toCreate.flatMap((b) => {
+          const r = routeById.get(b.routeId);
+          return r ? [{ origin: r.origin, destination: r.destination, unitLabel: unitName.get(b.unitType) ?? b.unitType }] : [];
+        }),
+        { id: session.user.id, name: session.user.name }
+      );
     }
 
     void logAudit({

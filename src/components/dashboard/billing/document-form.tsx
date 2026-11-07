@@ -53,7 +53,7 @@ function addDays(key: string, days: number) {
   return d.toISOString().slice(0, 10);
 }
 
-export function emptyDocumentForm(): DocumentFormData {
+export function emptyDocumentForm(kind: BillingKind): DocumentFormData {
   const today = todayKey();
   return {
     draft: false,
@@ -70,8 +70,9 @@ export function emptyDocumentForm(): DocumentFormData {
     exchangeRate: "",
     subtotal: "",
     ivaRate: "0.16",
-    // Autotransporte: en las dos se retiene el 4 % de IVA (al cobrar lo retiene el cliente; al pagar, JTP).
-    withholdingRate: "0.04",
+    // Al cobrar, JTP factura con IVA normal sin retención; al pagarle a un
+    // transportista, JTP retiene el 4 %.
+    withholdingRate: kind === "payable" ? "0.04" : "0",
     paymentMethod: "PPD",
     concept: "",
     reference: "",

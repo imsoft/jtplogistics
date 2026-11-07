@@ -31,6 +31,7 @@ export function prospectToJson(p: {
   discardReason: string | null;
   createdAt: Date;
   createdBy?: { name: string } | null;
+  onboarding?: { id: string } | null;
 }) {
   return {
     id: p.id,
@@ -49,6 +50,8 @@ export function prospectToJson(p: {
     discardReason: p.discardReason,
     createdAt: p.createdAt.toISOString(),
     createdByName: p.createdBy?.name ?? null,
+    // Para no ofrecer "Iniciar alta" a quien ya tiene una.
+    onboardingId: p.onboarding?.id ?? null,
   };
 }
 
@@ -103,7 +106,7 @@ export async function GET(request: Request) {
     const prospects = await prisma.providerProspect.findMany({
       where,
       orderBy: { createdAt: "desc" },
-      include: { createdBy: { select: { name: true } } },
+      include: { createdBy: { select: { name: true } }, onboarding: { select: { id: true } } },
     });
 
     return Response.json(prospects.map(prospectToJson));

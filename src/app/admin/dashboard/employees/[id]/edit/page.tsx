@@ -35,7 +35,7 @@ const MODULES = [
   { suffix: "ProviderProspects", label: "Prospección de proveedores" },
   { suffix: "ProviderOnboardings", label: "Alta de proveedores" },
   { suffix: "Clients", label: "Clientes" },
-  { suffix: "ClientLeads", label: "CRM de clientes" },
+  { suffix: "ClientLeads", label: "Prospección de clientes" },
   { suffix: "Employees", label: "Colaboradores" },
   { suffix: "Vendors", label: "Vendedores" },
   { suffix: "Laptops", label: "Laptops" },
@@ -72,6 +72,8 @@ const PERMISSION_FIELDS = [
   { key: "canChangeRouteStatus", label: "Rutas: cambiar estatus (activa, pendiente, inactiva)" },
   // Prospecto listo para alta, alta nueva, alta completa y cambios de contrato.
   { key: "canReceiveOnboardingAlerts", label: "Alta de proveedores: recibir avisos (campana y correo)" },
+  // Cada que a un cliente se le asigna una ruta nueva.
+  { key: "canReceiveClientRouteAlerts", label: "Clientes: aviso de ruta nueva (campana y correo)" },
 ];
 
 const PERM_ICONS: Record<string, React.ElementType> = {

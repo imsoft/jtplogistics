@@ -10,6 +10,8 @@ import {
   validateHold,
   type DocRecord,
 } from "@/lib/provider-onboardings";
+import { validateOnboardingContact } from "@/lib/provider-onboarding-account";
+import { ensureProviderAccount } from "@/lib/provider-onboarding-account-server";
 import { MODULE, ONBOARDING_INCLUDE, onboardingToJson, readOnboardingBody } from "../route";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -39,11 +41,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (!current) return Response.json({ error: "No encontrado" }, { status: 404 });
 
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
-    const { texts, dates, docs, contractStatus, prospectId } = readOnboardingBody(body);
+    const { texts, dates, docs, contractStatus, prospectId, email, rfc } = readOnboardingBody(body);
 
     if (texts.legalName === null) return Response.json({ error: "La razón social no puede quedar vacía." }, { status: 400 });
     if (texts.commercialName === null) return Response.json({ error: "El nombre comercial no puede quedar vacío." }, { status: 400 });
     if (dates.startedOn === null) return Response.json({ error: "La fecha de inicio no puede quedar vacía." }, { status: 400 });
+    const contactError = validateOnboardingContact({ email: email ?? null, rfc: rfc ?? null });
+    if (contactError) return Response.json({ error: contactError }, { status: 400 });
 
     // Detener/reactivar: `onHold` manda; el motivo viaja aparte.
     const onHold =
@@ -76,6 +80,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         ...(texts.legalName !== undefined && { legalName: texts.legalName! }),
         ...(texts.commercialName !== undefined && { commercialName: texts.commercialName! }),
         ...(prospectId !== undefined && { prospectId }),
+        ...(email !== undefined && { email }),
+        ...(rfc !== undefined && { rfc }),
         ...(dates.startedOn !== undefined && { startedOn: dates.startedOn! }),
         ...nextDocs,
         completedOn: completedOn ? new Date(`${completedOn}T00:00:00.000Z`) : null,
@@ -105,6 +111,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (onHold !== Boolean(current.onHoldSince)) {
       changes.push({ field: "onHold", label: "Detenido", from: current.onHoldSince ? "sí" : "no", to: onHold ? `sí: ${holdReason.trim()}` : "no" });
     }
+    if (email !== undefined && email !== current.email) changes.push({ field: "email", label: "Correo", from: current.email, to: email });
+    if (rfc !== undefined && rfc !== current.rfc) changes.push({ field: "rfc", label: "RFC", from: current.rfc, to: rfc });
     for (const d of ONBOARDING_DOCS) {
       if (nextDocs[d.key] !== current[d.key]) changes.push({ field: d.key, label: d.label, from: current[d.key], to: nextDocs[d.key] });
     }
@@ -119,7 +127,16 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       changes,
     });
 
-    return Response.json({ ok: true, completedOn, onHoldSince: onHoldSince ? onHoldSince.toISOString().slice(0, 10) : null });
+    // Con el expediente completo, correo y RFC, nace (o se liga) la cuenta del proveedor.
+    const account = await ensureProviderAccount(id, session.user);
+
+    return Response.json({
+      ok: true,
+      completedOn,
+      onHoldSince: onHoldSince ? onHoldSince.toISOString().slice(0, 10) : null,
+      userId: account.status === "created" || account.status === "linked" ? account.userId : current.userId,
+      account: account.status === "none" ? null : account,
+    });
   } catch (e) {
     if (e instanceof Response) return e;
     console.error("[provider-onboardings/:id] PATCH", e);

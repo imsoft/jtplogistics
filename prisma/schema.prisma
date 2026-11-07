@@ -117,6 +117,10 @@ model User {
   canChangeRouteStatus Boolean    @default(false) @map("can_change_route_status")
   /// Recibe en campana y correo los avisos de Alta de proveedores.
   canReceiveOnboardingAlerts Boolean @default(false) @map("can_receive_onboarding_alerts")
+  /// Recibe aviso (campana y correo) cada que se le asigna una ruta nueva a un cliente.
+  canReceiveClientRouteAlerts Boolean @default(false) @map("can_receive_client_route_alerts")
+  /// La cuenta se creó con una contraseña conocida (p. ej. el RFC): al entrar debe cambiarla.
+  mustChangePassword Boolean @default(false) @map("must_change_password")
   canUpdateRouteLogs Boolean      @default(false) @map("can_update_route_logs")
   canUpdateUnitTypes Boolean      @default(false) @map("can_update_unit_types")
   canUpdateQuotes   Boolean       @default(false) @map("can_update_quotes")
@@ -184,6 +188,8 @@ model User {
   leavesCreated        TimeClockLeave[] @relation("LeaveAuthor")
   prospects            ProviderProspect[] @relation("ProspectAuthor")
   onboardings          ProviderOnboarding[] @relation("OnboardingAuthor")
+  /// El alta de proveedor de la que salió esta cuenta (si se creó sola al completarla).
+  providerOnboarding   ProviderOnboarding?  @relation("OnboardingAccount")
   clientLeadsOwned     ClientLead[] @relation("ClientLeadOwner")
   clientLeadsCreated   ClientLead[] @relation("ClientLeadAuthor")
   clientLeadActivities ClientLeadActivity[] @relation("ClientLeadActivityAuthor")
@@ -330,7 +336,7 @@ model Route {
   updatedAt        DateTime           @updatedAt @map("updated_at")
   carrierRoutes    CarrierRoute[]
   clientRoutes     ClientRoute[]
-  clientLocations  ClientLocation[]
+  addressPairs     ClientAddressPair[]
   unitTargets      RouteUnitTarget[]
 
   @@map("routes")
@@ -428,28 +434,27 @@ model Client {
   clientRoutes ClientRoute[]
   leads        ClientLead[]
   billingDocuments BillingDocument[]
-  locations    ClientLocation[]
+  addressPairs ClientAddressPair[]
 
   @@map("clients")
 }
 
 /// Direcciones donde se carga (origen) o se entrega (destino) en cada ruta del
 /// cliente; una ciudad puede tener varias. El embarque las ofrece al elegir la ruta.
-model ClientLocation {
-  id        String   @id @default(cuid()) @map("id")
-  clientId  String   @map("client_id")
-  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  routeId   String?  @map("route_id")
-  route     Route?   @relation(fields: [routeId], references: [id], onDelete: Cascade)
-  /// "origin" o "destination".
-  kind      String   @map("kind")
-  /// La ciudad tal como está en la ruta.
-  city      String   @map("city")
-  address   String   @map("address")
-  updatedAt DateTime @updatedAt @map("updated_at")
+/// Direcciones de un cliente por ruta, en pares: dónde se carga y dónde se
+/// entrega. Al registrar un embarque se elige la de carga y la de entrega sale sola.
+model ClientAddressPair {
+  id                 String   @id @default(cuid()) @map("id")
+  clientId           String   @map("client_id")
+  client             Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  routeId            String   @map("route_id")
+  route              Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  originAddress      String   @map("origin_address")
+  destinationAddress String   @map("destination_address")
+  updatedAt          DateTime @updatedAt @map("updated_at")
 
   @@index([clientId, routeId])
-  @@map("client_locations")
+  @@map("client_address_pairs")
 }
 
 model ClientRoute {
@@ -1330,6 +1335,11 @@ model ProviderOnboarding {
   /// De qué prospecto nació, si vino de Prospección.
   prospectId     String?           @unique @map("prospect_id")
   prospect       ProviderProspect? @relation(fields: [prospectId], references: [id], onDelete: SetNull)
+  /// Con correo y RFC, al quedar completa el alta se crea sola la cuenta del proveedor.
+  email          String?           @map("email")
+  rfc            String?           @map("rfc")
+  userId         String?           @unique @map("user_id")
+  user           User?             @relation("OnboardingAccount", fields: [userId], references: [id], onDelete: SetNull)
 
   startedOn DateTime @db.Date @map("started_on")
 

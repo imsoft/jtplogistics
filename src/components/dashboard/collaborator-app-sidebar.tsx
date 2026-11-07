@@ -111,7 +111,7 @@ const allNavGroups: PermNavGroup[] = [
     label: "Contactos",
     items: [
       { title: "Clientes", href: `${BASE}/clients`, icon: Users, permission: "canViewClients" },
-      { title: "CRM de clientes", href: `${BASE}/client-leads`, icon: Handshake, permission: "canViewClientLeads" },
+      { title: "Prospección de clientes", href: `${BASE}/client-leads`, icon: Handshake, permission: "canViewClientLeads" },
       { title: "Proveedores", href: `${BASE}/providers`, icon: Building2, permission: "canViewProviders" },
       { title: "Prospección de proveedores", href: `${BASE}/prospects`, icon: Search, permission: "canViewProviderProspects" },
       { title: "Alta de proveedores", href: `${BASE}/provider-onboardings`, icon: ClipboardCheck, permission: "canViewProviderOnboardings" },

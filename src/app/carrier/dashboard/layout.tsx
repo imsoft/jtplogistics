@@ -6,6 +6,7 @@ import { CarrierOnboardingTour } from "@/components/dashboard/carrier-onboarding
 import { dashboardMainWithFloatingChatClassName } from "@/lib/dashboard-shell";
 import { requireCarrierPage } from "@/lib/auth-server";
 import { prisma } from "@/lib/db";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -18,8 +19,10 @@ export default async function CarrierDashboardLayout({
   const session = await requireCarrierPage();
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { onboardingTourCompletedAt: true },
+    select: { onboardingTourCompletedAt: true, mustChangePassword: true },
   });
+  // Cuenta creada sola al completar su alta: entra con su RFC y debe cambiarlo antes de nada.
+  if (user?.mustChangePassword) redirect("/carrier/cambiar-contrasena");
   const tourCompleted = !user || user.onboardingTourCompletedAt !== null;
 
   return (

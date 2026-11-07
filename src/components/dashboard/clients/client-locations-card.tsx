@@ -10,21 +10,28 @@ import { CardListSkeleton } from "@/components/ui/skeletons";
 import type { AssignedRoute } from "./client-routes";
 import { SAVE_CHANGES, useConfirm } from "@/components/ui/confirm-provider";
 
-type Kind = "origin" | "destination";
-interface Row {
+interface Pair {
   /** Solo para la lista en pantalla. */
   key: string;
   routeId: string;
-  kind: Kind;
-  address: string;
+  originAddress: string;
+  destinationAddress: string;
 }
 
 let seq = 0;
-const newKey = () => `n${++seq}`;
+const newKey = () => `p${++seq}`;
+
+const snapshotOf = (pairs: Pair[]) =>
+  JSON.stringify(
+    pairs
+      .filter((p) => p.originAddress.trim() || p.destinationAddress.trim())
+      .map((p) => [p.routeId, p.originAddress.trim(), p.destinationAddress.trim()])
+  );
 
 /**
- * Direcciones de carga y entrega del cliente, agrupadas por ruta: cada ciudad
- * puede tener varias. Al registrar un embarque se ofrecen las de esa ruta.
+ * Direcciones del cliente por ruta, en pares: dónde se carga y dónde se
+ * entrega. Al registrar un embarque se elige la de carga y la de entrega sale
+ * sola.
  */
 export function ClientLocationsCard({ clientId, routes, loaded, canEdit }: { clientId: string; routes: AssignedRoute[]; loaded: boolean; canEdit: boolean }) {
   const confirm = useConfirm();
@@ -35,41 +42,46 @@ export function ClientLocationsCard({ clientId, routes, loaded, canEdit }: { cli
     return [...map.values()].sort((a, b) => `${a.origin} ${a.destination}`.localeCompare(`${b.origin} ${b.destination}`, "es"));
   }, [routes]);
 
-  const [rows, setRows] = useState<Row[] | null>(null);
+  const [pairs, setPairs] = useState<Pair[] | null>(null);
   const [saved, setSaved] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/clients/${clientId}/locations`)
+    fetch(`/api/clients/${clientId}/address-pairs`)
       .then((r) => (r.ok ? r.json() : []))
-      .then((list: { routeId: string | null; kind: Kind; address: string }[]) => {
-        const loadedRows = list.filter((l) => l.routeId).map((l) => ({ key: newKey(), routeId: l.routeId!, kind: l.kind, address: l.address }));
-        setRows(loadedRows);
-        setSaved(JSON.stringify(loadedRows.map(({ routeId, kind, address }) => [routeId, kind, address])));
+      .then((list: { routeId: string; originAddress: string; destinationAddress: string }[]) => {
+        const loadedPairs = list.map((p) => ({ key: newKey(), routeId: p.routeId, originAddress: p.originAddress, destinationAddress: p.destinationAddress }));
+        setPairs(loadedPairs);
+        setSaved(snapshotOf(loadedPairs));
       })
-      .catch(() => setRows([]));
+      .catch(() => setPairs([]));
   }, [clientId]);
 
-  const snapshot = JSON.stringify((rows ?? []).filter((r) => r.address.trim()).map(({ routeId, kind, address }) => [routeId, kind, address.trim()]));
-  const dirty = rows !== null && snapshot !== saved;
+  const dirty = pairs !== null && snapshotOf(pairs) !== saved;
 
-  const update = (key: string, address: string) => setRows((l) => l?.map((r) => (r.key === key ? { ...r, address } : r)) ?? l);
-  const add = (routeId: string, kind: Kind) => setRows((l) => [...(l ?? []), { key: newKey(), routeId, kind, address: "" }]);
-  const remove = (key: string) => setRows((l) => l?.filter((r) => r.key !== key) ?? l);
+  const update = (key: string, field: "originAddress" | "destinationAddress", value: string) =>
+    setPairs((l) => l?.map((p) => (p.key === key ? { ...p, [field]: value } : p)) ?? l);
+  const add = (routeId: string) => setPairs((l) => [...(l ?? []), { key: newKey(), routeId, originAddress: "", destinationAddress: "" }]);
+  const remove = (key: string) => setPairs((l) => l?.filter((p) => p.key !== key) ?? l);
 
   async function save() {
-    if (!rows) return;
+    if (!pairs) return;
+    const filled = pairs.filter((p) => p.originAddress.trim() || p.destinationAddress.trim());
+    if (filled.some((p) => !p.originAddress.trim() || !p.destinationAddress.trim())) {
+      toast.error("Cada par necesita la dirección de carga y la de entrega.");
+      return;
+    }
     if (!(await confirm({ ...SAVE_CHANGES, description: "Las direcciones del cliente quedarán como las capturaste." }))) return;
     setBusy(true);
     try {
-      const locations = rows.filter((r) => r.address.trim()).map(({ routeId, kind, address }) => ({ routeId, kind, address: address.trim() }));
-      const res = await fetch(`/api/clients/${clientId}/locations`, {
+      const body = filled.map((p) => ({ routeId: p.routeId, originAddress: p.originAddress.trim(), destinationAddress: p.destinationAddress.trim() }));
+      const res = await fetch(`/api/clients/${clientId}/address-pairs`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ locations }),
+        body: JSON.stringify({ pairs: body }),
       });
       if (!res.ok) throw new Error(((await res.json().catch(() => ({}))) as { error?: string }).error ?? "No se pudieron guardar.");
-      setSaved(JSON.stringify(locations.map(({ routeId, kind, address }) => [routeId, kind, address])));
+      setSaved(snapshotOf(filled));
       toast.success("Direcciones guardadas.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "No se pudieron guardar.");
@@ -78,71 +90,85 @@ export function ClientLocationsCard({ clientId, routes, loaded, canEdit }: { cli
     }
   }
 
-  const column = (routeId: string, kind: Kind, city: string) => {
-    const list = (rows ?? []).filter((r) => r.routeId === routeId && r.kind === kind);
-    return (
-      <div className="min-w-0 space-y-2">
-        <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
-          {kind === "origin" ? "Origen" : "Destino"} · {city}
-        </p>
-        {list.length === 0 && !canEdit && <p className="text-muted-foreground text-sm">Sin dirección.</p>}
-        {list.map((r, i) => (
-          <div key={r.key} className="flex items-center gap-2">
-            {canEdit ? (
-              <>
-                <Input
-                  aria-label={`Dirección ${i + 1} de ${kind === "origin" ? "origen" : "destino"} en ${city}`}
-                  value={r.address}
-                  onChange={(e) => update(r.key, e.target.value)}
-                />
-                <Button type="button" variant="ghost" size="icon" className="shrink-0" aria-label="Quitar dirección" onClick={() => remove(r.key)}>
-                  <Trash2 className="text-destructive size-4" />
-                </Button>
-              </>
-            ) : (
-              <p className="text-sm">{r.address}</p>
-            )}
-          </div>
-        ))}
-        {canEdit && (
-          <Button type="button" variant="outline" size="sm" onClick={() => add(routeId, kind)}>
-            <Plus className="size-4" />
-            Agregar dirección
-          </Button>
-        )}
-      </div>
-    );
-  };
-
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-3">
-        <CardTitle className="text-muted-foreground text-sm font-semibold uppercase tracking-wider">Direcciones de origen y destino</CardTitle>
+        <CardTitle className="text-muted-foreground text-sm font-semibold uppercase tracking-wider">Direcciones de carga y entrega</CardTitle>
         <MapPin className="text-muted-foreground size-4" />
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-muted-foreground text-xs">
-          Por cada ruta, dónde se carga y dónde se entrega; una ciudad puede tener varias. Al registrar un embarque de esa ruta se ofrecen para elegir.
+          Por cada ruta, pares de dónde se carga y dónde se entrega. Al registrar un embarque se elige la de carga y la de entrega sale sola.
         </p>
-        {!loaded || rows === null ? (
+        {!loaded || pairs === null ? (
           <CardListSkeleton />
         ) : groups.length === 0 ? (
           <p className="text-muted-foreground text-sm">Asígnale rutas para capturar sus direcciones.</p>
         ) : (
           <>
-            {groups.map((g) => (
-              <div key={g.routeId} className="rounded-md border">
-                <div className="bg-primary/[0.07] text-primary flex items-center gap-1.5 border-b px-4 py-2.5 text-xs font-semibold uppercase tracking-wide">
-                  {g.origin}
-                  <MoveRight className="size-3.5" />
-                  {g.destination}
+            {groups.map((g) => {
+              const list = pairs.filter((p) => p.routeId === g.routeId);
+              return (
+                <div key={g.routeId} className="rounded-md border">
+                  <div className="bg-primary/[0.07] text-primary flex items-center gap-1.5 border-b px-4 py-2.5 text-xs font-semibold uppercase tracking-wide">
+                    {g.origin}
+                    <MoveRight className="size-3.5" />
+                    {g.destination}
+                  </div>
+                  <div className="space-y-3 p-4">
+                    {list.length > 0 && (
+                      <div className="text-muted-foreground hidden grid-cols-[1fr_auto_1fr_auto] gap-2 text-xs font-semibold uppercase tracking-wide sm:grid">
+                        <span>Carga · {g.origin}</span>
+                        <span className="w-4" />
+                        <span>Entrega · {g.destination}</span>
+                        <span className="w-9" />
+                      </div>
+                    )}
+                    {list.length === 0 && <p className="text-muted-foreground text-sm">Sin direcciones.</p>}
+                    {list.map((p, i) =>
+                      canEdit ? (
+                        <div key={p.key} className="grid grid-cols-[1fr_auto] items-center gap-2 sm:grid-cols-[1fr_auto_1fr_auto]">
+                          <Input
+                            aria-label={`Dirección de carga ${i + 1} en ${g.origin}`}
+                            value={p.originAddress}
+                            onChange={(e) => update(p.key, "originAddress", e.target.value)}
+                          />
+                          <MoveRight className="text-muted-foreground hidden size-4 sm:block" aria-hidden />
+                          <Input
+                            aria-label={`Dirección de entrega ${i + 1} en ${g.destination}`}
+                            value={p.destinationAddress}
+                            onChange={(e) => update(p.key, "destinationAddress", e.target.value)}
+                            className="col-start-1 sm:col-start-auto"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="row-span-2 row-start-1 col-start-2 shrink-0 sm:row-span-1 sm:col-start-auto"
+                            aria-label={`Quitar par ${i + 1}`}
+                            onClick={() => remove(p.key)}
+                          >
+                            <Trash2 className="text-destructive size-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <p key={p.key} className="flex flex-wrap items-center gap-1.5 text-sm">
+                          {p.originAddress}
+                          <MoveRight className="text-muted-foreground size-3.5" aria-hidden />
+                          {p.destinationAddress}
+                        </p>
+                      )
+                    )}
+                    {canEdit && (
+                      <Button type="button" variant="outline" size="sm" onClick={() => add(g.routeId)}>
+                        <Plus className="size-4" />
+                        Agregar par de direcciones
+                      </Button>
+                    )}
+                  </div>
                 </div>
-                <div className="grid gap-5 p-4 lg:grid-cols-2">
-                  {column(g.routeId, "origin", g.origin)}
-                  {column(g.routeId, "destination", g.destination)}
-                </div>
-              </div>
-            ))}
+              );
+            })}
             {canEdit && (
               <div className="flex justify-end">
                 <Button onClick={save} disabled={busy || !dirty}>

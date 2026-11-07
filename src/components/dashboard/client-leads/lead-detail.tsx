@@ -112,7 +112,7 @@ export function LeadDetailView({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-2">
           <Button variant="ghost" size="icon" asChild className="shrink-0">
-            <Link href={basePath} aria-label="Volver al CRM">
+            <Link href={basePath} aria-label="Volver a prospección de clientes">
               <ChevronLeft className="size-4" />
             </Link>
           </Button>

@@ -80,11 +80,12 @@ export function ShipmentForm({
   const [phone, setPhone] = useState(initialValues.phone ?? "");
   const [comments, setComments] = useState(initialValues.comments ?? "");
   // Direcciones: se proponen de la ficha del cliente mientras no se escriban a mano.
-  const [originAddressInput, setOriginAddress] = useState(initialValues.originAddress ?? "");
-  const [destinationAddressInput, setDestinationAddress] = useState(initialValues.destinationAddress ?? "");
-  const [originAddressTouched, setOriginAddressTouched] = useState(Boolean(initialValues.originAddress));
-  const [destinationAddressTouched, setDestinationAddressTouched] = useState(Boolean(initialValues.destinationAddress));
-  const [locations, setLocations] = useState<{ routeId: string | null; kind: string; city: string; address: string }[]>([]);
+  // Direcciones en pares (ficha del cliente): se elige la de carga y la de
+  // entrega sale sola. Un embarque ya guardado conserva las suyas hasta que
+  // se cambie la ruta o se elija otro par.
+  const [addressPairs, setAddressPairs] = useState<AddressPair[]>([]);
+  const [pickedPairId, setPickedPairId] = useState<string | null>(null);
+  const [keepSavedAddresses, setKeepSavedAddresses] = useState(Boolean(initialValues.originAddress || initialValues.destinationAddress));
   // Costos extra (maniobras, estadías…): se suman a venta y compra.
   const [extras, setExtras] = useState<{ concept: string; sale: string; cost: string }[]>(
     (initialValues.extraCosts ?? []).map((x) => ({
@@ -283,32 +284,43 @@ export function ShipmentForm({
   const clientRecord = clients.find((x) => x.name.trim().toLowerCase() === client.trim().toLowerCase());
   const clientId = clientRecord?.id;
   // Sin cliente no hay direcciones.
-  if (!clientId && locations.length > 0) setLocations([]);
+  if (!clientId && addressPairs.length > 0) setAddressPairs([]);
   useEffect(() => {
     if (!clientId) return;
     let cancelled = false;
-    fetch(`/api/clients/${clientId}/locations`)
+    fetch(`/api/clients/${clientId}/address-pairs`)
       .then((r) => (r.ok ? r.json() : []))
-      .then((rows) => !cancelled && setLocations(Array.isArray(rows) ? rows : []))
-      .catch(() => !cancelled && setLocations([]));
+      .then((rows) => !cancelled && setAddressPairs(Array.isArray(rows) ? rows : []))
+      .catch(() => !cancelled && setAddressPairs([]));
     return () => {
       cancelled = true;
     };
   }, [clientId]);
-  // Las direcciones van por ruta: las de las rutas con este origen y destino.
-  const routeIds = useMemo(() => {
+  // Los pares de las rutas con este origen y destino. Se empata por ciudad, no
+  // por id: la ruta del cliente puede no estar en la lista del formulario
+  // (p. ej. si está inactiva) y entonces sus direcciones no salían.
+  const matchingPairs = useMemo(() => {
     const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
-    return new Set(routes.filter((r) => origin && destination && same(r.origin, origin) && same(r.destination, destination)).map((r) => r.id));
-  }, [routes, origin, destination]);
-  const addressesFor = useCallback(
-    (kind: "origin" | "destination") => [...new Set(locations.filter((l) => l.kind === kind && l.routeId && routeIds.has(l.routeId)).map((l) => l.address))],
-    [locations, routeIds]
-  );
-  const originChoices = addressesFor("origin");
-  const destinationChoices = addressesFor("destination");
-  // Mientras no se toque el campo, se propone la primera dirección.
-  const originAddress = originAddressTouched ? originAddressInput : originChoices[0] ?? "";
-  const destinationAddress = destinationAddressTouched ? destinationAddressInput : destinationChoices[0] ?? "";
+    if (!origin.trim() || !destination.trim()) return [];
+    return addressPairs.filter((p) => same(p.origin, origin) && same(p.destination, destination));
+  }, [addressPairs, origin, destination]);
+  const savedAddresses = keepSavedAddresses
+    ? { originAddress: initialValues.originAddress ?? "", destinationAddress: initialValues.destinationAddress ?? "" }
+    : null;
+  const pickedPair =
+    matchingPairs.find((p) => p.id === pickedPairId) ??
+    (pickedPairId === null
+      ? savedAddresses
+        ? matchingPairs.find((p) => p.originAddress === savedAddresses.originAddress && p.destinationAddress === savedAddresses.destinationAddress)
+        : matchingPairs[0]
+      : undefined);
+  const originAddress = pickedPair?.originAddress ?? savedAddresses?.originAddress ?? "";
+  const destinationAddress = pickedPair?.destinationAddress ?? savedAddresses?.destinationAddress ?? "";
+  // Otra ruta: las direcciones guardadas ya no aplican.
+  const forgetAddresses = () => {
+    setKeepSavedAddresses(false);
+    setPickedPairId(null);
+  };
 
   // Propone la tarifa de compra pactada con el transportista para esta ruta.
   const carrierMap = useMemo(() => carrierByOption(carriers), [carriers]);
@@ -415,21 +427,25 @@ export function ShipmentForm({
           </Label>
           <AppSelect
             value={origin}
-            onValueChange={onOriginChange}
+            onValueChange={(v) => {
+              onOriginChange(v);
+              forgetAddresses();
+            }}
             options={originOptions.map((o) => ({value: o, label: o}))}
             disabled={isClosed || originOptions.length === 0}
             className="w-full"
           />
-          <AddressList
-            label="Dirección de carga"
+          <AddressPairPicker
             city={origin}
-            choices={originChoices}
-            value={originAddress}
+            destinationCity={destination}
+            pairs={matchingPairs}
+            pickedId={pickedPair?.id ?? null}
+            savedOrigin={pickedPair ? null : savedAddresses?.originAddress || null}
             disabled={isClosed}
             hasClient={Boolean(clientId)}
-            onSelect={(v) => {
-              setOriginAddressTouched(true);
-              setOriginAddress(v);
+            onPick={(id) => {
+              setPickedPairId(id);
+              setKeepSavedAddresses(false);
             }}
           />
         </div>
@@ -439,23 +455,23 @@ export function ShipmentForm({
           </Label>
           <AppSelect
             value={destination}
-            onValueChange={setDestination}
+            onValueChange={(v) => {
+              setDestination(v);
+              forgetAddresses();
+            }}
             options={destinationOptions.map((d) => ({value: d, label: d}))}
             disabled={isClosed || !origin.trim() || destinationOptions.length === 0}
             className="w-full"
           />
-          <AddressList
-            label="Dirección de entrega"
-            city={destination}
-            choices={destinationChoices}
-            value={destinationAddress}
-            disabled={isClosed}
-            hasClient={Boolean(clientId)}
-            onSelect={(v) => {
-              setDestinationAddressTouched(true);
-              setDestinationAddress(v);
-            }}
-          />
+          {destination.trim() && destinationAddress && (
+            <div className="space-y-1">
+              <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">Dirección de entrega</p>
+              {/* Sale sola del par elegido en la dirección de carga; no se edita aquí. */}
+              <p className="bg-muted/40 text-muted-foreground min-h-9 rounded-md border px-3 py-2 text-sm" aria-readonly>
+                {destinationAddress}
+              </p>
+            </div>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-product">Producto</Label>
@@ -736,23 +752,65 @@ export function ShipmentForm({
 }
 
 
-/** Direcciones del cliente para esa ciudad en la ruta elegida; se elige una. La guardada que ya no esté en la ficha también se ofrece. */
-function AddressList({ label, city, choices, value, disabled, hasClient, onSelect }: { label: string; city: string; choices: string[]; value: string; disabled: boolean; hasClient: boolean; onSelect: (address: string) => void }) {
+interface AddressPair {
+  id: string;
+  routeId: string;
+  origin: string;
+  destination: string;
+  originAddress: string;
+  destinationAddress: string;
+}
+
+/**
+ * Elige la dirección de carga entre los pares del cliente para la ruta; la de
+ * entrega sale del par. Si una misma dirección de carga tiene varios destinos,
+ * cada opción dice a dónde va. La guardada que ya no esté en la ficha también
+ * se muestra.
+ */
+function AddressPairPicker({
+  city,
+  destinationCity,
+  pairs,
+  pickedId,
+  savedOrigin,
+  disabled,
+  hasClient,
+  onPick,
+}: {
+  city: string;
+  destinationCity: string;
+  pairs: AddressPair[];
+  pickedId: string | null;
+  savedOrigin: string | null;
+  disabled: boolean;
+  hasClient: boolean;
+  onPick: (id: string) => void;
+}) {
   if (!city.trim()) return null;
-  if (choices.length === 0 && !value) {
+  if (pairs.length === 0 && !savedOrigin) {
     return (
       <p className="text-muted-foreground text-xs">
-        {hasClient ? "Este cliente no tiene direcciones guardadas para esta ruta; captúralas en su ficha." : "Elige el cliente para ver sus direcciones."}
+        {!hasClient
+          ? "Elige el cliente para ver sus direcciones."
+          : destinationCity.trim()
+            ? "Este cliente no tiene direcciones guardadas para esta ruta; captúralas en su ficha."
+            : "Elige el destino para ver las direcciones."}
       </p>
     );
   }
+  const repeated = (o: string) => pairs.filter((p) => p.originAddress === o).length > 1;
+  const SAVED = "__guardada__";
+  const options = [
+    ...pairs.map((p) => ({ value: p.id, label: repeated(p.originAddress) ? `${p.originAddress} → ${p.destinationAddress}` : p.originAddress })),
+    ...(savedOrigin ? [{ value: SAVED, label: savedOrigin }] : []),
+  ];
   return (
     <div className="space-y-1">
-      <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">{label}</p>
+      <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">Dirección de carga</p>
       <AppSelect
-        value={value}
-        onValueChange={onSelect}
-        options={[...choices, ...(value && !choices.includes(value) ? [value] : [])].map((a) => ({ value: a, label: a }))}
+        value={pickedId ?? (savedOrigin ? SAVED : "")}
+        onValueChange={(v) => v && v !== SAVED && onPick(v)}
+        options={options}
         disabled={disabled}
         className="w-full"
       />

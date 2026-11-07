@@ -172,8 +172,8 @@ export function planShipmentBilling(
   else if (!s.client?.trim()) receivable = { plan: null, reason: "El embarque no tiene cliente." };
   else {
     const rfc = client?.rfc ?? null;
-    // Autotransporte de carga: la persona moral (RFC de 12) retiene el 4 % de IVA.
-    const withholdingRate = rfc && rfc.length === 13 ? 0 : 0.04;
+    // JTP factura con el 16 % de IVA, sin retención (decisión del cliente, nov 2026).
+    const withholdingRate = 0;
     const totals = computeTotals({ subtotal: s.sale, ivaRate: 0.16, withholdingRate });
     receivable = {
       plan: {

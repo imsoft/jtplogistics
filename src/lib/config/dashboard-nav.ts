@@ -57,7 +57,7 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
     label: "Contactos",
     items: [
       { title: "Clientes", href: "/admin/dashboard/clients", icon: Users },
-      { title: "CRM de clientes", href: "/admin/dashboard/client-leads", icon: Handshake },
+      { title: "Prospección de clientes", href: "/admin/dashboard/client-leads", icon: Handshake },
       { title: "Proveedores", href: "/admin/dashboard/providers", icon: Building2 },
       { title: "Prospección de proveedores", href: "/admin/dashboard/prospects", icon: Search },
       { title: "Alta de proveedores", href: "/admin/dashboard/provider-onboardings", icon: ClipboardCheck },

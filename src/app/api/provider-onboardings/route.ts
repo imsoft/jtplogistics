@@ -13,6 +13,8 @@ import {
   validateHold,
   type DocRecord,
 } from "@/lib/provider-onboardings";
+import { normalizeOnboardingEmail, normalizeRfc, validateOnboardingContact } from "@/lib/provider-onboarding-account";
+import { ensureProviderAccount } from "@/lib/provider-onboarding-account-server";
 
 export const MODULE = "ProviderOnboardings";
 
@@ -54,6 +56,9 @@ export function onboardingToJson(o: Row) {
     legalName: o.legalName,
     commercialName: o.commercialName,
     prospectId: o.prospectId,
+    email: o.email,
+    rfc: o.rfc,
+    userId: o.userId,
     startedOn: day(o.startedOn)!,
     docs,
     completedOn: day(o.completedOn),
@@ -90,7 +95,12 @@ export function readOnboardingBody(body: Record<string, unknown>) {
     if (isDocStatus(docsIn[d.key])) docs[d.key] = docsIn[d.key] as DocRecord[typeof d.key];
   }
 
+  const contact = (key: "email" | "rfc", normalize: (v: string) => string | null) =>
+    typeof body[key] === "string" ? normalize(body[key] as string) : body[key] === null ? null : undefined;
+
   return {
+    email: contact("email", normalizeOnboardingEmail),
+    rfc: contact("rfc", normalizeRfc),
     texts: Object.fromEntries(TEXT_FIELDS.map((k) => [k, text(k)])) as Record<TextField, string | null | undefined>,
     dates: Object.fromEntries(DATE_FIELDS.map((k) => [k, date(k)])) as Record<DateField, Date | null | undefined>,
     docs,
@@ -99,7 +109,7 @@ export function readOnboardingBody(body: Record<string, unknown>) {
   };
 }
 
-const SEARCH_FIELDS = ["legalName", "commercialName", "altaAuthorizedBy", "contractAuthorizedBy", "notes", "purchasingNotes"] as const;
+const SEARCH_FIELDS = ["legalName", "commercialName", "email", "rfc", "altaAuthorizedBy", "contractAuthorizedBy", "notes", "purchasingNotes"] as const;
 
 /** GET /api/provider-onboardings?q= */
 export async function GET(request: Request) {
@@ -127,7 +137,7 @@ export async function POST(request: Request) {
   try {
     const session = await requireModuleAccess(MODULE, "create");
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
-    const { texts, dates, docs, contractStatus, prospectId } = readOnboardingBody(body);
+    const { texts, dates, docs, contractStatus, prospectId, email, rfc } = readOnboardingBody(body);
 
     if (!texts.legalName) return Response.json({ error: "Escribe la razón social." }, { status: 400 });
     if (!texts.commercialName) return Response.json({ error: "Escribe el nombre comercial." }, { status: 400 });
@@ -135,6 +145,8 @@ export async function POST(request: Request) {
 
     const holdError = validateHold({ onHold: Boolean(dates.onHoldSince), holdReason: texts.holdReason ?? "" });
     if (holdError) return Response.json({ error: holdError }, { status: 400 });
+    const contactError = validateOnboardingContact({ email: email ?? null, rfc: rfc ?? null });
+    if (contactError) return Response.json({ error: contactError }, { status: 400 });
 
     if (prospectId) {
       const taken = await prisma.providerOnboarding.findUnique({ where: { prospectId }, select: { id: true } });
@@ -149,6 +161,8 @@ export async function POST(request: Request) {
         legalName: texts.legalName,
         commercialName: texts.commercialName,
         prospectId: prospectId ?? null,
+        email: email ?? null,
+        rfc: rfc ?? null,
         startedOn: dates.startedOn,
         ...fullDocs,
         completedOn: completedOn ? new Date(`${completedOn}T00:00:00.000Z`) : null,
@@ -190,7 +204,13 @@ export async function POST(request: Request) {
       userName: session.user.name,
     });
 
-    return Response.json({ id: created.id }, { status: 201 });
+    // Si ya nace completa y con correo y RFC, se crea la cuenta del proveedor.
+    const account = await ensureProviderAccount(created.id, session.user);
+
+    return Response.json(
+      { id: created.id, account: account.status === "none" ? null : account },
+      { status: 201 }
+    );
   } catch (e) {
     if (e instanceof Response) return e;
     console.error("[provider-onboardings] POST", e);

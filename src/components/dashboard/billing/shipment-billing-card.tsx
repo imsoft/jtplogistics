@@ -101,7 +101,6 @@ export function ShipmentBillingCard({ shipmentId, panel }: { shipmentId: string;
                     <p>{side.plan.partyName}</p>
                     <p className="text-muted-foreground">
                       Total {money(side.plan.total, "MXN")}
-                      {side.plan.ivaWithheld > 0 && " (con retención de 4 %)"}
                     </p>
                     {kind === "receivable" && !data.clientFound && (
                       <p className="text-xs text-amber-700 dark:text-amber-500">El cliente no está en el catálogo: la factura saldrá sin RFC.</p>

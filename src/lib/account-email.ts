@@ -156,3 +156,52 @@ export function buildCarrierMemberInviteEmail(input: {
     ].join("\n"),
   };
 }
+
+/**
+ * Bienvenida al proveedor cuya cuenta se creó sola al completar su alta. La
+ * contraseña temporal es su RFC (decisión del cliente) y la plataforma le pide
+ * cambiarla en cuanto entra.
+ */
+export function buildProviderWelcomeEmail(input: {
+  companyName: string;
+  email: string;
+  rfc: string;
+  loginUrl: string;
+  manualUrl: string;
+}): BuiltEmail {
+  return {
+    subject: "Tu cuenta de proveedor en JTP Logistics",
+    html: brandedEmail({
+      preheader: "Tu alta como proveedor está completa.",
+      eyebrow: "Tu cuenta",
+      heading: "Bienvenido a JTP Logistics",
+      paragraphs: [
+        `Hola, <strong>${escapeHtml(input.companyName)}</strong>:`,
+        "Tu alta como proveedor de JTP Logistics está completa y ya tienes cuenta en nuestra plataforma.",
+        `Tu correo de acceso es <strong>${escapeHtml(input.email)}</strong> y tu contraseña temporal es tu RFC:`,
+        `<strong style="font-size:18px;letter-spacing:.05em;">${keepCase(escapeHtml(input.rfc))}</strong>`,
+        `¿Es tu primera vez? En el <a href="${escapeHtml(input.manualUrl)}" style="color:#1d3fd4;font-weight:600;">manual del proveedor</a> está paso a paso cómo registrar tarifas y leer el semáforo.`,
+      ],
+      highlight: "La primera vez que entres te pediremos cambiar la contraseña antes de continuar.",
+      ctaLabel: "Entrar",
+      ctaHref: input.loginUrl,
+      footnote: ACCOUNT_RESPONSIBILITY_NOTICE,
+    }),
+    text: [
+      `Hola, ${input.companyName}:`,
+      "",
+      "Tu alta como proveedor de JTP Logistics está completa y ya tienes cuenta en nuestra plataforma.",
+      "",
+      `Correo de acceso: ${input.email}`,
+      `Contraseña temporal (tu RFC): ${keepCase(input.rfc)}`,
+      "",
+      `Entra en ${input.loginUrl}. La primera vez que entres te pediremos cambiar la contraseña antes de continuar.`,
+      "",
+      `¿Es tu primera vez? El manual del proveedor está en ${input.manualUrl}`,
+      "",
+      ACCOUNT_RESPONSIBILITY_NOTICE,
+      "",
+      "— JTP Logistics",
+    ].join("\n"),
+  };
+}

@@ -20,12 +20,20 @@ import {
   type DocRecord,
   type DocStatus,
 } from "@/lib/provider-onboardings";
+import {
+  isValidOnboardingEmail,
+  isValidRfc,
+  normalizeOnboardingEmail,
+  normalizeRfc,
+} from "@/lib/provider-onboarding-account";
 import { DatePicker } from "@/components/ui/date-picker";
 
 export interface OnboardingFormData {
   legalName: string;
   commercialName: string;
   prospectId: string | null;
+  email: string;
+  rfc: string;
   startedOn: string;
   docs: DocRecord;
   completedOn: string;
@@ -47,6 +55,8 @@ export function emptyOnboardingForm(today: string): OnboardingFormData {
     legalName: "",
     commercialName: "",
     prospectId: null,
+    email: "",
+    rfc: "",
     startedOn: today,
     docs: Object.fromEntries(ONBOARDING_DOCS.map((d) => [d.key, "pending"])) as DocRecord,
     completedOn: "",
@@ -101,8 +111,12 @@ export function OnboardingForm({
     if (!form.commercialName.trim()) return setError("Escribe el nombre comercial.");
     if (!form.startedOn) return setError("Escribe la fecha de inicio del alta.");
     if (form.onHold && form.holdReason.trim().length < 3) return setError("Escribe por qué se detiene el alta.");
+    const email = normalizeOnboardingEmail(form.email) ?? "";
+    const rfc = normalizeRfc(form.rfc) ?? "";
+    if (email && !isValidOnboardingEmail(email)) return setError("Escribe un correo válido.");
+    if (rfc && !isValidRfc(rfc)) return setError("El RFC debe tener 12 o 13 letras y números.");
     setError(null);
-    onSubmit(form);
+    onSubmit({ ...form, email, rfc });
   }
 
   return (
@@ -126,6 +140,25 @@ export function OnboardingForm({
             </Label>
             <DatePicker id="ob-start" required value={form.startedOn as string} onChange={(v) => set("startedOn")(v as never)} />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="ob-email">Correo</Label>
+            <Input id="ob-email" type="email" autoComplete="off" {...text("email")} />
+            <p className="text-muted-foreground text-xs">Con este correo entrará el proveedor a la plataforma.</p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="ob-rfc">RFC</Label>
+            <Input
+              id="ob-rfc"
+              maxLength={13}
+              autoComplete="off"
+              value={form.rfc}
+              onChange={(e) => set("rfc")(e.target.value.toLocaleUpperCase("es-MX"))}
+            />
+            <p className="text-muted-foreground text-xs">12 o 13 caracteres. Será su contraseña temporal.</p>
+          </div>
+          <p className="text-muted-foreground text-xs sm:col-span-2 lg:col-span-3">
+            Con correo y RFC, al quedar completo el expediente se crea sola la cuenta del proveedor y le llega su acceso por correo.
+          </p>
       </FormSection>
 
       <FormSection

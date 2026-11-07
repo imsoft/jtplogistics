@@ -88,7 +88,7 @@ export function FollowUpCell({ lead, today }: { lead: Pick<Lead, "nextFollowUpOn
 type Filter = LeadStage | "todos" | "pendientes";
 
 /**
- * CRM de clientes: las empresas a las que se les quiere vender, en qué etapa
+ * Prospección de clientes (antes "CRM"): las empresas a las que se les quiere vender, en qué etapa
  * va cada una y qué toca hacer. La etapa se cambia aquí mismo; marcar perdido
  * pide el motivo.
  */
@@ -304,7 +304,7 @@ export function LeadsTable({
             : "Ningún prospecto coincide con los filtros."}
         </p>
       ) : (
-        <ExportableTable title="CRM de clientes">
+        <ExportableTable title="Prospección de clientes">
           <div className="@container/table w-full overflow-x-auto rounded-md border">
             <table className="w-full min-w-max text-sm md:min-w-0">
               <thead>
