@@ -11,6 +11,7 @@ import {
   type DocRecord,
 } from "@/lib/provider-onboardings";
 import { validateOnboardingContact } from "@/lib/provider-onboarding-account";
+import { syncProspectWithOnboarding } from "@/lib/provider-prospect-sync-server";
 import { ensureProviderAccount } from "@/lib/provider-onboarding-account-server";
 import { MODULE, ONBOARDING_INCLUDE, onboardingToJson, readOnboardingBody } from "../route";
 
@@ -126,6 +127,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       userName: session.user.name,
       changes,
     });
+
+    // El prospecto sigue al alta: nombres, correo y etapa.
+    await syncProspectWithOnboarding(id);
 
     // Con el expediente completo, correo y RFC, nace (o se liga) la cuenta del proveedor.
     const account = await ensureProviderAccount(id, session.user);

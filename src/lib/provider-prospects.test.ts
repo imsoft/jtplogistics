@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   isProspectStatus,
   pipelineStatuses,
+  prospectStatusForOnboarding,
   PROSPECT_COVERAGES,
   PROSPECT_SOURCES,
   PROSPECT_STATUS_LABELS,
@@ -68,5 +69,16 @@ describe("validación de etapa", () => {
     expect(isProspectStatus("negociando")).toBe(true);
     expect(isProspectStatus("otra")).toBe(false);
     expect(isProspectStatus(3)).toBe(false);
+  });
+});
+
+describe("prospectStatusForOnboarding", () => {
+  it("el alta completa deja al prospecto listo; si no, en proceso de alta", () => {
+    expect(prospectStatusForOnboarding("pendiente", false)).toBe("en_alta");
+    expect(prospectStatusForOnboarding("en_alta", true)).toBe("listo");
+    expect(prospectStatusForOnboarding("listo", false)).toBe("en_alta");
+  });
+  it("respeta el descartado", () => {
+    expect(prospectStatusForOnboarding("descartado", true)).toBe("descartado");
   });
 });

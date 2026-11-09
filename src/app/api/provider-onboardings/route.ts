@@ -15,6 +15,7 @@ import {
 } from "@/lib/provider-onboardings";
 import { normalizeOnboardingEmail, normalizeRfc, validateOnboardingContact } from "@/lib/provider-onboarding-account";
 import { ensureProviderAccount } from "@/lib/provider-onboarding-account-server";
+import { syncProspectWithOnboarding } from "@/lib/provider-prospect-sync-server";
 
 export const MODULE = "ProviderOnboardings";
 
@@ -182,13 +183,9 @@ export async function POST(request: Request) {
       select: { id: true },
     });
 
-    // El prospecto que dio origen pasa a "En proceso de alta" si iba antes.
-    if (prospectId) {
-      await prisma.providerProspect.updateMany({
-        where: { id: prospectId, status: { in: ["pendiente", "prospectando", "negociando"] } },
-        data: { status: "en_alta" },
-      });
-    }
+    // Toda alta aparece también en Prospección: se liga a su prospecto (o se
+    // le crea uno) y este pasa a "En proceso de alta" o "Listo para operar".
+    await syncProspectWithOnboarding(created.id);
 
     void sendOnboardingAlert({ kind: "created", onboardingId: created.id, name: texts.commercialName }, session.user);
     if (completedOn) {

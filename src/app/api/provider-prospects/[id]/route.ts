@@ -67,6 +67,15 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       },
     });
 
+    // Si ya tiene alta, los nombres se mantienen iguales en las dos pantallas.
+    const names = {
+      ...(data.commercialName && data.commercialName !== current.commercialName && { commercialName: data.commercialName }),
+      ...(data.legalName && data.legalName !== current.legalName && { legalName: data.legalName }),
+    };
+    if (Object.keys(names).length > 0) {
+      await prisma.providerOnboarding.updateMany({ where: { prospectId: id }, data: names });
+    }
+
     const changes =
       data.status && data.status !== current.status
         ? [

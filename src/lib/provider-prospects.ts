@@ -71,3 +71,12 @@ export function pipelineStatuses(): ProspectStatus[] {
 export function isProspectStatus(value: unknown): value is ProspectStatus {
   return typeof value === "string" && (PROSPECT_STATUS_VALUES as string[]).includes(value);
 }
+
+/**
+ * Etapa del prospecto según su alta: con el expediente completo queda "Listo
+ * para operar"; mientras no, "En proceso de alta". Un descartado se respeta.
+ */
+export function prospectStatusForOnboarding(current: ProspectStatus, onboardingCompleted: boolean): ProspectStatus {
+  if (current === "descartado") return current;
+  return onboardingCompleted ? "listo" : "en_alta";
+}
