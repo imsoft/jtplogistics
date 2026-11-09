@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
 import { hasModuleAccess, requireModuleAccess } from "@/lib/module-access";
 import { LEAD_STAGE_LABELS, requiresLostReason, type LeadStage } from "@/lib/client-leads";
-import { LEADS_MODULE, LEAD_INCLUDE, isValidOwner, leadRfcError, leadToJson, quotesForLead, readLeadBody } from "@/lib/client-leads-server";
+import { LEADS_MODULE, LEAD_INCLUDE, isValidOwner, leadRfcError, leadToJson, quotesForLead, readLeadBody, validUnitTypes } from "@/lib/client-leads-server";
 
 /** GET /api/client-leads/[id] — ficha con todas sus actividades y cotizaciones. */
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -90,6 +90,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         ...(data.source !== undefined && { source: data.source as never }),
         ...(data.stage !== undefined && data.stage !== null && { stage: data.stage as never }),
         ...(data.ownerId !== undefined && { ownerId: data.ownerId }),
+        ...(data.unitTypes !== undefined && { unitTypes: await validUnitTypes(data.unitTypes) }),
       },
       include: LEAD_INCLUDE,
     });

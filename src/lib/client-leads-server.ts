@@ -47,6 +47,7 @@ export function leadToJson(l: LeadRow) {
     lostReason: l.lostReason,
     nextAction: l.nextAction,
     nextFollowUpOn: day(l.nextFollowUpOn),
+    unitTypes: l.unitTypes,
     ownerId: l.ownerId,
     ownerName: l.owner?.name ?? null,
     clientId: l.clientId,
@@ -108,6 +109,9 @@ export function readLeadBody(body: Record<string, unknown>) {
     stage: enumValue("stage", LEAD_STAGE_VALUES),
     estimatedMonthly,
     nextFollowUpOn: readDate(body.nextFollowUpOn),
+    unitTypes: Array.isArray(body.unitTypes)
+      ? [...new Set(body.unitTypes.filter((v): v is string => typeof v === "string" && v.trim() !== "").map((v) => v.trim()))]
+      : undefined,
     ownerId: typeof body.ownerId === "string" && body.ownerId ? body.ownerId : body.ownerId === null || body.ownerId === "" ? null : undefined,
   };
 }
@@ -181,4 +185,13 @@ export async function quotesForLead(names: string[]) {
 /** El RFC, si viene, tiene que tener formato válido (12 o 13 caracteres). */
 export function leadRfcError(rfc: string | null | undefined): string | null {
   return rfc && !RFC_RE.test(rfc) ? "El RFC no tiene un formato válido (12 o 13 caracteres)." : null;
+}
+
+/** Solo se guardan tipos de unidad que existen en el catálogo. */
+export async function validUnitTypes(values: string[] | undefined): Promise<string[] | undefined> {
+  if (values === undefined) return undefined;
+  if (values.length === 0) return [];
+  const known = await prisma.unitTypeDef.findMany({ where: { value: { in: values } }, select: { value: true } });
+  const ok = new Set(known.map((k) => k.value));
+  return values.filter((v) => ok.has(v));
 }

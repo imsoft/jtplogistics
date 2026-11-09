@@ -30,6 +30,7 @@ function toFormData(l: Lead): LeadFormData {
     nextFollowUpOn: l.nextFollowUpOn ?? "",
     notes: l.notes ?? "",
     lostReason: l.lostReason ?? "",
+    unitTypes: l.unitTypes ?? [],
   };
 }
 

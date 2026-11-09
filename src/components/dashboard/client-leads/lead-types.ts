@@ -19,6 +19,7 @@ export interface Lead {
   lostReason: string | null;
   nextAction: string | null;
   nextFollowUpOn: string | null;
+  unitTypes: string[];
   ownerId: string | null;
   ownerName: string | null;
   clientId: string | null;

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Building2, CalendarClock, Loader2, UserRound } from "lucide-react";
+import { Building2, CalendarClock, Loader2, Truck, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ActionBar } from "@/components/ui/form-actions";
 import { FormSection, RequiredText } from "@/components/ui/form-section";
@@ -13,6 +13,7 @@ import { AppSelect } from "@/components/ui/app-select";
 import { formatMxnLive, parseMxn } from "@/lib/utils";
 import { LEAD_SOURCES, LEAD_STAGES } from "@/lib/client-leads";
 import { DatePicker } from "@/components/ui/date-picker";
+import { UnitTypePicker } from "@/components/dashboard/crm/unit-type-picker";
 
 export interface LeadFormData {
   companyName: string;
@@ -32,6 +33,7 @@ export interface LeadFormData {
   nextFollowUpOn: string;
   notes: string;
   lostReason: string;
+  unitTypes: string[];
 }
 
 export const EMPTY_LEAD: LeadFormData = {
@@ -52,6 +54,7 @@ export const EMPTY_LEAD: LeadFormData = {
   nextFollowUpOn: "",
   notes: "",
   lostReason: "",
+  unitTypes: [],
 };
 
 /** Lo que viaja a la API: dinero como número y vacíos como null. */
@@ -75,6 +78,7 @@ export function leadPayload(f: LeadFormData) {
     nextFollowUpOn: orNull(f.nextFollowUpOn),
     notes: orNull(f.notes),
     lostReason: orNull(f.lostReason),
+    unitTypes: f.unitTypes,
   };
 }
 
@@ -106,8 +110,9 @@ export function LeadForm({
   const [error, setError] = useState<string | null>(null);
   const owners = useOwners();
 
-  const set = (key: keyof LeadFormData) => (value: string) => setForm((prev) => ({ ...prev, [key]: value }));
-  const text = (key: keyof LeadFormData) => ({
+  type TextKey = Exclude<keyof LeadFormData, "unitTypes">;
+  const set = (key: TextKey) => (value: string) => setForm((prev) => ({ ...prev, [key]: value }));
+  const text = (key: TextKey) => ({
     value: form[key],
     onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => set(key)(e.target.value),
   });
@@ -241,6 +246,14 @@ export function LeadForm({
           <Textarea id="lead-notes" rows={3} {...text("notes")} />
           <p className="text-muted-foreground text-xs">Rutas que mueve, volumen, con quién trabaja hoy…</p>
         </div>
+      </FormSection>
+
+      <FormSection icon={Truck} title="Tipos de unidad" description="Qué unidades necesita mover. Puedes elegir varias.">
+        <p id="lead-unit-types" className="sr-only">
+          Tipos de unidad
+        </p>
+        <UnitTypePicker labelledBy="lead-unit-types" value={form.unitTypes} onChange={(unitTypes) => setForm((prev) => ({ ...prev, unitTypes }))} />
+        <p className="text-muted-foreground mt-2 text-xs">Salen del catálogo de Tipos de unidades.</p>
       </FormSection>
 
       {error && <p className="text-destructive text-sm font-medium">{error}</p>}

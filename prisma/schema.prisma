@@ -1463,6 +1463,8 @@ model ClientLead {
   /// Próximo seguimiento: qué toca hacer y cuándo.
   nextAction       String?           @map("next_action")
   nextFollowUpOn   DateTime?         @db.Date @map("next_follow_up_on")
+  /// Tipos de unidad que necesita (valores del catálogo de tipos de unidad).
+  unitTypes        String[]          @default([]) @map("unit_types")
   ownerId          String?           @map("owner_id")
   owner            User?             @relation("ClientLeadOwner", fields: [ownerId], references: [id], onDelete: SetNull)
   /// Cliente del catálogo en el que se convirtió (o al que corresponde).

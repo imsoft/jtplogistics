@@ -28,6 +28,7 @@ import {
   todayKey,
 } from "@/components/dashboard/crm/crm-ui";
 import type { LeadDetail } from "./lead-types";
+import { useUnitTypeNames } from "@/components/dashboard/crm/unit-type-picker";
 
 /**
  * Ficha de un prospecto de cliente en el panel lateral. Mismo orden que la de
@@ -57,6 +58,7 @@ export function LeadSheet({
   onConvertingChange: (v: boolean) => void;
 }) {
   const { data: session } = useSession();
+  const unitTypeNames = useUnitTypeNames();
   const panelBase = basePath.replace(/\/client-leads$/, "");
   const clientsEndpoint = panelBase.startsWith("/admin") ? "/api/admin/clients" : "/api/collaborator/clients";
   const [loaded, setLoaded] = useState<{ id: string; lead: LeadDetail | null } | null>(null);
@@ -175,6 +177,7 @@ export function LeadSheet({
                   <SheetRow label="Responsable">{lead.ownerName ?? "Sin responsable"}</SheetRow>
                   <SheetRow label="Cómo llegó">{lead.source ? LEAD_SOURCE_LABELS[lead.source as LeadSource] : null}</SheetRow>
                   <SheetRow label="Venta mensual">{lead.estimatedMonthly != null ? `$${formatMxn(lead.estimatedMonthly)}` : null}</SheetRow>
+                  <SheetRow label="Tipos de unidad">{lead.unitTypes.length > 0 ? unitTypeNames(lead.unitTypes) : null}</SheetRow>
                   <SheetRow label="Ciudad">{lead.city}</SheetRow>
                   <SheetRow label="Giro">{lead.industry}</SheetRow>
                   <SheetRow label="RFC">{lead.rfc}</SheetRow>

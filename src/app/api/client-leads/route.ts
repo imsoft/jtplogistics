@@ -4,7 +4,7 @@ import { logAudit } from "@/lib/audit-log";
 import { requireModuleAccess } from "@/lib/module-access";
 import { companyDateKey } from "@/lib/time-clock";
 import { LEAD_STAGE_LABELS, isLeadStage, requiresLostReason, type LeadStage } from "@/lib/client-leads";
-import { LEADS_MODULE, LEAD_INCLUDE, isValidOwner, leadRfcError, leadToJson, readLeadBody } from "@/lib/client-leads-server";
+import { LEADS_MODULE, LEAD_INCLUDE, isValidOwner, leadRfcError, leadToJson, readLeadBody, validUnitTypes } from "@/lib/client-leads-server";
 
 const SEARCH_FIELDS = ["companyName", "contactName", "phone", "email", "city", "industry", "rfc", "address", "notes"] as const;
 
@@ -77,6 +77,7 @@ export async function POST(request: Request) {
         nextAction: data.nextAction ?? null,
         nextFollowUpOn: data.nextFollowUpOn ?? null,
         estimatedMonthly: data.estimatedMonthly ?? null,
+        unitTypes: (await validUnitTypes(data.unitTypes)) ?? [],
         ...(data.source ? { source: data.source as never } : {}),
         stage,
         ownerId,
