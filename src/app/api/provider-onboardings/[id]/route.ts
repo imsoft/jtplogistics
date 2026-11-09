@@ -6,6 +6,7 @@ import { sendOnboardingAlert } from "@/lib/provider-onboarding-alerts-server";
 import {
   CONTRACT_STATUS_LABELS,
   ONBOARDING_DOCS,
+  URGENCY_LABELS,
   completedOnAfterChange,
   validateHold,
   type DocRecord,
@@ -42,7 +43,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (!current) return Response.json({ error: "No encontrado" }, { status: 404 });
 
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
-    const { texts, dates, docs, contractStatus, prospectId, email, rfc } = readOnboardingBody(body);
+    const { texts, dates, docs, contractStatus, prospectId, email, rfc, urgency } = readOnboardingBody(body);
 
     if (texts.legalName === null) return Response.json({ error: "La razón social no puede quedar vacía." }, { status: 400 });
     if (texts.commercialName === null) return Response.json({ error: "El nombre comercial no puede quedar vacío." }, { status: 400 });
@@ -88,6 +89,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         completedOn: completedOn ? new Date(`${completedOn}T00:00:00.000Z`) : null,
         ...(texts.altaAuthorizedBy !== undefined && { altaAuthorizedBy: texts.altaAuthorizedBy }),
         ...(contractStatus !== undefined && { contractStatus }),
+        ...(urgency !== undefined && { urgency }),
         ...(dates.legalRequestedOn !== undefined && { legalRequestedOn: dates.legalRequestedOn }),
         ...(dates.legalReceivedOn !== undefined && { legalReceivedOn: dates.legalReceivedOn }),
         ...(dates.sentToProviderOn !== undefined && { sentToProviderOn: dates.sentToProviderOn }),
@@ -108,6 +110,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (contractStatus && contractStatus !== current.contractStatus) {
       void sendOnboardingAlert({ kind: "contract", onboardingId: id, name: alertName, contractLabel: CONTRACT_STATUS_LABELS[contractStatus] }, session.user);
       changes.push({ field: "contractStatus", label: "Contrato", from: CONTRACT_STATUS_LABELS[current.contractStatus], to: CONTRACT_STATUS_LABELS[contractStatus] });
+    }
+    if (urgency && urgency !== current.urgency) {
+      changes.push({ field: "urgency", label: "Urgencia", from: URGENCY_LABELS[current.urgency], to: URGENCY_LABELS[urgency] });
+      if (urgency === "urgente") void sendOnboardingAlert({ kind: "urgent", onboardingId: id, name: alertName }, session.user);
     }
     if (onHold !== Boolean(current.onHoldSince)) {
       changes.push({ field: "onHold", label: "Detenido", from: current.onHoldSince ? "sí" : "no", to: onHold ? `sí: ${holdReason.trim()}` : "no" });

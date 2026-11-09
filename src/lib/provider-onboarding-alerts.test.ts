@@ -17,4 +17,9 @@ describe("avisos de alta de proveedores", () => {
     expect(onboardingAlertHref("collaborator", { kind: "created", onboardingId: "o1", name: "X" })).toBe("/collaborator/dashboard/provider-onboardings/o1/edit");
     expect(onboardingAlertHref("admin", { kind: "prospect_ready", prospectId: "p", name: "X", status: "listo" })).toBe("/admin/dashboard/provider-onboardings");
   });
+  it("avisa cuando un alta se marca urgente", () => {
+    const t = onboardingAlertText({ kind: "urgent", onboardingId: "o1", name: "Delta" }, "Liz");
+    expect(t.title).toBe("Alta urgente: Delta");
+    expect(t.body).toContain("Liz");
+  });
 });

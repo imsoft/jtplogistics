@@ -19,6 +19,7 @@ import {
   docProgress,
   type DocRecord,
   type DocStatus,
+  URGENCIES,
 } from "@/lib/provider-onboardings";
 import {
   isValidOnboardingEmail,
@@ -38,6 +39,7 @@ export interface OnboardingFormData {
   docs: DocRecord;
   completedOn: string;
   altaAuthorizedBy: string;
+  urgency: string;
   contractStatus: string;
   legalRequestedOn: string;
   legalReceivedOn: string;
@@ -61,6 +63,7 @@ export function emptyOnboardingForm(today: string): OnboardingFormData {
     docs: Object.fromEntries(ONBOARDING_DOCS.map((d) => [d.key, "pending"])) as DocRecord,
     completedOn: "",
     altaAuthorizedBy: "",
+    urgency: "media",
     contractStatus: "not_requested",
     legalRequestedOn: "",
     legalReceivedOn: "",
@@ -139,6 +142,16 @@ export function OnboardingForm({
               <RequiredText>Fecha de inicio del alta</RequiredText>
             </Label>
             <DatePicker id="ob-start" required value={form.startedOn as string} onChange={(v) => set("startedOn")(v as never)} />
+          </div>
+          <div className="space-y-2">
+            <Label>Urgencia</Label>
+            <AppSelect
+              value={form.urgency}
+              onValueChange={(v) => set("urgency")((v || "media") as never)}
+              options={URGENCIES.map((u) => ({ value: u.value, label: u.label }))}
+              className="w-full"
+            />
+            <p className="text-muted-foreground text-xs">Al marcarla urgente se avisa a quien da seguimiento a las altas.</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="ob-email">Correo</Label>

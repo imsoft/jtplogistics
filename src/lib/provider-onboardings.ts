@@ -25,6 +25,26 @@ export const ONBOARDING_DOCS = [
 export type DocKey = (typeof ONBOARDING_DOCS)[number]["key"];
 export type DocRecord = Record<DocKey, DocStatus>;
 
+/** Urgencia del alta, de menor a mayor. */
+export const URGENCIES = [
+  { value: "baja", label: "Baja", badgeClass: "bg-gray-100 text-gray-800" },
+  { value: "media", label: "Media", badgeClass: "bg-blue-100 text-blue-800" },
+  { value: "alta", label: "Alta", badgeClass: "bg-amber-100 text-amber-900" },
+  { value: "urgente", label: "Urgente", badgeClass: "bg-red-100 text-red-800" },
+] as const;
+export type Urgency = (typeof URGENCIES)[number]["value"];
+export const URGENCY_VALUES = URGENCIES.map((u) => u.value) as readonly string[];
+export const URGENCY_LABELS = Object.fromEntries(URGENCIES.map((u) => [u.value, u.label])) as Record<Urgency, string>;
+
+export function isUrgency(v: unknown): v is Urgency {
+  return typeof v === "string" && URGENCY_VALUES.includes(v);
+}
+
+/** Para ordenar: las más urgentes primero (urgente = 3 … baja = 0). */
+export function urgencyRank(u: Urgency): number {
+  return URGENCY_VALUES.indexOf(u);
+}
+
 export const CONTRACT_STATUSES = [
   { value: "not_requested", label: "Sin solicitar", badgeClass: "bg-gray-100 text-gray-800" },
   { value: "requested_legal", label: "Solicitado a jurídico", badgeClass: "bg-amber-100 text-amber-900" },

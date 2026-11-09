@@ -1347,6 +1347,14 @@ enum OnboardingDocStatus {
 
 /// En qué va el contrato. Son los textos que Finanzas usa en su columna de
 /// comentarios, ya como estado.
+/// Qué tan urgente es dar de alta al proveedor.
+enum OnboardingUrgency {
+  baja
+  media
+  alta
+  urgente
+}
+
 enum ContractStatus {
   not_requested
   requested_legal
@@ -1384,6 +1392,7 @@ model ProviderOnboarding {
   completedOn       DateTime? @db.Date @map("completed_on")
   altaAuthorizedBy  String?   @map("alta_authorized_by")
 
+  urgency              OnboardingUrgency @default(media) @map("urgency")
   contractStatus       ContractStatus @default(not_requested) @map("contract_status")
   legalRequestedOn     DateTime? @db.Date @map("legal_requested_on")
   legalReceivedOn      DateTime? @db.Date @map("legal_received_on")

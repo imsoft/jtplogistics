@@ -10,6 +10,8 @@ import {
   completedOnAfterChange,
   isContractStatus,
   isDocStatus,
+  isUrgency,
+  URGENCY_LABELS,
   validateHold,
   type DocRecord,
 } from "@/lib/provider-onboardings";
@@ -64,6 +66,7 @@ export function onboardingToJson(o: Row) {
     docs,
     completedOn: day(o.completedOn),
     altaAuthorizedBy: o.altaAuthorizedBy,
+    urgency: o.urgency,
     contractStatus: o.contractStatus,
     legalRequestedOn: day(o.legalRequestedOn),
     legalReceivedOn: day(o.legalReceivedOn),
@@ -106,6 +109,7 @@ export function readOnboardingBody(body: Record<string, unknown>) {
     dates: Object.fromEntries(DATE_FIELDS.map((k) => [k, date(k)])) as Record<DateField, Date | null | undefined>,
     docs,
     contractStatus: isContractStatus(body.contractStatus) ? body.contractStatus : undefined,
+    urgency: isUrgency(body.urgency) ? body.urgency : undefined,
     prospectId: typeof body.prospectId === "string" && body.prospectId ? body.prospectId : body.prospectId === null ? null : undefined,
   };
 }
@@ -138,7 +142,7 @@ export async function POST(request: Request) {
   try {
     const session = await requireModuleAccess(MODULE, "create");
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
-    const { texts, dates, docs, contractStatus, prospectId, email, rfc } = readOnboardingBody(body);
+    const { texts, dates, docs, contractStatus, prospectId, email, rfc, urgency } = readOnboardingBody(body);
 
     if (!texts.legalName) return Response.json({ error: "Escribe la razón social." }, { status: 400 });
     if (!texts.commercialName) return Response.json({ error: "Escribe el nombre comercial." }, { status: 400 });
@@ -169,6 +173,7 @@ export async function POST(request: Request) {
         completedOn: completedOn ? new Date(`${completedOn}T00:00:00.000Z`) : null,
         altaAuthorizedBy: texts.altaAuthorizedBy ?? null,
         contractStatus: contractStatus ?? "not_requested",
+        urgency: urgency ?? "media",
         legalRequestedOn: dates.legalRequestedOn ?? null,
         legalReceivedOn: dates.legalReceivedOn ?? null,
         sentToProviderOn: dates.sentToProviderOn ?? null,
@@ -190,6 +195,9 @@ export async function POST(request: Request) {
     void sendOnboardingAlert({ kind: "created", onboardingId: created.id, name: texts.commercialName }, session.user);
     if (completedOn) {
       void sendOnboardingAlert({ kind: "completed", onboardingId: created.id, name: texts.commercialName }, session.user);
+    }
+    if (urgency === "urgente") {
+      void sendOnboardingAlert({ kind: "urgent", onboardingId: created.id, name: texts.commercialName }, session.user);
     }
 
     void logAudit({
@@ -215,4 +223,4 @@ export async function POST(request: Request) {
   }
 }
 
-export { CONTRACT_STATUS_LABELS };
+export { CONTRACT_STATUS_LABELS, URGENCY_LABELS };

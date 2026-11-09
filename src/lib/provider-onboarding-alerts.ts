@@ -11,7 +11,8 @@ export type OnboardingAlert =
   | { kind: "prospect_ready"; prospectId: string; name: string; status: "en_alta" | "listo" }
   | { kind: "created"; onboardingId: string; name: string }
   | { kind: "completed"; onboardingId: string; name: string }
-  | { kind: "contract"; onboardingId: string; name: string; contractLabel: string };
+  | { kind: "contract"; onboardingId: string; name: string; contractLabel: string }
+  | { kind: "urgent"; onboardingId: string; name: string };
 
 export function onboardingAlertText(a: OnboardingAlert, actorName: string): { subject: string; title: string; body: string } {
   const who = actorName.trim() || "Alguien";
@@ -28,6 +29,8 @@ export function onboardingAlertText(a: OnboardingAlert, actorName: string): { su
       return { subject: `Alta completa: ${a.name}`, title: `Alta completa: ${a.name}`, body: "Ya no tiene documentos pendientes en el expediente." };
     case "contract":
       return { subject: `Contrato de ${a.name}: ${a.contractLabel}`, title: `Contrato de ${a.name}`, body: `${who} lo cambió a "${a.contractLabel}".` };
+    case "urgent":
+      return { subject: `Alta urgente: ${a.name}`, title: `Alta urgente: ${a.name}`, body: `${who} marcó esta alta como urgente. Conviene darle prioridad.` };
   }
 }
 

@@ -22,6 +22,8 @@ import {
   onboardingStage,
   type ContractStatus,
   type DocRecord,
+  URGENCY_LABELS,
+  type Urgency,
 } from "@/lib/provider-onboardings";
 import { providerProfileHref } from "@/lib/provider-onboarding-account";
 import {
@@ -86,6 +88,7 @@ interface OnboardingData {
   docs: DocRecord;
   completedOn: string | null;
   altaAuthorizedBy: string | null;
+  urgency: Urgency;
   contractStatus: ContractStatus;
   contractAuthorizedBy: string | null;
   notes: string | null;
@@ -182,6 +185,11 @@ export function ProviderSheet({
           {stage && (
             <Badge variant="outline" className={cn("border-0", STAGE_TONE[stage])}>
               Alta: {STAGE_LABELS[stage]}
+            </Badge>
+          )}
+          {o?.urgency === "urgente" && (
+            <Badge variant="outline" className="border-0 bg-red-100 text-red-800">
+              Urgente
             </Badge>
           )}
         </>
@@ -284,6 +292,9 @@ export function ProviderSheet({
           {o && progress && (
             <SheetSection title="Alta">
               <SheetRows>
+                <SheetRow label="Urgencia">
+                  <span className={cn(o.urgency === "urgente" && "text-destructive", o.urgency === "alta" && "text-amber-700")}>{URGENCY_LABELS[o.urgency]}</span>
+                </SheetRow>
                 <SheetRow label="Inicio">{shortDay(o.startedOn)}</SheetRow>
                 <SheetRow label="Expediente">
                   {progress.done} de {progress.total}

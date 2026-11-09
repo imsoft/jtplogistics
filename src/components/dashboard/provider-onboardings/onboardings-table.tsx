@@ -49,6 +49,9 @@ import {
   type DocRecord,
   type DocStatus,
   type OnboardingStage,
+  URGENCIES,
+  urgencyRank,
+  type Urgency,
 } from "@/lib/provider-onboardings";
 import { ExportableTable } from "@/components/dashboard/export/exportable-table";
 import { ProviderSheet, isRowClick, type ProviderSheetTarget } from "@/components/dashboard/prospects/provider-sheet";
@@ -66,6 +69,7 @@ export interface OnboardingRow {
   docs: DocRecord;
   completedOn: string | null;
   altaAuthorizedBy: string | null;
+  urgency: Urgency;
   contractStatus: ContractStatus;
   legalRequestedOn: string | null;
   legalReceivedOn: string | null;
@@ -79,6 +83,12 @@ export interface OnboardingRow {
 }
 
 const CONTRACT_BY_VALUE = Object.fromEntries(CONTRACT_STATUSES.map((c) => [c.value, c]));
+const URGENCY_BY_VALUE = Object.fromEntries(URGENCIES.map((u) => [u.value, u]));
+
+function UrgencyBadge({ urgency }: { urgency: Urgency }) {
+  const u = URGENCY_BY_VALUE[urgency] ?? URGENCY_BY_VALUE.media;
+  return <Badge variant="outline" className={cn("border-0 whitespace-nowrap", u.badgeClass)}>{u.label}</Badge>;
+}
 
 const STAGE_TONE: Record<OnboardingStage, string> = {
   in_progress: "bg-blue-100 text-blue-800",
@@ -171,6 +181,8 @@ export function OnboardingsTable({
   const [search, setSearch] = useState("");
   const [stage, setStage] = useState<OnboardingStage | "all">("all");
   const [contract, setContract] = useState<ContractStatus | "all">("all");
+  const [urgencyFilter, setUrgencyFilter] = useState<Urgency | "all">("all");
+  const [sortBy, setSortBy] = useState<"urgency" | "started">("urgency");
   const [holding, setHolding] = useState<OnboardingRow | null>(null);
   const [holdReason, setHoldReason] = useState("");
   const [deleting, setDeleting] = useState<OnboardingRow | null>(null);
@@ -198,14 +210,19 @@ export function OnboardingsTable({
 
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return (rows ?? []).filter((r) => {
+    const list = (rows ?? []).filter((r) => {
       if (stage !== "all" && onboardingStage(r) !== stage) return false;
       if (contract !== "all" && r.contractStatus !== contract) return false;
+      if (urgencyFilter !== "all" && r.urgency !== urgencyFilter) return false;
       if (!q) return true;
       return [r.legalName, r.commercialName, r.email, r.rfc, r.altaAuthorizedBy, r.contractAuthorizedBy, r.notes, r.purchasingNotes]
         .some((v) => (v ?? "").toLowerCase().includes(q));
     });
-  }, [rows, search, stage, contract]);
+    // Las más urgentes arriba; a igual urgencia, la más reciente primero.
+    return sortBy === "urgency"
+      ? [...list].sort((a, b) => urgencyRank(b.urgency) - urgencyRank(a.urgency) || b.startedOn.localeCompare(a.startedOn))
+      : list;
+  }, [rows, search, stage, contract, urgencyFilter, sortBy]);
 
   async function patch(id: string, body: Record<string, unknown>) {
     const res = await fetch(`/api/provider-onboardings/${id}`, {
@@ -252,6 +269,11 @@ export function OnboardingsTable({
   function setDoc(row: OnboardingRow, key: DocKey, status: DocStatus) {
     const docs = { ...row.docs, [key]: status };
     void quick(row, { docs }, { docs: { [key]: status } }, "Expediente actualizado.");
+  }
+
+  function setUrgency(row: OnboardingRow, urgency: Urgency) {
+    if (urgency === row.urgency) return;
+    void quick(row, { urgency }, { urgency }, "Urgencia actualizada.");
   }
 
   function setContractStatus(row: OnboardingRow, status: ContractStatus) {
@@ -341,7 +363,7 @@ export function OnboardingsTable({
       )}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-        <div className="w-full space-y-1.5 sm:max-w-xs">
+        <div className="w-full space-y-1.5 sm:max-w-56">
           <Label htmlFor="onboarding-search" className="text-muted-foreground text-xs">Buscar</Label>
           <Input id="onboarding-search" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
@@ -349,12 +371,36 @@ export function OnboardingsTable({
           <Label className="text-muted-foreground text-xs">Alta</Label>
           <AppSelect value={stage} onValueChange={(v) => setStage((v || "all") as OnboardingStage | "all")} options={stageOptions} className="w-full" />
         </div>
-        <div className="w-full space-y-1.5 sm:w-72">
+        <div className="w-full space-y-1.5 sm:w-64">
           <Label className="text-muted-foreground text-xs">Contrato</Label>
           <AppSelect
             value={contract}
             onValueChange={(v) => setContract((v || "all") as ContractStatus | "all")}
             options={[{ value: "all", label: "Todos los contratos" }, ...CONTRACT_STATUSES.map((c) => ({ value: c.value, label: c.label }))]}
+            className="w-full"
+          />
+        </div>
+        <div className="w-full space-y-1.5 sm:w-44">
+          <Label className="text-muted-foreground text-xs">Urgencia</Label>
+          <AppSelect
+            value={urgencyFilter}
+            onValueChange={(v) => setUrgencyFilter((v || "all") as Urgency | "all")}
+            options={[
+              { value: "all", label: "Todas" },
+              ...[...URGENCIES].reverse().map((u) => ({ value: u.value, label: `${u.label} (${(rows ?? []).filter((r) => r.urgency === u.value).length})` })),
+            ]}
+            className="w-full"
+          />
+        </div>
+        <div className="w-full space-y-1.5 sm:w-48">
+          <Label className="text-muted-foreground text-xs">Ordenar por</Label>
+          <AppSelect
+            value={sortBy}
+            onValueChange={(v) => setSortBy((v || "urgency") as "urgency" | "started")}
+            options={[
+              { value: "urgency", label: "Urgencia" },
+              { value: "started", label: "Fecha de inicio" },
+            ]}
             className="w-full"
           />
         </div>
@@ -370,12 +416,13 @@ export function OnboardingsTable({
             <table className="w-full min-w-max text-xs font-medium tracking-wide md:min-w-0">
               <thead>
                 <tr className="bg-primary/[0.07] border-b">
-                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary">Proveedor</th>
-                  <th className="hidden px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary @3xl/table:table-cell">Inicio</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary">Expediente</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary">Alta</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary">Contrato</th>
-                  <th className="hidden px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary @6xl/table:table-cell">Autoriza</th>
+                  <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary">Proveedor</th>
+                  <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary">Urgencia</th>
+                  <th className="hidden px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary @5xl/table:table-cell">Inicio</th>
+                  <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary">Expediente</th>
+                  <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary">Alta</th>
+                  <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary">Contrato</th>
+                  <th className="hidden px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-primary @6xl/table:table-cell">Autoriza</th>
                   {(canEdit || canDelete) && <th className="w-24 px-2 py-2" />}
                 </tr>
               </thead>
@@ -390,7 +437,7 @@ export function OnboardingsTable({
                       className={cn("hover:bg-muted/40 cursor-pointer border-b align-top last:border-0", st === "on_hold" && "bg-gray-50 dark:bg-gray-900/40")}
                       onClick={(e) => isRowClick(e) && setViewing({ prospectId: r.prospectId, onboardingId: r.id, name: r.commercialName })}
                     >
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-3">
                         <button
                           type="button"
                           className="block max-w-52 truncate text-left font-semibold hover:underline min-[1440px]:max-w-64"
@@ -413,9 +460,29 @@ export function OnboardingsTable({
                           </Link>
                         )}
                       </td>
-                      <td className="text-muted-foreground hidden whitespace-nowrap px-4 py-3 @3xl/table:table-cell">{shortDate(r.startedOn)}</td>
+                      <td className="px-3 py-3" data-export={URGENCY_BY_VALUE[r.urgency]?.label}>
+                        {canEdit ? (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger
+                              aria-label={`Urgencia de ${r.commercialName}`}
+                              className="inline-flex items-center gap-1 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                              <UrgencyBadge urgency={r.urgency} />
+                              <ChevronDown className="text-muted-foreground size-3 shrink-0" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start">
+                              {[...URGENCIES].reverse().map((u) => (
+                                <DropdownMenuItem key={u.value} onClick={() => setUrgency(r, u.value)}>{u.label}</DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        ) : (
+                          <UrgencyBadge urgency={r.urgency} />
+                        )}
+                      </td>
+                      <td className="text-muted-foreground hidden whitespace-nowrap px-3 py-3 @5xl/table:table-cell">{shortDate(r.startedOn)}</td>
                       <td
-                        className="px-4 py-3"
+                        className="px-3 py-3"
                         data-export={[
                           `${progress.done} de ${progress.total}`,
                           ...(() => {
@@ -431,11 +498,11 @@ export function OnboardingsTable({
                         </div>
                         <span className="text-muted-foreground mt-1 block text-xs">{progress.done} de {progress.total}</span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-3">
                         <Badge variant="outline" className={cn("border-0 whitespace-nowrap", STAGE_TONE[st])}>{STAGE_LABELS[st]}</Badge>
                         {r.completedOn && <span className="text-muted-foreground mt-1 block text-xs">{shortDate(r.completedOn)}</span>}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-3">
                         {canEdit ? (
                           <DropdownMenu>
                             <DropdownMenuTrigger className="inline-flex max-w-56 items-center gap-1 rounded-full text-left outline-none focus-visible:ring-2 focus-visible:ring-ring">
@@ -453,7 +520,7 @@ export function OnboardingsTable({
                         )}
                         {r.signedReceivedOn && <span className="text-muted-foreground mt-1 block text-xs">Firmado {shortDate(r.signedReceivedOn)}</span>}
                       </td>
-                      <td className="text-muted-foreground hidden px-4 py-3 text-xs @6xl/table:table-cell">
+                      <td className="text-muted-foreground hidden px-3 py-3 text-xs @6xl/table:table-cell">
                         {r.altaAuthorizedBy && <span className="block">Alta: {r.altaAuthorizedBy}</span>}
                         {r.contractAuthorizedBy && <span className="block">Contrato: {r.contractAuthorizedBy}</span>}
                         {!r.altaAuthorizedBy && !r.contractAuthorizedBy && "—"}

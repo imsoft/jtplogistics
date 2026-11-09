@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
+  isUrgency,
+  urgencyRank,
   CONTRACT_STATUSES,
   ONBOARDING_DOCS,
   completedOnAfterChange,
@@ -79,5 +81,14 @@ describe("nombre comparable del proveedor", () => {
     expect(providerNameKey("Transportes García y Mirafuentes")).toBe(providerNameKey("TRANSPORTES GARCIA Y MIRAFUENTES"));
     expect(providerNameKey("Telo")).not.toBe(providerNameKey("Logistica Sotelo"));
     expect(providerNameKey(null)).toBe("");
+  });
+});
+
+describe("urgencia del alta", () => {
+  it("ordena de menor a mayor y reconoce los valores", () => {
+    expect(urgencyRank("urgente")).toBeGreaterThan(urgencyRank("alta"));
+    expect(urgencyRank("baja")).toBe(0);
+    expect(isUrgency("media")).toBe(true);
+    expect(isUrgency("critica")).toBe(false);
   });
 });
