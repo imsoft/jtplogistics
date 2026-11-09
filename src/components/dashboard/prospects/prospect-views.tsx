@@ -24,6 +24,9 @@ interface Prospect {
   contactedOn: string | null;
   notes: string | null;
   discardReason: string | null;
+  ownerId: string | null;
+  nextFollowUpOn: string | null;
+  nextAction: string | null;
 }
 
 function toFormData(p: Prospect): ProspectFormData {
@@ -41,6 +44,9 @@ function toFormData(p: Prospect): ProspectFormData {
     contactedOn: p.contactedOn ?? "",
     notes: p.notes ?? "",
     discardReason: p.discardReason ?? "",
+    ownerId: p.ownerId ?? "",
+    nextFollowUpOn: p.nextFollowUpOn ?? "",
+    nextAction: p.nextAction ?? "",
   };
 }
 

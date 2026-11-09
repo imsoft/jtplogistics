@@ -6,6 +6,8 @@
  * el del embudo; perdido va al final porque no es un avance, es una salida.
  */
 
+import { followUpStateFor } from "./crm";
+
 export type LeadStage = "prospecto" | "contactado" | "cotizado" | "negociacion" | "ganado" | "perdido";
 export type LeadSource =
   | "referido"
@@ -76,20 +78,9 @@ export function isOpenStage(stage: LeadStage): boolean {
   return stage !== "ganado" && stage !== "perdido";
 }
 
-export type FollowUpState = "vencido" | "hoy" | "proximo";
+export type { FollowUpState } from "./crm";
 
-/**
- * Cómo va el próximo seguimiento respecto a hoy. Las dos fechas son
- * "YYYY-MM-DD" en la zona de la empresa; un prospecto cerrado no tiene
- * seguimiento pendiente aunque conserve la fecha.
- */
-export function followUpState(
-  nextFollowUpOn: string | null,
-  todayKey: string,
-  stage: LeadStage
-): FollowUpState | null {
-  if (!nextFollowUpOn || !isOpenStage(stage)) return null;
-  if (nextFollowUpOn < todayKey) return "vencido";
-  if (nextFollowUpOn === todayKey) return "hoy";
-  return "proximo";
+/** Cómo va el próximo seguimiento de un prospecto de cliente (ver crm.ts). */
+export function followUpState(nextFollowUpOn: string | null, todayKey: string, stage: LeadStage) {
+  return followUpStateFor(nextFollowUpOn, todayKey, isOpenStage(stage));
 }

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
 import { requireProspectAccess } from "@/lib/prospect-auth";
 import { alertProspectReady } from "@/lib/provider-onboarding-alerts-server";
+import { isValidOwner, readDate } from "@/lib/client-leads-server";
 import {
   PROSPECT_COVERAGE_VALUES,
   PROSPECT_SOURCE_VALUES,
@@ -14,25 +15,24 @@ import {
 
 const SEARCH_FIELDS = ["commercialName", "contactName", "phone", "email", "legalName", "city", "notes"] as const;
 
-export function prospectToJson(p: {
-  id: string;
-  commercialName: string;
-  contactName: string | null;
-  phone: string | null;
-  email: string | null;
-  website: string | null;
-  source: string | null;
-  coverage: string | null;
-  status: string;
-  legalName: string | null;
-  city: string | null;
-  contactedOn: Date | null;
-  notes: string | null;
-  discardReason: string | null;
-  createdAt: Date;
-  createdBy?: { name: string } | null;
-  onboarding?: { id: string } | null;
-}) {
+/** Lo que se carga con cada prospecto: autor, responsable, alta y última actividad. */
+export const PROSPECT_INCLUDE = {
+  createdBy: { select: { name: true } },
+  owner: { select: { id: true, name: true } },
+  onboarding: { select: { id: true } },
+  activities: {
+    orderBy: [{ occurredOn: "desc" }, { createdAt: "desc" }],
+    take: 1,
+    select: { type: true, occurredOn: true, summary: true },
+  },
+} satisfies Prisma.ProviderProspectInclude;
+
+type ProspectRow = Prisma.ProviderProspectGetPayload<{ include: typeof PROSPECT_INCLUDE }>;
+
+const day = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : null);
+
+export function prospectToJson(p: ProspectRow) {
+  const last = p.activities[0];
   return {
     id: p.id,
     commercialName: p.commercialName,
@@ -45,13 +45,19 @@ export function prospectToJson(p: {
     status: p.status,
     legalName: p.legalName,
     city: p.city,
-    contactedOn: p.contactedOn ? p.contactedOn.toISOString().slice(0, 10) : null,
+    contactedOn: day(p.contactedOn),
     notes: p.notes,
     discardReason: p.discardReason,
+    nextAction: p.nextAction,
+    nextFollowUpOn: day(p.nextFollowUpOn),
+    ownerId: p.ownerId,
+    ownerName: p.owner?.name ?? null,
     createdAt: p.createdAt.toISOString(),
+    updatedAt: p.updatedAt.toISOString(),
     createdByName: p.createdBy?.name ?? null,
     // Para no ofrecer "Iniciar alta" a quien ya tiene una.
     onboardingId: p.onboarding?.id ?? null,
+    lastActivity: last ? { type: last.type, occurredOn: day(last.occurredOn)!, summary: last.summary } : null,
   };
 }
 
@@ -78,6 +84,9 @@ export function readProspectBody(body: Record<string, unknown>) {
     source: enumValue("source", PROSPECT_SOURCE_VALUES),
     coverage: enumValue("coverage", PROSPECT_COVERAGE_VALUES),
     status: enumValue("status", PROSPECT_STATUS_VALUES),
+    nextAction: typeof body.nextAction === "string" ? body.nextAction.trim() || null : body.nextAction === null ? null : undefined,
+    nextFollowUpOn: readDate(body.nextFollowUpOn),
+    ownerId: typeof body.ownerId === "string" && body.ownerId ? body.ownerId : body.ownerId === null || body.ownerId === "" ? null : undefined,
     contactedOn:
       typeof body.contactedOn === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.contactedOn)
         ? new Date(`${body.contactedOn}T00:00:00.000Z`)
@@ -106,7 +115,7 @@ export async function GET(request: Request) {
     const prospects = await prisma.providerProspect.findMany({
       where,
       orderBy: { createdAt: "desc" },
-      include: { createdBy: { select: { name: true } }, onboarding: { select: { id: true } } },
+      include: PROSPECT_INCLUDE,
     });
 
     return Response.json(prospects.map(prospectToJson));
@@ -131,6 +140,12 @@ export async function POST(request: Request) {
       return Response.json({ error: "Escribe por qué se descarta." }, { status: 400 });
     }
 
+    // Sin responsable elegido, queda quien lo captura (igual que en clientes).
+    const ownerId = data.ownerId ?? session.user.id;
+    if (data.ownerId && !(await isValidOwner(data.ownerId))) {
+      return Response.json({ error: "El responsable no es válido." }, { status: 400 });
+    }
+
     const created = await prisma.providerProspect.create({
       data: {
         commercialName: data.commercialName,
@@ -143,6 +158,9 @@ export async function POST(request: Request) {
         notes: data.notes ?? null,
         discardReason: data.discardReason ?? null,
         contactedOn: data.contactedOn ?? null,
+        nextAction: data.nextAction ?? null,
+        nextFollowUpOn: data.nextFollowUpOn ?? null,
+        ownerId,
         ...(data.source ? { source: data.source as never } : {}),
         ...(data.coverage ? { coverage: data.coverage as never } : {}),
         ...(data.status ? { status: data.status as never } : {}),

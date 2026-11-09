@@ -1,6 +1,5 @@
 "use client";
 
-import { useParams } from "next/navigation";
 import { useResourceCreate } from "@/hooks/use-resource-create";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { ResourceNewPage } from "@/components/dashboard/resources/resource-new-page";
@@ -51,10 +50,9 @@ export function NewLeadView({ basePath }: { basePath: string }) {
 }
 
 export function EditLeadView({ basePath, canDelete = false }: { basePath: string; canDelete?: boolean }) {
-  const { id } = useParams<{ id: string }>();
   const { data, isLoaded, error, isSubmitting, handleSubmit, handleDelete } = useResourceEdit<Lead>({
     endpoint: ENDPOINT,
-    redirectHref: `${basePath}/${id}`,
+    redirectHref: basePath,
     deleteRedirectHref: basePath,
   });
 
@@ -65,8 +63,8 @@ export function EditLeadView({ basePath, canDelete = false }: { basePath: string
       <ResourceEditHeader
         title={data?.companyName ?? "Prospecto"}
         description="Editar el prospecto de cliente."
-        backHref={`${basePath}/${id}`}
-        backLabel="Volver a la ficha"
+        backHref={basePath}
+        backLabel="Volver a prospección de clientes"
         deleteTitle="¿Eliminar este prospecto?"
         deleteDescription="Se borra con todas sus actividades. Si no se cerró, mejor márcalo como perdido con su motivo."
         onDelete={handleDelete}
@@ -78,7 +76,7 @@ export function EditLeadView({ basePath, canDelete = false }: { basePath: string
           <LeadForm
             initialValues={toFormData(data)}
             submitLabel="Guardar cambios"
-            cancelHref={`${basePath}/${id}`}
+            cancelHref={basePath}
             onSubmit={handleSubmit}
             isSubmitting={isSubmitting}
           />

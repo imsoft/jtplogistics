@@ -80,3 +80,18 @@ export function prospectStatusForOnboarding(current: ProspectStatus, onboardingC
   if (current === "descartado") return current;
   return onboardingCompleted ? "listo" : "en_alta";
 }
+
+/** Listo y descartado cierran el seguimiento: ya no generan recordatorios. */
+export function isOpenProspectStatus(status: ProspectStatus): boolean {
+  return status !== "listo" && status !== "descartado";
+}
+
+/**
+ * Hasta dónde avanza la etapa una actividad, igual que en clientes: solo hacia
+ * adelante. Cualquier contacto saca de "pendiente de prospectar"; una nota no
+ * cuenta como contacto.
+ */
+export function prospectStatusAfterActivity(status: ProspectStatus, activityType: string): ProspectStatus {
+  if (activityType === "nota") return status;
+  return status === "pendiente" ? "prospectando" : status;
+}

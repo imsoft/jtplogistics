@@ -2,19 +2,33 @@ import { prisma } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
 import { requireProspectAccess } from "@/lib/prospect-auth";
 import { PROSPECT_STATUS_LABELS, requiresDiscardReason } from "@/lib/provider-prospects";
-import { prospectToJson, readProspectBody } from "../route";
+import { PROSPECT_INCLUDE, prospectToJson, readProspectBody } from "../route";
+import { isValidOwner } from "@/lib/client-leads-server";
 import { alertProspectReady } from "@/lib/provider-onboarding-alerts-server";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     await requireProspectAccess("view");
     const { id } = await params;
-    const p = await prisma.providerProspect.findUnique({
-      where: { id },
-      include: { createdBy: { select: { name: true } }, onboarding: { select: { id: true } } },
-    });
+    const p = await prisma.providerProspect.findUnique({ where: { id }, include: PROSPECT_INCLUDE });
     if (!p) return Response.json({ error: "No encontrado" }, { status: 404 });
-    return Response.json(prospectToJson(p));
+    const activities = await prisma.providerProspectActivity.findMany({
+      where: { prospectId: id },
+      orderBy: [{ occurredOn: "desc" }, { createdAt: "desc" }],
+      include: { author: { select: { name: true } } },
+    });
+    return Response.json({
+      ...prospectToJson(p),
+      activities: activities.map((a) => ({
+        id: a.id,
+        type: a.type,
+        summary: a.summary,
+        occurredOn: a.occurredOn.toISOString().slice(0, 10),
+        authorId: a.authorId,
+        authorName: a.author?.name ?? null,
+        createdAt: a.createdAt.toISOString(),
+      })),
+    });
   } catch (e) {
     if (e instanceof Response) return e;
     console.error("[provider-prospects/:id] GET", e);
@@ -48,6 +62,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       return Response.json({ error: "Escribe por qué se descarta." }, { status: 400 });
     }
 
+    if (data.ownerId && data.ownerId !== current.ownerId && !(await isValidOwner(data.ownerId))) {
+      return Response.json({ error: "El responsable no es válido." }, { status: 400 });
+    }
+
     const saved = await prisma.providerProspect.update({
       where: { id },
       data: {
@@ -64,7 +82,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         ...(data.source !== undefined && { source: data.source as never }),
         ...(data.coverage !== undefined && { coverage: data.coverage as never }),
         ...(data.status !== undefined && { status: data.status as never }),
+        ...(data.nextAction !== undefined && { nextAction: data.nextAction }),
+        ...(data.nextFollowUpOn !== undefined && { nextFollowUpOn: data.nextFollowUpOn }),
+        ...(data.ownerId !== undefined && { ownerId: data.ownerId }),
       },
+      include: { owner: { select: { name: true } } },
     });
 
     // Si ya tiene alta, los nombres se mantienen iguales en las dos pantallas.
@@ -76,7 +98,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       await prisma.providerOnboarding.updateMany({ where: { prospectId: id }, data: names });
     }
 
-    const changes =
+    const changes: { field: string; label: string; from: string | null; to: string | null }[] =
       data.status && data.status !== current.status
         ? [
             {
@@ -87,6 +109,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
             },
           ]
         : [];
+    if (saved.ownerId !== current.ownerId) {
+      changes.push({ field: "ownerId", label: "Responsable", from: null, to: saved.owner?.name ?? "Sin responsable" });
+    }
 
     // Listo para alta: avisar a quien abre los expedientes (Liz).
     void alertProspectReady(saved, current.status, session.user);

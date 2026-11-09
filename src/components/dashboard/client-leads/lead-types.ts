@@ -56,23 +56,3 @@ export interface LeadDetail extends Lead {
   quotes: LeadQuote[];
   canCreateClients: boolean;
 }
-
-/** "YYYY-MM-DD" → "22 oct 26", sin que la zona del navegador mueva el día. */
-export function shortDay(iso: string) {
-  return new Date(`${iso}T12:00:00Z`).toLocaleDateString("es-MX", {
-    day: "2-digit",
-    month: "short",
-    year: "2-digit",
-    timeZone: "UTC",
-  });
-}
-
-/** Hoy en la zona de la empresa, "YYYY-MM-DD". */
-export function todayKey() {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Mexico_City",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
-}

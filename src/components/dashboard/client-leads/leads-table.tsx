@@ -3,94 +3,39 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { ChevronDown, Loader2, Mail, Pencil, Phone, Trash2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { ChevronDown, Handshake, Mail, Pencil, Phone, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Skeleton } from "@/components/ui/skeleton";
-import { AppSelect } from "@/components/ui/app-select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useConfirm } from "@/components/ui/confirm-provider";
 import { cn, formatMxn, formatPhone } from "@/lib/utils";
 import { normalizeSearch } from "@/lib/search";
-import {
-  LEAD_ACTIVITY_LABELS,
-  LEAD_STAGES,
-  followUpState,
-  isOpenStage,
-  type LeadStage,
-} from "@/lib/client-leads";
-import { shortDay, todayKey, type Lead } from "./lead-types";
+import { isFollowUpDue } from "@/lib/crm";
+import { LEAD_STAGES, followUpState, isOpenStage, type LeadStage } from "@/lib/client-leads";
 import { ExportableTable } from "@/components/dashboard/export/exportable-table";
+import {
+  ALL_OWNERS,
+  CrmFilters,
+  CrmTableSkeleton,
+  FollowUpCell,
+  LastActivityCell,
+  ReasonDialog,
+  StageBadge,
+  SummaryCards,
+  isRowClick,
+  thClass,
+  todayKey,
+  useFichaParam,
+} from "@/components/dashboard/crm/crm-ui";
+import { LeadSheet } from "./lead-sheet";
+import type { Lead } from "./lead-types";
 
-const STAGE_BY_VALUE = Object.fromEntries(LEAD_STAGES.map((s) => [s.value, s]));
-
-export function StageBadge({ stage }: { stage: LeadStage }) {
-  const cfg = STAGE_BY_VALUE[stage];
-  return (
-    <Badge variant="outline" className={cn("border-0 whitespace-nowrap", cfg.badgeClass)}>
-      {cfg.label}
-    </Badge>
-  );
-}
-
-/** Próximo seguimiento con su estado en palabras, no solo en color. */
-export function FollowUpCell({ lead, today }: { lead: Pick<Lead, "nextFollowUpOn" | "nextAction" | "stage">; today: string }) {
-  const state = followUpState(lead.nextFollowUpOn, today, lead.stage);
-  if (!lead.nextFollowUpOn || !isOpenStage(lead.stage)) return <span className="text-muted-foreground">—</span>;
-  return (
-    <div className="space-y-0.5">
-      <span
-        className={cn(
-          "inline-flex items-center gap-1.5 whitespace-nowrap text-sm",
-          state === "vencido" && "text-destructive font-semibold",
-          state === "hoy" && "font-semibold text-amber-700"
-        )}
-      >
-        {shortDay(lead.nextFollowUpOn)}
-        {state === "vencido" && <span className="text-xs">· vencido</span>}
-        {state === "hoy" && <span className="text-xs">· hoy</span>}
-      </span>
-      {lead.nextAction && (
-        <span className="text-muted-foreground block max-w-56 truncate text-xs" title={lead.nextAction}>
-          {lead.nextAction}
-        </span>
-      )}
-    </div>
-  );
-}
-
-type Filter = LeadStage | "todos" | "pendientes";
+const PENDING = "pendientes";
+const ALL = "todos";
 
 /**
- * Prospección de clientes (antes "CRM"): las empresas a las que se les quiere vender, en qué etapa
- * va cada una y qué toca hacer. La etapa se cambia aquí mismo; marcar perdido
- * pide el motivo.
+ * Prospección de clientes: las empresas a las que se les quiere vender, en qué
+ * etapa va cada una y qué toca hacer. Funciona y se ve igual que Prospección
+ * de proveedores (mismas piezas en crm/crm-ui.tsx); solo cambia la información.
  */
 export function LeadsTable({
   basePath,
@@ -101,14 +46,14 @@ export function LeadsTable({
   canEdit?: boolean;
   canDelete?: boolean;
 }) {
+  const confirm = useConfirm();
   const [leads, setLeads] = useState<Lead[] | null>(null);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<Filter>("todos");
-  const [owner, setOwner] = useState("");
+  const [filter, setFilter] = useState<string>(ALL);
+  const [owner, setOwner] = useState(ALL_OWNERS);
   const [losing, setLosing] = useState<Lead | null>(null);
-  const [lostReason, setLostReason] = useState("");
-  const [deleting, setDeleting] = useState<Lead | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [viewing, setViewing] = useState<string | null>(null);
+  const [converting, setConverting] = useState(false);
   const today = todayKey();
 
   const load = useCallback(() => {
@@ -122,13 +67,15 @@ export function LeadsTable({
     load();
   }, [load]);
 
+  useFichaParam(setViewing);
+
   const owners = useMemo(() => {
     const map = new Map<string, string>();
     for (const l of leads ?? []) if (l.ownerId && l.ownerName) map.set(l.ownerId, l.ownerName);
     return [...map.entries()].sort((a, b) => a[1].localeCompare(b[1], "es")).map(([value, label]) => ({ value, label }));
   }, [leads]);
 
-  const byOwner = useMemo(() => (leads ?? []).filter((l) => !owner || l.ownerId === owner), [leads, owner]);
+  const byOwner = useMemo(() => (leads ?? []).filter((l) => owner === ALL_OWNERS || l.ownerId === owner), [leads, owner]);
 
   const summary = useMemo(() => {
     const counts = new Map<string, number>();
@@ -137,8 +84,7 @@ export function LeadsTable({
     let pipeline = 0;
     for (const l of byOwner) {
       counts.set(l.stage, (counts.get(l.stage) ?? 0) + 1);
-      const st = followUpState(l.nextFollowUpOn, today, l.stage);
-      if (st === "vencido" || st === "hoy") pending++;
+      if (isFollowUpDue(followUpState(l.nextFollowUpOn, today, l.stage))) pending++;
       if (isOpenStage(l.stage)) {
         open++;
         pipeline += l.estimatedMonthly ?? 0;
@@ -150,12 +96,11 @@ export function LeadsTable({
   const visible = useMemo(() => {
     const q = normalizeSearch(search);
     return byOwner.filter((l) => {
-      if (filter === "pendientes") {
-        const st = followUpState(l.nextFollowUpOn, today, l.stage);
-        if (st !== "vencido" && st !== "hoy") return false;
-      } else if (filter !== "todos" && l.stage !== filter) return false;
+      if (filter === PENDING) {
+        if (!isFollowUpDue(followUpState(l.nextFollowUpOn, today, l.stage))) return false;
+      } else if (filter !== ALL && l.stage !== filter) return false;
       if (!q) return true;
-      return [l.companyName, l.contactName, l.phone, l.email, l.city, l.industry, l.rfc, l.address, l.notes, l.ownerName]
+      return [l.companyName, l.contactName, l.phone, l.email, l.city, l.industry, l.rfc, l.address, l.notes, l.ownerName, l.nextAction]
         .some((v) => normalizeSearch(v ?? "").includes(q));
     });
   }, [byOwner, search, filter, today]);
@@ -175,11 +120,7 @@ export function LeadsTable({
   async function changeStage(l: Lead, stage: LeadStage) {
     if (stage === l.stage) return;
     // Perder no se aplica de inmediato: primero se pide el motivo.
-    if (stage === "perdido") {
-      setLostReason(l.lostReason ?? "");
-      setLosing(l);
-      return;
-    }
+    if (stage === "perdido") return setLosing(l);
     const prev = leads;
     setLeads((list) => list?.map((x) => (x.id === l.id ? { ...x, stage } : x)) ?? list);
     try {
@@ -191,23 +132,28 @@ export function LeadsTable({
     }
   }
 
-  async function confirmLost() {
-    if (!losing) return;
-    setBusy(true);
+  async function confirmLost(reason: string) {
+    if (!losing) return false;
     try {
-      await patch(losing.id, { stage: "perdido", lostReason: lostReason.trim() });
+      await patch(losing.id, { stage: "perdido", lostReason: reason });
       toast.success("Prospecto marcado como perdido.");
       setLosing(null);
       load();
+      return true;
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "No se pudo guardar.");
-    } finally {
-      setBusy(false);
+      return false;
     }
   }
 
   async function remove(l: Lead) {
-    setBusy(true);
+    const ok = await confirm({
+      title: `¿Eliminar ${l.companyName}?`,
+      description: "Se borra con todas sus actividades y no se puede deshacer. Si no se cerró, mejor márcalo como perdido con su motivo.",
+      confirmLabel: "Eliminar",
+      destructive: true,
+    });
+    if (!ok) return;
     try {
       const res = await fetch(`/api/client-leads/${l.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
@@ -215,87 +161,46 @@ export function LeadsTable({
       toast.success("Prospecto eliminado.");
     } catch {
       toast.error("No se pudo eliminar.");
-    } finally {
-      setBusy(false);
-      setDeleting(null);
     }
   }
 
-  if (leads === null) {
-    return (
-      <div className="space-y-3">
-        <div className="grid gap-3 sm:grid-cols-3">
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-20 w-full" />
-        </div>
-        <Skeleton className="h-10 w-full max-w-sm" />
-        <Skeleton className="h-12 w-full" />
-        <Skeleton className="h-12 w-full" />
-        <Skeleton className="h-12 w-full" />
-      </div>
-    );
-  }
+  const openSheet = (id: string, convert = false) => {
+    setConverting(convert);
+    setViewing(id);
+  };
 
-  const chip = (value: Filter, label: string, count: number) => (
-    <Button
-      key={value}
-      type="button"
-      variant={filter === value ? "secondary" : "outline"}
-      size="sm"
-      onClick={() => setFilter(value)}
-    >
-      {label} ({count})
-    </Button>
-  );
+  if (leads === null) return <CrmTableSkeleton />;
 
   return (
     <div className="min-w-0 space-y-4">
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Card className="py-0">
-          <CardContent className="p-4">
-            <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">Prospectos abiertos</p>
-            <p className="mt-1 text-2xl font-bold">{summary.open}</p>
-          </CardContent>
-        </Card>
-        <Card className="py-0">
-          <CardContent className="p-4">
-            <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">Venta mensual en juego</p>
-            <p className="mt-1 text-2xl font-bold">${formatMxn(summary.pipeline)}</p>
-            <p className="text-muted-foreground text-xs">Suma de lo estimado en los abiertos.</p>
-          </CardContent>
-        </Card>
-        <button
-          type="button"
-          onClick={() => setFilter("pendientes")}
-          className="text-left"
-          aria-label="Ver seguimientos pendientes"
-        >
-          <Card className={cn("h-full py-0 transition-colors hover:bg-muted/40", summary.pending > 0 && "border-destructive/40")}>
-            <CardContent className="p-4">
-              <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">Seguimientos para hoy o vencidos</p>
-              <p className={cn("mt-1 text-2xl font-bold", summary.pending > 0 && "text-destructive")}>{summary.pending}</p>
-            </CardContent>
-          </Card>
-        </button>
-      </div>
+      <SummaryCards
+        cards={[
+          { label: "Prospectos abiertos", value: summary.open, onClick: () => setFilter(ALL) },
+          { label: "Venta mensual en juego", value: `$${formatMxn(summary.pipeline)}`, hint: "Suma de lo estimado en los abiertos." },
+          {
+            label: "Seguimientos para hoy o vencidos",
+            value: summary.pending,
+            alert: summary.pending > 0,
+            onClick: () => setFilter(PENDING),
+          },
+        ]}
+      />
 
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="w-full space-y-1.5 sm:max-w-sm">
-          <Label htmlFor="leads-search">Buscar</Label>
-          <Input id="leads-search" value={search} onChange={(e) => setSearch(e.target.value)} />
-        </div>
-        <div className="w-full space-y-1.5 sm:w-64">
-          <Label>Responsable</Label>
-          <AppSelect value={owner} onValueChange={(v) => setOwner(v || "")} options={owners} className="w-full" />
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {chip("todos", "Todos", byOwner.length)}
-        {chip("pendientes", "Seguimiento pendiente", summary.pending)}
-        {LEAD_STAGES.map((s) => chip(s.value, s.label, summary.counts.get(s.value) ?? 0))}
-      </div>
+      <CrmFilters
+        searchId="leads-search"
+        search={search}
+        onSearch={setSearch}
+        owner={owner}
+        onOwner={setOwner}
+        owners={owners}
+        filter={filter}
+        onFilter={setFilter}
+        chips={[
+          { value: ALL, label: "Todos", count: byOwner.length },
+          { value: PENDING, label: "Seguimiento pendiente", count: summary.pending },
+          ...LEAD_STAGES.map((s) => ({ value: s.value, label: s.label, count: summary.counts.get(s.value) ?? 0 })),
+        ]}
+      />
 
       {visible.length === 0 ? (
         <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
@@ -308,36 +213,39 @@ export function LeadsTable({
           <div className="@container/table w-full overflow-x-auto rounded-md border">
             <table className="w-full min-w-max text-sm md:min-w-0">
               <thead>
-                <tr className="bg-muted/40 border-b">
-                  <th className="px-4 py-2 text-left font-medium">Empresa</th>
-                  <th className="hidden px-4 py-2 text-left font-medium @3xl/table:table-cell">Contacto</th>
-                  <th className="px-4 py-2 text-left font-medium">Etapa</th>
-                  <th className="px-4 py-2 text-left font-medium">Próximo seguimiento</th>
-                  <th className="hidden px-4 py-2 text-left font-medium @5xl/table:table-cell">Responsable</th>
-                  <th className="hidden px-4 py-2 text-right font-medium @6xl/table:table-cell">Venta mensual</th>
-                  <th className="hidden px-4 py-2 text-left font-medium @7xl/table:table-cell">Última actividad</th>
-                  {(canEdit || canDelete) && <th className="w-16 px-2 py-2" />}
+                <tr className="bg-primary/[0.07] border-b">
+                  <th className={thClass}>Empresa</th>
+                  <th className={cn(thClass, "hidden @3xl/table:table-cell")}>Contacto</th>
+                  <th className={thClass}>Etapa</th>
+                  <th className={thClass}>Próximo seguimiento</th>
+                  <th className={cn(thClass, "hidden @5xl/table:table-cell")}>Responsable</th>
+                  <th className={cn(thClass, "hidden text-right @6xl/table:table-cell")}>Venta mensual</th>
+                  <th className={cn(thClass, "hidden @7xl/table:table-cell")}>Última actividad</th>
+                  {(canEdit || canDelete) && <th className="w-24 px-2 py-2" />}
                 </tr>
               </thead>
               <tbody>
                 {visible.map((l) => (
-                  <tr key={l.id} className="border-b align-top last:border-0">
-                    <td className="px-4 py-3">
-                      <Link
-                        href={`${basePath}/${l.id}`}
-                        className="text-primary block max-w-56 truncate font-medium hover:underline"
+                  <tr
+                    key={l.id}
+                    className="hover:bg-muted/40 cursor-pointer border-b align-top last:border-0"
+                    onClick={(e) => isRowClick(e) && openSheet(l.id)}
+                  >
+                    <td className="px-3 py-3">
+                      <button
+                        type="button"
+                        className="block max-w-56 truncate text-left font-semibold hover:underline"
                         title={l.companyName}
+                        onClick={() => openSheet(l.id)}
                       >
                         {l.companyName}
-                      </Link>
+                      </button>
                       {(l.industry || l.city) && (
-                        <span className="text-muted-foreground block text-xs">
-                          {[l.industry, l.city].filter(Boolean).join(" · ")}
-                        </span>
+                        <span className="text-muted-foreground block text-xs">{[l.industry, l.city].filter(Boolean).join(" · ")}</span>
                       )}
                       {l.clientName && <span className="block text-xs text-green-700">Cliente: {l.clientName}</span>}
                     </td>
-                    <td className="hidden px-4 py-3 @3xl/table:table-cell">
+                    <td className="hidden px-3 py-3 @3xl/table:table-cell">
                       {l.contactName && <span className="block">{l.contactName}</span>}
                       {l.phone && (
                         <span className="text-muted-foreground flex items-center gap-1 text-xs">
@@ -353,11 +261,11 @@ export function LeadsTable({
                       )}
                       {!l.contactName && !l.phone && !l.email && <span className="text-muted-foreground">—</span>}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-3">
                       {canEdit ? (
                         <DropdownMenu>
                           <DropdownMenuTrigger className="focus-visible:ring-ring inline-flex items-center gap-1 rounded-full outline-none focus-visible:ring-2">
-                            <StageBadge stage={l.stage} />
+                            <StageBadge stage={l.stage} stages={LEAD_STAGES} />
                             <ChevronDown className="text-muted-foreground size-3" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="start">
@@ -369,7 +277,7 @@ export function LeadsTable({
                           </DropdownMenuContent>
                         </DropdownMenu>
                       ) : (
-                        <StageBadge stage={l.stage} />
+                        <StageBadge stage={l.stage} stages={LEAD_STAGES} />
                       )}
                       {l.stage === "perdido" && l.lostReason && (
                         <span className="text-muted-foreground mt-1 block max-w-56 truncate text-xs" title={l.lostReason}>
@@ -377,33 +285,34 @@ export function LeadsTable({
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3">
-                      <FollowUpCell lead={l} today={today} />
+                    <td className="px-3 py-3">
+                      <FollowUpCell nextFollowUpOn={l.nextFollowUpOn} nextAction={l.nextAction} open={isOpenStage(l.stage)} today={today} />
                     </td>
-                    <td className="text-muted-foreground hidden px-4 py-3 @5xl/table:table-cell">{l.ownerName ?? "—"}</td>
-                    <td className="hidden px-4 py-3 text-right whitespace-nowrap @6xl/table:table-cell">
+                    <td className="text-muted-foreground hidden px-3 py-3 @5xl/table:table-cell">{l.ownerName ?? "—"}</td>
+                    <td className="hidden px-3 py-3 text-right whitespace-nowrap @6xl/table:table-cell">
                       {l.estimatedMonthly != null ? `$${formatMxn(l.estimatedMonthly)}` : "—"}
                     </td>
-                    <td className="text-muted-foreground hidden px-4 py-3 @7xl/table:table-cell">
-                      {l.lastActivity ? (
-                        <>
-                          <span className="block text-xs whitespace-nowrap">
-                            {LEAD_ACTIVITY_LABELS[l.lastActivity.type]} · {shortDay(l.lastActivity.occurredOn)}
-                          </span>
-                          <span className="block max-w-56 truncate text-xs" title={l.lastActivity.summary}>
-                            {l.lastActivity.summary}
-                          </span>
-                        </>
-                      ) : (
-                        "—"
-                      )}
+                    <td className="text-muted-foreground hidden px-3 py-3 @7xl/table:table-cell">
+                      <LastActivityCell activity={l.lastActivity} />
                     </td>
                     {(canEdit || canDelete) && (
                       <td className="px-2 py-3">
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center justify-end gap-1">
+                          {canEdit && !l.clientId && l.stage !== "perdido" && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-7"
+                              aria-label={`Convertir ${l.companyName} en cliente`}
+                              title="Convertir en cliente"
+                              onClick={() => openSheet(l.id, true)}
+                            >
+                              <Handshake className="size-3.5" />
+                            </Button>
+                          )}
                           {canEdit && (
                             <Button variant="ghost" size="icon" className="size-7" asChild>
-                              <Link href={`${basePath}/${l.id}/edit`} aria-label={`Editar ${l.companyName}`}>
+                              <Link href={`${basePath}/${l.id}/edit`} aria-label={`Editar ${l.companyName}`} title="Editar">
                                 <Pencil className="size-3.5" />
                               </Link>
                             </Button>
@@ -414,7 +323,8 @@ export function LeadsTable({
                               size="icon"
                               className="size-7"
                               aria-label={`Eliminar ${l.companyName}`}
-                              onClick={() => setDeleting(l)}
+                              title="Eliminar"
+                              onClick={() => remove(l)}
                             >
                               <Trash2 className="text-destructive size-3.5" />
                             </Button>
@@ -430,46 +340,31 @@ export function LeadsTable({
         </ExportableTable>
       )}
 
-      <Dialog open={losing !== null} onOpenChange={(open) => !open && setLosing(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Marcar {losing?.companyName} como perdido</DialogTitle>
-            <DialogDescription>
-              Queda en la lista con el motivo, para saber qué pasó si se vuelve a buscar.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <Label htmlFor="lost-reason">Por qué se perdió</Label>
-            <Textarea id="lost-reason" rows={3} value={lostReason} onChange={(e) => setLostReason(e.target.value)} />
-            <p className="text-muted-foreground text-xs">Precio, se quedó con su transportista, no mueve nuestras rutas…</p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setLosing(null)}>
-              Cancelar
-            </Button>
-            <Button onClick={confirmLost} disabled={busy || !lostReason.trim()}>
-              {busy && <Loader2 className="size-4 animate-spin" />}
-              Marcar perdido
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ReasonDialog
+        open={losing !== null}
+        title={`Marcar ${losing?.companyName ?? ""} como perdido`}
+        description="Queda en la lista con el motivo, para saber qué pasó si se vuelve a buscar."
+        label="Por qué se perdió"
+        hint="Precio, se quedó con su transportista, no mueve nuestras rutas…"
+        confirmLabel="Marcar perdido"
+        initial={losing?.lostReason ?? ""}
+        onCancel={() => setLosing(null)}
+        onConfirm={confirmLost}
+      />
 
-      <AlertDialog open={deleting !== null} onOpenChange={(open) => !open && setDeleting(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar {deleting?.companyName}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Se borra con todas sus actividades y no se puede deshacer. Si no se cerró, mejor márcalo como perdido con su
-              motivo.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => deleting && remove(deleting)}>Eliminar</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <LeadSheet
+        leadId={viewing}
+        onClose={() => {
+          setViewing(null);
+          setConverting(false);
+        }}
+        onChanged={load}
+        basePath={basePath}
+        canEdit={canEdit}
+        canDelete={canDelete}
+        converting={converting}
+        onConvertingChange={setConverting}
+      />
     </div>
   );
 }

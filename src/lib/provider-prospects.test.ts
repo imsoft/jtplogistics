@@ -3,6 +3,8 @@ import {
   isProspectStatus,
   pipelineStatuses,
   prospectStatusForOnboarding,
+  isOpenProspectStatus,
+  prospectStatusAfterActivity,
   PROSPECT_COVERAGES,
   PROSPECT_SOURCES,
   PROSPECT_STATUS_LABELS,
@@ -80,5 +82,18 @@ describe("prospectStatusForOnboarding", () => {
   });
   it("respeta el descartado", () => {
     expect(prospectStatusForOnboarding("descartado", true)).toBe("descartado");
+  });
+});
+
+describe("seguimiento de prospectos de proveedor", () => {
+  it("listo y descartado ya no tienen seguimiento", () => {
+    expect(isOpenProspectStatus("en_alta")).toBe(true);
+    expect(isOpenProspectStatus("listo")).toBe(false);
+    expect(isOpenProspectStatus("descartado")).toBe(false);
+  });
+  it("una actividad saca de pendiente; una nota no", () => {
+    expect(prospectStatusAfterActivity("pendiente", "llamada")).toBe("prospectando");
+    expect(prospectStatusAfterActivity("pendiente", "nota")).toBe("pendiente");
+    expect(prospectStatusAfterActivity("negociando", "llamada")).toBe("negociando");
   });
 });

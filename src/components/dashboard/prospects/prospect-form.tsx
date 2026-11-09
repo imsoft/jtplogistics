@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Building2, Handshake, Loader2, UserRound } from "lucide-react";
+import { Building2, CalendarClock, Loader2, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,7 @@ import {
   PROSPECT_STATUSES,
 } from "@/lib/provider-prospects";
 import { DatePicker } from "@/components/ui/date-picker";
+import { useOwners } from "@/components/dashboard/crm/crm-ui";
 
 export interface ProspectFormData {
   commercialName: string;
@@ -31,6 +32,9 @@ export interface ProspectFormData {
   contactedOn: string;
   notes: string;
   discardReason: string;
+  ownerId: string;
+  nextFollowUpOn: string;
+  nextAction: string;
 }
 
 const EMPTY: ProspectFormData = {
@@ -47,6 +51,9 @@ const EMPTY: ProspectFormData = {
   contactedOn: "",
   notes: "",
   discardReason: "",
+  ownerId: "",
+  nextFollowUpOn: "",
+  nextAction: "",
 };
 
 export function ProspectForm({
@@ -64,6 +71,7 @@ export function ProspectForm({
 }) {
   const [form, setForm] = useState<ProspectFormData>({ ...EMPTY, ...initialValues });
   const [error, setError] = useState<string | null>(null);
+  const owners = useOwners("/api/provider-prospects/owners");
 
   const set = (key: keyof ProspectFormData) => (value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -108,7 +116,7 @@ export function ProspectForm({
         </div>
       </FormSection>
 
-      <FormSection icon={UserRound} title="Contacto" description="Con quién se habla." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
+      <FormSection icon={UserRound} title="Contacto" description="Con quién se habla y cómo llegó a nosotros." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="p-contact">Contacto</Label>
           <Input id="p-contact" value={form.contactName} onChange={(e) => set("contactName")(e.target.value)} />
@@ -121,9 +129,6 @@ export function ProspectForm({
           <Label htmlFor="p-email">Correo</Label>
           <Input id="p-email" type="email" value={form.email} onChange={(e) => set("email")(e.target.value)} />
         </div>
-      </FormSection>
-
-      <FormSection icon={Handshake} title="Prospección" description="Cómo llegó, qué cubre y en qué va." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label>Cómo se consiguió</Label>
           <AppSelect
@@ -146,14 +151,41 @@ export function ProspectForm({
           <Label htmlFor="p-date">Fecha de contacto</Label>
           <DatePicker id="p-date" value={form.contactedOn} onChange={(v) => set("contactedOn")(v)} />
         </div>
+      </FormSection>
+
+      <FormSection
+        icon={CalendarClock}
+        title="Seguimiento"
+        description="Al responsable le llega un recordatorio el día del próximo seguimiento."
+        className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2"
+      >
         <div className="space-y-2">
           <Label>Etapa</Label>
           <AppSelect
             value={form.status}
-            onValueChange={set("status")}
+            onValueChange={(v) => set("status")(v || "pendiente")}
             options={PROSPECT_STATUSES.map((s) => ({ value: s.value, label: s.label }))}
             className="w-full"
           />
+        </div>
+        <div className="space-y-2">
+          <Label>Responsable</Label>
+          <AppSelect
+            value={form.ownerId}
+            onValueChange={set("ownerId")}
+            options={owners.map((o) => ({ value: o.id, label: o.name }))}
+            className="w-full"
+          />
+          <p className="text-muted-foreground text-xs">Si lo dejas vacío, quedas tú.</p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="p-next-date">Próximo seguimiento</Label>
+          <DatePicker id="p-next-date" value={form.nextFollowUpOn} onChange={(v) => set("nextFollowUpOn")(v)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="p-next-action">Qué toca hacer</Label>
+          <Input id="p-next-action" value={form.nextAction} onChange={(e) => set("nextAction")(e.target.value)} />
+          <p className="text-muted-foreground text-xs">Llamar para pedir tarifas, pedir documentos, visitar su patio…</p>
         </div>
         {form.status === "descartado" && (
           <div className="space-y-2 sm:col-span-2">
@@ -167,7 +199,7 @@ export function ProspectForm({
           </div>
         )}
         <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="p-notes">Comentarios</Label>
+          <Label htmlFor="p-notes">Notas</Label>
           <Textarea id="p-notes" rows={4} value={form.notes} onChange={(e) => set("notes")(e.target.value)} />
           <p className="text-muted-foreground text-xs">Tarifas pactadas, en qué va la negociación, lo que haya que recordar.</p>
         </div>

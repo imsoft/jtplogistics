@@ -187,6 +187,8 @@ model User {
   leaves               TimeClockLeave[] @relation("LeaveOwner")
   leavesCreated        TimeClockLeave[] @relation("LeaveAuthor")
   prospects            ProviderProspect[] @relation("ProspectAuthor")
+  prospectsOwned       ProviderProspect[] @relation("ProspectOwner")
+  prospectActivities   ProviderProspectActivity[] @relation("ProspectActivityAuthor")
   onboardings          ProviderOnboarding[] @relation("OnboardingAuthor")
   /// El alta de proveedor de la que salió esta cuenta (si se creó sola al completarla).
   providerOnboarding   ProviderOnboarding?  @relation("OnboardingAccount")
@@ -1268,14 +1270,39 @@ model ProviderProspect {
   /// otra etapa, para saber qué había pasado antes.
   discardReason String? @map("discard_reason")
 
+  /// Próximo seguimiento: qué toca hacer y cuándo (igual que en clientes).
+  nextAction     String?   @map("next_action")
+  nextFollowUpOn DateTime? @db.Date @map("next_follow_up_on")
+  ownerId        String?   @map("owner_id")
+  owner          User?     @relation("ProspectOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+
   createdById String? @map("created_by_id")
   createdBy   User?   @relation("ProspectAuthor", fields: [createdById], references: [id], onDelete: SetNull)
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
   onboarding  ProviderOnboarding?
+  activities  ProviderProspectActivity[]
 
   @@index([status])
+  @@index([ownerId])
+  @@index([nextFollowUpOn])
   @@map("provider_prospects")
+}
+
+/// Llamada, correo, visita… lo que se hizo con el prospecto de proveedor, en orden.
+model ProviderProspectActivity {
+  id         String                 @id @default(cuid()) @map("id")
+  prospectId String                 @map("prospect_id")
+  prospect   ProviderProspect       @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+  type       ClientLeadActivityType @map("type")
+  summary    String                 @map("summary")
+  occurredOn DateTime               @db.Date @map("occurred_on")
+  authorId   String?                @map("author_id")
+  author     User?                  @relation("ProspectActivityAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt  DateTime               @default(now()) @map("created_at")
+
+  @@index([prospectId])
+  @@map("provider_prospect_activities")
 }
 
 enum TicketStatus {

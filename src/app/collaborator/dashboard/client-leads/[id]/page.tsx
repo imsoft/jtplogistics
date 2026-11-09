@@ -1,22 +1,11 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { useSession } from "@/lib/auth-client";
-import { LeadDetailView } from "@/components/dashboard/client-leads/lead-detail";
-import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
-import { ResourceDetailSkeleton } from "@/components/ui/skeletons";
-
-export default function CollaboratorClientLeadPage() {
-  const { data: session } = useSession();
-  const { permissions, isLoaded } = useCollaboratorPermissions();
-  if (!isLoaded) return <ResourceDetailSkeleton />;
-  return (
-    <LeadDetailView
-      basePath="/collaborator/dashboard/client-leads"
-      panelBase="/collaborator/dashboard"
-      clientsEndpoint="/api/collaborator/clients"
-      canEdit={permissions?.canUpdateClientLeads ?? false}
-      canDelete={permissions?.canDeleteClientLeads ?? false}
-      currentUserId={session?.user.id ?? null}
-    />
-  );
+/**
+ * La ficha del prospecto ahora se abre en el panel lateral de la tabla, igual
+ * que en Prospección de proveedores. Los enlaces viejos (notificaciones,
+ * auditoría) llegan aquí y se mandan a la tabla con esa ficha abierta.
+ */
+export default async function ClientLeadPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  redirect(`/collaborator/dashboard/client-leads?ficha=${id}`);
 }
