@@ -11,7 +11,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     const { id } = await params;
     const p = await prisma.providerProspect.findUnique({
       where: { id },
-      include: { createdBy: { select: { name: true } } },
+      include: { createdBy: { select: { name: true } }, onboarding: { select: { id: true } } },
     });
     if (!p) return Response.json({ error: "No encontrado" }, { status: 404 });
     return Response.json(prospectToJson(p));

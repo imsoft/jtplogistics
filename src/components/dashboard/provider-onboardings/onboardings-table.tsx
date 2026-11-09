@@ -51,6 +51,7 @@ import {
   type OnboardingStage,
 } from "@/lib/provider-onboardings";
 import { ExportableTable } from "@/components/dashboard/export/exportable-table";
+import { ProviderSheet, isRowClick, type ProviderSheetTarget } from "@/components/dashboard/prospects/provider-sheet";
 
 export interface OnboardingRow {
   id: string;
@@ -174,6 +175,7 @@ export function OnboardingsTable({
   const [holdReason, setHoldReason] = useState("");
   const [deleting, setDeleting] = useState<OnboardingRow | null>(null);
   const [busy, setBusy] = useState(false);
+  const [viewing, setViewing] = useState<ProviderSheetTarget | null>(null);
 
   const load = useCallback(() => {
     fetch("/api/provider-onboardings")
@@ -383,9 +385,20 @@ export function OnboardingsTable({
                   const progress = docProgress(r.docs);
                   const c = CONTRACT_BY_VALUE[r.contractStatus];
                   return (
-                    <tr key={r.id} className={cn("border-b align-top last:border-0", st === "on_hold" && "bg-gray-50 dark:bg-gray-900/40")}>
+                    <tr
+                      key={r.id}
+                      className={cn("hover:bg-muted/40 cursor-pointer border-b align-top last:border-0", st === "on_hold" && "bg-gray-50 dark:bg-gray-900/40")}
+                      onClick={(e) => isRowClick(e) && setViewing({ prospectId: r.prospectId, onboardingId: r.id, name: r.commercialName })}
+                    >
                       <td className="px-4 py-3">
-                        <span className="block max-w-52 truncate font-semibold min-[1440px]:max-w-64" title={r.legalName}>{r.legalName}</span>
+                        <button
+                          type="button"
+                          className="block max-w-52 truncate text-left font-semibold hover:underline min-[1440px]:max-w-64"
+                          title={r.legalName}
+                          onClick={() => setViewing({ prospectId: r.prospectId, onboardingId: r.id, name: r.commercialName })}
+                        >
+                          {r.legalName}
+                        </button>
                         <span className="text-muted-foreground block max-w-52 truncate text-xs min-[1440px]:max-w-64" title={r.commercialName}>{r.commercialName}</span>
                         {st === "on_hold" && r.holdReason && (
                           <span className="mt-1 block max-w-52 text-xs text-gray-700 min-[1440px]:max-w-64 dark:text-gray-300" title={r.holdReason}>{r.holdReason}</span>
@@ -519,6 +532,13 @@ export function OnboardingsTable({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ProviderSheet
+        target={viewing}
+        onClose={() => setViewing(null)}
+        dashboardBase={editBase.replace(/\/[^/]+$/, "")}
+        canEditOnboarding={canEdit}
+      />
     </div>
   );
 }

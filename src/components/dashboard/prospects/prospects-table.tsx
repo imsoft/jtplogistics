@@ -43,6 +43,7 @@ import {
   type ProspectStatus,
 } from "@/lib/provider-prospects";
 import { ExportableTable } from "@/components/dashboard/export/exportable-table";
+import { ProviderSheet, isRowClick, type ProviderSheetTarget } from "./provider-sheet";
 
 interface Prospect {
   id: string;
@@ -107,6 +108,7 @@ export function ProspectsTable({
   const [discardReason, setDiscardReason] = useState("");
   const [deleting, setDeleting] = useState<Prospect | null>(null);
   const [busy, setBusy] = useState(false);
+  const [viewing, setViewing] = useState<ProviderSheetTarget | null>(null);
 
   const load = useCallback(() => {
     fetch("/api/provider-prospects")
@@ -266,11 +268,20 @@ export function ProspectsTable({
               </thead>
               <tbody>
                 {visible.map((p) => (
-                  <tr key={p.id} className="border-b last:border-0 align-top">
+                  <tr
+                    key={p.id}
+                    className="hover:bg-muted/40 cursor-pointer border-b last:border-0 align-top"
+                    onClick={(e) => isRowClick(e) && setViewing({ prospectId: p.id, onboardingId: p.onboardingId, name: p.commercialName })}
+                  >
                     <td className="px-4 py-3">
-                      <span className="block max-w-56 truncate font-medium" title={p.commercialName}>
+                      <button
+                        type="button"
+                        className="block max-w-56 truncate text-left font-medium hover:underline"
+                        title={p.commercialName}
+                        onClick={() => setViewing({ prospectId: p.id, onboardingId: p.onboardingId, name: p.commercialName })}
+                      >
                         {p.commercialName}
-                      </span>
+                      </button>
                       {p.city && <span className="text-muted-foreground block text-xs">{p.city}</span>}
                       {p.notes && (
                         <span className="text-muted-foreground block max-w-72 truncate text-xs" title={p.notes}>
@@ -429,6 +440,13 @@ export function ProspectsTable({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ProviderSheet
+        target={viewing}
+        onClose={() => setViewing(null)}
+        dashboardBase={editBase.replace(/\/[^/]+$/, "")}
+        canEditProspect={canEdit}
+      />
     </div>
   );
 }
