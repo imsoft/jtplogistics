@@ -9,13 +9,20 @@ import { ConversationList } from "@/components/dashboard/messages/conversation-l
 import { ChatWindow } from "@/components/dashboard/messages/chat-window";
 import { Button } from "@/components/ui/button";
 import { ChatSkeleton } from "@/components/ui/skeletons";
+import { TeamChat } from "@/components/dashboard/team-chat/team-chat";
 
 export function StaffMessagesView() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const initialCarrierId = searchParams.get("carrierId");
-  const [selectedCarrierId, setSelectedCarrierId] = useState<string | null>(null);
+  const [selectedCarrierId, setSelectedCarrierId] = useState<string | null>(
+    null,
+  );
   const [selectedCarrierName, setSelectedCarrierName] = useState<string>("");
+  // Si llega desde una notificación de transportista, abre esa pestaña.
+  const [tab, setTab] = useState<"team" | "carriers">(
+    initialCarrierId ? "carriers" : "team",
+  );
 
   if (!session) {
     return <ChatSkeleton />;
@@ -32,68 +39,111 @@ export function StaffMessagesView() {
   }
 
   return (
-    <div className="min-w-0 flex flex-col" style={{ height: "calc(100vh - 8rem)" }}>
+    <div
+      className="min-w-0 flex flex-col"
+      style={{ height: "calc(100vh - 8rem)" }}
+    >
       <div className="mb-4">
         <h1 className="page-heading">Mensajes</h1>
         <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
-          Conversaciones con transportistas.
+          Conversaciones con el equipo y con transportistas.
         </p>
         <Separator className="mt-4" />
+        <div
+          className="mt-4 flex gap-2"
+          role="tablist"
+          aria-label="Tipo de conversación"
+        >
+          {(
+            [
+              ["team", "Equipo"],
+              ["carriers", "Transportistas"],
+            ] as const
+          ).map(([value, label]) => (
+            <Button
+              key={value}
+              type="button"
+              role="tab"
+              aria-selected={tab === value}
+              size="sm"
+              variant={tab === value ? "secondary" : "outline"}
+              onClick={() => setTab(value)}
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
       </div>
 
-      <div className="flex-1 min-h-0 rounded-lg border overflow-hidden flex">
-
-        {/* Panel izquierdo: lista (siempre visible en desktop, oculto en móvil si hay chat abierto) */}
-        <div
-          className={`flex flex-col border-r w-full sm:w-72 shrink-0 ${
-            selectedCarrierId ? "hidden sm:flex" : "flex"
-          }`}
-        >
-          <div className="border-b px-4 py-3">
-            <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-              Transportistas
-            </p>
-          </div>
-          <div className="flex-1 overflow-y-auto">
-            <ConversationList
-              selectedCarrierId={selectedCarrierId}
-              onSelect={handleSelect}
-              initialCarrierId={initialCarrierId}
-            />
-          </div>
+      {tab === "team" && (
+        <div className="min-h-0 flex-1 overflow-hidden rounded-lg border">
+          <TeamChat currentUserId={session.user.id} />
         </div>
+      )}
 
-        {/* Panel derecho: chat */}
-        <div
-          className={`flex-1 min-w-0 flex flex-col ${
-            selectedCarrierId ? "flex" : "hidden sm:flex"
-          }`}
-        >
-          {selectedCarrierId ? (
-            <>
-              {/* Botón volver en móvil */}
-              <div className="flex items-center gap-2 border-b px-3 py-2 sm:hidden">
-                <Button variant="ghost" size="icon" onClick={handleBack} aria-label="Volver">
-                  <ChevronLeft className="size-4" />
-                </Button>
-                <span className="text-sm font-medium uppercase tracking-wide">{selectedCarrierName}</span>
-              </div>
-              <div className="flex-1 min-h-0">
-                <ChatWindow
-                  carrierId={selectedCarrierId}
-                  currentUserId={session.user.id}
-                  title={selectedCarrierName}
-                />
-              </div>
-            </>
-          ) : (
-            <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
-              <MessageSquare className="size-10 opacity-20" />
-              <p className="text-sm uppercase tracking-wide">Selecciona un transportista para ver su conversación</p>
+      {tab === "carriers" && (
+        <div className="flex-1 min-h-0 rounded-lg border overflow-hidden flex">
+          {/* Panel izquierdo: lista (siempre visible en desktop, oculto en móvil si hay chat abierto) */}
+          <div
+            className={`flex flex-col border-r w-full sm:w-72 shrink-0 ${
+              selectedCarrierId ? "hidden sm:flex" : "flex"
+            }`}
+          >
+            <div className="border-b px-4 py-3">
+              <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                Transportistas
+              </p>
             </div>
-          )}
+            <div className="flex-1 overflow-y-auto">
+              <ConversationList
+                selectedCarrierId={selectedCarrierId}
+                onSelect={handleSelect}
+                initialCarrierId={initialCarrierId}
+              />
+            </div>
+          </div>
+
+          {/* Panel derecho: chat */}
+          <div
+            className={`flex-1 min-w-0 flex flex-col ${
+              selectedCarrierId ? "flex" : "hidden sm:flex"
+            }`}
+          >
+            {selectedCarrierId ? (
+              <>
+                {/* Botón volver en móvil */}
+                <div className="flex items-center gap-2 border-b px-3 py-2 sm:hidden">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleBack}
+                    aria-label="Volver"
+                  >
+                    <ChevronLeft className="size-4" />
+                  </Button>
+                  <span className="text-sm font-medium uppercase tracking-wide">
+                    {selectedCarrierName}
+                  </span>
+                </div>
+                <div className="flex-1 min-h-0">
+                  <ChatWindow
+                    carrierId={selectedCarrierId}
+                    currentUserId={session.user.id}
+                    title={selectedCarrierName}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
+                <MessageSquare className="size-10 opacity-20" />
+                <p className="text-sm uppercase tracking-wide">
+                  Selecciona un transportista para ver su conversación
+                </p>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -232,6 +232,9 @@ model User {
   quoteComments    QuoteComment[]
   maritimeQuotes   MaritimeQuote[]
   sentMessages     Message[]      @relation("SentMessages")
+  teamChatMemberships TeamChatMember[]
+  teamChatMessages    TeamChatMessage[] @relation("TeamChatSender")
+  teamChatsCreated    TeamChat[]        @relation("TeamChatCreator")
   carrierMessages  Message[]      @relation("CarrierMessages")
   notifications    Notification[]
   carrierManualRatings CarrierManualRating[] @relation("CarrierRatingRatedBy")
@@ -525,6 +528,52 @@ model Message {
 
   @@index([carrierId, createdAt])
   @@map("messages")
+}
+
+/// Chat entre colaboradores (admin y colaboradores): directo 1 a 1 o grupo.
+model TeamChat {
+  id            String   @id @default(cuid()) @map("id")
+  /// "direct" o "group".
+  kind          String   @map("kind")
+  /// Nombre del grupo; los directos no llevan.
+  name          String?  @map("name")
+  /// En directos, los dos ids ordenados ("a:b"), para no duplicar la conversación.
+  directKey     String?  @unique @map("direct_key")
+  createdById   String?  @map("created_by_id")
+  createdBy     User?    @relation("TeamChatCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  lastMessageAt DateTime? @map("last_message_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  members       TeamChatMember[]
+  messages      TeamChatMessage[]
+
+  @@map("team_chats")
+}
+
+model TeamChatMember {
+  chatId     String    @map("chat_id")
+  chat       TeamChat  @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  userId     String    @map("user_id")
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Hasta dónde leyó: lo posterior (de otros) cuenta como no leído.
+  lastReadAt DateTime? @map("last_read_at")
+  joinedAt   DateTime  @default(now()) @map("joined_at")
+
+  @@id([chatId, userId])
+  @@index([userId])
+  @@map("team_chat_members")
+}
+
+model TeamChatMessage {
+  id        String   @id @default(cuid()) @map("id")
+  chatId    String   @map("chat_id")
+  chat      TeamChat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  senderId  String?  @map("sender_id")
+  sender    User?    @relation("TeamChatSender", fields: [senderId], references: [id], onDelete: SetNull)
+  body      String   @map("body")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([chatId, createdAt])
+  @@map("team_chat_messages")
 }
 
 model Notification {

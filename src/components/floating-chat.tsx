@@ -7,6 +7,8 @@ import { useSession } from "@/lib/auth-client";
 import { ChatWindow } from "@/components/dashboard/messages/chat-window";
 import { ConversationList } from "@/components/dashboard/messages/conversation-list";
 import { Button } from "@/components/ui/button";
+import { TeamChat, useTeamUnread } from "@/components/dashboard/team-chat/team-chat";
+import { cn } from "@/lib/utils";
 
 type FloatingChatProps = {
   placement?: "floating" | "header";
@@ -22,6 +24,20 @@ export function FloatingChat({ placement = "floating" }: FloatingChatProps) {
   // Un usuario agregado sin permiso de mensajes no ve el chat.
   const [carrierChat, setCarrierChat] = useState<{ carrierId: string; canMessage: boolean } | null>(null);
   const sessionRole = (session?.user as { role?: string } | undefined)?.role;
+  const staff = sessionRole === "admin" || sessionRole === "collaborator";
+  // Equipo (colaboradores) o Transportistas. El de transportistas solo con su permiso.
+  const [tab, setTab] = useState<"team" | "carriers">("team");
+  const [collaboratorCarrierChat, setCollaboratorCarrierChat] = useState(false);
+  const canCarrierChat = sessionRole === "admin" || collaboratorCarrierChat;
+  const teamUnread = useTeamUnread(staff);
+
+  useEffect(() => {
+    if (sessionRole !== "collaborator") return;
+    fetch("/api/collaborator/permissions")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { canViewMessages?: boolean } | null) => setCollaboratorCarrierChat(Boolean(d?.canViewMessages)))
+      .catch(() => {});
+  }, [sessionRole]);
 
   useEffect(() => {
     if (sessionRole !== "carrier") return;
@@ -77,7 +93,7 @@ export function FloatingChat({ placement = "floating" }: FloatingChatProps) {
         >
           {/* Header */}
           <div className="flex items-center gap-2 border-b px-4 py-2.5 shrink-0">
-            {isStaff && selectedCarrierId ? (
+            {isStaff && tab === "carriers" && selectedCarrierId ? (
               <button
                 type="button"
                 onClick={handleBack}
@@ -100,9 +116,36 @@ export function FloatingChat({ placement = "floating" }: FloatingChatProps) {
             </Button>
           </div>
 
+          {isStaff && canCarrierChat && (
+            <div className="flex shrink-0 gap-1 border-b p-1.5" role="tablist" aria-label="Tipo de conversación">
+              {(
+                [
+                  ["team", `Equipo${teamUnread > 0 ? ` (${teamUnread})` : ""}`],
+                  ["carriers", "Transportistas"],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === value}
+                  onClick={() => setTab(value)}
+                  className={cn(
+                    "flex-1 rounded-md px-2 py-1.5 text-xs font-semibold tracking-wide transition-colors",
+                    tab === value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Contenido */}
           <div className="flex-1 min-h-0">
-            {isCarrier ? (
+            {isStaff && (tab === "team" || !canCarrierChat) ? (
+              <TeamChat compact currentUserId={session.user.id} />
+            ) : isCarrier ? (
               <ChatWindow
                 carrierId={carrierChat?.carrierId ?? session.user.id}
                 currentUserId={session.user.id}
@@ -134,6 +177,14 @@ export function FloatingChat({ placement = "floating" }: FloatingChatProps) {
           className="relative shrink-0"
         >
           {isOpen ? <X className="size-4" /> : <MessageSquare className="size-4" />}
+          {!isOpen && teamUnread > 0 && (
+            <span
+              className="bg-destructive absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
+              aria-label={`${teamUnread} mensajes sin leer`}
+            >
+              {teamUnread > 99 ? "99+" : teamUnread}
+            </span>
+          )}
         </Button>
       ) : (
         <button
