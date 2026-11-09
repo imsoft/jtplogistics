@@ -36,11 +36,11 @@ export default async function CarrierDashboardLayout({
             Mi panel
           </span>
           <NotificationBell />
+          <CarrierOnboardingTour completed={tourCompleted} />
           <FloatingChat placement="header" />
         </header>
         <div className={dashboardMainWithFloatingChatClassName}>{children}</div>
       </SidebarInset>
-      <CarrierOnboardingTour completed={tourCompleted} />
     </SidebarProvider>
   );
 }

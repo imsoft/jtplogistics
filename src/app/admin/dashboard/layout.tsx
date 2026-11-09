@@ -35,8 +35,9 @@ export default async function DashboardLayout({
           </span>
           <div id="tour-header-notifications">
             <CelebrationGreeting />
-          <NotificationBell />
+            <NotificationBell />
           </div>
+          <OnboardingTour completed={tourCompleted} />
           <FloatingChat placement="header" />
           <div id="tour-header-search">
             <GlobalSearch />
@@ -44,7 +45,6 @@ export default async function DashboardLayout({
         </header>
         <div className={dashboardMainWithFloatingChatClassName}>{children}</div>
       </SidebarInset>
-      <OnboardingTour completed={tourCompleted} />
     </SidebarProvider>
   );
 }

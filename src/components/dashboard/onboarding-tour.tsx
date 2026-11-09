@@ -1,5 +1,7 @@
 "use client";
 
+import { CircleHelp } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useEffect, useCallback } from "react";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
@@ -135,14 +137,18 @@ export function OnboardingTour({ completed }: { completed: boolean }) {
     return () => clearTimeout(t);
   }, [completed, startTour]);
 
+  // Va en el encabezado, junto a la campana: abajo a la derecha tapaba botones e información.
   return (
-    <button
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
       onClick={() => startTour()}
       aria-label="Iniciar tour de la plataforma"
       title="Tour guiado"
-      className="fixed bottom-20 right-6 z-40 flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg ring-2 ring-background transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="shrink-0"
     >
-      <span className="text-sm font-bold leading-none">?</span>
-    </button>
+      <CircleHelp className="size-4" />
+    </Button>
   );
 }
