@@ -18,7 +18,7 @@ import { shipmentLockReason } from "@/lib/shipment-lock";
 import { formatMxn, formatMxnLive, parseMxn } from "@/lib/utils";
 import { CalendarDays, CircleCheck, CircleDollarSign, MapPin, Plus, Trash2, TriangleAlert, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { InstructionLetterButton } from "@/components/dashboard/resources/instruction-letter-button";
+import { CartaPorteButton, InstructionLetterButton } from "@/components/dashboard/resources/instruction-letter-button";
 import type { Route } from "@/types/route.types";
 import type { Shipment, ShipmentFormData, ShipmentStatus } from "@/types/shipment.types";
 import type { Client } from "@/types/client.types";
@@ -388,6 +388,17 @@ export function ShipmentForm({
     });
   }
 
+  // Lo capturado en el formulario, para la carta de instrucciones y la carta porte.
+  const letterData = {
+    eco, client, product, pickupDate, deliveryDate, legalName, operatorName, phone, truck, trailer,
+    unit: unitOptions.find((u) => u.value === unit)?.label ?? unit,
+    origin, destination, originAddress, destinationAddress, comments,
+    originContact: clientRecord?.contactName || client || "",
+    destinationContact: clientRecord?.contactName || client || "",
+    originPhone: clientRecord?.phone || phone || "",
+    destinationPhone: clientRecord?.phone || phone || "",
+  };
+
   return (
     <form onSubmit={handleSubmit} className="w-full space-y-4 sm:space-y-5">
       <FormSection icon={MapPin} title="Cliente y ruta" description="Quién envía, de dónde a dónde y qué se mueve." className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -734,17 +745,10 @@ export function ShipmentForm({
         cancelHref={cancelHref}
         isSubmitting={isSubmitting}
         leading={
-          <InstructionLetterButton
-            data={{
-              eco, client, product, pickupDate, deliveryDate, legalName, operatorName, phone, truck, trailer,
-              unit: unitOptions.find((u) => u.value === unit)?.label ?? unit,
-              origin, destination, originAddress, destinationAddress, comments,
-              originContact: clientRecord?.contactName || client || "",
-              destinationContact: clientRecord?.contactName || client || "",
-              originPhone: clientRecord?.phone || phone || "",
-              destinationPhone: clientRecord?.phone || phone || "",
-            }}
-          />
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <InstructionLetterButton data={letterData} />
+            <CartaPorteButton data={letterData} />
+          </div>
         }
       />
     </form>
