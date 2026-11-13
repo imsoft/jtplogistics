@@ -55,8 +55,9 @@ export function AppSelect({ value, onValueChange, options, disabled, className, 
     >
       {/* Desactivada se tiene que notar: atenuada y sin poder abrirse, como
           los campos de texto desactivados. */}
+      {/* Sin la "X" de borrar: por decisión del cliente, para no dejar campos
+          vacíos por accidente. Para cambiar, se elige otra opción. */}
       <ComboboxInput
-        showClear={!!selected}
         className={cn("w-full", disabled && "pointer-events-none cursor-not-allowed bg-muted/40 opacity-50", className)}
       />
       <ComboboxContent container={container}>

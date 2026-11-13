@@ -65,7 +65,6 @@ export function CityCombobox({
         <ComboboxInput
           id={id}
           className="w-full"
-          showClear
         />
         <ComboboxContent>
           <div className="max-h-[min(24rem,var(--available-height))] overflow-y-auto p-1">
