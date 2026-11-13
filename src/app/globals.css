@@ -2,6 +2,13 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/*
+ * La plataforma es solo en modo claro. Sin esto, las clases `dark:` se
+ * prendían con el modo oscuro de la computadora (Mac en oscuro) y salían
+ * pastillas verde oscuro y filas grises sobre la interfaz clara.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

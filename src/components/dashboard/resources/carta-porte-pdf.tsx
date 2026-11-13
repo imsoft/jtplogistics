@@ -40,9 +40,6 @@ const fixed = (s: string, digits: number) => {
   return s && Number.isFinite(n) ? n.toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits }) : "—";
 };
 
-const GRAY_DARK = "#575757";
-const GRAY = "#C9C9C9";
-const GRAY_LIGHT = "#EFEFEF";
 
 const s = StyleSheet.create({
   page: { paddingTop: 20, paddingBottom: 36, paddingHorizontal: 32, fontFamily: "Helvetica", fontSize: 8.5, color: COLORS.text, textTransform: "uppercase" },
@@ -54,18 +51,18 @@ const s = StyleSheet.create({
   folio: { fontSize: 11, fontFamily: "Helvetica-Bold", marginTop: 3 },
   muted: { fontSize: 8, color: COLORS.muted, marginTop: 2 },
   notice: { fontSize: 7, color: COLORS.muted, marginTop: 3, textAlign: "right" },
-  band: { backgroundColor: GRAY_DARK, paddingVertical: 2.5, marginTop: 6, marginBottom: 3 },
-  bandText: { color: "#FFFFFF", fontFamily: "Helvetica-Bold", fontSize: 10, textAlign: "center" },
+  band: { backgroundColor: COLORS.blue, borderRadius: 3, paddingVertical: 3, marginTop: 6, marginBottom: 3 },
+  bandText: { color: COLORS.onBlue, fontFamily: "Helvetica-Bold", fontSize: 9.5, letterSpacing: 1, textAlign: "center" },
   row: { flexDirection: "row" },
-  head: { flex: 1, backgroundColor: GRAY, paddingVertical: 2.5, paddingHorizontal: 3, borderRightWidth: 1, borderRightColor: "#FFFFFF" },
-  headText: { fontFamily: "Helvetica-Bold", fontSize: 7.5, textAlign: "center" },
-  cell: { flex: 1, paddingVertical: 2.5, paddingHorizontal: 3 },
+  head: { flex: 1, backgroundColor: COLORS.surface, paddingVertical: 2.5, paddingHorizontal: 3, borderRightWidth: 1, borderRightColor: "#FFFFFF" },
+  headText: { fontFamily: "Helvetica-Bold", fontSize: 7, color: COLORS.blueDark, textAlign: "center" },
+  cell: { flex: 1, paddingVertical: 2.5, paddingHorizontal: 3, borderBottomWidth: 0.5, borderBottomColor: COLORS.border },
   cellText: { fontSize: 8, textAlign: "center" },
   blank: { flex: 1 },
   gap: { height: 4 },
   totals: { flexDirection: "row", marginTop: 4 },
-  totLabel: { backgroundColor: GRAY, paddingVertical: 4, paddingHorizontal: 6, fontFamily: "Helvetica-Bold", fontSize: 8 },
-  totValue: { backgroundColor: GRAY_LIGHT, paddingVertical: 4, paddingHorizontal: 6, fontSize: 8 },
+  totLabel: { backgroundColor: COLORS.surface, color: COLORS.blueDark, paddingVertical: 4, paddingHorizontal: 6, fontFamily: "Helvetica-Bold", fontSize: 8 },
+  totValue: { backgroundColor: COLORS.background, paddingVertical: 4, paddingHorizontal: 6, fontFamily: "Helvetica-Bold", fontSize: 8 },
   box: { borderWidth: 0.6, borderColor: COLORS.border, borderRadius: 4, padding: 6, minHeight: 30, lineHeight: 1.4 },
   signs: { flexDirection: "row", justifyContent: "space-between", marginTop: 16 },
   sign: { width: "42%", borderTopWidth: 0.8, borderTopColor: COLORS.text, paddingTop: 5, alignItems: "center" },
