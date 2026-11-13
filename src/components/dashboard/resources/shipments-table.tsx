@@ -26,11 +26,13 @@ import type { Shipment, ShipmentStatus } from "@/types/shipment.types";
 import { ChevronDown, FileText, ImageDown, Loader2, MoreVertical, Trash2 } from "lucide-react";
 import { trackingFileName } from "@/lib/shipment-tracking";
 import { TrackingImageDialog, type TrackingPreview } from "@/components/dashboard/resources/tracking-image-dialog";
-import { SHIPMENT_STATUSES } from "@/lib/shipment-statuses";
+import { SHIPMENT_STATUSES, SHIPMENT_STATUS_GROUPS } from "@/lib/shipment-statuses";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -75,7 +77,6 @@ export function shipmentStatusDisplay(status: string, incident?: string | null) 
 
 const STATUS_FILTER_ALL = "all" as const;
 
-const STATUS_ORDER: ShipmentStatus[] = SHIPMENT_STATUSES.map((st) => st.value);
 
 /**
  * Estado del embarque en la tabla: con permiso de editar, un menú para
@@ -117,12 +118,19 @@ function StatusCell({
           {badge}
           {busy ? <Loader2 className="size-3 animate-spin" /> : <ChevronDown className="text-muted-foreground size-3 shrink-0" />}
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
-          {STATUS_ORDER.map((st) => (
-            <DropdownMenuItem key={st} disabled={st === shipment.status} onSelect={() => onChange(st)}>
-              <span className={`size-2 rounded-full ${SHIPMENT_STATUS_CONFIG[st].badgeClass}`} aria-hidden />
-              {SHIPMENT_STATUS_CONFIG[st].label}
-            </DropdownMenuItem>
+        {/* 41 estados: agrupados por etapa y con scroll para que quepan en pantalla. */}
+        <DropdownMenuContent align="start" className="max-h-[min(70vh,32rem)] overflow-y-auto">
+          {SHIPMENT_STATUS_GROUPS.map((g, gi) => (
+            <DropdownMenuGroup key={g.value}>
+              {gi > 0 && <DropdownMenuSeparator />}
+              <DropdownMenuLabel className="text-muted-foreground text-[10px] tracking-wide uppercase">{g.label}</DropdownMenuLabel>
+              {SHIPMENT_STATUSES.filter((st) => st.group === g.value).map((st) => (
+                <DropdownMenuItem key={st.value} disabled={st.value === shipment.status} onSelect={() => onChange(st.value)}>
+                  <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: st.solid }} aria-hidden />
+                  {st.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuGroup>
           ))}
         </DropdownMenuContent>
       </DropdownMenu>

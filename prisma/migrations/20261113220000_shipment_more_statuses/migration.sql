@@ -1,0 +1,26 @@
+-- Más estados operativos del embarque, pedidos por el cliente.
+ALTER TYPE "ShipmentStatus" ADD VALUE IF NOT EXISTS 'awaiting_load';
+ALTER TYPE "ShipmentStatus" ADD VALUE IF NOT EXISTS 'awaiting_load_ramp';
+ALTER TYPE "ShipmentStatus" ADD VALUE IF NOT EXISTS 'ramp_awaiting_load';
+ALTER TYPE "ShipmentStatus" ADD VALUE IF NOT EXISTS 'load_started';
+ALTER TYPE "ShipmentStatus" ADD VALUE IF NOT EXISTS 'loading';
+ALTER TYPE "ShipmentStatus" ADD VALUE IF NOT EXISTS 'route_started';
+ALTER TYPE "ShipmentStatus" ADD VALUE IF NOT EXISTS 'on_route';
+ALTER TYPE "ShipmentStatus" ADD VALUE IF NOT EXISTS 'near_destination';
+ALTER TYPE "ShipmentStatus" ADD VALUE IF NOT EXISTS 'awaiting_restriction_end';
+ALTER TYPE "ShipmentStatus" ADD VALUE IF NOT EXISTS 'awaiting_reschedule';
+ALTER TYPE "ShipmentStatus" ADD VALUE IF NOT EXISTS 'resting';
+ALTER TYPE "ShipmentStatus" ADD VALUE IF NOT EXISTS 'near_safe_yard';
+ALTER TYPE "ShipmentStatus" ADD VALUE IF NOT EXISTS 'entered_awaiting_ramp';
+ALTER TYPE "ShipmentStatus" ADD VALUE IF NOT EXISTS 'awaiting_unload_entry';
+ALTER TYPE "ShipmentStatus" ADD VALUE IF NOT EXISTS 'entered_awaiting_unload';
+ALTER TYPE "ShipmentStatus" ADD VALUE IF NOT EXISTS 'ramp_awaiting_unload';
+ALTER TYPE "ShipmentStatus" ADD VALUE IF NOT EXISTS 'unload_started';
+ALTER TYPE "ShipmentStatus" ADD VALUE IF NOT EXISTS 'unloading';
+ALTER TYPE "ShipmentStatus" ADD VALUE IF NOT EXISTS 'unload_in_process';
+ALTER TYPE "ShipmentStatus" ADD VALUE IF NOT EXISTS 'unload_completed';
+ALTER TYPE "ShipmentStatus" ADD VALUE IF NOT EXISTS 'stopped_blockade';
+ALTER TYPE "ShipmentStatus" ADD VALUE IF NOT EXISTS 'tire_repair';
+ALTER TYPE "ShipmentStatus" ADD VALUE IF NOT EXISTS 'stopped_breakdown';
+ALTER TYPE "ShipmentStatus" ADD VALUE IF NOT EXISTS 'crashed';
+ALTER TYPE "ShipmentStatus" ADD VALUE IF NOT EXISTS 'false_freight';

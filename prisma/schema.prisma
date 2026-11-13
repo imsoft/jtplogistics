@@ -803,6 +803,31 @@ enum ShipmentStatus {
   awaiting_unload
   first_delivery
   at_ramp
+  awaiting_load
+  awaiting_load_ramp
+  ramp_awaiting_load
+  load_started
+  loading
+  route_started
+  on_route
+  near_destination
+  awaiting_restriction_end
+  awaiting_reschedule
+  resting
+  near_safe_yard
+  entered_awaiting_ramp
+  awaiting_unload_entry
+  entered_awaiting_unload
+  ramp_awaiting_unload
+  unload_started
+  unloading
+  unload_in_process
+  unload_completed
+  stopped_blockade
+  tire_repair
+  stopped_breakdown
+  crashed
+  false_freight
 }
 
 model Shipment {

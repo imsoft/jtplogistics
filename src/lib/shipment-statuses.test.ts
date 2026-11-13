@@ -4,11 +4,13 @@ import { outcomeAfterStatus } from "./shipment-outcome";
 
 describe("estados del embarque", () => {
   it("incluye los estados operativos que pidió el cliente", () => {
-    expect(SHIPMENT_STATUS_VALUES).toHaveLength(16);
+    expect(SHIPMENT_STATUS_VALUES).toHaveLength(41);
     expect(shipmentStatusLabel("awaiting_unload")).toBe("Unidad en espera de descarga");
     expect(shipmentStatusLabel("at_ramp")).toBe("Unidad en rampa");
     expect(isShipmentStatus("meal_stop")).toBe(true);
     expect(isShipmentStatus("otro")).toBe(false);
+    expect(shipmentStatusLabel("false_freight")).toBe("Flete en falso");
+    expect(shipmentStatusLabel("near_safe_yard")).toBe("Unidad próxima a resguardo");
   });
 
   it("los operativos van en camino: no dejan resultado de entrega", () => {
