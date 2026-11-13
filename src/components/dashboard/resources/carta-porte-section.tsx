@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { FileStack, Loader2, Plus, Trash2, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { PlatesInput } from "@/components/ui/phone-plates-input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -89,14 +90,12 @@ function LocationFields({
         <Field id={`${p}-rfc`} label="RFC" value={value.rfc} onChange={set("rfc")} disabled={disabled} />
         <Field id={`${p}-name`} label="Nombre o razón social" value={value.name} onChange={set("name")} disabled={disabled} className="lg:col-span-2" />
         <Field id={`${p}-numreg`} label="NumRegIdTrib" value={value.numRegIdTrib} onChange={set("numRegIdTrib")} disabled={disabled} help="Solo si es extranjero." />
-        <Field
-          id={`${p}-date`}
-          label={kind === "origin" ? "Fecha y hora de salida" : "Fecha y hora de llegada"}
-          type="datetime-local"
-          value={value.dateTime}
-          onChange={set("dateTime")}
-          disabled={disabled}
-        />
+        <div className="space-y-1.5">
+          <Label htmlFor={`${p}-date`} className="text-xs">
+            {kind === "origin" ? "Fecha y hora de salida" : "Fecha y hora de llegada"}
+          </Label>
+          <DateTimePicker id={`${p}-date`} value={value.dateTime} onChange={set("dateTime")} disabled={disabled} />
+        </div>
         <Field id={`${p}-street`} label="Calle" value={value.street} onChange={set("street")} disabled={disabled} className="lg:col-span-2" />
         <Field id={`${p}-ext`} label="Núm. exterior" value={value.extNumber} onChange={set("extNumber")} disabled={disabled} />
         <Field id={`${p}-int`} label="Núm. interior" value={value.intNumber} onChange={set("intNumber")} disabled={disabled} />

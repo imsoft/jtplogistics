@@ -6,6 +6,7 @@ import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { MonthPicker } from "@/components/ui/month-picker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -105,7 +106,7 @@ export function ExpensesView({ canCreate, canUpdate, canDelete }: { canCreate: b
         <div className="flex flex-wrap items-end gap-3">
           <div className="space-y-1.5">
             <Label htmlFor="exp-month">Mes</Label>
-            <Input id="exp-month" type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="w-auto" />
+            <MonthPicker id="exp-month" value={month} onChange={setMonth} />
           </div>
           <div className="w-full space-y-1.5 sm:w-72">
             <Label htmlFor="exp-search">Buscar</Label>

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Clock, Moon } from "lucide-react";
 import { FormSection } from "@/components/ui/form-section";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
+import { TimePicker } from "@/components/ui/date-time-picker";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -138,23 +138,17 @@ export function EmployeeScheduleCard({
                   </div>
                   {day && (
                     <>
-                      <Input
-                        type="time"
+                      <TimePicker
                         aria-label={`Entrada ${label}`}
                         value={day.start}
-                        onChange={(e) =>
-                          setDraft((p) => ({ ...p!, [n]: { ...p![n], start: e.target.value } }))
-                        }
+                        onChange={(v) => setDraft((p) => ({ ...p!, [n]: { ...p![n], start: v } }))}
                         className="w-auto"
                       />
                       <span className="text-muted-foreground text-sm">a</span>
-                      <Input
-                        type="time"
+                      <TimePicker
                         aria-label={`Salida ${label}`}
                         value={day.end}
-                        onChange={(e) =>
-                          setDraft((p) => ({ ...p!, [n]: { ...p![n], end: e.target.value } }))
-                        }
+                        onChange={(v) => setDraft((p) => ({ ...p!, [n]: { ...p![n], end: v } }))}
                         className="w-auto"
                       />
                       {crossesMidnight && (

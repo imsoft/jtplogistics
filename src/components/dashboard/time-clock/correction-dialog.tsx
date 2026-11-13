@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AppSelect } from "@/components/ui/app-select";
@@ -119,12 +119,7 @@ export function CorrectionDialog({
             {kind === "adjust" && (
               <div className="space-y-2">
                 <Label htmlFor="corr-time">Hora correcta</Label>
-                <Input
-                  id="corr-time"
-                  type="datetime-local"
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                />
+                <DateTimePicker id="corr-time" value={time} onChange={setTime} />
               </div>
             )}
 

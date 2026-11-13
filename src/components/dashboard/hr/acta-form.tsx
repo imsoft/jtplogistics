@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ActionBar } from "@/components/ui/form-actions";
 import { FormSection } from "@/components/ui/form-section";
 import { Input } from "@/components/ui/input";
+import { TimePicker } from "@/components/ui/date-time-picker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AppSelect } from "@/components/ui/app-select";
@@ -164,10 +165,10 @@ export function ActaForm({
             <DatePicker id="a-date" value={data.date as string} onChange={(v) => set("date")(v as never)} />
           </Field>
           <Field id="a-start" label="Hora de inicio" error={errors.startTime}>
-            <Input id="a-start" type="time" {...text("startTime")} />
+            <TimePicker id="a-start" value={data.startTime as string} onChange={(v) => set("startTime")(v as never)} />
           </Field>
           <Field id="a-end" label="Hora de cierre" help="Vacía: queda la línea para escribirla a mano." error={errors.endTime}>
-            <Input id="a-end" type="time" {...text("endTime")} />
+            <TimePicker id="a-end" value={data.endTime as string} onChange={(v) => set("endTime")(v as never)} />
           </Field>
           <div className="sm:col-span-2">
             <Field id="a-resp" label="Quién levanta el acta" error={errors.responsibleName}>

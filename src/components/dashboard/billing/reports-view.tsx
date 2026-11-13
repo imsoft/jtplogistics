@@ -6,7 +6,7 @@ import { FileDown, FileSpreadsheet, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Input } from "@/components/ui/input";
+import { MonthPicker } from "@/components/ui/month-picker";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AppSelect } from "@/components/ui/app-select";
@@ -273,7 +273,7 @@ function CashFlowCard({ generatedBy }: { generatedBy: string }) {
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="cf-month">Mes</Label>
-          <Input id="cf-month" type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="w-auto" />
+          <MonthPicker id="cf-month" value={month} onChange={setMonth} />
         </div>
 
         {loading ? (
@@ -356,7 +356,7 @@ function ExportCard() {
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="ex-month">Mes</Label>
-          <Input id="ex-month" type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="w-auto" />
+          <MonthPicker id="ex-month" value={month} onChange={setMonth} />
         </div>
         {last && last.month === month && <p className="text-muted-foreground text-sm">Se descargó con {last.counts}</p>}
         <Button onClick={download} disabled={busy || !month}>
