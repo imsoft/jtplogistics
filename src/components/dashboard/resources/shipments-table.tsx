@@ -5,7 +5,7 @@ import { DataTableSkeleton } from "@/components/ui/skeletons";
 import { useRouter } from "next/navigation";
 import { useServerTable } from "@/hooks/use-server-table";
 import { type ColumnDef } from "@tanstack/react-table";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, STICKY_ACTIONS_CLASS } from "@/components/ui/data-table";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -405,7 +405,7 @@ export function ShipmentsTable({
       id: "actions",
       // Pegada al borde derecho: en laptops la tabla se recorre de lado y el
       // botón quedaría escondido al final.
-      meta: { className: "sticky right-0 z-[1] bg-background w-10" },
+      meta: { className: STICKY_ACTIONS_CLASS },
       enableSorting: false,
       enableHiding: false,
       header: () => <span className="sr-only">Acciones</span>,
@@ -552,9 +552,14 @@ export function ShipmentsTable({
       getRowId={(row) => row.id}
       onRowClick={(shipment) => router.push(`${detailBase}/${shipment.id}`)}
       getRowClassName={getRowClassName}
+      searchOnOwnRow
       toolbar={
-        <div className="flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-          <div className="space-y-1.5 w-full sm:w-auto sm:min-w-50">
+        // Un solo renglón en escritorio: estado, las cuatro fechas, "Limpiar
+        // filtros" y (lo pone la tabla) "Exportar", todos alineados abajo.
+        <div className="flex w-full min-w-0 flex-col gap-3 sm:w-auto sm:flex-1 sm:flex-row sm:flex-wrap sm:items-end sm:gap-2">
+          {/* flex + gap (no space-y): la lista trae un elemento oculto que con
+              space-y sumaba margen y subía "Estado" sobre las fechas. */}
+          <div className="flex w-full flex-col gap-1.5 sm:w-52">
             <Label htmlFor="shipment-filter-status" className="text-xs text-muted-foreground">
               Estado
             </Label>
@@ -565,8 +570,9 @@ export function ShipmentsTable({
               className="w-full"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end sm:gap-2">
-            <div className="space-y-1.5 min-w-0 sm:w-37.5">
+          {/* En celular, las fechas en dos columnas; en escritorio, en el mismo renglón. */}
+          <div className="grid grid-cols-2 gap-3 sm:contents">
+            <div className="flex min-w-0 flex-col gap-1.5 sm:w-36">
               <Label htmlFor="shipment-filter-pickup-from" className="text-xs text-muted-foreground">
                 Recolección desde
               </Label>
@@ -577,7 +583,7 @@ export function ShipmentsTable({
                 className="w-full"
               />
             </div>
-            <div className="space-y-1.5 min-w-0 sm:w-37.5">
+            <div className="flex min-w-0 flex-col gap-1.5 sm:w-36">
               <Label htmlFor="shipment-filter-pickup-to" className="text-xs text-muted-foreground">
                 Recolección hasta
               </Label>
@@ -588,7 +594,7 @@ export function ShipmentsTable({
                 className="w-full"
               />
             </div>
-            <div className="space-y-1.5 min-w-0 sm:w-37.5">
+            <div className="flex min-w-0 flex-col gap-1.5 sm:w-36">
               <Label htmlFor="shipment-filter-delivery-from" className="text-xs text-muted-foreground">
                 Entrega desde
               </Label>
@@ -599,7 +605,7 @@ export function ShipmentsTable({
                 className="w-full"
               />
             </div>
-            <div className="space-y-1.5 min-w-0 sm:w-37.5">
+            <div className="flex min-w-0 flex-col gap-1.5 sm:w-36">
               <Label htmlFor="shipment-filter-delivery-to" className="text-xs text-muted-foreground">
                 Entrega hasta
               </Label>
@@ -611,7 +617,7 @@ export function ShipmentsTable({
               />
             </div>
           </div>
-          <div className="flex w-full flex-col gap-2 sm:flex-row sm:ml-auto sm:w-auto sm:shrink-0">
+          <div className="flex w-full flex-col gap-2 sm:ml-auto sm:w-auto sm:shrink-0 sm:flex-row">
             <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={clearFilters}>
               Limpiar filtros
             </Button>

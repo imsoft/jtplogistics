@@ -7,7 +7,7 @@ import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAdminFetch } from "@/hooks/use-admin-fetch";
 import { type ColumnDef } from "@tanstack/react-table";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, STICKY_ACTIONS_CLASS } from "@/components/ui/data-table";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -168,7 +168,7 @@ export function FinancesTable({
       id: "actions",
       // Pegada al borde derecho: en laptops la tabla se recorre de lado y el
       // botón quedaría escondido al final.
-      meta: { className: "sticky right-0 z-[1] bg-background w-10" },
+      meta: { className: STICKY_ACTIONS_CLASS },
       enableSorting: false,
       enableHiding: false,
       header: () => <span className="sr-only">Acciones</span>,

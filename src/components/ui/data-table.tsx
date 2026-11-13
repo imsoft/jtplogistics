@@ -63,6 +63,14 @@ export interface DataTableColumnMeta {
   className?: string;
 }
 
+/**
+ * Columna de acciones pegada a la derecha. Lleva fondo para que el texto de la
+ * fila no se vea por detrás al recorrer la tabla de lado; en el encabezado, el
+ * mismo azul claro del resto de los títulos (si no, queda un hueco blanco).
+ */
+export const STICKY_ACTIONS_CLASS =
+  "sticky right-0 z-[1] w-10 bg-background [thead_&]:bg-[color-mix(in_oklab,var(--primary)_7%,var(--background))]";
+
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -73,6 +81,11 @@ interface DataTableProps<TData, TValue> {
   onRowClick?: (row: TData) => void;
   getRowClassName?: (row: TData) => string;
   toolbar?: React.ReactNode;
+  /**
+   * Buscador en su propio renglón y, abajo, los filtros con "Exportar" en un
+   * solo renglón (para barras con varios filtros).
+   */
+  searchOnOwnRow?: boolean;
 
   // --- Modo servidor (opcional). Si se omiten, la tabla opera en modo cliente. ---
   /** Activa paginación controlada por el servidor. */
@@ -124,6 +137,7 @@ export function DataTable<TData, TValue>({
   onRowClick,
   getRowClassName,
   toolbar,
+  searchOnOwnRow = false,
   manualPagination = false,
   pageCount,
   pageIndex,
@@ -237,7 +251,7 @@ export function DataTable<TData, TValue>({
   return (
     <div className="w-full min-w-0 space-y-4">
       {(showSearch || toolbar || exportTitle) && (
-        <div className="flex flex-wrap items-center gap-2 py-2">
+        <div className="flex flex-wrap items-end gap-2 py-2">
           {isManualSearch ? (
             <Input
               type="search"
@@ -259,6 +273,7 @@ export function DataTable<TData, TValue>({
               className="w-full sm:max-w-sm"
             />
           ) : null}
+          {searchOnOwnRow && (isManualSearch || filterKey) && <div className="basis-full" aria-hidden />}
           {toolbar}
           {exportTitle && (
             <div className="sm:ml-auto">
