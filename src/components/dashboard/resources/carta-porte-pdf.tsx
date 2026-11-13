@@ -1,6 +1,8 @@
 import { Document, Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import { BRAND as COLORS } from "@/lib/email-layout";
 import { pdfSentence, pdfUpper } from "@/lib/pdf-text-case";
+import { cartaPorteTotals, locationId, readCartaPorte, type CartaPorte, type CartaPorteLocation } from "@/lib/carta-porte";
+import { labelOf, SCT_PERMITS, TRAILER_SUBTYPES } from "@/lib/sat-catalogs";
 
 export interface CartaPorteData {
   eco: string;
@@ -20,6 +22,8 @@ export interface CartaPorteData {
   truck: string;
   trailer: string;
   comments: string;
+  /** Ubicaciones, mercancías y autotransporte capturados en el embarque. */
+  sat?: CartaPorte | null;
 }
 
 const MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
@@ -27,127 +31,258 @@ const day = (iso: string) => {
   const [y, m, d] = (iso ?? "").slice(0, 10).split("-").map(Number);
   return y && m && d ? `${d} de ${MONTHS[m - 1]} de ${y}` : "Por confirmar";
 };
-const v = (s: string) => (s?.trim() ? s.trim() : "—");
+const v = (s: string | null | undefined) => (s?.trim() ? s.trim() : "—");
+/** "2026-03-12T18:00" → "2026-03-12 18:00". */
+const dateTime = (s: string, fallbackDay: string) => (s ? s.replace("T", " ") : fallbackDay ? fallbackDay.slice(0, 10) : "—");
+/** Número con miles y decimales fijos: "21000" → "21,000.000". */
+const fixed = (s: string, digits: number) => {
+  const n = Number(s);
+  return s && Number.isFinite(n) ? n.toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits }) : "—";
+};
+
+const GRAY_DARK = "#575757";
+const GRAY = "#C9C9C9";
+const GRAY_LIGHT = "#EFEFEF";
 
 const s = StyleSheet.create({
-  page: { paddingTop: 28, paddingBottom: 48, paddingHorizontal: 40, fontFamily: "Helvetica", fontSize: 9.5, color: COLORS.text, textTransform: "uppercase" },
+  page: { paddingTop: 20, paddingBottom: 36, paddingHorizontal: 32, fontFamily: "Helvetica", fontSize: 8.5, color: COLORS.text, textTransform: "uppercase" },
   bar: { position: "absolute", top: 0, left: 0, right: 0, height: 6, backgroundColor: COLORS.blue },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
-  logo: { width: 120, height: 56, objectFit: "contain" },
-  headRight: { alignItems: "flex-end", maxWidth: 300 },
-  title: { fontSize: 15, fontFamily: "Helvetica-Bold", color: COLORS.blue, textTransform: "uppercase" },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
+  logo: { width: 100, height: 44, objectFit: "contain" },
+  headRight: { alignItems: "flex-end", maxWidth: 400 },
+  title: { fontSize: 15, fontFamily: "Helvetica-Bold", color: COLORS.blue },
   folio: { fontSize: 11, fontFamily: "Helvetica-Bold", marginTop: 3 },
-  muted: { fontSize: 8.5, color: COLORS.muted, marginTop: 2 },
-  notice: { fontSize: 7.5, color: COLORS.muted, marginTop: 3, textAlign: "right" },
-  section: { marginTop: 12 },
-  sectionTitle: { fontSize: 8.5, fontFamily: "Helvetica-Bold", color: COLORS.blue, textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 },
-  grid: { flexDirection: "row", flexWrap: "wrap", borderWidth: 0.6, borderColor: COLORS.border, borderRadius: 4 },
-  cell: { width: "50%", padding: 7, borderBottomWidth: 0.5, borderBottomColor: COLORS.border },
-  label: { fontSize: 7.5, color: COLORS.muted, textTransform: "uppercase", marginBottom: 2 },
-  value: { fontSize: 10, fontFamily: "Helvetica-Bold" },
-  stops: { flexDirection: "row", gap: 10 },
-  stop: { flex: 1, backgroundColor: COLORS.background, borderRadius: 6, padding: 10 },
-  stopTitle: { fontSize: 8.5, fontFamily: "Helvetica-Bold", color: COLORS.blue, textTransform: "uppercase", marginBottom: 4 },
-  city: { fontSize: 12, fontFamily: "Helvetica-Bold", marginBottom: 3 },
-  box: { borderWidth: 0.6, borderColor: COLORS.border, borderRadius: 4, padding: 8, minHeight: 40, lineHeight: 1.4 },
-  signs: { flexDirection: "row", justifyContent: "space-between", marginTop: 44 },
+  muted: { fontSize: 8, color: COLORS.muted, marginTop: 2 },
+  notice: { fontSize: 7, color: COLORS.muted, marginTop: 3, textAlign: "right" },
+  band: { backgroundColor: GRAY_DARK, paddingVertical: 2.5, marginTop: 6, marginBottom: 3 },
+  bandText: { color: "#FFFFFF", fontFamily: "Helvetica-Bold", fontSize: 10, textAlign: "center" },
+  row: { flexDirection: "row" },
+  head: { flex: 1, backgroundColor: GRAY, paddingVertical: 2.5, paddingHorizontal: 3, borderRightWidth: 1, borderRightColor: "#FFFFFF" },
+  headText: { fontFamily: "Helvetica-Bold", fontSize: 7.5, textAlign: "center" },
+  cell: { flex: 1, paddingVertical: 2.5, paddingHorizontal: 3 },
+  cellText: { fontSize: 8, textAlign: "center" },
+  blank: { flex: 1 },
+  gap: { height: 4 },
+  totals: { flexDirection: "row", marginTop: 4 },
+  totLabel: { backgroundColor: GRAY, paddingVertical: 4, paddingHorizontal: 6, fontFamily: "Helvetica-Bold", fontSize: 8 },
+  totValue: { backgroundColor: GRAY_LIGHT, paddingVertical: 4, paddingHorizontal: 6, fontSize: 8 },
+  box: { borderWidth: 0.6, borderColor: COLORS.border, borderRadius: 4, padding: 6, minHeight: 30, lineHeight: 1.4 },
+  signs: { flexDirection: "row", justifyContent: "space-between", marginTop: 16 },
   sign: { width: "42%", borderTopWidth: 0.8, borderTopColor: COLORS.text, paddingTop: 5, alignItems: "center" },
-  footer: { position: "absolute", bottom: 18, left: 40, right: 40, borderTopWidth: 0.5, borderTopColor: COLORS.border, paddingTop: 5, flexDirection: "row", justifyContent: "space-between", fontSize: 7.5, color: COLORS.muted },
+  bold: { fontFamily: "Helvetica-Bold", fontSize: 9 },
+  footer: { position: "absolute", bottom: 18, left: 32, right: 32, borderTopWidth: 0.5, borderTopColor: COLORS.border, paddingTop: 5, flexDirection: "row", justifyContent: "space-between", fontSize: 7.5, color: COLORS.muted },
 });
+
+type Pair = [label: string, value: string] | null;
+
+/** Renglones de 5 columnas: encabezado gris y valor debajo, como el CFDI. */
+function Grid({ pairs, cols = 5 }: { pairs: Pair[]; cols?: number }) {
+  const rows: Pair[][] = [];
+  for (let i = 0; i < pairs.length; i += cols) rows.push(pairs.slice(i, i + cols));
+  return (
+    <View>
+      {rows.map((r, i) => {
+        const filled = [...r, ...Array(cols - r.length).fill(null)] as Pair[];
+        return (
+          <View key={i} wrap={false}>
+            <View style={s.row}>
+              {filled.map((p, j) =>
+                p ? (
+                  <View key={j} style={s.head}>
+                    <Text style={s.headText}>{p[0]}</Text>
+                  </View>
+                ) : (
+                  <View key={j} style={s.blank} />
+                )
+              )}
+            </View>
+            <View style={s.row}>
+              {filled.map((p, j) => (
+                <View key={j} style={s.cell}>
+                  <Text style={s.cellText}>{p ? p[1] : ""}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+function Band({ children }: { children: string }) {
+  return (
+    <View style={s.band} wrap={false}>
+      <Text style={s.bandText}>{children}</Text>
+    </View>
+  );
+}
+
+function locationPairs(kind: "origin" | "destination", l: CartaPorteLocation, city: string, address: string, fallbackDay: string): Pair[] {
+  const hasAddress = l.street || l.postalCode || l.colony;
+  return [
+    ["Tipo", kind === "origin" ? "Origen" : "Destino"],
+    ["ID", locationId(kind)],
+    ["RFC", v(l.rfc)],
+    ["Nombre", pdfUpper(v(l.name))],
+    ["NumRegIdTrib", v(l.numRegIdTrib)],
+    ...(hasAddress
+      ? ([
+          ["Calle", pdfUpper(v(l.street))],
+          ["Núm. exterior", v(l.extNumber)],
+          ["CP", v(l.postalCode)],
+          ["Colonia", pdfUpper(v(l.colony))],
+          ["Localidad", pdfUpper(v(l.locality))],
+          ["Municipio", pdfUpper(v(l.municipality))],
+          ["Estado", pdfUpper(v(l.state))],
+          ["País", pdfUpper(v(l.country))],
+        ] as Pair[])
+      : ([["Domicilio", pdfUpper(v(address || city))]] as Pair[])),
+    ["Fecha/hora", dateTime(l.dateTime, fallbackDay)],
+    ...(kind === "destination" && l.distanceKm ? ([["Distancia (km)", fixed(l.distanceKm, 2)]] as Pair[]) : []),
+    ...(l.intNumber && hasAddress ? ([["Núm. interior", v(l.intNumber)]] as Pair[]) : []),
+  ];
+}
+
+/** Solo la página: para juntarla con la carta de instrucciones en un mismo PDF. */
+export function CartaPortePage({ data, logoUrl }: { data: CartaPorteData; logoUrl: string }) {
+  const today = new Date();
+  const folio = data.eco ? `ECO ${pdfUpper(data.eco)}` : "Sin ECO";
+  const cp = readCartaPorte(data.sat ?? {});
+  const goods = cp.goods.filter((g) => g.description || g.satKey || g.weightKg || g.quantity);
+  const totals = cartaPorteTotals(cp);
+  const t = cp.transport;
+  const permit = t.permitType ? (labelOf(SCT_PERMITS, t.permitType) ?? t.permitType).split(" · ")[0] : "—";
+  const trailerSub = t.trailerSubtype ? (labelOf(TRAILER_SUBTYPES, t.trailerSubtype) ?? t.trailerSubtype) : "";
+
+  return (
+    <Page size="LETTER" style={s.page}>
+      <View style={s.bar} fixed />
+      <View style={s.header}>
+        {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf no tiene alt */}
+        <Image src={logoUrl} style={s.logo} />
+        <View style={s.headRight}>
+          <Text style={s.title}>Carta porte</Text>
+          <Text style={s.folio}>{folio}</Text>
+          <Text style={s.muted}>
+            Emitida el {today.getDate()} de {MONTHS[today.getMonth()]} de {today.getFullYear()}
+          </Text>
+          <Text style={s.notice}>Documento de traslado. No sustituye al CFDI con complemento Carta Porte.</Text>
+        </View>
+      </View>
+
+      <Band>Servicio</Band>
+      <Grid
+        cols={4}
+        pairs={[
+          ["Número ECO", pdfUpper(v(data.eco))],
+          ["Cliente", pdfUpper(v(data.client))],
+          ["Recolección", day(data.pickupDate)],
+          ["Entrega", day(data.deliveryDate)],
+          ["Ruta", `${pdfUpper(v(data.origin))} - ${pdfUpper(v(data.destination))}`],
+          ["Tipo de unidad", pdfSentence(v(data.unit))],
+          ["Producto", pdfSentence(v(data.product))],
+          ["Transportista", pdfUpper(v(data.legalName))],
+          ["Operador", pdfUpper(v(data.operatorName))],
+          ["Celular", v(data.phone)],
+        ]}
+      />
+
+      <Band>Ubicaciones</Band>
+      <Grid pairs={locationPairs("origin", cp.origin, data.origin, data.originAddress, data.pickupDate)} />
+      <View style={s.gap} />
+      <Grid pairs={locationPairs("destination", cp.destination, data.destination, data.destinationAddress, data.deliveryDate)} />
+
+      <Band>Mercancías</Band>
+      {goods.length === 0 ? (
+        <Grid cols={2} pairs={[["Descripción", pdfSentence(v(data.product))], ["Peso en kgs", "—"]]} />
+      ) : (
+        goods.map((g, i) => (
+          <View key={i}>
+            {i > 0 && <View style={s.gap} />}
+            <Grid
+              pairs={[
+                ["Bienes transp.", v(g.satKey)],
+                ["Descripción", pdfUpper(v(g.description))],
+                ["Cantidad", fixed(g.quantity, 6)],
+                ["Clave unidad", v(g.unitKey)],
+                ["Peso en kgs", fixed(g.weightKg, 3)],
+                ...((g.tareKg || g.netKg
+                  ? [
+                      ["Peso tara", fixed(g.tareKg || "0", 3)],
+                      ["Peso neto", fixed(g.netKg || "0", 3)],
+                    ]
+                  : []) as Pair[]),
+              ]}
+            />
+          </View>
+        ))
+      )}
+      <View style={s.totals} wrap={false}>
+        <Text style={[s.totLabel, { width: "20%" }]}>Peso bruto total</Text>
+        <Text style={[s.totValue, { width: "20%" }]}>{fixed(String(totals.grossWeightKg), 3)}</Text>
+        <Text style={[s.totLabel, { width: "15%" }]}>Unidad peso</Text>
+        <Text style={[s.totValue, { width: "10%" }]}>KGM</Text>
+        <Text style={[s.totLabel, { width: "20%" }]}>Total mercancías</Text>
+        <Text style={[s.totValue, { width: "15%" }]}>{String(totals.count)}</Text>
+      </View>
+      <View style={s.totals} wrap={false}>
+        <Text style={[s.totLabel, { width: "45%" }]}>Logística inversa (recolección / devolución)</Text>
+        <Text style={[s.totValue, { width: "15%" }]}>{cp.inverseLogistics ? "Sí" : "No"}</Text>
+      </View>
+
+      <Band>Autotransporte</Band>
+      <Grid
+        pairs={[
+          ["Tipo permiso SCT", permit],
+          ["Folio permiso SCT", v(t.permitNumber)],
+          ["Config. vehicular", v(t.vehicleConfig)],
+          ["Placa unidad", v(t.plates || data.truck)],
+          ["Modelo unidad", v(t.modelYear)],
+          ["Aseguradora resp. civil", pdfUpper(v(t.civilInsurer))],
+          ["Póliza resp. civil", v(t.civilPolicy)],
+          ["Peso bruto vehicular", t.grossVehicleWeight ? fixed(t.grossVehicleWeight, 2) : "—"],
+          ["Aseguradora carga", pdfUpper(v(t.cargoInsurer))],
+          ["Póliza carga", v(t.cargoPolicy)],
+          ["Prima seguro carga", t.cargoPremium ? `$${fixed(t.cargoPremium, 2)}` : "—"],
+          ["Remolque", trailerSub ? trailerSub.split(" · ")[0] : "—"],
+          ["Placa remolque", v(t.trailerPlates || data.trailer)],
+        ]}
+      />
+
+      {data.comments?.trim() ? (
+        <View wrap={false}>
+          <Band>Observaciones</Band>
+          <View style={s.box}>
+            <Text>{data.comments.trim()}</Text>
+          </View>
+        </View>
+      ) : null}
+
+      <View style={s.signs} wrap={false}>
+        <View style={s.sign}>
+          <Text style={s.bold}>JTP LOGISTICS</Text>
+          <Text style={s.muted}>Nombre y firma</Text>
+        </View>
+        <View style={s.sign}>
+          <Text style={s.bold}>{pdfUpper(v(data.legalName))}</Text>
+          <Text style={s.muted}>Transportista · nombre y firma</Text>
+        </View>
+      </View>
+
+      <View style={s.footer} fixed>
+        <Text>JTP Logistics · El mejor socio comercial</Text>
+        <Text>jtp.com.mx</Text>
+      </View>
+    </Page>
+  );
+}
 
 /** Carta porte imprimible del embarque: documento de traslado, no es el CFDI. */
 export function CartaPortePdf({ data, logoUrl }: { data: CartaPorteData; logoUrl: string }) {
-  const today = new Date();
-  const folio = data.eco ? `ECO ${pdfUpper(data.eco)}` : "Sin ECO";
-  const field = (label: string, value: string) => (
-    <View style={s.cell}>
-      <Text style={s.label}>{label}</Text>
-      <Text style={s.value}>{value}</Text>
-    </View>
-  );
   return (
     <Document title={`Carta porte ${data.eco || ""}`.trim()}>
-      <Page size="LETTER" style={s.page}>
-        <View style={s.bar} fixed />
-        <View style={s.header}>
-          {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf no tiene alt */}
-          <Image src={logoUrl} style={s.logo} />
-          <View style={s.headRight}>
-            <Text style={s.title}>Carta porte</Text>
-            <Text style={s.folio}>{folio}</Text>
-            <Text style={s.muted}>Emitida el {today.getDate()} de {MONTHS[today.getMonth()]} de {today.getFullYear()}</Text>
-            <Text style={s.notice}>Documento de traslado. No sustituye al CFDI con complemento Carta Porte.</Text>
-          </View>
-        </View>
-
-        <View style={s.section}>
-          <Text style={s.sectionTitle}>Servicio</Text>
-          <View style={s.grid}>
-            {field("Número ECO", pdfUpper(v(data.eco)))}
-            {field("Cliente", pdfUpper(v(data.client)))}
-            {field("Fecha de recolección", day(data.pickupDate))}
-            {field("Fecha de entrega", day(data.deliveryDate))}
-          </View>
-        </View>
-
-        <View style={s.section}>
-          <Text style={s.sectionTitle}>Origen y destino</Text>
-          <View style={s.stops}>
-            <View style={s.stop}>
-              <Text style={s.stopTitle}>Origen · carga</Text>
-              <Text style={s.city}>{pdfUpper(v(data.origin))}</Text>
-              <Text>{v(data.originAddress)}</Text>
-            </View>
-            <View style={s.stop}>
-              <Text style={s.stopTitle}>Destino · entrega</Text>
-              <Text style={s.city}>{pdfUpper(v(data.destination))}</Text>
-              <Text>{v(data.destinationAddress)}</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={s.section}>
-          <Text style={s.sectionTitle}>Mercancía</Text>
-          <View style={s.grid}>
-            {field("Producto", pdfSentence(v(data.product)))}
-            {field("Tipo de unidad", pdfSentence(v(data.unit)))}
-          </View>
-        </View>
-
-        <View style={s.section}>
-          <Text style={s.sectionTitle}>Transporte</Text>
-          <View style={s.grid}>
-            {field("Transportista", pdfUpper(v(data.legalName)))}
-            {field("Operador", pdfUpper(v(data.operatorName)))}
-            {field("Celular", v(data.phone))}
-            {field("Tracto", v(data.truck))}
-            {field("Caja", v(data.trailer))}
-          </View>
-        </View>
-
-        <View style={s.section} wrap={false}>
-          <Text style={s.sectionTitle}>Observaciones</Text>
-          <View style={s.box}>
-            <Text>{v(data.comments)}</Text>
-          </View>
-        </View>
-
-        <View style={s.signs} wrap={false}>
-          <View style={s.sign}>
-            <Text style={s.value}>JTP LOGISTICS</Text>
-            <Text style={s.muted}>Nombre y firma</Text>
-          </View>
-          <View style={s.sign}>
-            <Text style={s.value}>{pdfUpper(v(data.legalName))}</Text>
-            <Text style={s.muted}>Transportista · nombre y firma</Text>
-          </View>
-        </View>
-
-        <View style={s.footer} fixed>
-          <Text>JTP Logistics · El mejor socio comercial</Text>
-          <Text>jtp.com.mx</Text>
-        </View>
-      </Page>
+      <CartaPortePage data={data} logoUrl={logoUrl} />
     </Document>
   );
 }

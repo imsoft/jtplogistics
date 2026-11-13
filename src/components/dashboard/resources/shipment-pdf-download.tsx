@@ -3,6 +3,7 @@ import type { DocumentProps } from "@react-pdf/renderer";
 import type { Shipment } from "@/types/shipment.types";
 import type { InstructionLetterData } from "./instruction-letter-pdf";
 import type { CartaPorteData } from "./carta-porte-pdf";
+import type { CartaPorte } from "@/lib/carta-porte";
 
 /** Lo mínimo para armar la carta: origen, destino y transportista. */
 export function shipmentLetterMissing(data: { origin?: string | null; destination?: string | null; legalName?: string | null }): string[] {
@@ -33,18 +34,47 @@ export async function downloadPdf(build: (pdfLogo: (file: string) => string) => 
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
-export function downloadInstructionLetter(data: InstructionLetterData) {
-  return downloadPdf(async (logo) => {
-    const { InstructionLetterPdf } = await import("./instruction-letter-pdf");
-    return <InstructionLetterPdf data={data} logoUrl={logo("jtp-instruction-logo.jpg")} />;
-  }, `carta-de-instrucciones${ecoSuffix(data.eco)}.pdf`);
+/** La carta porte con lo mismo que la de instrucciones, más sus datos del SAT. */
+export function cartaPorteFromLetter(d: InstructionLetterData, sat: CartaPorte | null | undefined): CartaPorteData {
+  return {
+    eco: d.eco,
+    client: d.client,
+    pickupDate: d.pickupDate,
+    deliveryDate: d.deliveryDate,
+    origin: d.origin,
+    destination: d.destination,
+    originAddress: d.originAddress,
+    destinationAddress: d.destinationAddress,
+    product: d.product,
+    unit: d.unit,
+    legalName: d.legalName,
+    operatorName: d.operatorName,
+    phone: d.phone,
+    truck: d.truck,
+    trailer: d.trailer,
+    comments: d.comments ?? "",
+    sat: sat ?? null,
+  };
 }
 
-export function downloadCartaPorte(data: CartaPorteData) {
+/**
+ * Un solo PDF con las dos cartas del embarque: primero la de instrucciones y
+ * después la carta porte.
+ */
+export function downloadShipmentLetters(letter: InstructionLetterData, sat: CartaPorte | null | undefined) {
   return downloadPdf(async (logo) => {
-    const { CartaPortePdf } = await import("./carta-porte-pdf");
-    return <CartaPortePdf data={data} logoUrl={logo("jtp-logistics.png")} />;
-  }, `carta-porte${ecoSuffix(data.eco)}.pdf`);
+    const [{ Document }, { InstructionLetterPage }, { CartaPortePage }] = await Promise.all([
+      import("@react-pdf/renderer"),
+      import("./instruction-letter-pdf"),
+      import("./carta-porte-pdf"),
+    ]);
+    return (
+      <Document title={`Cartas del embarque ${letter.eco || ""}`.trim()}>
+        <InstructionLetterPage data={letter} logoUrl={logo("jtp-instruction-logo.jpg")} />
+        <CartaPortePage data={cartaPorteFromLetter(letter, sat)} logoUrl={logo("jtp-logistics.png")} />
+      </Document>
+    );
+  }, `cartas-embarque${ecoSuffix(letter.eco)}.pdf`);
 }
 
 /** Datos de la carta de instrucciones desde una fila de la tabla (sin la ficha del cliente). */
@@ -71,26 +101,5 @@ export function instructionLetterFromShipment(s: Shipment, unitLabel: string): I
     destinationContact: s.client ?? "",
     originPhone: s.phone ?? "",
     destinationPhone: s.phone ?? "",
-  };
-}
-
-export function cartaPorteFromShipment(s: Shipment, unitLabel: string): CartaPorteData {
-  return {
-    eco: s.eco ?? "",
-    client: s.client ?? "",
-    pickupDate: s.pickupDate ?? "",
-    deliveryDate: s.deliveryDate ?? "",
-    origin: s.origin ?? "",
-    destination: s.destination ?? "",
-    originAddress: s.originAddress ?? "",
-    destinationAddress: s.destinationAddress ?? "",
-    product: s.product ?? "",
-    unit: unitLabel,
-    legalName: s.legalName ?? "",
-    operatorName: s.operatorName ?? "",
-    phone: s.phone ?? "",
-    truck: s.truck ?? "",
-    trailer: s.trailer ?? "",
-    comments: s.comments ?? "",
   };
 }

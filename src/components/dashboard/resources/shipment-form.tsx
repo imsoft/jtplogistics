@@ -18,7 +18,9 @@ import { shipmentLockReason } from "@/lib/shipment-lock";
 import { formatMxn, formatMxnLive, parseMxn } from "@/lib/utils";
 import { CalendarDays, CircleCheck, CircleDollarSign, MapPin, Plus, Trash2, TriangleAlert, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CartaPorteButton, InstructionLetterButton } from "@/components/dashboard/resources/instruction-letter-button";
+import { ShipmentLettersButton } from "@/components/dashboard/resources/instruction-letter-button";
+import { CartaPorteSection } from "@/components/dashboard/resources/carta-porte-section";
+import { cartaPorteForDb, readCartaPorte } from "@/lib/carta-porte";
 import type { Route } from "@/types/route.types";
 import type { Shipment, ShipmentFormData, ShipmentStatus } from "@/types/shipment.types";
 import type { Client } from "@/types/client.types";
@@ -94,6 +96,8 @@ export function ShipmentForm({
       cost: x.cost != null ? formatMxn(x.cost) : "",
     }))
   );
+  // Datos de la Carta Porte (ubicaciones, mercancías y autotransporte).
+  const [cartaPorte, setCartaPorte] = useState(() => readCartaPorte(initialValues.cartaPorte ?? {}));
   const [incident, setIncident] = useState(initialValues.incident ?? "");
   // Si la incidencia guardada no admite tipo, se arranca sin él (el onChange
   // de la incidencia lo limpia en los demás casos).
@@ -382,6 +386,7 @@ export function ShipmentForm({
       comments,
       originAddress,
       destinationAddress,
+      cartaPorte,
       incident,
       incidentType: canPickIncidentType ? incidentType : "",
       status,
@@ -733,6 +738,15 @@ export function ShipmentForm({
         </FormSection>
       )}
 
+      <CartaPorteSection
+        value={cartaPorte}
+        onChange={setCartaPorte}
+        disabled={isClosed}
+        carrierId={carrierId}
+        truck={truck}
+        trailer={trailer}
+      />
+
       {missingError && (
         <p role="alert" className="text-destructive text-sm font-medium">
           {missingError}
@@ -745,10 +759,7 @@ export function ShipmentForm({
         cancelHref={cancelHref}
         isSubmitting={isSubmitting}
         leading={
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <InstructionLetterButton data={letterData} />
-            <CartaPorteButton data={letterData} />
-          </div>
+          <ShipmentLettersButton data={letterData} cartaPorte={cartaPorteForDb(cartaPorte)} />
         }
       />
     </form>

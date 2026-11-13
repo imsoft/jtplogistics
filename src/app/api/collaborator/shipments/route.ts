@@ -1,6 +1,7 @@
 import { Prisma, ShipmentStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { readExtraCosts } from "@/lib/shipment-extras";
+import { cartaPorteForDb, readCartaPorte } from "@/lib/carta-porte";
 import { incidentAllowsIncidentType } from "@/lib/incident-yes-no";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 import { logAudit } from "@/lib/audit-log";
@@ -46,6 +47,7 @@ function toJson(s: {
   originAddress?: string | null;
   destinationAddress?: string | null;
   extraCosts?: unknown;
+  cartaPorte?: unknown;
   incident: string | null;
   incidentType: string | null;
   status: string;
@@ -70,6 +72,7 @@ function toJson(s: {
     originAddress: s.originAddress ?? null,
     destinationAddress: s.destinationAddress ?? null,
     extraCosts: readExtraCosts(s.extraCosts),
+    cartaPorte: s.cartaPorte ? readCartaPorte(s.cartaPorte) : null,
     incident: s.incident,
     incidentType: s.incidentType,
     status: s.status,
@@ -214,6 +217,7 @@ export async function POST(request: Request) {
         comments: comments?.trim() || null,
         originAddress: (originAddress as string | undefined)?.trim() || null,
         destinationAddress: (destinationAddress as string | undefined)?.trim() || null,
+        cartaPorte: cartaPorteForDb((body as Record<string, unknown>).cartaPorte) ?? Prisma.DbNull,
         incident: incident?.trim() || null,
         // Sin incidencia no hay tipo de incidencia.
         incidentType: incidentAllowsIncidentType(incident ?? "") ? incidentType?.trim() || null : null,

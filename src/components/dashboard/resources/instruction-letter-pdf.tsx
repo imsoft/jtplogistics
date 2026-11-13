@@ -618,7 +618,17 @@ const s = StyleSheet.create({
   },
 });
 
+/** La carta de instrucciones como documento suelto. */
 export function InstructionLetterPdf({ data, logoUrl }: { data: InstructionLetterData; logoUrl?: string }) {
+  return (
+    <Document title={`Carta de instrucciones ${data.eco || ""}`.trim()}>
+      <InstructionLetterPage data={data} logoUrl={logoUrl} />
+    </Document>
+  );
+}
+
+/** Solo la página: para juntarla con la carta porte en un mismo PDF. */
+export function InstructionLetterPage({ data, logoUrl }: { data: InstructionLetterData; logoUrl?: string }) {
   const origin = parseLocation(
     data.origin,
     data.originAddress,
@@ -730,7 +740,6 @@ export function InstructionLetterPdf({ data, logoUrl }: { data: InstructionLette
   );
 
   return (
-    <Document title={`Carta de instrucciones ${data.eco || ""}`.trim()}>
       <Page size={[540, 720]} style={s.page}>
         <View style={s.outerFrame}>
           {/* Encabezado: Título y Logotipo */}
@@ -847,6 +856,5 @@ export function InstructionLetterPdf({ data, logoUrl }: { data: InstructionLette
           </View>
         </View>
       </Page>
-    </Document>
   );
 }

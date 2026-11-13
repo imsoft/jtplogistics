@@ -1,3 +1,5 @@
+import type { CartaPorte } from "@/lib/carta-porte";
+
 export type ShipmentStatus =
   | "pending"
   | "in_transit"
@@ -26,6 +28,8 @@ export interface Shipment {
   originAddress?: string | null;
   destinationAddress?: string | null;
   extraCosts?: { concept: string; sale: number | null; cost: number | null }[];
+  /** Datos de la Carta Porte (ubicaciones, mercancías, autotransporte). */
+  cartaPorte?: CartaPorte | null;
   incident: string | null;
   incidentType: string | null;
   status: ShipmentStatus;
@@ -61,4 +65,5 @@ export interface ShipmentFormData {
   sale?: string;
   cost?: string;
   extraCosts?: { concept: string; sale: string; cost: string }[];
+  cartaPorte?: CartaPorte;
 }

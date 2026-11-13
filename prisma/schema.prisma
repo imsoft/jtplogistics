@@ -828,6 +828,9 @@ model Shipment {
   destinationAddress String?    @map("destination_address")
   /// Costos extra: [{ concept, sale, cost }]. Se suman a la venta y a la compra.
   extraCosts      Json          @default("[]") @map("extra_costs")
+  /// Datos de la Carta Porte (ubicaciones, mercancías y autotransporte).
+  /// Ver src/lib/carta-porte.ts.
+  cartaPorte      Json?         @map("carta_porte")
   /// Día en que se recibieron las evidencias de entrega.
   evidenceReceivedOn DateTime?  @db.Date @map("evidence_received_on")
   status         ShipmentStatus @default(pending) @map("status")

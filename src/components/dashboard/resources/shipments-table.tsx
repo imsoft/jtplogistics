@@ -23,7 +23,7 @@ import { getIncidentTypeLabel } from "@/lib/incident-type-label";
 import { useIncidentTypes } from "@/hooks/use-incident-types";
 import { IncidentTypeBadge } from "@/components/dashboard/resources/incident-type-badge";
 import type { Shipment, ShipmentStatus } from "@/types/shipment.types";
-import { FileText, Loader2, MoreVertical, Trash2, Truck } from "lucide-react";
+import { FileText, Loader2, MoreVertical, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,9 +34,7 @@ import {
 import { useUnitTypes } from "@/hooks/use-unit-types";
 import { shipmentTotal, SHIPMENT_TOTAL_FORMULA } from "@/lib/shipment-total";
 import {
-  cartaPorteFromShipment,
-  downloadCartaPorte,
-  downloadInstructionLetter,
+  downloadShipmentLetters,
   instructionLetterFromShipment,
   shipmentLetterMissing,
 } from "@/components/dashboard/resources/shipment-pdf-download";
@@ -380,20 +378,20 @@ export function ShipmentsTable({
   const [generating, setGenerating] = useState<string | null>(null);
 
   const generatePdf = useCallback(
-    async (shipment: Shipment, kind: "instructions" | "carta-porte") => {
+    async (shipment: Shipment) => {
       const missing = shipmentLetterMissing(shipment);
       if (missing.length) {
-        toast.error(`Para la carta falta: ${missing.join(", ")}.`);
+        toast.error(`Para las cartas falta: ${missing.join(", ")}.`);
         return;
       }
       const unitLabel = unitTypes.find((u) => u.value === shipment.unit)?.label ?? shipment.unit ?? "";
       setGenerating(shipment.id);
       try {
-        if (kind === "instructions") await downloadInstructionLetter(instructionLetterFromShipment(shipment, unitLabel));
-        else await downloadCartaPorte(cartaPorteFromShipment(shipment, unitLabel));
+        // Un solo PDF: primero la carta de instrucciones y después la carta porte.
+        await downloadShipmentLetters(instructionLetterFromShipment(shipment, unitLabel), shipment.cartaPorte);
       } catch (e) {
         console.error(e);
-        toast.error(kind === "instructions" ? "No se pudo generar la carta de instrucciones." : "No se pudo generar la carta porte.");
+        toast.error("No se pudieron generar las cartas.");
       } finally {
         setGenerating(null);
       }
@@ -432,13 +430,9 @@ export function ShipmentsTable({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onSelect={() => generatePdf(shipment, "instructions")}>
+                <DropdownMenuItem onSelect={() => generatePdf(shipment)}>
                   <FileText className="size-4" />
-                  Carta de instrucciones
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => generatePdf(shipment, "carta-porte")}>
-                  <Truck className="size-4" />
-                  Carta porte
+                  Carta de instrucciones y carta porte
                 </DropdownMenuItem>
                 {showDelete && (
                   <>

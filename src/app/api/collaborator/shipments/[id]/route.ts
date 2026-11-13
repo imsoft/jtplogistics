@@ -1,5 +1,13 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { readExtraCosts } from "@/lib/shipment-extras";
+import { cartaPorteForDb, cartaPorteSummary, readCartaPorte } from "@/lib/carta-porte";
+
+/** Carta porte para la bitácora: se compara completa y se muestra resumida. */
+const cpText = (v: unknown): string | null => (v ? JSON.stringify(readCartaPorte(v)) : null);
+const CP_FORMAT = {
+  cartaPorte: (v: unknown) => (typeof v === "string" && v ? (cartaPorteSummary(readCartaPorte(JSON.parse(v))) ?? "Capturada") : null),
+};
 
 /** Costos extra en texto para la bitácora: "Maniobras $1,500/$1,000; …". */
 function extrasText(v: unknown): string {
@@ -32,6 +40,7 @@ function toJson(s: {
   originAddress?: string | null;
   destinationAddress?: string | null;
   extraCosts?: unknown;
+  cartaPorte?: unknown;
   incident: string | null;
   incidentType: string | null;
   sale?: number | null;
@@ -59,6 +68,7 @@ function toJson(s: {
     originAddress: s.originAddress ?? null,
     destinationAddress: s.destinationAddress ?? null,
     extraCosts: readExtraCosts(s.extraCosts),
+    cartaPorte: s.cartaPorte ? readCartaPorte(s.cartaPorte) : null,
     incident: s.incident,
     incidentType: s.incidentType,
     sale: s.sale ?? null,
@@ -119,6 +129,7 @@ const SHIPMENT_LABELS: Record<string, string> = {
   originAddress: "Dirección de origen",
   destinationAddress: "Dirección de destino",
   extraCosts: "Costos extra",
+  cartaPorte: "Carta porte",
   incident: "Incidencia",
   incidentType: "Tipo de incidencia",
   status: "Estado",
@@ -205,6 +216,9 @@ export async function PATCH(
     if (comments !== undefined) data.comments = (comments as string)?.trim() || null;
     if (originAddress !== undefined) data.originAddress = (originAddress as string)?.trim() || null;
     if (destinationAddress !== undefined) data.destinationAddress = (destinationAddress as string)?.trim() || null;
+    if ((body as Record<string, unknown>).cartaPorte !== undefined) {
+      data.cartaPorte = cartaPorteForDb((body as Record<string, unknown>).cartaPorte) ?? Prisma.DbNull;
+    }
     if (incident !== undefined) data.incident = (incident as string)?.trim() || null;
     if (incidentType !== undefined) data.incidentType = (incidentType as string)?.trim() || null;
     // Sin incidencia no hay tipo de incidencia (con la incidencia que quede guardada).
@@ -237,9 +251,10 @@ export async function PATCH(
     }
 
     const changes = diffObjects(
-      { ...shipment, extraCosts: extrasText(shipment.extraCosts) } as unknown as Record<string, unknown>,
-      { ...updated, extraCosts: extrasText(updated.extraCosts) } as unknown as Record<string, unknown>,
-      SHIPMENT_LABELS
+      { ...shipment, extraCosts: extrasText(shipment.extraCosts), cartaPorte: cpText(shipment.cartaPorte) } as unknown as Record<string, unknown>,
+      { ...updated, extraCosts: extrasText(updated.extraCosts), cartaPorte: cpText(updated.cartaPorte) } as unknown as Record<string, unknown>,
+      SHIPMENT_LABELS,
+      CP_FORMAT
     );
     if (changes.length > 0) {
       void logAudit({
