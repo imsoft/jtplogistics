@@ -42,7 +42,7 @@ const fixed = (s: string, digits: number) => {
 
 
 const s = StyleSheet.create({
-  page: { paddingTop: 20, paddingBottom: 36, paddingHorizontal: 32, fontFamily: "Helvetica", fontSize: 8.5, color: COLORS.text, textTransform: "uppercase" },
+  page: { paddingTop: 16, paddingBottom: 34, paddingHorizontal: 32, fontFamily: "Helvetica", fontSize: 8.5, color: COLORS.text, textTransform: "uppercase" },
   bar: { position: "absolute", top: 0, left: 0, right: 0, height: 6, backgroundColor: COLORS.blue },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
   logo: { width: 170, height: 72, objectFit: "contain" },
@@ -51,7 +51,7 @@ const s = StyleSheet.create({
   folio: { fontSize: 20, fontFamily: "Helvetica-Bold", marginTop: 2 },
   muted: { fontSize: 8, color: COLORS.muted, marginTop: 2 },
   notice: { fontSize: 7, color: COLORS.muted, marginTop: 3, textAlign: "right" },
-  band: { backgroundColor: COLORS.blue, borderRadius: 3, paddingVertical: 3, marginTop: 6, marginBottom: 3 },
+  band: { backgroundColor: COLORS.blue, borderRadius: 3, paddingVertical: 2.5, marginTop: 4, marginBottom: 2 },
   bandText: { color: COLORS.onBlue, fontFamily: "Helvetica-Bold", fontSize: 9.5, letterSpacing: 1, textAlign: "center" },
   row: { flexDirection: "row" },
   head: { flex: 1, backgroundColor: COLORS.surface, paddingVertical: 2.5, paddingHorizontal: 3, borderRightWidth: 1, borderRightColor: "#FFFFFF" },
@@ -66,7 +66,7 @@ const s = StyleSheet.create({
   box: { borderWidth: 0.6, borderColor: COLORS.border, borderRadius: 4, paddingVertical: 4, paddingHorizontal: 6, marginTop: 6 },
   boxText: {},
   boxTitle: { color: COLORS.blue },
-  signs: { flexDirection: "row", justifyContent: "space-between", marginTop: 16 },
+  signs: { flexDirection: "row", justifyContent: "space-between", marginTop: 56 },
   sign: { width: "42%", borderTopWidth: 0.8, borderTopColor: COLORS.text, paddingTop: 5, alignItems: "center" },
   bold: { fontFamily: "Helvetica-Bold", fontSize: 9 },
   footer: { position: "absolute", bottom: 18, left: 32, right: 32, borderTopWidth: 0.5, borderTopColor: COLORS.border, paddingTop: 5, flexDirection: "row", justifyContent: "space-between", fontSize: 7.5, color: COLORS.muted },
