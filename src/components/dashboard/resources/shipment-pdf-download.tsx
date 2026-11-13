@@ -4,6 +4,7 @@ import type { Shipment } from "@/types/shipment.types";
 import type { InstructionLetterData } from "./instruction-letter-pdf";
 import type { CartaPorteData } from "./carta-porte-pdf";
 import type { CartaPorte } from "@/lib/carta-porte";
+import { withInstructionContact } from "@/lib/instruction-contact";
 
 /** Lo mínimo para armar la carta: origen, destino y transportista. */
 export function shipmentLetterMissing(data: { origin?: string | null; destination?: string | null; legalName?: string | null }): string[] {
@@ -61,7 +62,12 @@ export function cartaPorteFromLetter(d: InstructionLetterData, sat: CartaPorte |
  * Un solo PDF con las dos cartas del embarque: primero la de instrucciones y
  * después la carta porte.
  */
-export function downloadShipmentLetters(letter: InstructionLetterData, sat: CartaPorte | null | undefined) {
+export async function downloadShipmentLetters(rawLetter: InstructionLetterData, sat: CartaPorte | null | undefined) {
+  // Contacto fijo de Configuración en carga y descarga (si está capturado).
+  const settings = await fetch("/api/settings")
+    .then((r) => (r.ok ? (r.json() as Promise<Record<string, string>>) : {}))
+    .catch(() => ({}));
+  const letter = withInstructionContact(rawLetter, settings);
   return downloadPdf(async (logo) => {
     const [{ Document }, { InstructionLetterPage }, { CartaPortePage }] = await Promise.all([
       import("@react-pdf/renderer"),
