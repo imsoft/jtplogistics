@@ -23,7 +23,8 @@ import { getIncidentTypeLabel } from "@/lib/incident-type-label";
 import { useIncidentTypes } from "@/hooks/use-incident-types";
 import { IncidentTypeBadge } from "@/components/dashboard/resources/incident-type-badge";
 import type { Shipment, ShipmentStatus } from "@/types/shipment.types";
-import { ChevronDown, FileText, Loader2, MoreVertical, Trash2 } from "lucide-react";
+import { ChevronDown, FileText, ImageDown, Loader2, MoreVertical, Trash2 } from "lucide-react";
+import { trackingFileName } from "@/lib/shipment-tracking";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -490,6 +491,28 @@ export function ShipmentsTable({
     [unitTypes]
   );
 
+  // Imagen cuadrada de seguimiento para mandarle al cliente por WhatsApp.
+  const downloadTracking = useCallback(async (shipment: Shipment) => {
+    setGenerating(shipment.id);
+    try {
+      const res = await fetch(`/api/shipments/${shipment.id}/tracking-image`);
+      if (!res.ok) {
+        const d = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(d.error ?? "No se pudo generar la imagen.");
+      }
+      const url = URL.createObjectURL(await res.blob());
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = trackingFileName(shipment.eco);
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo generar la imagen.");
+    } finally {
+      setGenerating(null);
+    }
+  }, []);
+
   const columns = useMemo(() => {
     const base = getColumns(incidentTypes, showSale).map((col) =>
       "accessorKey" in col && col.accessorKey === "status"
@@ -539,6 +562,10 @@ export function ShipmentsTable({
                   <FileText className="size-4" />
                   Carta de instrucciones y carta porte
                 </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => void downloadTracking(shipment)}>
+                  <ImageDown className="size-4" />
+                  Imagen de seguimiento
+                </DropdownMenuItem>
                 {showDelete && (
                   <>
                     <DropdownMenuSeparator />
@@ -555,7 +582,7 @@ export function ShipmentsTable({
       },
     };
     return [...base, actions];
-  }, [incidentTypes, showSale, canDelete, isAdmin, generating, generatePdf, canUpdate, savingStatus, changeStatus]);
+  }, [incidentTypes, showSale, canDelete, isAdmin, generating, generatePdf, canUpdate, savingStatus, changeStatus, downloadTracking]);
 
   async function deleteShipment(confirmEmail: string) {
     if (!deleting) return;
