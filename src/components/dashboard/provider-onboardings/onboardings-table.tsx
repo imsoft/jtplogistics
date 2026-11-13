@@ -108,33 +108,20 @@ function shortDate(iso: string | null) {
   return `${d}/${m}/${y.slice(2)}`;
 }
 
-/** Una pastilla por documento: clic para rotar pendiente → recibido → no aplica. */
-function DocChip({
-  docKey,
-  status,
-  canEdit,
-  onChange,
-}: {
-  docKey: DocKey;
-  status: DocStatus;
-  canEdit: boolean;
-  onChange: (next: DocStatus) => void;
-}) {
+/**
+ * Una pastilla por documento, solo para ver: el expediente se cambia al editar
+ * el alta (desde la tabla se cambiaba por error con un clic).
+ */
+function DocChip({ docKey, status }: { docKey: DocKey; status: DocStatus }) {
   const doc = ONBOARDING_DOCS.find((d) => d.key === docKey)!;
-  const next = (): DocStatus =>
-    status === "pending" ? "received" : status === "received" ? "not_applicable" : "pending";
   const label = `${doc.label}: ${DOC_STATUSES.find((d) => d.value === status)!.label}`;
   return (
-    <button
-      type="button"
-      disabled={!canEdit}
-      onClick={() => onChange(next())}
-      title={canEdit ? `${label}. Clic para cambiar.` : label}
+    <span
+      title={label}
       aria-label={label}
       className={cn(
-        "inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase leading-none tracking-wide transition-colors",
-        DOC_TONE[status],
-        canEdit && "hover:ring-2 hover:ring-ring/40"
+        "inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase leading-none tracking-wide",
+        DOC_TONE[status]
       )}
     >
       {/* La X del Excel es una palomita; N/A, una raya; pendiente, un círculo vacío. */}
@@ -146,7 +133,7 @@ function DocChip({
         <Circle className="size-2.5" aria-hidden />
       )}
       {doc.short}
-    </button>
+    </span>
   );
 }
 
@@ -264,11 +251,6 @@ export function OnboardingsTable({
       setRows(prev ?? null);
       toast.error(e instanceof Error ? e.message : "No se pudo guardar.");
     }
-  }
-
-  function setDoc(row: OnboardingRow, key: DocKey, status: DocStatus) {
-    const docs = { ...row.docs, [key]: status };
-    void quick(row, { docs }, { docs: { [key]: status } }, "Expediente actualizado.");
   }
 
   function setUrgency(row: OnboardingRow, urgency: Urgency) {
@@ -493,7 +475,7 @@ export function OnboardingsTable({
                       >
                         <div className="flex w-64 max-w-64 flex-wrap gap-1 min-[1440px]:w-72 min-[1440px]:max-w-72">
                           {ONBOARDING_DOCS.map((d) => (
-                            <DocChip key={d.key} docKey={d.key} status={r.docs[d.key]} canEdit={canEdit} onChange={(next) => setDoc(r, d.key, next)} />
+                            <DocChip key={d.key} docKey={d.key} status={r.docs[d.key]} />
                           ))}
                         </div>
                         <span className="text-muted-foreground mt-1 block text-xs">{progress.done} de {progress.total}</span>
@@ -562,8 +544,8 @@ export function OnboardingsTable({
       )}
 
       <p className="text-muted-foreground text-xs">
-        Expediente: clic en cada documento para marcarlo recibido, no aplica o pendiente. El alta queda
-        completa sola cuando no hay pendientes.
+        Expediente: para marcar documentos como recibidos, no aplica o pendientes, edita el alta (lápiz). El
+        alta queda completa sola cuando no hay pendientes.
       </p>
 
       <Dialog open={holding !== null} onOpenChange={(open) => !open && setHolding(null)}>
