@@ -1,7 +1,7 @@
 import { Document, Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import { BRAND as COLORS } from "@/lib/email-layout";
 import { pdfSentence, pdfUpper } from "@/lib/pdf-text-case";
-import { cartaPorteTotals, locationId, readCartaPorte, type CartaPorte, type CartaPorteLocation } from "@/lib/carta-porte";
+import { cartaPorteTotals, readCartaPorte, type CartaPorte, type CartaPorteLocation } from "@/lib/carta-porte";
 import { countryLabel, labelOf, stateLabel, SCT_PERMITS, TRAILER_SUBTYPES } from "@/lib/sat-catalogs";
 
 export interface CartaPorteData {
@@ -63,7 +63,9 @@ const s = StyleSheet.create({
   totals: { flexDirection: "row", marginTop: 4 },
   totLabel: { backgroundColor: COLORS.surface, color: COLORS.blueDark, paddingVertical: 4, paddingHorizontal: 6, fontFamily: "Helvetica-Bold", fontSize: 8 },
   totValue: { backgroundColor: COLORS.background, paddingVertical: 4, paddingHorizontal: 6, fontFamily: "Helvetica-Bold", fontSize: 8 },
-  box: { borderWidth: 0.6, borderColor: COLORS.border, borderRadius: 4, padding: 6, minHeight: 30, lineHeight: 1.4 },
+  box: { borderWidth: 0.6, borderColor: COLORS.border, borderRadius: 4, paddingVertical: 4, paddingHorizontal: 6, marginTop: 6 },
+  boxText: {},
+  boxTitle: { color: COLORS.blue },
   signs: { flexDirection: "row", justifyContent: "space-between", marginTop: 16 },
   sign: { width: "42%", borderTopWidth: 0.8, borderTopColor: COLORS.text, paddingTop: 5, alignItems: "center" },
   bold: { fontFamily: "Helvetica-Bold", fontSize: 9 },
@@ -115,18 +117,24 @@ function Band({ children }: { children: string }) {
   );
 }
 
+/**
+ * Una ubicación en 2 renglones de 6 columnas. Sin el ID (siempre OR000001 /
+ * DE000001) y sin NumRegIdTrib salvo que se haya capturado (solo extranjeros),
+ * como en el CFDI de referencia del cliente: así la hoja alcanza para las firmas.
+ */
 function locationPairs(kind: "origin" | "destination", l: CartaPorteLocation, city: string, address: string, fallbackDay: string): Pair[] {
   const hasAddress = l.street || l.postalCode || l.colony;
+  const tipo = kind === "origin" ? "Origen" : "Destino";
+  const number = [l.extNumber, l.intNumber].filter(Boolean).join(" int. ");
   return [
-    ["Tipo", kind === "origin" ? "Origen" : "Destino"],
-    ["ID", locationId(kind)],
+    ["Tipo", kind === "destination" && l.distanceKm ? `${tipo} · ${fixed(l.distanceKm, 0)} km` : tipo],
     ["RFC", v(l.rfc)],
     ["Nombre", pdfUpper(v(l.name))],
-    ["NumRegIdTrib", v(l.numRegIdTrib)],
+    ...(l.numRegIdTrib ? ([["NumRegIdTrib", v(l.numRegIdTrib)]] as Pair[]) : []),
     ...(hasAddress
       ? ([
           ["Calle", pdfUpper(v(l.street))],
-          ["Núm. exterior", v(l.extNumber)],
+          ["Número", v(number)],
           ["CP", v(l.postalCode)],
           ["Colonia", pdfUpper(v(l.colony))],
           ["Localidad", pdfUpper(v(l.locality))],
@@ -136,8 +144,6 @@ function locationPairs(kind: "origin" | "destination", l: CartaPorteLocation, ci
         ] as Pair[])
       : ([["Domicilio", pdfUpper(v(address || city))]] as Pair[])),
     ["Fecha/hora", dateTime(l.dateTime, fallbackDay)],
-    ...(kind === "destination" && l.distanceKm ? ([["Distancia (km)", fixed(l.distanceKm, 2)]] as Pair[]) : []),
-    ...(l.intNumber && hasAddress ? ([["Núm. interior", v(l.intNumber)]] as Pair[]) : []),
   ];
 }
 
@@ -170,7 +176,7 @@ export function CartaPortePage({ data, logoUrl }: { data: CartaPorteData; logoUr
 
       <Band>Servicio</Band>
       <Grid
-        cols={4}
+        cols={5}
         pairs={[
           ["Número ECO", pdfUpper(v(data.eco))],
           ["Cliente", pdfUpper(v(data.client))],
@@ -186,9 +192,9 @@ export function CartaPortePage({ data, logoUrl }: { data: CartaPorteData; logoUr
       />
 
       <Band>Ubicaciones</Band>
-      <Grid pairs={locationPairs("origin", cp.origin, data.origin, data.originAddress, data.pickupDate)} />
+      <Grid cols={6} pairs={locationPairs("origin", cp.origin, data.origin, data.originAddress, data.pickupDate)} />
       <View style={s.gap} />
-      <Grid pairs={locationPairs("destination", cp.destination, data.destination, data.destinationAddress, data.deliveryDate)} />
+      <Grid cols={6} pairs={locationPairs("destination", cp.destination, data.destination, data.destinationAddress, data.deliveryDate)} />
 
       <Band>Mercancías</Band>
       {goods.length === 0 ? (
@@ -248,11 +254,10 @@ export function CartaPortePage({ data, logoUrl }: { data: CartaPorteData; logoUr
       />
 
       {data.comments?.trim() ? (
-        <View wrap={false}>
-          <Band>Observaciones</Band>
-          <View style={s.box}>
-            <Text>{data.comments.trim()}</Text>
-          </View>
+        // Compacto (título dentro del recuadro) para que las firmas quepan en la misma hoja.
+        <View wrap={false} style={[s.box, { flexDirection: "row", gap: 4 }]}>
+          <Text style={s.boxTitle}>Observaciones:</Text>
+          <Text style={[s.boxText, { flex: 1 }]}>{data.comments.trim()}</Text>
         </View>
       ) : null}
 
