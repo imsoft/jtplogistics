@@ -69,6 +69,7 @@ export function ShipmentForm({
   const clientsEndpoint = scope === "collaborator" ? "/api/collaborator/clients?all=1" : "/api/admin/clients?all=1";
   const carriersEndpoint = scope === "collaborator" ? "/api/collaborator/shipment-carriers" : "/api/admin/users?role=carrier";
   const [eco, setEco] = useState(initialValues.eco ?? "");
+  const [reference, setReference] = useState(initialValues.reference ?? "");
   const [client, setClient] = useState(initialValues.client ?? "");
   const [origin, setOrigin] = useState(initialValues.origin ?? "");
   const [destination, setDestination] = useState(initialValues.destination ?? "");
@@ -387,6 +388,7 @@ export function ShipmentForm({
       comments,
       originAddress,
       destinationAddress,
+      reference,
       cartaPorte,
       incident,
       incidentType: canPickIncidentType ? incidentType : "",
@@ -421,6 +423,11 @@ export function ShipmentForm({
         <div className="space-y-2">
           <Label htmlFor="shipment-eco">ECO</Label>
           <Input id="shipment-eco" value={eco} disabled={isClosed} onChange={(e) => setEco(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="shipment-reference">Referencia</Label>
+          <Input id="shipment-reference" value={reference} maxLength={80} disabled={isClosed} onChange={(e) => setReference(e.target.value)} />
+          <p className="text-muted-foreground text-xs">La del cliente: su pedido, orden o folio. Sale en la imagen de seguimiento.</p>
         </div>
         <div className="space-y-2">
           <Label htmlFor="shipment-client">

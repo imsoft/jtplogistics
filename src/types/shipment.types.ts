@@ -26,6 +26,8 @@ export interface Shipment {
   phone: string | null;
   comments: string | null;
   originAddress?: string | null;
+  /** Referencia del cliente (su pedido, orden u otro folio). */
+  reference?: string | null;
   destinationAddress?: string | null;
   extraCosts?: { concept: string; sale: number | null; cost: number | null }[];
   /** Datos de la Carta Porte (ubicaciones, mercancías, autotransporte). */
@@ -57,6 +59,7 @@ export interface ShipmentFormData {
   phone: string;
   comments: string;
   originAddress: string;
+  reference?: string;
   destinationAddress: string;
   incident: string;
   incidentType: string;

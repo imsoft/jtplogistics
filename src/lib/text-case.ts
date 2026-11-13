@@ -16,7 +16,9 @@ const PRESERVE_CASE_KEYS = new Set(["producttypes", "title", "description", "dep
   // Fecha y hora ("2026-11-18T04:04"): en minúsculas la "t" ya no se reconoce.
   "datetime",
   // Municipio y localidad salen de un catálogo: se guardan tal como vienen.
-  "municipality", "locality"]);
+  "municipality", "locality",
+  // La referencia del cliente se guarda tal como la escribe.
+  "reference"]);
 
 function shouldSkipLowercaseForKey(key?: string): boolean {
   if (!key) return false;

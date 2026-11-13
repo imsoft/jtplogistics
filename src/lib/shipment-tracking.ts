@@ -25,6 +25,7 @@ export interface TrackingSource {
   pickupDate: Date | string | null;
   deliveryDate: Date | string | null;
   operatorName: string | null;
+  reference?: string | null;
   status: string;
   cartaPorte?: unknown;
 }
@@ -40,6 +41,8 @@ export interface TrackingCard {
   deliveryDate: string;
   deliveryTime: string;
   operator: string;
+  /** Referencia del cliente; "N/A" si no tiene (como en su Excel). */
+  reference: string;
   status: { label: string; bg: string; fg: string };
 }
 
@@ -74,6 +77,7 @@ export function trackingCard(s: TrackingSource): TrackingCard {
     deliveryDate: trackingDate(s.deliveryDate),
     deliveryTime: trackingTime(cp?.destination.dateTime),
     operator: dash(s.operatorName),
+    reference: s.reference?.trim() || "N/A",
     status: TRACKING_STATUS[s.status] ?? { label: s.status, bg: "#E5E7EB", fg: "#1F2937" },
   };
 }

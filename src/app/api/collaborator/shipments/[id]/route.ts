@@ -38,6 +38,7 @@ function toJson(s: {
   phone: string | null;
   comments: string | null;
   originAddress?: string | null;
+  reference?: string | null;
   destinationAddress?: string | null;
   extraCosts?: unknown;
   cartaPorte?: unknown;
@@ -66,6 +67,7 @@ function toJson(s: {
     phone: s.phone,
     comments: s.comments,
     originAddress: s.originAddress ?? null,
+    reference: s.reference ?? null,
     destinationAddress: s.destinationAddress ?? null,
     extraCosts: readExtraCosts(s.extraCosts),
     cartaPorte: s.cartaPorte ? readCartaPorte(s.cartaPorte) : null,
@@ -127,6 +129,7 @@ const SHIPMENT_LABELS: Record<string, string> = {
   phone: "Celular",
   comments: "Comentarios",
   originAddress: "Dirección de origen",
+  reference: "Referencia",
   destinationAddress: "Dirección de destino",
   extraCosts: "Costos extra",
   cartaPorte: "Carta porte",
@@ -160,7 +163,7 @@ export async function PATCH(
     const {
       eco, client, origin, destination, product,
       pickupDate, deliveryDate, legalName, operatorName,
-      truck, trailer, unit, phone, comments, incident, incidentType, status, originAddress, destinationAddress,
+      truck, trailer, unit, phone, comments, incident, incidentType, status, originAddress, destinationAddress, reference,
       _confirmedEmail,
     } = body as Record<string, string | null | undefined>;
 
@@ -217,6 +220,7 @@ export async function PATCH(
     if (phone !== undefined) data.phone = (phone as string)?.trim() || null;
     if (comments !== undefined) data.comments = (comments as string)?.trim() || null;
     if (originAddress !== undefined) data.originAddress = (originAddress as string)?.trim() || null;
+    if (reference !== undefined) data.reference = (reference as string)?.trim() || null;
     if (destinationAddress !== undefined) data.destinationAddress = (destinationAddress as string)?.trim() || null;
     if ((body as Record<string, unknown>).cartaPorte !== undefined) {
       data.cartaPorte = cartaPorteForDb((body as Record<string, unknown>).cartaPorte) ?? Prisma.DbNull;

@@ -46,6 +46,7 @@ function toJson(s: {
   phone: string | null;
   comments: string | null;
   originAddress?: string | null;
+  reference?: string | null;
   destinationAddress?: string | null;
   extraCosts?: unknown;
   cartaPorte?: unknown;
@@ -71,6 +72,7 @@ function toJson(s: {
     phone: s.phone,
     comments: s.comments,
     originAddress: s.originAddress ?? null,
+    reference: s.reference ?? null,
     destinationAddress: s.destinationAddress ?? null,
     extraCosts: readExtraCosts(s.extraCosts),
     cartaPorte: s.cartaPorte ? readCartaPorte(s.cartaPorte) : null,
@@ -186,7 +188,7 @@ export async function POST(request: Request) {
     const {
       eco, client, origin, destination, product,
       pickupDate, deliveryDate, legalName, operatorName,
-      truck, trailer, unit, phone, comments, incident, incidentType, status, originAddress, destinationAddress,
+      truck, trailer, unit, phone, comments, incident, incidentType, status, originAddress, destinationAddress, reference,
     } = body as Record<string, string | undefined>;
 
     const missing = missingShipmentFields({ client, origin, destination, unit });
@@ -217,6 +219,7 @@ export async function POST(request: Request) {
         phone: phone?.trim() || null,
         comments: comments?.trim() || null,
         originAddress: (originAddress as string | undefined)?.trim() || null,
+        reference: (reference as string | undefined)?.trim() || null,
         destinationAddress: (destinationAddress as string | undefined)?.trim() || null,
         cartaPorte: cartaPorteForDb((body as Record<string, unknown>).cartaPorte) ?? Prisma.DbNull,
         incident: incident?.trim() || null,
