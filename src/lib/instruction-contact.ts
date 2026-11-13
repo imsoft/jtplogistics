@@ -1,12 +1,15 @@
 /**
- * Contacto fijo de la carta de instrucciones (Configuración): sale en los
- * cuadros de carga y de descarga en lugar del contacto del cliente.
+ * Contacto fijo de la carta de instrucciones: por decisión del cliente, en los
+ * cuadros de carga y de descarga siempre sale Maribel (JTP), no el contacto
+ * del cliente.
  *
  * Puro, para poder probarlo.
  */
 
-export const INSTRUCTION_CONTACT_NAME = "instruction_contact_name";
-export const INSTRUCTION_CONTACT_PHONE = "instruction_contact_phone";
+export const INSTRUCTION_CONTACT = {
+  name: "Maribel Ramírez Arellano",
+  phone: "33-3058-0733",
+} as const;
 
 type LetterContacts = {
   originContact?: string;
@@ -15,16 +18,13 @@ type LetterContacts = {
   destinationPhone?: string;
 };
 
-/**
- * Pone el contacto configurado en carga y descarga. Cada dato por separado: si
- * solo hay nombre, el teléfono sigue siendo el de antes (y al revés).
- */
-export function withInstructionContact<T extends LetterContacts>(data: T, settings: Record<string, string | undefined>): T {
-  const name = settings[INSTRUCTION_CONTACT_NAME]?.trim();
-  const phone = settings[INSTRUCTION_CONTACT_PHONE]?.trim();
+/** Pone el contacto fijo en carga y descarga. */
+export function withInstructionContact<T extends LetterContacts>(data: T): T {
   return {
     ...data,
-    ...(name && { originContact: name, destinationContact: name }),
-    ...(phone && { originPhone: phone, destinationPhone: phone }),
+    originContact: INSTRUCTION_CONTACT.name,
+    destinationContact: INSTRUCTION_CONTACT.name,
+    originPhone: INSTRUCTION_CONTACT.phone,
+    destinationPhone: INSTRUCTION_CONTACT.phone,
   };
 }

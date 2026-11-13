@@ -63,11 +63,8 @@ export function cartaPorteFromLetter(d: InstructionLetterData, sat: CartaPorte |
  * después la carta porte.
  */
 export async function downloadShipmentLetters(rawLetter: InstructionLetterData, sat: CartaPorte | null | undefined) {
-  // Contacto fijo de Configuración en carga y descarga (si está capturado).
-  const settings = await fetch("/api/settings")
-    .then((r) => (r.ok ? (r.json() as Promise<Record<string, string>>) : {}))
-    .catch(() => ({}));
-  const letter = withInstructionContact(rawLetter, settings);
+  // Contacto fijo (Maribel) en carga y descarga.
+  const letter = withInstructionContact(rawLetter);
   return downloadPdf(async (logo) => {
     const [{ Document }, { InstructionLetterPage }, { CartaPortePage }] = await Promise.all([
       import("@react-pdf/renderer"),

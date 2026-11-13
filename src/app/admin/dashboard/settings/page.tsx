@@ -10,13 +10,10 @@ import { Separator } from "@/components/ui/separator";
 import { CoverImageUpload } from "@/components/ui/cover-image-upload";
 import { toast } from "sonner";
 import { FormSkeleton } from "@/components/ui/skeletons";
-import { InstructionContactCard } from "@/components/dashboard/admin/instruction-contact-card";
-import { INSTRUCTION_CONTACT_NAME, INSTRUCTION_CONTACT_PHONE } from "@/lib/instruction-contact";
 
 export default function AdminSettingsPage() {
   const [whatsapp, setWhatsapp] = useState("");
   const [coverImage, setCoverImage] = useState<string | null>(null);
-  const [instructionContact, setInstructionContact] = useState({ name: "", phone: "" });
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -28,7 +25,6 @@ export default function AdminSettingsPage() {
         const digits = raw.replace(/\D/g, "");
         setWhatsapp(formatPhone(digits.startsWith("52") && digits.length === 12 ? digits.slice(2) : digits));
         setCoverImage(data.cover_image_url ?? null);
-        setInstructionContact({ name: data[INSTRUCTION_CONTACT_NAME] ?? "", phone: data[INSTRUCTION_CONTACT_PHONE] ?? "" });
         setIsLoaded(true);
       })
       .catch(() => setIsLoaded(true));
@@ -101,7 +97,6 @@ export default function AdminSettingsPage() {
           </form>
         </CardContent>
       </Card>
-      <InstructionContactCard initialName={instructionContact.name} initialPhone={instructionContact.phone} />
       <Card className="max-w-lg">
         <CardHeader className="space-y-1">
           <CardTitle className="text-base sm:text-lg">Imagen de portada</CardTitle>
