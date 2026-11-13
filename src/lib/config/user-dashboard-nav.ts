@@ -6,6 +6,7 @@ import {
   MessageSquare,
   Lightbulb,
   ClipboardList,
+  Star,
 } from "lucide-react";
 
 export interface UserDashboardNavItem {
@@ -19,6 +20,11 @@ export const userDashboardNavItems: UserDashboardNavItem[] = [
     title: "Inicio",
     href: "/carrier/dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Mis evaluaciones",
+    href: "/carrier/dashboard/evaluations",
+    icon: Star,
   },
   {
     title: "Tipos de unidades",

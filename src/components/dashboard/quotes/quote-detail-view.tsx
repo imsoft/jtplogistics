@@ -12,6 +12,7 @@ import { InfoRow } from "@/components/dashboard/users/info-row";
 import { QuoteComments } from "@/components/dashboard/quotes/quote-comments";
 import { QuoteDownloadButton } from "@/components/dashboard/quotes/quote-download-button";
 import { QuoteSendButton } from "@/components/dashboard/quotes/quote-send-button";
+import { QuoteProvidersCard } from "@/components/dashboard/quotes/quote-providers-card";
 import { QUOTE_STATUS_CONFIG, getQuoteDisplayStatus } from "@/lib/constants/quote-status";
 import { QUOTE_REJECTION_LABELS } from "@/lib/quote-rejection";
 import { formatMxn, formatPhone } from "@/lib/utils";
@@ -57,12 +58,15 @@ export function QuoteDetailView({
   listHref,
   editBase,
   showComments = true,
+  showProviders = true,
 }: {
   apiEndpoint: string;
   listHref: string;
   /** Sin él no se ofrece editar (vendedor o colaborador sin permiso). */
   editBase?: string;
   showComments?: boolean;
+  /** Proveedores con los que se cotizó: solo el equipo (es nuestro costo). */
+  showProviders?: boolean;
 }) {
   const { id } = useParams<{ id: string }>();
   const [quote, setQuote] = useState<QuoteDetail | null>(null);
@@ -163,6 +167,8 @@ export function QuoteDetailView({
               )}
             </CardContent>
           </Card>
+
+          {showProviders && <QuoteProvidersCard quoteId={quote.id} rows={rows} />}
         </div>
 
         <div className="min-w-0 space-y-4 sm:space-y-6">

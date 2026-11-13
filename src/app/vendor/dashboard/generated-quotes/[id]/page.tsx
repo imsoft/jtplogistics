@@ -9,6 +9,7 @@ export default function VendorQuoteDetailPage() {
       apiEndpoint="/api/vendor/generated-quotes"
       listHref="/vendor/dashboard/generated-quotes"
       showComments={false}
+      showProviders={false}
     />
   );
 }

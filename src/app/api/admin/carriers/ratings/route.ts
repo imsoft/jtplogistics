@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
-import { ratingStatus } from "@/lib/shipment-outcome";
+import { scoreShipments, scoreToStars } from "@/lib/carrier-evaluation";
 
 export interface CarrierRating {
   legalName: string;
@@ -18,9 +18,9 @@ export interface CarrierRating {
   deliveryRateScore: number | null;
   /** 0–100 weighted overall */
   overallScore: number;
-  /** 1–5 */
+  /** 1–5 en medias (4.5) */
   stars: number;
-  /** Calificación manual del admin (1–5) | null si no se ha calificado */
+  /** Calificación de JTP (1–5 en medias) | null si no se ha calificado */
   manualStars: number | null;
   manualNotes: string | null;
   manualRatedByName: string | null;
@@ -28,122 +28,46 @@ export interface CarrierRating {
   manualRatedAt: string | null;
 }
 
-function toStars(score: number): number {
-  if (score >= 90) return 5;
-  if (score >= 75) return 4;
-  if (score >= 58) return 3;
-  if (score >= 38) return 2;
-  return 1;
-}
-
-function hasIncident(value: string | null): boolean {
-  const v = (value ?? "").trim().toLowerCase();
-  return v !== "" && v !== "no";
-}
-
 export function GET() {
   return adminHandler(async () => {
     const [shipments, manualRatings] = await Promise.all([
       prisma.shipment.findMany({
         where: { legalName: { not: null } },
-        select: {
-          legalName: true,
-          status: true,
-          deliveryOutcome: true,
-          incident: true,
-        },
+        select: { legalName: true, status: true, deliveryOutcome: true, incident: true },
       }),
       prisma.carrierManualRating.findMany({
-        select: {
-          legalName: true,
-          stars: true,
-          notes: true,
-          updatedAt: true,
-          ratedBy: { select: { name: true } },
-        },
+        select: { legalName: true, stars: true, notes: true, updatedAt: true, ratedBy: { select: { name: true } } },
       }),
     ]);
 
     const manualMap = new Map(manualRatings.map((m) => [m.legalName, m]));
 
-    // Group by legalName
-    const map = new Map<string, {
-      delivered: number;
-      deliveredWithDelay: number;
-      notDelivered: number;
-      inTransit: number;
-      withIncident: number;
-      total: number;
-    }>();
-
+    // Agrupados por razón social, igual que siempre.
+    const byCarrier = new Map<string, typeof shipments>();
     for (const s of shipments) {
       const name = s.legalName!.trim();
       if (!name) continue;
-
-      const entry = map.get(name) ?? {
-        delivered: 0, deliveredWithDelay: 0, notDelivered: 0,
-        inTransit: 0, withIncident: 0, total: 0,
-      };
-
-      // Un embarque cerrado cuenta con el resultado que tuvo su entrega. Si se
-      // cerró antes de que se guardara ese resultado, no se sabe cómo llegó:
-      // se deja fuera en lugar de contarlo "en tránsito" y bajarle la nota.
-      const st = ratingStatus(s.status, s.deliveryOutcome);
-      if (st === "returned") continue;
-      entry.total += 1;
-      if (st === "delivered") entry.delivered += 1;
-      else if (st === "delivered_with_delay") entry.deliveredWithDelay += 1;
-      else if (st === "not_delivered") entry.notDelivered += 1;
-      else entry.inTransit += 1; // pendiente, en tránsito o en riesgo: todavía en camino
-
-      if (hasIncident(s.incident)) entry.withIncident += 1;
-
-      map.set(name, entry);
+      byCarrier.set(name, [...(byCarrier.get(name) ?? []), s]);
     }
 
     const ratings: CarrierRating[] = [];
-
-    for (const [legalName, d] of map.entries()) {
-      if (d.total === 0) continue;
-
-      const closedShipments = d.delivered + d.deliveredWithDelay + d.notDelivered;
-
-      // Punctuality: on-time full, with-delay half, not-delivered zero
-      const punctualityScore = closedShipments > 0
-        ? ((d.delivered + d.deliveredWithDelay * 0.5) / closedShipments) * 100
-        : null;
-
-      // Incident-free: % of total shipments without incident
-      const incidentFreeScore = ((d.total - d.withIncident) / d.total) * 100;
-
-      // Delivery rate: among closed, how many arrived (any form)
-      const deliveryRateScore = closedShipments > 0
-        ? ((d.delivered + d.deliveredWithDelay) / closedShipments) * 100
-        : null;
-
-      // Weighted overall — if no closed shipments, weight incident score fully
-      let overallScore: number;
-      if (punctualityScore !== null && deliveryRateScore !== null) {
-        overallScore = punctualityScore * 0.4 + incidentFreeScore * 0.3 + deliveryRateScore * 0.3;
-      } else {
-        overallScore = incidentFreeScore;
-      }
-
+    for (const [legalName, list] of byCarrier) {
+      const stats = scoreShipments(list);
+      if (!stats) continue;
       const manual = manualMap.get(legalName);
-
       ratings.push({
         legalName,
-        totalShipments: d.total,
-        delivered: d.delivered,
-        deliveredWithDelay: d.deliveredWithDelay,
-        notDelivered: d.notDelivered,
-        inTransit: d.inTransit,
-        withIncident: d.withIncident,
-        punctualityScore: punctualityScore !== null ? Math.round(punctualityScore) : null,
-        incidentFreeScore: Math.round(incidentFreeScore),
-        deliveryRateScore: deliveryRateScore !== null ? Math.round(deliveryRateScore) : null,
-        overallScore: Math.round(overallScore),
-        stars: toStars(overallScore),
+        totalShipments: stats.total,
+        delivered: stats.delivered,
+        deliveredWithDelay: stats.deliveredWithDelay,
+        notDelivered: stats.notDelivered,
+        inTransit: stats.inTransit,
+        withIncident: stats.withIncident,
+        punctualityScore: stats.punctualityScore,
+        incidentFreeScore: stats.incidentFreeScore,
+        deliveryRateScore: stats.deliveryRateScore,
+        overallScore: stats.overallScore,
+        stars: scoreToStars(stats.overallScore),
         manualStars: manual?.stars ?? null,
         manualNotes: manual?.notes ?? null,
         manualRatedByName: manual?.ratedBy?.name ?? null,
@@ -151,9 +75,7 @@ export function GET() {
       });
     }
 
-    // Sort: most shipments first within same star tier, then by score
     ratings.sort((a, b) => b.overallScore - a.overallScore || b.totalShipments - a.totalShipments);
-
     return Response.json(ratings);
   });
 }

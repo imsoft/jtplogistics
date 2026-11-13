@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-server";
 import { logAudit } from "@/lib/audit-log";
+import { isHalfStar } from "@/lib/carrier-evaluation";
 
 /** Guarda (crea o actualiza) la calificación manual de un transportista. */
 export async function POST(request: NextRequest) {
@@ -16,8 +17,8 @@ export async function POST(request: NextRequest) {
     if (!legalName) {
       return Response.json({ error: "Falta la razón social del transportista." }, { status: 400 });
     }
-    if (!Number.isInteger(stars) || stars < 1 || stars > 5) {
-      return Response.json({ error: "La calificación debe ser un número del 1 al 5." }, { status: 400 });
+    if (!isHalfStar(stars)) {
+      return Response.json({ error: "La calificación va de 1 a 5 estrellas, en medias (por ejemplo 4.5)." }, { status: 400 });
     }
 
     const existing = await prisma.carrierManualRating.findUnique({ where: { legalName } });

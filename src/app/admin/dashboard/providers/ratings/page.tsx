@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { ChevronLeft, Star, Search } from "lucide-react";
+import { CalendarDays, ChevronLeft, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -11,58 +11,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { AppSelect } from "@/components/ui/app-select";
 import type { CarrierRating } from "@/app/api/admin/carriers/ratings/route";
 import { useConfirm } from "@/components/ui/confirm-provider";
-
-// ── Star display ─────────────────────────────────────────────────────────────
-
-function StarRating({ stars, size = "sm" }: { stars: number; size?: "sm" | "lg" }) {
-  const s = size === "lg" ? "size-5" : "size-3.5";
-  return (
-    <span className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((n) => (
-        <Star
-          key={n}
-          className={`${s} ${n <= stars ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`}
-        />
-      ))}
-    </span>
-  );
-}
-
-// ── Interactive star input (calificación manual) ─────────────────────────────
-
-function InteractiveStars({
-  value,
-  onChange,
-  disabled,
-}: {
-  value: number;
-  onChange: (n: number) => void;
-  disabled?: boolean;
-}) {
-  const [hover, setHover] = useState(0);
-  return (
-    <span className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((n) => (
-        <button
-          key={n}
-          type="button"
-          disabled={disabled}
-          onClick={() => onChange(n)}
-          onMouseEnter={() => setHover(n)}
-          onMouseLeave={() => setHover(0)}
-          className="p-0.5 disabled:cursor-not-allowed"
-          aria-label={`${n} estrella${n !== 1 ? "s" : ""}`}
-        >
-          <Star
-            className={`size-6 transition-colors ${
-              n <= (hover || value) ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"
-            }`}
-          />
-        </button>
-      ))}
-    </span>
-  );
-}
+import { StarInput, StarRating } from "@/components/ui/star-rating";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { MonthlyEvaluations, OverallCard, saveMonthEvaluation } from "@/components/dashboard/evaluations/evaluations-view";
+import type { CarrierEvaluations } from "@/lib/carrier-evaluation-server";
 
 // ── Score bar ────────────────────────────────────────────────────────────────
 
@@ -203,7 +155,7 @@ function ManualRatingEditor({
     <div className="mt-3 border-t pt-3 space-y-2">
       <div className="flex items-center justify-between gap-2">
         <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-          Tu calificación
+          Calificación JTP (la ve el proveedor)
         </p>
         {carrier.manualRatedByName && carrier.manualRatedAt && (
           <span className="text-[10px] text-muted-foreground truncate">
@@ -216,16 +168,17 @@ function ManualRatingEditor({
         )}
       </div>
 
-      <InteractiveStars value={stars} onChange={setStars} disabled={saving} />
+      <StarInput value={stars} onChange={setStars} disabled={saving} />
 
       <Textarea
         rows={2}
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
-        placeholder="Notas (opcional): por qué le das esta calificación…"
         className="resize-none text-sm"
         disabled={saving}
       />
+
+      <p className="text-muted-foreground text-[10px]">Notas opcionales: por qué le das esta calificación. Media estrella con la mitad izquierda.</p>
 
       {error && <p className="text-xs text-destructive">{error}</p>}
 
@@ -253,10 +206,12 @@ function CarrierCard({
   carrier,
   rank,
   onManualSaved,
+  onOpenMonthly,
 }: {
   carrier: CarrierRating;
   rank: number;
   onManualSaved: (legalName: string, patch: ManualPatch) => void;
+  onOpenMonthly: (legalName: string) => void;
 }) {
   return (
     <Card className="relative overflow-hidden transition-shadow hover:shadow-md">
@@ -274,7 +229,7 @@ function CarrierCard({
 
             {/* Automatic stars + shipments count */}
             <div className="flex items-center gap-3 mb-3">
-              <StarRating stars={carrier.stars} />
+              <StarRating stars={carrier.stars} showNumber />
               <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
                 Automático · {carrier.totalShipments} embarque{carrier.totalShipments !== 1 ? "s" : ""}
               </span>
@@ -323,6 +278,11 @@ function CarrierCard({
           </div>
         </div>
 
+        <Button size="sm" variant="outline" className="mt-3 w-full" onClick={() => onOpenMonthly(carrier.legalName)}>
+          <CalendarDays className="size-4" />
+          Evaluaciones mensuales
+        </Button>
+
         {/* Manual rating */}
         <ManualRatingEditor carrier={carrier} onSaved={onManualSaved} />
       </CardContent>
@@ -347,6 +307,7 @@ export default function CarrierRatingsPage() {
   const [search, setSearch] = useState("");
   const [starFilter, setStarFilter] = useState("all");
   const [minShipments, setMinShipments] = useState("1");
+  const [monthlyFor, setMonthlyFor] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/carriers/ratings")
@@ -366,7 +327,7 @@ export default function CarrierRatingsPage() {
     const min = parseInt(minShipments, 10) || 1;
     return ratings.filter((r) => {
       if (q && !r.legalName.toLowerCase().includes(q)) return false;
-      if (starFilter !== "all" && r.stars !== parseInt(starFilter, 10)) return false;
+      if (starFilter !== "all" && Math.floor(r.manualStars ?? r.stars) !== parseInt(starFilter, 10)) return false;
       if (r.totalShipments < min) return false;
       return true;
     });
@@ -499,12 +460,63 @@ export default function CarrierRatingsPage() {
                   carrier={carrier}
                   rank={ratings.indexOf(carrier) + 1}
                   onManualSaved={handleManualSaved}
+                  onOpenMonthly={setMonthlyFor}
                 />
               ))}
             </div>
           )}
         </div>
       )}
+
+      <MonthlySheet legalName={monthlyFor} onClose={() => setMonthlyFor(null)} />
     </div>
+  );
+}
+
+/** Evaluación general y mes por mes de un transportista; cada mes se puede ajustar y comentar. */
+function MonthlySheet({ legalName, onClose }: { legalName: string | null; onClose: () => void }) {
+  const [loaded, setLoaded] = useState<{ for: string; data: CarrierEvaluations | null } | null>(null);
+  const data = loaded && loaded.for === legalName ? loaded.data : undefined;
+
+  useEffect(() => {
+    if (!legalName) return;
+    fetch(`/api/admin/carriers/evaluations?legalName=${encodeURIComponent(legalName)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: CarrierEvaluations | null) => setLoaded({ for: legalName, data: d }))
+      .catch(() => setLoaded({ for: legalName, data: null }));
+  }, [legalName]);
+
+  return (
+    <Sheet open={legalName !== null} onOpenChange={(o) => !o && onClose()}>
+      <SheetContent className="w-full gap-0 sm:max-w-xl">
+        <SheetHeader className="border-b pr-10">
+          <SheetTitle>{legalName}</SheetTitle>
+          <SheetDescription>Evaluaciones mensuales. El proveedor las ve en «Mis evaluaciones», con tus comentarios.</SheetDescription>
+        </SheetHeader>
+        <div className="flex-1 space-y-4 overflow-y-auto p-4">
+          {data === undefined ? (
+            <div className="space-y-3">
+              <Skeleton className="h-28 w-full" />
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-24 w-full" />
+            </div>
+          ) : data === null ? (
+            <p className="text-destructive text-sm">No se pudieron cargar las evaluaciones.</p>
+          ) : (
+            <>
+              <OverallCard data={data} />
+              <MonthlyEvaluations
+                months={data.months}
+                onSave={async (month, stars, comment) => {
+                  const next = await saveMonthEvaluation(data.legalName, month, stars, comment);
+                  if (next) setLoaded({ for: data.legalName, data: next });
+                  return next !== null;
+                }}
+              />
+            </>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

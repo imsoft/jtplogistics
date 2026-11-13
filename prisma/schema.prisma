@@ -238,6 +238,9 @@ model User {
   carrierMessages  Message[]      @relation("CarrierMessages")
   notifications    Notification[]
   carrierManualRatings CarrierManualRating[] @relation("CarrierRatingRatedBy")
+  monthlyEvaluationsRated CarrierMonthlyEvaluation[] @relation("CarrierEvaluationRatedBy")
+  quotedAsProvider        QuoteProvider[] @relation("QuoteProviderCarrier")
+  quoteProvidersAdded     QuoteProvider[] @relation("QuoteProviderAuthor")
   muralPosts       MuralPost[]    @relation("MuralPostAuthor")
   muralEntries     MuralEntry[]   @relation("MuralEntryAuthor")
   muralMentions    MuralEntry[]   @relation("MuralEntrySubject")
@@ -715,7 +718,8 @@ model CarrierSuggestion {
 model CarrierManualRating {
   id        String   @id @default(cuid()) @map("id")
   legalName String   @unique @map("legal_name")
-  stars     Int      @map("stars")
+  /// De 1 a 5, en medias (4.5). Es la categoría que JTP le da; manda sobre la automática.
+  stars     Float    @map("stars")
   notes     String?  @map("notes")
   ratedById String?  @map("rated_by_id")
   ratedBy   User?    @relation("CarrierRatingRatedBy", fields: [ratedById], references: [id], onDelete: SetNull)
@@ -723,6 +727,25 @@ model CarrierManualRating {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("carrier_manual_ratings")
+}
+
+/// Evaluación de un mes: la automática sale de sus embarques; JTP puede
+/// ajustar las estrellas y dejar un comentario que el proveedor ve.
+model CarrierMonthlyEvaluation {
+  id        String   @id @default(cuid()) @map("id")
+  legalName String   @map("legal_name")
+  /// "YYYY-MM"
+  month     String   @map("month")
+  /// Ajuste de JTP (1 a 5 en medias); null = se queda la automática.
+  stars     Float?   @map("stars")
+  comment   String?  @map("comment")
+  ratedById String?  @map("rated_by_id")
+  ratedBy   User?    @relation("CarrierEvaluationRatedBy", fields: [ratedById], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([legalName, month])
+  @@map("carrier_monthly_evaluations")
 }
 
 // ---- App: ideas (colaboradores + admins) ----
@@ -892,9 +915,30 @@ model GeneratedQuote {
   createdById String         @map("created_by_id")
   createdBy   User           @relation(fields: [createdById], references: [id], onDelete: Cascade)
   comments    QuoteComment[]
+  providers   QuoteProvider[]
   createdAt   DateTime       @default(now()) @map("created_at")
 
   @@map("generated_quotes")
+}
+
+/// Proveedor con el que se cotizó: dado de alta (carrierId) o escrito a mano.
+model QuoteProvider {
+  id          String         @id @default(cuid()) @map("id")
+  quoteId     String         @map("quote_id")
+  quote       GeneratedQuote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  carrierId   String?        @map("carrier_id")
+  carrier     User?          @relation("QuoteProviderCarrier", fields: [carrierId], references: [id], onDelete: SetNull)
+  name        String         @map("name")
+  /// Lo que cobra el proveedor (nuestro costo), en pesos.
+  amount      Float          @map("amount")
+  /// A qué ruta de la cotización corresponde (posición en rows); null = a la cotización.
+  routeIndex  Int?           @map("route_index")
+  createdById String?        @map("created_by_id")
+  createdBy   User?          @relation("QuoteProviderAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime       @default(now()) @map("created_at")
+
+  @@index([quoteId])
+  @@map("quote_providers")
 }
 
 model QuoteComment {
