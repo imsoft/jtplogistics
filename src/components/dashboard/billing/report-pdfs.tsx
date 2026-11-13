@@ -60,7 +60,7 @@ function Frame({ title, lines, banner, logoUrl, generatedBy, children }: {
 }) {
   const generated = new Intl.DateTimeFormat("es-MX", { dateStyle: "long", timeStyle: "short" }).format(new Date());
   return (
-    <Page size="A4" style={s.page}>
+    <Page size="LETTER" style={s.page}>
       <View style={s.footer} fixed>
         <Text style={s.footerText}>JTP Logistics · Administración</Text>
         <Text style={s.footerText} render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`} />

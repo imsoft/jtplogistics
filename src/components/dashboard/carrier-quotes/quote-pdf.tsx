@@ -170,7 +170,7 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
   return (
     <Document title={`Cotizacion-${data.quoteNumber}`}>
       {/* ── Página 1: Cotización ── */}
-      <Page size="A4" style={s.page}>
+      <Page size="LETTER" style={s.page}>
         <PageHeader logoUrl={logoUrl} date={dateStr} />
         <PageFooter />
         <View style={s.titleWrapper}>
@@ -236,7 +236,7 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
       </Page>
 
       {/* ── Página 2: Términos del contrato ── */}
-      <Page size="A4" style={s.page}>
+      <Page size="LETTER" style={s.page}>
         <PageHeader logoUrl={logoUrl} date={dateStr} />
         <PageFooter />
         <Text style={s.pageTitle}>Términos insertos en el contrato</Text>
@@ -249,7 +249,7 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
       </Page>
 
       {/* ── Página 3: Aviso de privacidad ── */}
-      <Page size="A4" style={s.page}>
+      <Page size="LETTER" style={s.page}>
         <PageHeader logoUrl={logoUrl} date={dateStr} />
         <PageFooter />
         <Text style={s.pageTitle}>Aviso de privacidad</Text>
@@ -262,7 +262,7 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
       </Page>
 
       {/* ── Página 4: Límites de responsabilidad ── */}
-      <Page size="A4" style={s.page}>
+      <Page size="LETTER" style={s.page}>
         <PageHeader logoUrl={logoUrl} date={dateStr} />
         <PageFooter />
         {renderLexicalContent(termsJson.limitsJson, lexStyles, { sentenceCase: true })}

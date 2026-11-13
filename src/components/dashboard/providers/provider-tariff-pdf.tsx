@@ -114,7 +114,7 @@ export function ProviderTariffPdf({ data, logoUrl, termsJson, issuerName, issuer
 
   return (
     <Document title={`Tarifario-${data.legalName}`}>
-      <Page size="A4" style={s.page}>
+      <Page size="LETTER" style={s.page}>
         <View style={s.footer} fixed>
           <Text style={s.footerText}>jtp.com.mx</Text>
         </View>

@@ -69,7 +69,9 @@ export async function downloadTimeClockExcel(data: TimeClockExport) {
     views: [{ state: "frozen", ySplit: HEADER_ROW, showGridLines: false }],
     pageSetup: {
       orientation: "landscape",
-      paperSize: 9,
+      // 1 = Carta (9 era A4): en México se imprime en hoja carta. El enum de
+      // exceljs no trae Carta, pero es el código válido de Excel.
+      paperSize: 1 as never,
       fitToPage: true,
       fitToWidth: 1,
       fitToHeight: 0,
@@ -245,7 +247,8 @@ export async function downloadTimeClockWord(data: TimeClockExport) {
       {
         properties: {
           page: {
-            size: { orientation: PageOrientation.LANDSCAPE },
+            // Hoja carta (en twips, en vertical; docx la voltea por la orientación).
+            size: { width: 12240, height: 15840, orientation: PageOrientation.LANDSCAPE },
             margin: { top: 620, bottom: 720, left: 720, right: 720 },
           },
         },
@@ -306,7 +309,7 @@ export async function downloadTimeClockPdf(data: TimeClockExport) {
 
   const blob = await pdf(
     <Document title={TITLE} author={COMPANY}>
-      <Page size="A4" orientation="landscape" style={s.page}>
+      <Page size="LETTER" orientation="landscape" style={s.page}>
         <View style={s.letterhead}>
           {/* eslint-disable-next-line jsx-a11y/alt-text -- Image de react-pdf, no del DOM */}
           <Image src={logoSrc} style={s.logo} />

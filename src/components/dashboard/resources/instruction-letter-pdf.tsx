@@ -223,7 +223,9 @@ function parseLocation(
 const s = StyleSheet.create({
   page: {
     textTransform: "uppercase",
-    padding: 16,
+    // Hoja carta (612 × 792). El diseño se hizo para 540 × 720 con 16 de
+    // margen: con 52 queda la misma área de contenido, centrada en la hoja.
+    padding: 52,
     backgroundColor: C.white,
     fontFamily: "Helvetica",
   },
@@ -740,7 +742,7 @@ export function InstructionLetterPage({ data, logoUrl }: { data: InstructionLett
   );
 
   return (
-      <Page size={[540, 720]} style={s.page}>
+      <Page size="LETTER" style={s.page}>
         <View style={s.outerFrame}>
           {/* Encabezado: Título y Logotipo */}
           <View style={s.headerRow}>

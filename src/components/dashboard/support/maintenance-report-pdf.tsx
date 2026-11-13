@@ -107,7 +107,7 @@ export function MaintenanceReportPdf({
 
   return (
     <Document title={`Mantenimientos ${from} a ${to}`}>
-      <Page size="A4" style={s.page}>
+      <Page size="LETTER" style={s.page}>
         <View style={s.footer} fixed>
           <Text style={s.footerText}>JTP Logistics · Control de mantenimiento de equipo</Text>
           <Text
