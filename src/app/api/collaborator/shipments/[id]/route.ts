@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { isShipmentStatus } from "@/lib/shipment-statuses";
 import { readExtraCosts } from "@/lib/shipment-extras";
 import { cartaPorteForDb, cartaPorteSummary, readCartaPorte } from "@/lib/carta-porte";
 
@@ -140,8 +141,7 @@ const SHIPMENT_LABELS: Record<string, string> = {
   cost: "Tarifa de compra",
 };
 
-const VALID_STATUSES = ["pending", "in_transit", "delivered", "delivered_with_delay", "not_delivered", "at_risk", "returned"] as const;
-const SHIPMENT_CLOSED_STATUS: (typeof VALID_STATUSES)[number] = "returned";
+const SHIPMENT_CLOSED_STATUS = "returned";
 
 export async function PATCH(
   request: Request,
@@ -231,7 +231,7 @@ export async function PATCH(
     const finalIncident = incident !== undefined ? (data.incident as string | null) : shipment.incident;
     if (!incidentAllowsIncidentType(finalIncident ?? "")) data.incidentType = null;
     if (status !== undefined) {
-      if (status && VALID_STATUSES.includes(status as (typeof VALID_STATUSES)[number])) data.status = status;
+      if (isShipmentStatus(status)) data.status = status;
     }
     Object.assign(data, tariffs.data);
     // El resultado de la entrega sobrevive al cierre (lo usa la calificación de transportistas).

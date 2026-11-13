@@ -5,16 +5,9 @@ import type { FinanceListRow } from "@/types/finance.types";
 import type { Shipment, ShipmentStatus } from "@/types/shipment.types";
 import type { Employee } from "@/types/resources.types";
 import { formatPhone } from "@/lib/utils";
+import { SHIPMENT_STATUSES } from "@/lib/shipment-statuses";
 
-const SHIPMENT_STATUS_LABEL: Record<ShipmentStatus, string> = {
-  pending: "Pendiente",
-  in_transit: "En tránsito",
-  delivered: "Entregado",
-  delivered_with_delay: "Entregado con retraso",
-  not_delivered: "No entregado",
-  at_risk: "En riesgo",
-  returned: "Cerrado",
-};
+const SHIPMENT_STATUS_LABEL = Object.fromEntries(SHIPMENT_STATUSES.map((st) => [st.value, st.label])) as Record<ShipmentStatus, string>;
 
 /**
  * Las fechas se guardan a medianoche UTC, así que hay que formatearlas en UTC.

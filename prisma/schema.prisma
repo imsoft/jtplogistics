@@ -794,6 +794,15 @@ enum ShipmentStatus {
   not_delivered
   at_risk
   returned
+  traffic_delay
+  awaiting_entry
+  awaiting_papers
+  meal_stop
+  safe_yard
+  checkpoint
+  awaiting_unload
+  first_delivery
+  at_ramp
 }
 
 model Shipment {

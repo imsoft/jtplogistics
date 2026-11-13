@@ -18,7 +18,7 @@ describe("imagen de seguimiento", () => {
     expect(c.deliveryDate).toBe("13/11/2026");
     expect(c.deliveryTime).toBe("8:00 a. m.");
     expect(c.finalDestination).toBe("Omnigreen");
-    expect(c.status.label).toBe("En tránsito");
+    expect(c.status.label).toBe("Unidad en tránsito");
     expect(c.reference).toBe("N/A");
     expect(trackingCard({ eco: "1", client: "c", origin: "o", destination: "d", pickupDate: null, deliveryDate: null, operatorName: null, status: "pending", reference: " PO-4581 " }).reference).toBe("PO-4581");
   });

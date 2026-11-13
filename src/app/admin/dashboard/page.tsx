@@ -1,3 +1,4 @@
+import { SHIPMENT_STATUSES } from "@/lib/shipment-statuses";
 import Link from "next/link";
 import {
   Route,
@@ -28,19 +29,17 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 const SHIPMENT_LABELS: Record<string, string> = {
+  ...Object.fromEntries(SHIPMENT_STATUSES.map((st) => [st.value, st.label])),
   pending: "Pendientes",
-  in_transit: "En tránsito",
   delivered: "Entregados",
   delivered_with_delay: "Con retraso",
   not_delivered: "No entregados",
-  at_risk: "En riesgo",
   returned: "Cerrados",
 };
 
+// En camino primero (en el orden de la lista), luego los resultados.
 const SHIPMENT_ORDER = [
-  "pending",
-  "in_transit",
-  "at_risk",
+  ...SHIPMENT_STATUSES.filter((st) => st.active).map((st) => st.value),
   "delivered_with_delay",
   "not_delivered",
   "delivered",

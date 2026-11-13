@@ -25,6 +25,8 @@ import { IncidentTypeBadge } from "@/components/dashboard/resources/incident-typ
 import type { Shipment, ShipmentStatus } from "@/types/shipment.types";
 import { ChevronDown, FileText, ImageDown, Loader2, MoreVertical, Trash2 } from "lucide-react";
 import { trackingFileName } from "@/lib/shipment-tracking";
+import { TrackingImageDialog, type TrackingPreview } from "@/components/dashboard/resources/tracking-image-dialog";
+import { SHIPMENT_STATUSES } from "@/lib/shipment-statuses";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -56,46 +58,9 @@ function fmtDate(iso: string | null) {
   });
 }
 
-export const SHIPMENT_STATUS_CONFIG: Record<
-  ShipmentStatus,
-  { label: string; badgeClass: string; rowClass: string }
-> = {
-  pending: {
-    label: "Pendiente",
-    badgeClass: "bg-gray-100 text-gray-800",
-    rowClass: "",
-  },
-  in_transit: {
-    label: "En tránsito",
-    badgeClass: "bg-blue-100 text-blue-800",
-    rowClass: "",
-  },
-  delivered: {
-    label: "Entregado",
-    badgeClass: "bg-blue-200 text-blue-900",
-    rowClass: "bg-blue-50",
-  },
-  delivered_with_delay: {
-    label: "Entregado con retraso",
-    badgeClass: "bg-amber-100 text-amber-800",
-    rowClass: "bg-amber-50",
-  },
-  not_delivered: {
-    label: "No entregado",
-    badgeClass: "bg-red-200 text-red-900",
-    rowClass: "bg-red-50",
-  },
-  at_risk: {
-    label: "En riesgo",
-    badgeClass: "bg-red-100 text-red-800",
-    rowClass: "bg-red-50",
-  },
-  returned: {
-    label: "Cerrado",
-    badgeClass: "bg-green-100 text-green-800",
-    rowClass: "bg-green-50",
-  },
-};
+export const SHIPMENT_STATUS_CONFIG = Object.fromEntries(
+  SHIPMENT_STATUSES.map((st) => [st.value, { label: st.label, badgeClass: st.badgeClass, rowClass: st.rowClass }])
+) as Record<ShipmentStatus, { label: string; badgeClass: string; rowClass: string }>;
 
 /**
  * Cómo se pinta el estado de un embarque. Un cerrado con incidencia se pinta
@@ -110,7 +75,7 @@ export function shipmentStatusDisplay(status: string, incident?: string | null) 
 
 const STATUS_FILTER_ALL = "all" as const;
 
-const STATUS_ORDER: ShipmentStatus[] = ["pending", "in_transit", "delivered", "delivered_with_delay", "not_delivered", "at_risk", "returned"];
+const STATUS_ORDER: ShipmentStatus[] = SHIPMENT_STATUSES.map((st) => st.value);
 
 /**
  * Estado del embarque en la tabla: con permiso de editar, un menú para
@@ -491,7 +456,15 @@ export function ShipmentsTable({
     [unitTypes]
   );
 
-  // Imagen cuadrada de seguimiento para mandarle al cliente por WhatsApp.
+  // Imagen cuadrada de seguimiento para mandarle al cliente por WhatsApp:
+  // primero se ve en una vista previa y desde ahí se descarga o se copia.
+  const [trackingPreview, setTrackingPreview] = useState<TrackingPreview | null>(null);
+  const closeTrackingPreview = useCallback(() => {
+    setTrackingPreview((cur) => {
+      if (cur) URL.revokeObjectURL(cur.url);
+      return null;
+    });
+  }, []);
   const downloadTracking = useCallback(async (shipment: Shipment) => {
     setGenerating(shipment.id);
     try {
@@ -500,12 +473,8 @@ export function ShipmentsTable({
         const d = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(d.error ?? "No se pudo generar la imagen.");
       }
-      const url = URL.createObjectURL(await res.blob());
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = trackingFileName(shipment.eco);
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      const blob = await res.blob();
+      setTrackingPreview({ url: URL.createObjectURL(blob), blob, fileName: trackingFileName(shipment.eco), eco: shipment.eco });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "No se pudo generar la imagen.");
     } finally {
@@ -635,6 +604,7 @@ export function ShipmentsTable({
 
   return (
     <>
+    <TrackingImageDialog preview={trackingPreview} onClose={closeTrackingPreview} />
     <RowDeleteDialog
       open={deleting !== null}
       title="¿Eliminar embarque?"

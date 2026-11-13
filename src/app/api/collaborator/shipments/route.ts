@@ -1,5 +1,6 @@
 import { Prisma, ShipmentStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { SHIPMENT_STATUS_VALUES } from "@/lib/shipment-statuses";
 import { searchTerms } from "@/lib/search";
 import { readExtraCosts } from "@/lib/shipment-extras";
 import { cartaPorteForDb, readCartaPorte } from "@/lib/carta-porte";
@@ -25,9 +26,7 @@ const SORTABLE_FIELDS = new Set([
   "incident", "createdAt",
 ]);
 
-const VALID_STATUSES: ShipmentStatus[] = [
-  "pending", "in_transit", "delivered", "delivered_with_delay", "not_delivered", "at_risk", "returned",
-];
+const VALID_STATUSES: ShipmentStatus[] = [...SHIPMENT_STATUS_VALUES];
 
 function toJson(s: {
   id: string;
@@ -200,7 +199,7 @@ export async function POST(request: Request) {
       return Response.json({ error: "Sin permiso para capturar tarifas" }, { status: 403 });
     }
 
-    const validStatuses = ["pending", "in_transit", "delivered", "delivered_with_delay", "not_delivered", "at_risk", "returned"];
+    const validStatuses: string[] = [...SHIPMENT_STATUS_VALUES];
 
     const shipment = await prisma.shipment.create({
       data: {

@@ -6,16 +6,13 @@
  * Puro, para poder probarlo.
  */
 import { readCartaPorte } from "@/lib/carta-porte";
+import { shipmentStatusDef } from "@/lib/shipment-statuses";
 
-export const TRACKING_STATUS: Record<string, { label: string; bg: string; fg: string }> = {
-  pending: { label: "Pendiente", bg: "#E5E7EB", fg: "#1F2937" },
-  in_transit: { label: "En tránsito", bg: "#DBEAFE", fg: "#1E40AF" },
-  delivered: { label: "Entregado", bg: "#BFDBFE", fg: "#1E3A8A" },
-  delivered_with_delay: { label: "Entregado con retraso", bg: "#FEF3C7", fg: "#92400E" },
-  not_delivered: { label: "No entregado", bg: "#FECACA", fg: "#7F1D1D" },
-  at_risk: { label: "En riesgo", bg: "#FEE2E2", fg: "#991B1B" },
-  returned: { label: "Cerrado", bg: "#DCFCE7", fg: "#166534" },
-};
+/** Estatus en la imagen: nombre y color sólido (ver shipment-statuses.ts). */
+function trackingStatus(value: string): { label: string; bg: string; fg: string } {
+  const st = shipmentStatusDef(value);
+  return { label: st?.label ?? value, bg: st?.solid ?? "#1F2937", fg: st?.solid ?? "#1F2937" };
+}
 
 export interface TrackingSource {
   eco: string | null;
@@ -78,7 +75,7 @@ export function trackingCard(s: TrackingSource): TrackingCard {
     deliveryTime: trackingTime(cp?.destination.dateTime),
     operator: dash(s.operatorName),
     reference: s.reference?.trim() || "N/A",
-    status: TRACKING_STATUS[s.status] ?? { label: s.status, bg: "#E5E7EB", fg: "#1F2937" },
+    status: trackingStatus(s.status),
   };
 }
 

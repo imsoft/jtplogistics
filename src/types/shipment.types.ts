@@ -1,13 +1,9 @@
 import type { CartaPorte } from "@/lib/carta-porte";
 
-export type ShipmentStatus =
-  | "pending"
-  | "in_transit"
-  | "delivered"
-  | "delivered_with_delay"
-  | "not_delivered"
-  | "at_risk"
-  | "returned";
+import type { ShipmentStatusValue } from "@/lib/shipment-statuses";
+
+/** Ver src/lib/shipment-statuses.ts (nombres, colores y orden). */
+export type ShipmentStatus = ShipmentStatusValue;
 
 export interface Shipment {
   id: string;

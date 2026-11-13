@@ -10,8 +10,8 @@ import { FormSection, RequiredText } from "@/components/ui/form-section";
 import { missingShipmentFields, missingShipmentMessage } from "@/lib/shipment-required";
 import { Label } from "@/components/ui/label";
 import { AppSelect } from "@/components/ui/app-select";
-import { SHIPMENT_STATUS_CONFIG } from "@/components/dashboard/resources/shipments-table";
 import { useUnitTypes } from "@/hooks/use-unit-types";
+import { SHIPMENT_STATUSES } from "@/lib/shipment-statuses";
 import { useIncidentTypes } from "@/hooks/use-incident-types";
 import { getIncidentSelectOptions, incidentAllowsIncidentType } from "@/lib/incident-yes-no";
 import { carrierByOption, carrierProviderSelectOptions } from "@/lib/carrier-provider-options";
@@ -32,15 +32,7 @@ function toDateInput(iso: string | null | undefined): string {
   return iso.slice(0, 10);
 }
 
-const STATUS_OPTIONS: { value: ShipmentStatus; label: string }[] = [
-  { value: "pending", label: SHIPMENT_STATUS_CONFIG.pending.label },
-  { value: "in_transit", label: SHIPMENT_STATUS_CONFIG.in_transit.label },
-  { value: "delivered", label: SHIPMENT_STATUS_CONFIG.delivered.label },
-  { value: "delivered_with_delay", label: SHIPMENT_STATUS_CONFIG.delivered_with_delay.label },
-  { value: "not_delivered", label: SHIPMENT_STATUS_CONFIG.not_delivered.label },
-  { value: "at_risk", label: SHIPMENT_STATUS_CONFIG.at_risk.label },
-  { value: "returned", label: SHIPMENT_STATUS_CONFIG.returned.label },
-];
+const STATUS_OPTIONS = SHIPMENT_STATUSES.map((st) => ({ value: st.value as ShipmentStatus, label: st.label }));
 
 interface ShipmentFormProps {
   initialValues?: Partial<Shipment>;
