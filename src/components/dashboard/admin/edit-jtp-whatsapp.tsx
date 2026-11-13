@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-plates-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { formatPhone } from "@/lib/utils";
@@ -21,7 +21,7 @@ export function EditJtpWhatsapp() {
       .then((data) => {
         const raw = data.jtp_whatsapp ?? "";
         const digits = raw.replace(/\D/g, "");
-        setPhone(digits.startsWith("52") && digits.length === 12 ? digits.slice(2) : digits);
+        setPhone(formatPhone(digits.startsWith("52") && digits.length === 12 ? digits.slice(2) : digits));
       })
       .catch(() => {})
       .finally(() => setIsFetching(false));
@@ -41,7 +41,7 @@ export function EditJtpWhatsapp() {
       const res = await fetch("/api/admin/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jtp_whatsapp: full || phone.trim() }),
+        body: JSON.stringify({ jtp_whatsapp: formatPhone(full || phone.trim()) }),
       });
       if (!res.ok) throw new Error();
       setIsEditing(false);
@@ -96,9 +96,8 @@ export function EditJtpWhatsapp() {
 
             {isEditing && (
               <div className="flex items-center gap-2">
-                <Input
-                  type="tel"
-                  inputMode="numeric"
+                <PhoneInput
+                  aria-label="Número de WhatsApp"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   disabled={isLoading}

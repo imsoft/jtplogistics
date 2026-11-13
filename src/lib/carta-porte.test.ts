@@ -36,7 +36,7 @@ describe("carta porte del embarque", () => {
     expect(cp.goods[0].unitKey).toBe("H87");
     expect(cp.goods[0].weightKg).toBe("21000.000");
     expect(cp.inverseLogistics).toBe(true);
-    expect(cp.transport.plates).toBe("02AZ1A");
+    expect(cp.transport.plates).toBe("02-AZ-1A");
     expect(cp.transport.grossVehicleWeight).toBe("36.00");
   });
 

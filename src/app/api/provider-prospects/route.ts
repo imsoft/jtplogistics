@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { searchTerms } from "@/lib/search";
 import { logAudit } from "@/lib/audit-log";
 import { requireProspectAccess } from "@/lib/prospect-auth";
 import { alertProspectReady } from "@/lib/provider-onboarding-alerts-server";
@@ -107,9 +108,9 @@ export async function GET(request: Request) {
     const where: Prisma.ProviderProspectWhereInput = {};
     if (isProspectStatus(status)) where.status = status;
     if (q) {
-      where.OR = SEARCH_FIELDS.map((field) => ({
-        [field]: { contains: q, mode: "insensitive" as Prisma.QueryMode },
-      })) as Prisma.ProviderProspectWhereInput[];
+      where.OR = SEARCH_FIELDS.flatMap((field) =>
+        searchTerms(q).map((term) => ({ [field]: { contains: term, mode: "insensitive" as Prisma.QueryMode } }))
+      ) as Prisma.ProviderProspectWhereInput[];
     }
 
     const prospects = await prisma.providerProspect.findMany({

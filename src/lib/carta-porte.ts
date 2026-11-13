@@ -9,6 +9,8 @@
  * Puro, para poder probarlo.
  */
 
+import { formatPlates } from "@/lib/phone-plates";
+
 // `type` y no `interface`: así Prisma los acepta como JSON.
 export type CartaPorteLocation = {
   rfc: string;
@@ -80,7 +82,9 @@ const TRANSPORT_KEYS = [
 /** Campos numéricos: se guardan como texto, pero solo con dígitos y punto. */
 const NUMERIC = new Set<string>(["quantity", "weightKg", "tareKg", "netKg", "grossVehicleWeight", "cargoPremium", "distanceKm", "modelYear"]);
 /** Claves que el SAT pide en mayúsculas y sin espacios. */
-const CODES = new Set<string>(["rfc", "numRegIdTrib", "postalCode", "satKey", "unitKey", "plates", "trailerPlates", "permitType", "vehicleConfig", "trailerSubtype"]);
+const CODES = new Set<string>(["rfc", "numRegIdTrib", "postalCode", "satKey", "unitKey", "permitType", "vehicleConfig", "trailerSubtype"]);
+/** Placas con guiones, como en el resto de la plataforma ("02-AZ-1A"). */
+const PLATES = new Set<string>(["plates", "trailerPlates"]);
 
 const empty = <K extends string>(keys: readonly K[]) => Object.fromEntries(keys.map((k) => [k, ""])) as Record<K, string>;
 
@@ -107,6 +111,7 @@ function cleanField(key: string, value: unknown): string {
   const s = typeof value === "string" ? value.trim() : typeof value === "number" && Number.isFinite(value) ? String(value) : "";
   if (!s) return "";
   if (NUMERIC.has(key)) return cleanNumber(s);
+  if (PLATES.has(key)) return formatPlates(s);
   if (CODES.has(key)) return s.toUpperCase().replace(/\s+/g, "");
   return s.slice(0, 300);
 }

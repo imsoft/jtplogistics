@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Building2, CalendarClock, Loader2, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-plates-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AppSelect } from "@/components/ui/app-select";
@@ -123,7 +124,7 @@ export function ProspectForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="p-phone">Teléfono</Label>
-          <Input id="p-phone" type="tel" value={form.phone} onChange={(e) => set("phone")(e.target.value)} />
+          <PhoneInput id="p-phone" value={form.phone} onChange={(e) => set("phone")(e.target.value)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="p-email">Correo</Label>

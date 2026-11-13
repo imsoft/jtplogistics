@@ -6,6 +6,7 @@ import { CheckCircle2, Loader2, Pencil, Plus, Trash2, TriangleAlert } from "luci
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PhoneInput, PlatesInput } from "@/components/ui/phone-plates-input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
@@ -365,8 +366,8 @@ function VehicleForm({ item, carrierId, onClose, onSaved }: { item: Vehicle | nu
             className="w-full"
           />
         </Field>
-        <Field id="fv-plates" label="Placas" help="Sin guiones ni espacios.">
-          <Input id="fv-plates" value={f.plates} maxLength={12} onChange={(e) => set("plates")(e.target.value)} />
+        <Field id="fv-plates" label="Placas" help="Los guiones se ponen solos.">
+          <PlatesInput id="fv-plates" value={f.plates} maxLength={14} onChange={(e) => set("plates")(e.target.value)} />
         </Field>
         <Field id="fv-label" label="Número económico" help="Opcional, como la identifican ustedes.">
           <Input id="fv-label" value={f.label} onChange={(e) => set("label")(e.target.value)} />
@@ -459,7 +460,7 @@ function OperatorForm({ item, carrierId, onClose, onSaved }: { item: Operator | 
           <Input id="fo-license" value={f.licenseNumber} onChange={(e) => set("licenseNumber")(e.target.value)} />
         </Field>
         <Field id="fo-phone" label="Teléfono">
-          <Input id="fo-phone" inputMode="tel" value={f.phone} onChange={(e) => set("phone")(e.target.value)} />
+          <PhoneInput id="fo-phone" value={f.phone} onChange={(e) => set("phone")(e.target.value)} />
         </Field>
         <label className="flex items-center gap-2 self-end pb-2 text-sm">
           <Switch checked={f.active} onCheckedChange={set("active")} />

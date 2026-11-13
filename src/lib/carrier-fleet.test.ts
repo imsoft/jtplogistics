@@ -18,7 +18,7 @@ describe("readVehicleBody", () => {
     const r = readVehicleBody(fullTractor, 2026);
     expect(r.ok).toBe(true);
     if (r.ok) {
-      expect(r.data.plates).toBe("AB123CD");
+      expect(r.data.plates).toBe("AB-12-3CD");
       expect(r.data.vehicleConfig).toBe("T3S2");
       expect(r.data.sctPermitType).toBe("TPAF01");
       expect(r.data.year).toBe(2020);

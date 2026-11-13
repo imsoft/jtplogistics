@@ -6,22 +6,10 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Formatea un número de teléfono para mostrarlo.
- * 10 dígitos → "33 3410 9866"
- * 12 dígitos con 52 → "+52 33 3410 9866"
- * Cualquier otro formato → se devuelve sin cambios.
+ * Teléfono para mostrar: "33-3410-9866" o "+52-33-3410-9866" (ver
+ * src/lib/phone-plates.ts). Cualquier otro formato se devuelve igual.
  */
-export function formatPhone(value: string | null | undefined): string {
-  if (!value) return "";
-  const d = value.replace(/\D/g, "");
-  if (d.length === 12 && d.startsWith("52")) {
-    return `+52 ${d.slice(2, 4)} ${d.slice(4, 8)} ${d.slice(8)}`;
-  }
-  if (d.length === 10) {
-    return `${d.slice(0, 2)} ${d.slice(2, 6)} ${d.slice(6)}`;
-  }
-  return value;
-}
+export { formatPhone } from "@/lib/phone-plates";
 
 /**
  * Formatea un IMEI de 15 dígitos como "35 094981 137257 6".

@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { searchTerms } from "@/lib/search";
 import { logAudit } from "@/lib/audit-log";
 import { requireModuleAccess } from "@/lib/module-access";
 import { companyDateKey } from "@/lib/time-clock";
@@ -28,7 +29,7 @@ export async function GET(request: Request) {
       where.nextFollowUpOn = { lte: new Date(`${companyDateKey()}T00:00:00.000Z`) };
     }
     if (q) {
-      where.OR = SEARCH_FIELDS.map((f) => ({ [f]: { contains: q, mode: "insensitive" as Prisma.QueryMode } }));
+      where.OR = SEARCH_FIELDS.flatMap((f) => searchTerms(q).map((term) => ({ [f]: { contains: term, mode: "insensitive" as Prisma.QueryMode } })));
     }
 
     const leads = await prisma.clientLead.findMany({ where, orderBy: { updatedAt: "desc" }, include: LEAD_INCLUDE });

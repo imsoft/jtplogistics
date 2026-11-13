@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-plates-input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormActions } from "@/components/ui/form-actions";
 import { FormSection, RequiredText } from "@/components/ui/form-section";
@@ -84,7 +85,7 @@ export function PhoneForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="ph-number">Número telefónico</Label>
-          <Input
+          <PhoneInput
             id="ph-number"
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}

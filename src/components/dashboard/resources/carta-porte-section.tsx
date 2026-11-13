@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { FileStack, Loader2, Plus, Trash2, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PlatesInput } from "@/components/ui/phone-plates-input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { AppSelect } from "@/components/ui/app-select";
@@ -31,6 +32,7 @@ function Field({
   type = "text",
   inputMode,
   className,
+  plates,
 }: {
   id: string;
   label: string;
@@ -41,13 +43,16 @@ function Field({
   type?: string;
   inputMode?: "decimal" | "numeric";
   className?: string;
+  /** Placas: los guiones se ponen solos. */
+  plates?: boolean;
 }) {
+  const InputTag = plates ? PlatesInput : Input;
   return (
     <div className={`space-y-1.5 ${className ?? ""}`}>
       <Label htmlFor={id} className="text-xs">
         {label}
       </Label>
-      <Input id={id} type={type} inputMode={inputMode} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)} />
+      <InputTag id={id} type={type} inputMode={inputMode} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)} />
       {help && <p className="text-muted-foreground text-[11px]">{help}</p>}
     </div>
   );
@@ -321,7 +326,7 @@ export function CartaPorteSection({
               <Label className="text-xs">Configuración vehicular</Label>
               <AppSelect value={t.vehicleConfig} onValueChange={setTransport("vehicleConfig")} options={options(VEHICLE_CONFIGS, t.vehicleConfig)} disabled={disabled} className="w-full" />
             </div>
-            <Field id="cp-plates" label="Placa de la unidad" value={t.plates} onChange={setTransport("plates")} disabled={disabled} />
+            <Field id="cp-plates" label="Placa de la unidad" plates value={t.plates} onChange={setTransport("plates")} disabled={disabled} />
             <Field id="cp-model" label="Modelo (año)" value={t.modelYear} onChange={setTransport("modelYear")} disabled={disabled} inputMode="numeric" />
             <Field id="cp-gross" label="Peso bruto vehicular (t)" value={t.grossVehicleWeight} onChange={setTransport("grossVehicleWeight")} disabled={disabled} inputMode="decimal" />
             <Field id="cp-civil-insurer" label="Aseguradora resp. civil" value={t.civilInsurer} onChange={setTransport("civilInsurer")} disabled={disabled} />
@@ -333,7 +338,7 @@ export function CartaPorteSection({
               <Label className="text-xs">Tipo de remolque</Label>
               <AppSelect value={t.trailerSubtype} onValueChange={setTransport("trailerSubtype")} options={options(TRAILER_SUBTYPES, t.trailerSubtype)} disabled={disabled} className="w-full" />
             </div>
-            <Field id="cp-trailer-plates" label="Placa del remolque" value={t.trailerPlates} onChange={setTransport("trailerPlates")} disabled={disabled} />
+            <Field id="cp-trailer-plates" label="Placa del remolque" plates value={t.trailerPlates} onChange={setTransport("trailerPlates")} disabled={disabled} />
           </div>
         </div>
 

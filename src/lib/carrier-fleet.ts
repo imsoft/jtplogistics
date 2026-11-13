@@ -6,6 +6,7 @@
  * Puro y sin base de datos, para poder probarlo.
  */
 
+import { formatPlates, platesForSat } from "@/lib/phone-plates";
 import { RFC_RE, SCT_PERMITS, TRAILER_SUBTYPES, VEHICLE_CONFIGS, normalizeRfc } from "@/lib/sat-catalogs";
 
 export type VehicleKind = "motriz" | "remolque";
@@ -38,9 +39,12 @@ const has = (list: { value: string }[], v: string) => list.some((o) => o.value =
 const readActive = (v: unknown) => !(v === false || v === "false" || v === 0 || v === "0");
 const text = (v: unknown) => (typeof v === "string" ? v.trim() || null : null);
 
-/** Placas sin espacios ni guiones y en mayúsculas, como las pide el SAT. */
+/**
+ * Placas sin espacios ni guiones y en mayúsculas, como las pide el SAT. Sirve
+ * para validar y comparar; en la base de datos se guardan con guiones.
+ */
 export function normalizePlates(v: string) {
-  return v.toUpperCase().replace(/[\s-]/g, "");
+  return platesForSat(v);
 }
 
 export function readVehicleBody(body: Record<string, unknown>, currentYear: number):
@@ -48,7 +52,7 @@ export function readVehicleBody(body: Record<string, unknown>, currentYear: numb
   | { ok: false; error: string } {
   const kind: VehicleKind = String(body.kind ?? "").toLowerCase() === "remolque" ? "remolque" : "motriz";
   const plates = normalizePlates(String(body.plates ?? ""));
-  if (!/^[A-Z0-9]{5,10}$/.test(plates)) return { ok: false, error: "Las placas deben tener de 5 a 10 letras o números." };
+  if (!/^[A-Z0-9Ñ]{5,10}$/.test(plates)) return { ok: false, error: "Las placas deben tener de 5 a 10 letras o números." };
 
   let year: number | null = null;
   if (body.year !== undefined && body.year !== null && body.year !== "") {
@@ -60,7 +64,7 @@ export function readVehicleBody(body: Record<string, unknown>, currentYear: numb
   const data: VehicleData = {
     kind,
     label: text(body.label),
-    plates,
+    plates: formatPlates(plates),
     year,
     vehicleConfig: null,
     sctPermitType: null,

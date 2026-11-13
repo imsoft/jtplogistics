@@ -3,13 +3,13 @@ import { formatPhone, formatIMEI, formatMxn, parseMxn, formatMxnLive } from "@/l
 
 describe("formatPhone", () => {
   it("formatea 10 dígitos", () => {
-    expect(formatPhone("3334109866")).toBe("33 3410 9866");
+    expect(formatPhone("3334109866")).toBe("33-3410-9866");
   });
   it("formatea 12 dígitos con lada 52", () => {
-    expect(formatPhone("523334109866")).toBe("+52 33 3410 9866");
+    expect(formatPhone("523334109866")).toBe("+52-33-3410-9866");
   });
   it("ignora caracteres no numéricos antes de formatear", () => {
-    expect(formatPhone("(33) 3410-9866")).toBe("33 3410 9866");
+    expect(formatPhone("(33) 3410-9866")).toBe("33-3410-9866");
   });
   it("devuelve el valor original si no encaja en ningún formato", () => {
     expect(formatPhone("12345")).toBe("12345");

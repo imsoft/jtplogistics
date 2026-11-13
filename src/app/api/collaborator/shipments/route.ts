@@ -1,5 +1,6 @@
 import { Prisma, ShipmentStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { searchTerms } from "@/lib/search";
 import { readExtraCosts } from "@/lib/shipment-extras";
 import { cartaPorteForDb, readCartaPorte } from "@/lib/carta-porte";
 import { incidentAllowsIncidentType } from "@/lib/incident-yes-no";
@@ -118,9 +119,9 @@ export async function GET(request: Request) {
         prisma.unitTypeDef.findMany({ where: { name: { contains: q, mode: "insensitive" } }, select: { value: true } }),
       ]);
       where.OR = [
-        ...(SEARCH_FIELDS.map((field) => ({
-          [field]: { contains: q, mode: "insensitive" as Prisma.QueryMode },
-        })) as Prisma.ShipmentWhereInput[]),
+        ...(SEARCH_FIELDS.flatMap((field) =>
+          searchTerms(q).map((term) => ({ [field]: { contains: term, mode: "insensitive" as Prisma.QueryMode } }))
+        ) as Prisma.ShipmentWhereInput[]),
         ...(incidentTypes.length ? [{ incidentType: { in: incidentTypes.map((t) => t.value) } }] : []),
         ...(unitTypes.length ? [{ unit: { in: unitTypes.map((t) => t.value) } }] : []),
       ];

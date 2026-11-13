@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ActionBar } from "@/components/ui/form-actions";
 import { FormSection, RequiredText } from "@/components/ui/form-section";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-plates-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AppSelect } from "@/components/ui/app-select";
@@ -169,7 +170,7 @@ export function LeadForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="lead-phone">Teléfono</Label>
-          <Input id="lead-phone" type="tel" inputMode="tel" {...text("phone")} />
+          <PhoneInput id="lead-phone" {...text("phone")} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="lead-email">Correo</Label>

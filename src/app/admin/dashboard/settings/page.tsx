@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-plates-input";
+import { formatPhone } from "@/lib/phone-plates";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -22,7 +23,7 @@ export default function AdminSettingsPage() {
       .then((data: Record<string, string>) => {
         const raw = data.jtp_whatsapp ?? "";
         const digits = raw.replace(/\D/g, "");
-        setWhatsapp(digits.startsWith("52") && digits.length === 12 ? digits.slice(2) : digits);
+        setWhatsapp(formatPhone(digits.startsWith("52") && digits.length === 12 ? digits.slice(2) : digits));
         setCoverImage(data.cover_image_url ?? null);
         setIsLoaded(true);
       })
@@ -44,7 +45,7 @@ export default function AdminSettingsPage() {
       const res = await fetch("/api/admin/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jtp_whatsapp: full }),
+        body: JSON.stringify({ jtp_whatsapp: formatPhone(full) }),
       });
       if (!res.ok) throw new Error();
       toast.success("Configuración guardada correctamente.");
@@ -78,10 +79,8 @@ export default function AdminSettingsPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="whatsapp">Número de WhatsApp</Label>
-              <Input
+              <PhoneInput
                 id="whatsapp"
-                type="tel"
-                inputMode="numeric"
                 value={whatsapp}
                 onChange={(e) => setWhatsapp(e.target.value)}
                 disabled={isSaving}

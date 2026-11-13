@@ -63,8 +63,8 @@ describe("planShipmentBilling", () => {
 describe("cartaPorteSnapshot", () => {
   it("encuentra tracto por placas, caja por número económico y operador sin acentos", () => {
     const s = cartaPorteSnapshot(shipment, carrier());
-    expect(s.vehicle?.plates).toBe("AB123CD");
-    expect(s.trailer).toEqual({ plates: "99XY88", trailerSubtype: "CTR007" });
+    expect(s.vehicle?.plates).toBe("AB-12-3CD");
+    expect(s.trailer).toEqual({ plates: "99-XY-88", trailerSubtype: "CTR007" });
     expect(s.operator?.rfc).toBe("PEJJ800101AB1");
     expect(s.missing).toEqual([]);
   });

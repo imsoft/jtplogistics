@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-plates-input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { FormActions } from "@/components/ui/form-actions";
 import { FormSection, RequiredText } from "@/components/ui/form-section";
@@ -109,9 +110,8 @@ export function EmployeeForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="emp-phone">Teléfono</Label>
-          <Input
+          <PhoneInput
             id="emp-phone"
-            type="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
           />

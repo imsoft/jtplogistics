@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-plates-input";
 import { Label } from "@/components/ui/label";
 import { ProviderTariffPdf } from "@/components/dashboard/providers/provider-tariff-pdf";
 import type { ProviderTariffRow } from "@/types/provider-tariff.types";
@@ -175,9 +176,8 @@ export function ProviderTariffButton({
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="tariff-phone">Teléfono</Label>
-            <Input
+            <PhoneInput
               id="tariff-phone"
-              type="tel"
               value={contactPhone}
               onChange={(e) => setContactPhone(e.target.value)}
             />

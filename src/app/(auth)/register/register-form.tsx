@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-plates-input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { FormAlert } from "@/components/auth/form-alert";
@@ -122,11 +123,9 @@ export function RegisterForm() {
       </div>
       <div className="space-y-2">
         <Label htmlFor="phone">Teléfono</Label>
-        <Input
+        <PhoneInput
           id="phone"
           name="phone"
-          type="tel"
-          autoComplete="tel"
           required
           disabled={isLoading}
         />

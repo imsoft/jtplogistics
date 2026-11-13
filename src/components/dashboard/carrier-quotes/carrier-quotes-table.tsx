@@ -13,6 +13,7 @@ import { SAVE_CHANGES, useConfirm } from "@/components/ui/confirm-provider";
 import { FormSection } from "@/components/ui/form-section";
 import { ActionBar } from "@/components/ui/form-actions";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-plates-input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
@@ -839,7 +840,7 @@ export function CarrierQuotesTable({
           </div>
           <div className="space-y-2">
             <Label htmlFor="qb-phone">Teléfono</Label>
-            <Input id="qb-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            <PhoneInput id="qb-phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="qb-email">Correo</Label>

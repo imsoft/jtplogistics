@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Plus, X, Phone, Mail, User, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-plates-input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -523,9 +524,8 @@ export default function CarrierProfilePage() {
                   )}
                   {editingPerson.phones.map((ph, j) => (
                     <div key={j} className="flex items-center gap-2">
-                      <Input
-                        type="tel"
-                        placeholder="Teléfono"
+                      <PhoneInput
+                        aria-label="Teléfono"
                         value={ph.value}
                         onChange={(e) => updatePersonContact(editingIndex, "phones", j, { value: e.target.value })}
                         className="flex-1 min-w-0"

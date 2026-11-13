@@ -91,7 +91,8 @@ const same = (a: string | null | undefined, b: string | null | undefined) =>
 function findVehicle(list: (VehicleData & { id: string })[], text: string | null, kind: VehicleData["kind"]) {
   if (!text?.trim()) return null;
   const plates = normalizePlates(text);
-  return list.find((v) => v.kind === kind && (v.plates === plates || same(v.label, text))) ?? null;
+  // Se comparan sin guiones: en la base de datos van con guiones ("02-AZ-1A").
+  return list.find((v) => v.kind === kind && (normalizePlates(v.plates) === plates || same(v.label, text))) ?? null;
 }
 
 export function cartaPorteSnapshot(s: BillingShipment, carrier: BillingCarrier | null): CartaPorteSnapshot {
