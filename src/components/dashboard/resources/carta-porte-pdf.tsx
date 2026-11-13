@@ -2,7 +2,7 @@ import { Document, Image, Page, StyleSheet, Text, View } from "@react-pdf/render
 import { BRAND as COLORS } from "@/lib/email-layout";
 import { pdfSentence, pdfUpper } from "@/lib/pdf-text-case";
 import { cartaPorteTotals, locationId, readCartaPorte, type CartaPorte, type CartaPorteLocation } from "@/lib/carta-porte";
-import { countryLabel, labelOf, SCT_PERMITS, TRAILER_SUBTYPES } from "@/lib/sat-catalogs";
+import { countryLabel, labelOf, stateLabel, SCT_PERMITS, TRAILER_SUBTYPES } from "@/lib/sat-catalogs";
 
 export interface CartaPorteData {
   eco: string;
@@ -131,7 +131,7 @@ function locationPairs(kind: "origin" | "destination", l: CartaPorteLocation, ci
           ["Colonia", pdfUpper(v(l.colony))],
           ["Localidad", pdfUpper(v(l.locality))],
           ["Municipio", pdfUpper(v(l.municipality))],
-          ["Estado", pdfUpper(v(l.state))],
+          ["Estado", pdfUpper(v(stateLabel(l.state)))],
           ["País", pdfUpper(v(countryLabel(l.country)))],
         ] as Pair[])
       : ([["Domicilio", pdfUpper(v(address || city))]] as Pair[])),

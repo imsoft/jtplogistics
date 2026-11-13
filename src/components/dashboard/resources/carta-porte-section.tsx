@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { PlatesInput } from "@/components/ui/phone-plates-input";
+import { isMunicipalityOf, municipalitiesFor } from "@/lib/mx-places";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { AppSelect } from "@/components/ui/app-select";
 import { FormSection } from "@/components/ui/form-section";
-import { COUNTRIES, SCT_PERMITS, TRAILER_SUBTYPES, VEHICLE_CONFIGS } from "@/lib/sat-catalogs";
+import { COUNTRIES, MX_STATES, SCT_PERMITS, TRAILER_SUBTYPES, VEHICLE_CONFIGS } from "@/lib/sat-catalogs";
 import {
   cartaPorteMissing,
   cartaPorteTotals,
@@ -101,9 +102,7 @@ function LocationFields({
         <Field id={`${p}-int`} label="Núm. interior" value={value.intNumber} onChange={set("intNumber")} disabled={disabled} />
         <Field id={`${p}-cp`} label="CP" value={value.postalCode} onChange={set("postalCode")} disabled={disabled} inputMode="numeric" />
         <Field id={`${p}-colony`} label="Colonia" value={value.colony} onChange={set("colony")} disabled={disabled} help="Clave y nombre, p. ej. 1380-Guadalupe del Moral." className="lg:col-span-2" />
-        <Field id={`${p}-locality`} label="Localidad" value={value.locality} onChange={set("locality")} disabled={disabled} />
-        <Field id={`${p}-municipality`} label="Municipio" value={value.municipality} onChange={set("municipality")} disabled={disabled} />
-        <Field id={`${p}-state`} label="Estado" value={value.state} onChange={set("state")} disabled={disabled} />
+        <PlaceFields value={value} onChange={onChange} disabled={disabled} idPrefix={p} />
         <div className="space-y-1.5">
           <Label className="text-xs">País</Label>
           {/* Se muestra el nombre; se guarda la clave del SAT (MEX, USA, CAN). */}
@@ -124,6 +123,78 @@ function LocationFields({
         )}
       </div>
     </div>
+  );
+}
+
+/** Lista con la opción guardada al frente si ya no está en el catálogo. */
+function withCurrent(list: { value: string; label: string }[], current: string) {
+  return current && !list.some((o) => o.value.toLowerCase() === current.toLowerCase()) ? [{ value: current, label: current }, ...list] : list;
+}
+
+/**
+ * Estado → municipio → localidad: primero el estado, y municipio y localidad
+ * solo muestran los de ese estado (catálogo del INEGI). Se guarda la clave del
+ * SAT del estado ("JAL") y el nombre del municipio y la localidad.
+ */
+function PlaceFields({
+  value,
+  onChange,
+  disabled,
+  idPrefix,
+}: {
+  value: CartaPorteLocation;
+  onChange: (v: CartaPorteLocation) => void;
+  disabled: boolean;
+  idPrefix: string;
+}) {
+  const towns = municipalitiesFor(value.state).map((m) => ({ value: m, label: m }));
+  const noState = !value.state;
+  return (
+    <>
+      <div className="space-y-1.5">
+        <Label className="text-xs">Estado</Label>
+        <AppSelect
+          value={value.state}
+          onValueChange={(state) =>
+            onChange({
+              ...value,
+              state,
+              // Otro estado: el municipio y la localidad de antes ya no aplican.
+              municipality: isMunicipalityOf(state, value.municipality) ? value.municipality : "",
+              locality: isMunicipalityOf(state, value.locality) ? value.locality : "",
+            })
+          }
+          options={withCurrent(MX_STATES, value.state)}
+          disabled={disabled}
+          className="w-full"
+        />
+      </div>
+      <div className="space-y-1.5" id={`${idPrefix}-municipality`}>
+        <Label className="text-xs">Municipio</Label>
+        <AppSelect
+          value={value.municipality}
+          onValueChange={(municipality) =>
+            // La localidad suele ser la misma que el municipio: se propone si está vacía.
+            onChange({ ...value, municipality, locality: value.locality || municipality })
+          }
+          options={withCurrent(towns, value.municipality)}
+          disabled={disabled || noState}
+          className="w-full"
+        />
+        {noState && !disabled && <p className="text-muted-foreground text-[11px]">Elige primero el estado.</p>}
+      </div>
+      <div className="space-y-1.5" id={`${idPrefix}-locality`}>
+        <Label className="text-xs">Localidad</Label>
+        <AppSelect
+          value={value.locality}
+          onValueChange={(locality) => onChange({ ...value, locality })}
+          options={withCurrent(towns, value.locality)}
+          disabled={disabled || noState}
+          className="w-full"
+        />
+        {!noState && !disabled && <p className="text-muted-foreground text-[11px]">Ciudad o población; casi siempre la misma que el municipio.</p>}
+      </div>
+    </>
   );
 }
 

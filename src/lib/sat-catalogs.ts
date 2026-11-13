@@ -108,6 +108,52 @@ export function countryLabel(value: string | null | undefined): string {
   return c ? `${c.value}-${c.label}` : value;
 }
 
+/**
+ * c_Estado — los 32 estados con su clave del SAT. `name` es como viene en el
+ * catálogo de municipios del INEGI (src/lib/data/mexico-cities.ts).
+ */
+export const MX_STATES: (SatOption & { name: string })[] = [
+  { value: "AGU", label: "Aguascalientes", name: "Aguascalientes" },
+  { value: "BCN", label: "Baja California", name: "Baja California" },
+  { value: "BCS", label: "Baja California Sur", name: "Baja California Sur" },
+  { value: "CAM", label: "Campeche", name: "Campeche" },
+  { value: "CHP", label: "Chiapas", name: "Chiapas" },
+  { value: "CHH", label: "Chihuahua", name: "Chihuahua" },
+  { value: "CMX", label: "Ciudad de México", name: "Ciudad de México" },
+  { value: "COA", label: "Coahuila", name: "Coahuila" },
+  { value: "COL", label: "Colima", name: "Colima" },
+  { value: "DUR", label: "Durango", name: "Durango" },
+  { value: "GUA", label: "Guanajuato", name: "Guanajuato" },
+  { value: "GRO", label: "Guerrero", name: "Guerrero" },
+  { value: "HID", label: "Hidalgo", name: "Hidalgo" },
+  { value: "JAL", label: "Jalisco", name: "Jalisco" },
+  { value: "MEX", label: "Estado de México", name: "Estado de México" },
+  { value: "MIC", label: "Michoacán", name: "Michoacán" },
+  { value: "MOR", label: "Morelos", name: "Morelos" },
+  { value: "NAY", label: "Nayarit", name: "Nayarit" },
+  { value: "NLE", label: "Nuevo León", name: "Nuevo León" },
+  { value: "OAX", label: "Oaxaca", name: "Oaxaca" },
+  { value: "PUE", label: "Puebla", name: "Puebla" },
+  { value: "QUE", label: "Querétaro", name: "Querétaro" },
+  { value: "ROO", label: "Quintana Roo", name: "Quintana Roo" },
+  { value: "SLP", label: "San Luis Potosí", name: "San Luis Potosí" },
+  { value: "SIN", label: "Sinaloa", name: "Sinaloa" },
+  { value: "SON", label: "Sonora", name: "Sonora" },
+  { value: "TAB", label: "Tabasco", name: "Tabasco" },
+  { value: "TAM", label: "Tamaulipas", name: "Tamaulipas" },
+  { value: "TLA", label: "Tlaxcala", name: "Tlaxcala" },
+  { value: "VER", label: "Veracruz", name: "Veracruz" },
+  { value: "YUC", label: "Yucatán", name: "Yucatán" },
+  { value: "ZAC", label: "Zacatecas", name: "Zacatecas" },
+];
+
+/** Estado como lo muestra el CFDI: "JAL-Jalisco". Lo que no es clave se muestra tal cual. */
+export function stateLabel(value: string | null | undefined): string {
+  if (!value) return "";
+  const st = MX_STATES.find((o) => o.value === value.toUpperCase());
+  return st ? `${st.value}-${st.label}` : value;
+}
+
 export const labelOf = (list: SatOption[], value: string | null | undefined) =>
   value ? (list.find((o) => o.value === value)?.label ?? value) : null;
 
