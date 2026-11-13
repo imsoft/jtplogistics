@@ -199,7 +199,17 @@ function Sidebar({
             <SheetTitle>Sidebar</SheetTitle>
             <SheetDescription>Displays the mobile sidebar.</SheetDescription>
           </SheetHeader>
-          <div className="flex h-full w-full flex-col">{children}</div>
+          {/* En celular, al tocar un enlace se va a esa página y el menú se
+              cierra (si no, se quedaba abierto encima). Los botones que solo
+              despliegan un submenú no son enlaces: lo dejan abierto. */}
+          <div
+            className="flex h-full w-full flex-col"
+            onClick={(e) => {
+              if ((e.target as HTMLElement).closest("a[href]")) setOpenMobile(false)
+            }}
+          >
+            {children}
+          </div>
         </SheetContent>
       </Sheet>
     )
