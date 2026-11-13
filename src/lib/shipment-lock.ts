@@ -34,6 +34,16 @@ export const LOCK_TEXT: Record<Exclude<ShipmentLockReason, null>, { title: strin
 };
 
 /**
+ * Si un cambio que solo toca el estado se permite con este bloqueo. Sin
+ * incidencias el embarque sigue su curso (en tránsito, entregado, cerrado):
+ * el estado se cambia aunque lo demás quede de solo lectura. Cerrado, no.
+ */
+export function statusChangeAllowed(lock: ShipmentLockReason, body: Record<string, unknown>): boolean {
+  const keys = Object.keys(body).filter((k) => k !== "_confirmedEmail");
+  return lock === "no_incident" && keys.length === 1 && keys[0] === "status";
+}
+
+/**
  * Por qué no se puede eliminar un embarque (null = sí se puede). Abierto lo
  * elimina quien tenga permiso; cerrado o sin incidencias, solo dirección y
  * confirmando su correo, igual que para desbloquearlo.

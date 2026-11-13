@@ -16,7 +16,7 @@ function extrasText(v: unknown): string {
 import { incidentAllowsIncidentType } from "@/lib/incident-yes-no";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 import { logAudit, diffObjects } from "@/lib/audit-log";
-import { shipmentDeleteBlock, shipmentLockReason, LOCK_TEXT } from "@/lib/shipment-lock";
+import { shipmentDeleteBlock, shipmentLockReason, LOCK_TEXT, statusChangeAllowed } from "@/lib/shipment-lock";
 import { readTariffs, isTariffOnlyBody, canManageTariffs } from "@/lib/shipment-tariffs";
 import { outcomeAfterStatus } from "@/lib/shipment-outcome";
 import { deleteShipmentWithFinance, syncShipmentFinance } from "@/lib/shipment-tariffs-server";
@@ -187,7 +187,9 @@ export async function PATCH(
     const lock = shipmentLockReason(shipment);
     // Las tarifas se pueden capturar aunque esté bloqueado: suelen confirmarse al cerrar.
     const tariffOnly = canTariffs && isTariffOnlyBody(body as Record<string, unknown>);
-    if (lock && !emailConfirmed && !tariffOnly) {
+    // El estado se cambia aunque esté "sin incidencias" (cambio rápido desde la tabla).
+    const statusOnly = statusChangeAllowed(lock, body as Record<string, unknown>);
+    if (lock && !emailConfirmed && !tariffOnly && !statusOnly) {
       return Response.json(
         {
           error:

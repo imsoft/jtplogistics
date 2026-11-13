@@ -113,8 +113,9 @@ const STATUS_ORDER: ShipmentStatus[] = ["pending", "in_transit", "delivered", "d
 
 /**
  * Estado del embarque en la tabla: con permiso de editar, un menú para
- * cambiarlo ahí mismo. Cerrado o sin incidencias queda de solo lectura (igual
- * que en el formulario): se desbloquea desde la ficha confirmando el correo.
+ * cambiarlo ahí mismo, también si está "sin incidencias" (sigue su curso
+ * hasta cerrarse). Cerrado queda de solo lectura: se reabre desde la ficha
+ * confirmando el correo.
  */
 function StatusCell({
   shipment,
@@ -133,7 +134,8 @@ function StatusCell({
       {config.label}
     </Badge>
   );
-  const lock = shipmentLockReason(shipment);
+  // Sin incidencias, el estado sí se cambia aquí; cerrado, solo desde su ficha.
+  const lock = shipmentLockReason(shipment) === "closed" ? "closed" : null;
   if (!canEdit || lock) {
     return lock && canEdit ? <span title={`${LOCK_TEXT[lock].title}: se cambia desde su ficha.`}>{badge}</span> : badge;
   }

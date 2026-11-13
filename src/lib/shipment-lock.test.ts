@@ -30,3 +30,12 @@ describe("shipmentDeleteBlock", () => {
     expect(shipmentDeleteBlock(closed, { isAdmin: true, emailConfirmed: true })).toBeNull();
   });
 });
+
+describe("cambiar solo el estado", () => {
+  it("sin incidencias sí; cerrado o con más campos, no", async () => {
+    const { statusChangeAllowed } = await import("./shipment-lock");
+    expect(statusChangeAllowed("no_incident", { status: "in_transit" })).toBe(true);
+    expect(statusChangeAllowed("no_incident", { status: "in_transit", eco: "1" })).toBe(false);
+    expect(statusChangeAllowed("closed", { status: "pending" })).toBe(false);
+  });
+});
