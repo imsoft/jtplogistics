@@ -23,7 +23,7 @@ import { getIncidentTypeLabel } from "@/lib/incident-type-label";
 import { useIncidentTypes } from "@/hooks/use-incident-types";
 import { IncidentTypeBadge } from "@/components/dashboard/resources/incident-type-badge";
 import type { Shipment, ShipmentStatus } from "@/types/shipment.types";
-import { FileText, Loader2, MoreVertical, Trash2 } from "lucide-react";
+import { ChevronDown, FileText, Loader2, MoreVertical, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,7 +40,8 @@ import {
 } from "@/components/dashboard/resources/shipment-pdf-download";
 import { toast } from "sonner";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
-import { shipmentLockReason } from "@/lib/shipment-lock";
+import { LOCK_TEXT, shipmentLockReason } from "@/lib/shipment-lock";
+import { useConfirm } from "@/components/ui/confirm-provider";
 import { RowDeleteDialog } from "@/components/dashboard/resources/row-delete-dialog";
 
 function fmtDate(iso: string | null) {
@@ -107,6 +108,59 @@ export function shipmentStatusDisplay(status: string, incident?: string | null) 
 }
 
 const STATUS_FILTER_ALL = "all" as const;
+
+const STATUS_ORDER: ShipmentStatus[] = ["pending", "in_transit", "delivered", "delivered_with_delay", "not_delivered", "at_risk", "returned"];
+
+/**
+ * Estado del embarque en la tabla: con permiso de editar, un menú para
+ * cambiarlo ahí mismo. Cerrado o sin incidencias queda de solo lectura (igual
+ * que en el formulario): se desbloquea desde la ficha confirmando el correo.
+ */
+function StatusCell({
+  shipment,
+  canEdit,
+  busy,
+  onChange,
+}: {
+  shipment: Shipment;
+  canEdit: boolean;
+  busy: boolean;
+  onChange: (next: ShipmentStatus) => void;
+}) {
+  const config = shipmentStatusDisplay(shipment.status, shipment.incident);
+  const badge = (
+    <Badge variant="outline" className={`whitespace-nowrap text-xs font-medium border-0 ${config.badgeClass}`}>
+      {config.label}
+    </Badge>
+  );
+  const lock = shipmentLockReason(shipment);
+  if (!canEdit || lock) {
+    return lock && canEdit ? <span title={`${LOCK_TEXT[lock].title}: se cambia desde su ficha.`}>{badge}</span> : badge;
+  }
+  return (
+    // El menú vive en un portal, pero sus clics suben por React hasta la fila.
+    <div onClick={(e) => e.stopPropagation()}>
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger
+          disabled={busy}
+          aria-label={`Cambiar estado del embarque ${shipment.eco ?? ""}`}
+          className="inline-flex items-center gap-1 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+        >
+          {badge}
+          {busy ? <Loader2 className="size-3 animate-spin" /> : <ChevronDown className="text-muted-foreground size-3 shrink-0" />}
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          {STATUS_ORDER.map((st) => (
+            <DropdownMenuItem key={st} disabled={st === shipment.status} onSelect={() => onChange(st)}>
+              <span className={`size-2 rounded-full ${SHIPMENT_STATUS_CONFIG[st].badgeClass}`} aria-hidden />
+              {SHIPMENT_STATUS_CONFIG[st].label}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
 
 function getColumns(incidentTypes: { value: string; label: string; color?: string | null }[], showSale: boolean): ColumnDef<Shipment>[] {
   const columns: ColumnDef<Shipment>[] = [
@@ -373,6 +427,41 @@ export function ShipmentsTable({
   const showSale = useMemo(() => shipments.some((s) => "sale" in s), [shipments]);
   const { permissions } = useCollaboratorPermissions();
   const canDelete = isAdmin || Boolean(permissions?.canDeleteShipments);
+  const canUpdate = isAdmin || Boolean(permissions?.canUpdateShipments);
+  const confirm = useConfirm();
+  const [savingStatus, setSavingStatus] = useState<string | null>(null);
+
+  // Cambio rápido de estado desde la tabla. Solo "Cerrado" se confirma: deja
+  // el embarque de solo lectura y pasa su registro a finanzas.
+  const changeStatus = useCallback(
+    async (shipment: Shipment, next: ShipmentStatus) => {
+      if (next === "returned") {
+        const ok = await confirm({
+          title: `¿Cerrar el embarque ${shipment.eco ?? ""}?`.replace(" ?", "?"),
+          description: "Queda de solo lectura y su registro pasa a la tabla de finanzas. Para volver a editarlo hay que reabrirlo confirmando el correo.",
+          confirmLabel: "Cerrar embarque",
+        });
+        if (!ok) return;
+      }
+      setSavingStatus(shipment.id);
+      try {
+        const res = await fetch(`${endpoint}/${shipment.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: next }),
+        });
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        if (!res.ok) throw new Error(data.error ?? "No se pudo cambiar el estado.");
+        toast.success(`Estado: ${SHIPMENT_STATUS_CONFIG[next].label}.`);
+        refetch();
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "No se pudo cambiar el estado.");
+      } finally {
+        setSavingStatus(null);
+      }
+    },
+    [confirm, endpoint, refetch]
+  );
   const [deleting, setDeleting] = useState<Shipment | null>(null);
   const unitTypes = useUnitTypes();
   const [generating, setGenerating] = useState<string | null>(null);
@@ -400,7 +489,21 @@ export function ShipmentsTable({
   );
 
   const columns = useMemo(() => {
-    const base = getColumns(incidentTypes, showSale);
+    const base = getColumns(incidentTypes, showSale).map((col) =>
+      "accessorKey" in col && col.accessorKey === "status"
+        ? ({
+            ...col,
+            cell: ({ row }) => (
+              <StatusCell
+                shipment={row.original}
+                canEdit={canUpdate}
+                busy={savingStatus === row.original.id}
+                onChange={(next) => void changeStatus(row.original, next)}
+              />
+            ),
+          } as ColumnDef<Shipment>)
+        : col
+    );
     const actions: ColumnDef<Shipment> = {
       id: "actions",
       // Pegada al borde derecho: en laptops la tabla se recorre de lado y el
@@ -450,7 +553,7 @@ export function ShipmentsTable({
       },
     };
     return [...base, actions];
-  }, [incidentTypes, showSale, canDelete, isAdmin, generating, generatePdf]);
+  }, [incidentTypes, showSale, canDelete, isAdmin, generating, generatePdf, canUpdate, savingStatus, changeStatus]);
 
   async function deleteShipment(confirmEmail: string) {
     if (!deleting) return;
