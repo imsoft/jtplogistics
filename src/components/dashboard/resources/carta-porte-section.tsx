@@ -148,6 +148,11 @@ function PlaceFields({
   idPrefix: string;
 }) {
   const towns = municipalitiesFor(value.state).map((m) => ({ value: m, label: m }));
+  // Lo guardado puede venir en minúsculas: se empata con el catálogo sin
+  // importar mayúsculas para que la lista lo muestre elegido.
+  const canonical = (v: string) => towns.find((t) => t.value.toLowerCase() === v.toLowerCase())?.value ?? v;
+  const municipality = canonical(value.municipality);
+  const locality = canonical(value.locality);
   const noState = !value.state;
   return (
     <>
@@ -172,12 +177,12 @@ function PlaceFields({
       <div className="space-y-1.5" id={`${idPrefix}-municipality`}>
         <Label className="text-xs">Municipio</Label>
         <AppSelect
-          value={value.municipality}
+          value={municipality}
           onValueChange={(municipality) =>
             // La localidad suele ser la misma que el municipio: se propone si está vacía.
             onChange({ ...value, municipality, locality: value.locality || municipality })
           }
-          options={withCurrent(towns, value.municipality)}
+          options={withCurrent(towns, municipality)}
           disabled={disabled || noState}
           className="w-full"
         />
@@ -186,9 +191,9 @@ function PlaceFields({
       <div className="space-y-1.5" id={`${idPrefix}-locality`}>
         <Label className="text-xs">Localidad</Label>
         <AppSelect
-          value={value.locality}
+          value={locality}
           onValueChange={(locality) => onChange({ ...value, locality })}
-          options={withCurrent(towns, value.locality)}
+          options={withCurrent(towns, locality)}
           disabled={disabled || noState}
           className="w-full"
         />

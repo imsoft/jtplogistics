@@ -79,3 +79,16 @@ describe("país de la carta porte", () => {
     expect(countryLabel("")).toBe("");
   });
 });
+
+describe("fecha y hora de la carta porte", () => {
+  it("acepta la t en minúscula (guardados viejos) y la deja como T", () => {
+    const cp = readCartaPorte({ destination: { dateTime: "2026-11-18t04:04" }, origin: { dateTime: "basura" } });
+    expect(cp.destination.dateTime).toBe("2026-11-18T04:04");
+    expect(cp.origin.dateTime).toBe("");
+  });
+
+  it("estado y país en mayúsculas aunque se hayan guardado en minúsculas", () => {
+    const cp = readCartaPorte({ origin: { state: "jal", country: "mex" } });
+    expect([cp.origin.state, cp.origin.country]).toEqual(["JAL", "MEX"]);
+  });
+});

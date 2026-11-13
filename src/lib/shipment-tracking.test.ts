@@ -30,6 +30,8 @@ describe("imagen de seguimiento", () => {
     expect(trackingTime("2026-11-13T14:00")).toBe("2:00 p. m.");
     expect(trackingTime("2026-11-13T00:30")).toBe("12:30 a. m.");
     expect(trackingDate(null)).toBe("—");
+    // Guardado viejo con la "t" en minúscula.
+    expect(trackingCard({ eco: "1", client: "c", origin: "o", destination: "d", pickupDate: null, deliveryDate: null, operatorName: null, status: "pending", cartaPorte: { destination: { dateTime: "2026-11-18t04:04" } } }).deliveryTime).toBe("4:04 a. m.");
     expect(trackingFileName("J - 16353")).toBe("seguimiento-J-16353.png");
   });
 });

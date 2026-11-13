@@ -12,7 +12,11 @@ const SENSITIVE_KEYS = new Set([
 ]);
 
 /** Campos cuyos strings no deben pasarse a minúsculas (p. ej. nombres propios de producto). */
-const PRESERVE_CASE_KEYS = new Set(["producttypes", "title", "description", "department", "position", "name", "equipmenttype", "brand", "model", "accessories", "generalstate", "software"]);
+const PRESERVE_CASE_KEYS = new Set(["producttypes", "title", "description", "department", "position", "name", "equipmenttype", "brand", "model", "accessories", "generalstate", "software",
+  // Fecha y hora ("2026-11-18T04:04"): en minúsculas la "t" ya no se reconoce.
+  "datetime",
+  // Municipio y localidad salen de un catálogo: se guardan tal como vienen.
+  "municipality", "locality"]);
 
 function shouldSkipLowercaseForKey(key?: string): boolean {
   if (!key) return false;

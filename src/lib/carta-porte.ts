@@ -82,7 +82,7 @@ const TRANSPORT_KEYS = [
 /** Campos numéricos: se guardan como texto, pero solo con dígitos y punto. */
 const NUMERIC = new Set<string>(["quantity", "weightKg", "tareKg", "netKg", "grossVehicleWeight", "cargoPremium", "distanceKm", "modelYear"]);
 /** Claves que el SAT pide en mayúsculas y sin espacios. */
-const CODES = new Set<string>(["rfc", "numRegIdTrib", "postalCode", "satKey", "unitKey", "permitType", "vehicleConfig", "trailerSubtype"]);
+const CODES = new Set<string>(["rfc", "numRegIdTrib", "postalCode", "satKey", "unitKey", "permitType", "vehicleConfig", "trailerSubtype", "state", "country"]);
 /** Placas con guiones, como en el resto de la plataforma ("02-AZ-1A"). */
 const PLATES = new Set<string>(["plates", "trailerPlates"]);
 
@@ -112,6 +112,8 @@ function cleanField(key: string, value: unknown): string {
   if (!s) return "";
   if (NUMERIC.has(key)) return cleanNumber(s);
   if (PLATES.has(key)) return formatPlates(s);
+  // "2026-11-18t04:04" (el guardado pasaba el texto a minúsculas) → "…T04:04".
+  if (key === "dateTime") return /^\d{4}-\d{2}-\d{2}[Tt]\d{2}:\d{2}/.test(s) ? `${s.slice(0, 10)}T${s.slice(11, 16)}` : "";
   if (CODES.has(key)) return s.toUpperCase().replace(/\s+/g, "");
   return s.slice(0, 300);
 }
