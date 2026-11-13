@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { AppSelect } from "@/components/ui/app-select";
 import { FormSection } from "@/components/ui/form-section";
-import { SCT_PERMITS, TRAILER_SUBTYPES, VEHICLE_CONFIGS } from "@/lib/sat-catalogs";
+import { COUNTRIES, SCT_PERMITS, TRAILER_SUBTYPES, VEHICLE_CONFIGS } from "@/lib/sat-catalogs";
 import {
   cartaPorteMissing,
   cartaPorteTotals,
@@ -105,7 +105,21 @@ function LocationFields({
         <Field id={`${p}-locality`} label="Localidad" value={value.locality} onChange={set("locality")} disabled={disabled} />
         <Field id={`${p}-municipality`} label="Municipio" value={value.municipality} onChange={set("municipality")} disabled={disabled} />
         <Field id={`${p}-state`} label="Estado" value={value.state} onChange={set("state")} disabled={disabled} />
-        <Field id={`${p}-country`} label="País" value={value.country} onChange={set("country")} disabled={disabled} />
+        <div className="space-y-1.5">
+          <Label className="text-xs">País</Label>
+          {/* Se muestra el nombre; se guarda la clave del SAT (MEX, USA, CAN). */}
+          <AppSelect
+            value={value.country}
+            onValueChange={set("country")}
+            options={
+              value.country && !COUNTRIES.some((c) => c.value === value.country)
+                ? [{ value: value.country, label: value.country }, ...COUNTRIES]
+                : COUNTRIES
+            }
+            disabled={disabled}
+            className="w-full"
+          />
+        </div>
         {kind === "destination" && (
           <Field id={`${p}-km`} label="Distancia recorrida (km)" value={value.distanceKm} onChange={set("distanceKm")} disabled={disabled} inputMode="decimal" />
         )}

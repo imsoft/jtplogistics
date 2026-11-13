@@ -94,6 +94,20 @@ export const TRAILER_SUBTYPES: SatOption[] = [
   { value: "CTR012", label: "CTR012 · Equipo especial" },
 ];
 
+/** c_Pais — los países que se usan en la Carta Porte (se guarda la clave). */
+export const COUNTRIES: SatOption[] = [
+  { value: "MEX", label: "México" },
+  { value: "USA", label: "Estados Unidos" },
+  { value: "CAN", label: "Canadá" },
+];
+
+/** País como lo muestra el CFDI: "MEX-México". Una clave desconocida se muestra tal cual. */
+export function countryLabel(value: string | null | undefined): string {
+  if (!value) return "";
+  const c = COUNTRIES.find((o) => o.value === value.toUpperCase());
+  return c ? `${c.value}-${c.label}` : value;
+}
+
 export const labelOf = (list: SatOption[], value: string | null | undefined) =>
   value ? (list.find((o) => o.value === value)?.label ?? value) : null;
 

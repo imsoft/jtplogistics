@@ -69,3 +69,13 @@ describe("carta porte del embarque", () => {
     );
   });
 });
+
+describe("país de la carta porte", () => {
+  it("clave y nombre, como el CFDI", async () => {
+    const { countryLabel } = await import("./sat-catalogs");
+    expect(countryLabel("MEX")).toBe("MEX-México");
+    expect(countryLabel("usa")).toBe("USA-Estados Unidos");
+    expect(countryLabel("GTM")).toBe("GTM");
+    expect(countryLabel("")).toBe("");
+  });
+});
