@@ -12,6 +12,7 @@ const RATE_LIMIT_RULES: [string, number, number][] = [
   ["/api/auth/sign-in",         10, 60_000],  // 10 intentos/min
   ["/api/auth/sign-up",          5, 60_000],  // 5 registros/min
   ["/api/auth/forget-password",  5, 60_000],  // 5 recuperaciones/min
+  ["/api/auth/request-password-reset", 5, 60_000],  // la ruta actual de recuperar contraseña
   ["/api/auth/reset-password",   5, 60_000],
   ["/api/mural/uploads",        20, 60_000],  // subida de imágenes
   ["/api/admin/uploads",        20, 60_000],

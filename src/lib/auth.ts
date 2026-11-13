@@ -78,6 +78,8 @@ export const auth = betterAuth({
       "/sign-in/email": { window: 60, max: 10 },
       "/sign-up/email": { window: 60, max: 5 },
       "/forget-password": { window: 60, max: 5 },
+      // Así se llama hoy la de recuperar contraseña (la de arriba es la vieja).
+      "/request-password-reset": { window: 60, max: 5 },
       "/reset-password": { window: 60, max: 5 },
     },
   },
