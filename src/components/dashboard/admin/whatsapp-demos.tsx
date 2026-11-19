@@ -13,6 +13,7 @@ import { PhoneInput } from "@/components/ui/phone-plates-input";
 import { FormSkeleton } from "@/components/ui/skeletons";
 import { cn } from "@/lib/utils";
 import { shipmentStatusLabel } from "@/lib/shipment-statuses";
+import { trackingDate } from "@/lib/shipment-tracking";
 import { WHATSAPP_TEMPLATES, fillTemplate, missingParams, templateByName, whatsappNumber } from "@/lib/whatsapp-templates";
 
 interface Status {
@@ -30,6 +31,7 @@ interface ShipmentOption {
   client: string | null;
   origin: string | null;
   destination: string | null;
+  deliveryDate: string | null;
   status: string;
 }
 
@@ -63,6 +65,8 @@ function paramFromShipment(param: string, s: ShipmentOption | undefined): string
       return [s.origin, s.destination].filter(Boolean).join(" - ");
     case "Destino":
       return s.destination ?? "";
+    case "Entrega":
+      return s.deliveryDate ? trackingDate(s.deliveryDate) : "";
     case "Estado":
     case "Motivo":
       return shipmentStatusLabel(s.status);
@@ -93,7 +97,7 @@ export function WhatsAppDemos() {
   const [registering, setRegistering] = useState(false);
   const [to, setTo] = useState("");
   const [kind, setKind] = useState<Kind>("template");
-  const [templateName, setTemplateName] = useState("jtp_seguimiento_embarque");
+  const [templateName, setTemplateName] = useState("jtp_estado_embarque");
   const [shipmentId, setShipmentId] = useState("");
   const [params, setParams] = useState<string[]>([]);
   const [text, setText] = useState("");

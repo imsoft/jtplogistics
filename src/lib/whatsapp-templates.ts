@@ -38,13 +38,16 @@ export const WHATSAPP_TEMPLATES: WhatsAppTemplateDef[] = [
     builtIn: true,
   },
   {
-    name: "jtp_seguimiento_embarque",
-    title: "Seguimiento del embarque (cambio de estado)",
+    // Reemplaza a "jtp_seguimiento_embarque", que Meta reclasificó como
+    // marketing por ser muy general: esta habla de una operación concreta
+    // (ECO, ruta, estado y entrega), que es lo que Meta considera utilidad.
+    name: "jtp_estado_embarque",
+    title: "Estado del embarque (cambio de estado)",
     language: "es_MX",
     category: "UTILITY",
-    body: "HOLA, {{1}}. TU EMBARQUE {{2}} ({{3}}) TIENE UNA ACTUALIZACIÓN: {{4}}. TE AVISAREMOS DE CADA CAMBIO. JTP LOGISTICS.",
-    params: ["Cliente", "ECO", "Ruta", "Estado"],
-    example: ["OMNIGREEN", "J-16353", "CUAUTITLÁN - ORIZABA", "UNIDAD EN RUTA"],
+    body: "ACTUALIZACIÓN DE TU EMBARQUE {{1}}. RUTA: {{2}}. ESTADO ACTUAL: {{3}}. ENTREGA PROGRAMADA: {{4}}. SI TIENES DUDAS, RESPONDE ESTE MENSAJE.",
+    params: ["ECO", "Ruta", "Estado", "Entrega"],
+    example: ["J-16353", "CUAUTITLÁN - ORIZABA", "UNIDAD EN RUTA", "13/11/2026"],
   },
   {
     name: "jtp_embarque_retraso",

@@ -20,11 +20,12 @@ describe("plantillas de WhatsApp", () => {
   });
 
   it("vista previa y variables faltantes", () => {
-    const t = templateByName("jtp_seguimiento_embarque")!;
-    expect(fillTemplate(t.body, ["Omnigreen", "J-1", "", "en ruta"])).toBe(
-      "HOLA, OMNIGREEN. TU EMBARQUE J-1 ({{3}}) TIENE UNA ACTUALIZACIÓN: EN RUTA. TE AVISAREMOS DE CADA CAMBIO. JTP LOGISTICS."
+    const t = templateByName("jtp_estado_embarque")!;
+    expect(fillTemplate(t.body, ["J-1", "", "en ruta", "13/11/2026"])).toBe(
+      "ACTUALIZACIÓN DE TU EMBARQUE J-1. RUTA: {{2}}. ESTADO ACTUAL: EN RUTA. ENTREGA PROGRAMADA: 13/11/2026. SI TIENES DUDAS, RESPONDE ESTE MENSAJE."
     );
-    expect(missingParams(t, ["a", "b", "", "d"])).toEqual(["Ruta"]);
+    expect(missingParams(t, ["a", "", "c", "d"])).toEqual(["Ruta"]);
+    expect(templateByName("jtp_seguimiento_embarque")).toBeUndefined();
   });
 
   it("mensaje de plantilla con sus variables", () => {
