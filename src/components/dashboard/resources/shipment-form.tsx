@@ -457,12 +457,15 @@ export function ShipmentForm({
             city={origin}
             destinationCity={destination}
             pairs={matchingPairs}
-            pickedId={pickedPair?.id ?? null}
+            pickedOrigin={pickedPair?.originAddress ?? null}
             savedOrigin={pickedPair ? null : savedAddresses?.originAddress || null}
             disabled={isClosed}
             hasClient={Boolean(clientId)}
-            onPick={(id) => {
-              setPickedPairId(id);
+            onPickOrigin={(addr) => {
+              // Otra carga: su primera entrega; si es la misma, se queda la que estaba.
+              if (pickedPair?.originAddress === addr) return;
+              const first = matchingPairs.find((p) => p.originAddress === addr);
+              if (first) setPickedPairId(first.id);
               setKeepSavedAddresses(false);
             }}
           />
@@ -481,14 +484,17 @@ export function ShipmentForm({
             disabled={isClosed || !origin.trim() || destinationOptions.length === 0}
             className="w-full"
           />
-          {destination.trim() && destinationAddress && (
-            <div className="space-y-1">
-              <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">Dirección de entrega</p>
-              {/* Sale sola del par elegido en la dirección de carga; no se edita aquí. */}
-              <p className="bg-muted/40 text-muted-foreground min-h-9 rounded-md border px-3 py-2 text-sm" aria-readonly>
-                {destinationAddress}
-              </p>
-            </div>
+          {destination.trim() && (destinationAddress || pickedPair) && (
+            <DeliveryAddressPicker
+              pairs={pickedPair ? matchingPairs.filter((p) => p.originAddress === pickedPair.originAddress) : []}
+              pickedId={pickedPair?.id ?? null}
+              address={destinationAddress}
+              disabled={isClosed}
+              onPick={(id) => {
+                setPickedPairId(id);
+                setKeepSavedAddresses(false);
+              }}
+            />
           )}
         </div>
         <div className="space-y-2">
@@ -782,29 +788,29 @@ interface AddressPair {
 }
 
 /**
- * Elige la dirección de carga entre los pares del cliente para la ruta; la de
- * entrega sale del par. Si una misma dirección de carga tiene varios destinos,
- * cada opción dice a dónde va. La guardada que ya no esté en la ficha también
+ * Dirección de carga: cada dirección de los pares del cliente para la ruta,
+ * una sola vez. La de entrega se elige aparte (ver DeliveryAddressPicker) entre
+ * las que van con esta carga. La guardada que ya no esté en la ficha también
  * se muestra.
  */
 function AddressPairPicker({
   city,
   destinationCity,
   pairs,
-  pickedId,
+  pickedOrigin,
   savedOrigin,
   disabled,
   hasClient,
-  onPick,
+  onPickOrigin,
 }: {
   city: string;
   destinationCity: string;
   pairs: AddressPair[];
-  pickedId: string | null;
+  pickedOrigin: string | null;
   savedOrigin: string | null;
   disabled: boolean;
   hasClient: boolean;
-  onPick: (id: string) => void;
+  onPickOrigin: (originAddress: string) => void;
 }) {
   if (!city.trim()) return null;
   if (pairs.length === 0 && !savedOrigin) {
@@ -818,22 +824,61 @@ function AddressPairPicker({
       </p>
     );
   }
-  const repeated = (o: string) => pairs.filter((p) => p.originAddress === o).length > 1;
   const SAVED = "__guardada__";
+  const origins = [...new Set(pairs.map((p) => p.originAddress))];
   const options = [
-    ...pairs.map((p) => ({ value: p.id, label: repeated(p.originAddress) ? `${p.originAddress} → ${p.destinationAddress}` : p.originAddress })),
-    ...(savedOrigin ? [{ value: SAVED, label: savedOrigin }] : []),
+    ...origins.map((o) => ({ value: o, label: o })),
+    ...(savedOrigin && !origins.includes(savedOrigin) ? [{ value: SAVED, label: savedOrigin }] : []),
   ];
   return (
     <div className="space-y-1">
       <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">Dirección de carga</p>
       <AppSelect
-        value={pickedId ?? (savedOrigin ? SAVED : "")}
-        onValueChange={(v) => v && v !== SAVED && onPick(v)}
+        value={pickedOrigin ?? (savedOrigin ? (origins.includes(savedOrigin) ? savedOrigin : SAVED) : "")}
+        onValueChange={(v) => v && v !== SAVED && onPickOrigin(v)}
         options={options}
         disabled={disabled}
         className="w-full"
       />
+    </div>
+  );
+}
+
+/**
+ * Dirección de entrega: si la carga elegida tiene varias entregas en la ficha
+ * del cliente, se elige entre ellas; si tiene una, sale sola (solo lectura).
+ */
+function DeliveryAddressPicker({
+  pairs,
+  pickedId,
+  address,
+  disabled,
+  onPick,
+}: {
+  /** Los pares que comparten la dirección de carga elegida. */
+  pairs: AddressPair[];
+  pickedId: string | null;
+  address: string;
+  disabled: boolean;
+  onPick: (id: string) => void;
+}) {
+  if (!address && pairs.length === 0) return null;
+  return (
+    <div className="space-y-1">
+      <p className="text-muted-foreground text-[11px] font-semibold uppercase tracking-wide">Dirección de entrega</p>
+      {pairs.length > 1 ? (
+        <AppSelect
+          value={pickedId ?? ""}
+          onValueChange={(v) => v && onPick(v)}
+          options={pairs.map((p) => ({ value: p.id, label: p.destinationAddress }))}
+          disabled={disabled}
+          className="w-full"
+        />
+      ) : (
+        <p className="bg-muted/40 text-muted-foreground min-h-9 rounded-md border px-3 py-2 text-sm" aria-readonly>
+          {address}
+        </p>
+      )}
     </div>
   );
 }
