@@ -188,10 +188,12 @@ export function WhatsAppDemos() {
   if (!status) return <FormSkeleton fields={4} />;
 
   const missingVars = kind === "template" && template ? missingParams(template, params) : [];
+  // Solo se manda una plantilla aprobada en Meta (si no, WhatsApp la rechaza).
+  const templateApproved = !!template && (metaStatus.get(template.name)?.status === "APPROVED" || (template.builtIn === true && !metaStatus.has(template.name)));
   const canSend =
     status.configured &&
     !!whatsappNumber(to) &&
-    (kind === "template" ? !!template && missingVars.length === 0 : kind === "text" ? !!text.trim() : !!shipmentId);
+    (kind === "template" ? templateApproved && missingVars.length === 0 : kind === "text" ? !!text.trim() : !!shipmentId);
 
   return (
     <div className="max-w-5xl space-y-5">
@@ -326,8 +328,12 @@ export function WhatsAppDemos() {
                     options={WHATSAPP_TEMPLATES.map((t) => ({ value: t.name, label: t.title }))}
                     className="w-full"
                   />
-                  {template && !template.builtIn && metaStatus.get(template.name)?.status !== "APPROVED" && (
-                    <p className="text-xs text-amber-700">Esta plantilla todavía no está aprobada en Meta: el envío va a fallar.</p>
+                  {template && !templateApproved && (
+                    <p className="text-xs text-amber-700">
+                      {metaStatus.has(template.name)
+                        ? `Meta todavía no la aprueba (${META_STATUS[metaStatus.get(template.name)!.status]?.label ?? metaStatus.get(template.name)!.status}). Se podrá mandar cuando diga "Aprobada"; presiona "Actualizar" en Plantillas.`
+                        : 'No está registrada en Meta. Presiona "Mandar a revisión" en Plantillas.'}
+                    </p>
                   )}
                 </div>
                 {template?.params.map((p, i) => (
