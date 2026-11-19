@@ -15,6 +15,7 @@ import { DataTableSkeleton } from "@/components/ui/skeletons";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { MAINTENANCE_KIND_LABELS, MAINTENANCE_STATUS_LABELS } from "@/lib/support";
 import type { MaintenanceItem } from "./maintenance-board";
+import { useConfirm, removeItem } from "@/components/ui/confirm-provider";
 
 interface Detail extends MaintenanceItem {
   laptop: (MaintenanceItem["laptop"] & { equipmentCode?: string | null; serialNumber?: string | null; assignedTo?: { name: string } | null }) | null;
@@ -32,6 +33,7 @@ export function MaintenanceDetail({ id }: { id: string }) {
   const [findings, setFindings] = useState("");
   const [performedAt, setPerformedAt] = useState("");
   const [photos, setPhotos] = useState<{ url: string; publicId?: string }[]>([]);
+  const confirm = useConfirm();
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -202,7 +204,10 @@ export function MaintenanceDetail({ id }: { id: string }) {
                     <Image src={p.url} alt={`Evidencia ${i + 1}`} fill className="object-cover" />
                     <button
                       type="button"
-                      onClick={() => setPhotos((prev) => prev.filter((x) => x.url !== p.url))}
+                      onClick={async () => {
+                            if (!(await confirm(removeItem("esta foto")))) return;
+                            setPhotos((prev) => prev.filter((x) => x.url !== p.url));
+                          }}
                       className="absolute right-1 top-1 rounded-full bg-background/90 p-1 text-destructive"
                       aria-label="Quitar foto"
                     >

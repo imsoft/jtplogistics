@@ -9,6 +9,7 @@ import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { ResourceEditHeader } from "@/components/dashboard/resources/resource-edit-header";
 import { ClientForm } from "@/components/dashboard/resources/client-form";
 import { ClientRoutesDialog } from "@/components/dashboard/clients/client-routes-dialog";
+import { ClientLocationsCard } from "@/components/dashboard/clients/client-locations-card";
 import { ClientRoutesEditorCard, useClientRoutesEditor } from "@/components/dashboard/clients/client-routes-editor";
 import type { Client, ClientFormData } from "@/types/client.types";
 
@@ -63,6 +64,10 @@ export default function EditClientPage() {
           </ClientForm>
         )}
       </div>
+
+      {/* Direcciones de carga y entrega por ruta: tienen su propio "Guardar". Va
+          fuera del formulario del cliente para no mandarlo al guardarlas. */}
+      {id && <ClientLocationsCard clientId={id} routes={editor.routes} loaded={editor.routesLoaded} canEdit />}
 
       {id && (
         <ClientRoutesDialog clientId={id} open={routesOpen} onOpenChange={setRoutesOpen} onSave={editor.reload} />

@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm, removeItem } from "@/components/ui/confirm-provider";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,8 +12,12 @@ import { Label } from "@/components/ui/label";
  * vacías se descartan al guardar.
  */
 export function ProductTagsField({ id, value, onChange, disabled }: { id: string; value: string[]; onChange: (next: string[]) => void; disabled?: boolean }) {
+  const confirm = useConfirm();
   const update = (i: number, text: string) => onChange(value.map((p, j) => (j === i ? text : p)));
-  const remove = (i: number) => onChange(value.filter((_, j) => j !== i));
+  const remove = async (i: number) => {
+    if (value[i]?.trim() && !(await confirm(removeItem(`el producto "${value[i].trim()}"`)))) return;
+    onChange(value.filter((_, j) => j !== i));
+  };
 
   return (
     <div className="space-y-2">

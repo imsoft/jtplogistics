@@ -26,6 +26,7 @@ import type { Route } from "@/types/route.types";
 import type { Shipment, ShipmentFormData, ShipmentStatus } from "@/types/shipment.types";
 import type { Client } from "@/types/client.types";
 import type { User } from "@/types/user.types";
+import { useConfirm, removeItem } from "@/components/ui/confirm-provider";
 
 function toDateInput(iso: string | null | undefined): string {
   if (!iso) return "";
@@ -60,6 +61,7 @@ export function ShipmentForm({
   // primeros 20 clientes sin avisar que faltan los demás.
   const clientsEndpoint = scope === "collaborator" ? "/api/collaborator/clients?all=1" : "/api/admin/clients?all=1";
   const carriersEndpoint = scope === "collaborator" ? "/api/collaborator/shipment-carriers" : "/api/admin/users?role=carrier";
+  const confirm = useConfirm();
   const [eco, setEco] = useState(initialValues.eco ?? "");
   const [reference, setReference] = useState(initialValues.reference ?? "");
   const [client, setClient] = useState(initialValues.client ?? "");
@@ -729,7 +731,10 @@ export function ShipmentForm({
                   <Label htmlFor={`extra-cost-${i}`} className="text-xs">Compra ($)</Label>
                   <Input id={`extra-cost-${i}`} inputMode="decimal" value={x.cost} onChange={(e) => setExtras((l) => l.map((y, j) => (j === i ? { ...y, cost: formatMxnLive(e.target.value) } : y)))} />
                 </div>
-                <Button type="button" variant="ghost" size="icon" aria-label="Quitar costo extra" onClick={() => setExtras((l) => l.filter((_, j) => j !== i))}>
+                <Button type="button" variant="ghost" size="icon" aria-label="Quitar costo extra" onClick={async () => {
+                  if ((x.concept.trim() || x.sale.trim() || x.cost.trim()) && !(await confirm(removeItem("este costo extra")))) return;
+                  setExtras((l) => l.filter((_, j) => j !== i));
+                }}>
                   <Trash2 className="text-destructive size-4" />
                 </Button>
               </div>

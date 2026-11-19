@@ -77,6 +77,20 @@ export function useConfirm(): ConfirmFn {
   return confirm;
 }
 
+/**
+ * Confirmación para quitar un elemento de una lista de un formulario (una
+ * fila, una foto, un teléfono…). Se quita de la pantalla; en los formularios
+ * se guarda hasta presionar "Guardar".
+ */
+export function removeItem(what: string, saved = false): ConfirmOptions {
+  return {
+    title: `¿Quitar ${what}?`,
+    description: saved ? "Se quita en este momento." : "Se quita de la lista. El cambio se guarda al presionar Guardar.",
+    confirmLabel: "Quitar",
+    destructive: true,
+  };
+}
+
 /** Texto estándar para confirmar que se guardan cambios de un registro. */
 export const SAVE_CHANGES: ConfirmOptions = {
   title: "¿Guardar los cambios?",

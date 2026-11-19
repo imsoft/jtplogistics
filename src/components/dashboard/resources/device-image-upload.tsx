@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import { useConfirm, removeItem } from "@/components/ui/confirm-provider";
 
 interface DeviceImageUploadProps {
   label?: string;
@@ -23,6 +24,7 @@ export function DeviceImageUpload({
   onChange,
 }: DeviceImageUploadProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const confirm = useConfirm();
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -78,7 +80,9 @@ export function DeviceImageUpload({
         {imageUrl && !isLoading && (
           <button
             type="button"
-            onClick={() => onChange("", "")}
+            onClick={async () => {
+              if (await confirm(removeItem("la imagen"))) onChange("", "");
+            }}
             className="inline-flex items-center gap-1 text-xs text-destructive hover:underline"
           >
             <X className="h-3.5 w-3.5" />

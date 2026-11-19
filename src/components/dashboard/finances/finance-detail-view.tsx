@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { removeItem, useConfirm } from "@/components/ui/confirm-provider";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -53,6 +54,7 @@ export function FinanceDetailView({ panel, canMarkEvidence }: { panel: "admin" |
   const [row, setRow] = useState<FinanceShipmentDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const confirm = useConfirm();
   const incidentTypes = useIncidentTypes();
   const unitTypes = useUnitTypes();
 
@@ -68,6 +70,8 @@ export function FinanceDetailView({ panel, canMarkEvidence }: { panel: "admin" |
 
   async function toggleEvidence() {
     if (!row) return;
+    // Quitar la marca se confirma (deshace un dato guardado); marcarla no.
+    if (row.evidenceReceivedOn && !(await confirm(removeItem("la marca de evidencias recibidas", true)))) return;
     setBusy(true);
     try {
       const res = await fetch(`${api}/${row.id}`, {

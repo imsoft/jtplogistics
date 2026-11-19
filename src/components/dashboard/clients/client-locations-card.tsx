@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CardListSkeleton } from "@/components/ui/skeletons";
 import type { AssignedRoute } from "./client-routes";
-import { SAVE_CHANGES, useConfirm } from "@/components/ui/confirm-provider";
+import { SAVE_CHANGES, useConfirm, removeItem } from "@/components/ui/confirm-provider";
 
 interface Pair {
   /** Solo para la lista en pantalla. */
@@ -62,7 +62,11 @@ export function ClientLocationsCard({ clientId, routes, loaded, canEdit }: { cli
   const update = (key: string, field: "originAddress" | "destinationAddress", value: string) =>
     setPairs((l) => l?.map((p) => (p.key === key ? { ...p, [field]: value } : p)) ?? l);
   const add = (routeId: string) => setPairs((l) => [...(l ?? []), { key: newKey(), routeId, originAddress: "", destinationAddress: "" }]);
-  const remove = (key: string) => setPairs((l) => l?.filter((p) => p.key !== key) ?? l);
+  const remove = async (key: string) => {
+    const p = pairs?.find((x) => x.key === key);
+    if (p && (p.originAddress.trim() || p.destinationAddress.trim()) && !(await confirm(removeItem("este par de direcciones")))) return;
+    setPairs((l) => l?.filter((x) => x.key !== key) ?? l);
+  };
 
   async function save() {
     if (!pairs) return;

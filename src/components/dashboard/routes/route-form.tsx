@@ -15,6 +15,7 @@ import { UNIT_TYPE_FALLBACK } from "@/lib/constants/unit-type";
 import { formatMxn, formatMxnLive, parseMxn } from "@/lib/utils";
 import { Megaphone, MapPin, Plus, Trash2, TriangleAlert, Truck } from "lucide-react";
 import type { RouteFormData, RouteStatus, UnitType } from "@/types/route.types";
+import { useConfirm, removeItem } from "@/components/ui/confirm-provider";
 
 const defaultFormData: RouteFormData = {
   origin: "",
@@ -49,6 +50,7 @@ export function RouteForm({
   cancelHref,
   onSubmit,
 }: RouteFormProps) {
+  const confirm = useConfirm();
   const [status, setStatus] = useState<RouteStatus>(
     initialValues.status ?? defaultFormData.status
   );
@@ -139,7 +141,8 @@ export function RouteForm({
     setUnitTargets((prev) => [...prev, { unitType: first, targetDisplay: "" }]);
   }
 
-  function removeUnitTargetRow(index: number) {
+  async function removeUnitTargetRow(index: number) {
+    if (unitTargets[index]?.targetDisplay.trim() && !(await confirm(removeItem("este tipo de unidad y su tarifa")))) return;
     setUnitTargets((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== index)));
   }
 

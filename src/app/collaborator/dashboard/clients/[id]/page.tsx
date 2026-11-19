@@ -10,8 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { InfoRow } from "@/components/dashboard/users/info-row";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
-import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
-import { ClientViewActions } from "@/components/dashboard/clients/client-view-actions";
 import { ClientAssignedRoutesCard } from "@/components/dashboard/clients/client-assigned-routes-card";
 import { ClientLocationsCard } from "@/components/dashboard/clients/client-locations-card";
 import { type AssignedRoute, clientRoutesEndpoint } from "@/components/dashboard/clients/client-routes";
@@ -29,8 +27,6 @@ export default function CollaboratorClientProfilePage() {
     endpoint: "/api/collaborator/clients",
     redirectHref: "/collaborator/dashboard/clients",
   });
-  const { permissions } = useCollaboratorPermissions();
-  const canAssign = Boolean(permissions?.canUpdateClients);
 
   const [routes, setRoutes] = useState<AssignedRoute[]>([]);
   const [routesLoaded, setRoutesLoaded] = useState(false);
@@ -71,7 +67,6 @@ export default function CollaboratorClientProfilePage() {
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {canAssign && <ClientViewActions clientId={id} onSave={loadRoutes} />}
           <Button asChild>
             <Link href={`/collaborator/dashboard/clients/${id}/edit`}>
               <Pencil className="size-4" />
@@ -153,9 +148,10 @@ export default function CollaboratorClientProfilePage() {
         )}
       </div>
 
-      <ClientAssignedRoutesCard routes={routes} loaded={routesLoaded} canAssign={canAssign} />
+      {/* En el perfil solo se consultan; se agregan, quitan y editan en "Editar". */}
+      <ClientAssignedRoutesCard routes={routes} loaded={routesLoaded} canAssign={false} />
 
-      <ClientLocationsCard clientId={id} routes={routes} loaded={routesLoaded} canEdit={canAssign} />
+      <ClientLocationsCard clientId={id} routes={routes} loaded={routesLoaded} canEdit={false} />
     </div>
   );
 }

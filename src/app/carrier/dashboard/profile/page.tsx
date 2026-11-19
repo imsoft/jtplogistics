@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { useProfile } from "@/hooks/use-profile";
 import { FormSkeleton } from "@/components/ui/skeletons";
-import { SAVE_CHANGES, useConfirm } from "@/components/ui/confirm-provider";
+import { SAVE_CHANGES, useConfirm, removeItem } from "@/components/ui/confirm-provider";
 
 const PHONE_LABELS = ["Oficina", "Celular", "Casa", "Principal", "Otro"] as const;
 const EMAIL_LABELS = ["Principal", "Operaciones", "Cotizaciones", "Ventas", "Otro"] as const;
@@ -181,7 +181,10 @@ export default function CarrierProfilePage() {
     setEditingIndex(form.persons.length);
   }
 
-  function removePerson(idx: number) {
+  async function removePerson(idx: number) {
+    const person = form.persons[idx];
+    const hasData = person && (person.name.trim() || [...person.phones, ...person.emails].some((c) => c.value.trim()));
+    if (hasData && !(await confirm(removeItem(person.name.trim() ? `a ${person.name.trim()}` : "esta persona de contacto")))) return;
     setForm((prev) => ({
       ...prev,
       persons: prev.persons.filter((_, i) => i !== idx),
@@ -224,7 +227,9 @@ export default function CarrierProfilePage() {
     });
   }
 
-  function removePersonContact(idx: number, kind: "phones" | "emails", itemIdx: number) {
+  async function removePersonContact(idx: number, kind: "phones" | "emails", itemIdx: number) {
+    const item = form.persons[idx]?.[kind][itemIdx];
+    if (item?.value.trim() && !(await confirm(removeItem(kind === "phones" ? "este teléfono" : "este correo")))) return;
     setForm((prev) => {
       const persons = [...prev.persons];
       persons[idx] = {

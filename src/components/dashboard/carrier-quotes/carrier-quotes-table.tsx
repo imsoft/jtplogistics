@@ -9,7 +9,7 @@ import { pdf } from "@react-pdf/renderer";
 import { Building2, FileText, ListChecks, Loader2, Plus, Save, Search, Send, Settings, Trash2, Truck } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
-import { SAVE_CHANGES, useConfirm } from "@/components/ui/confirm-provider";
+import { SAVE_CHANGES, useConfirm, removeItem } from "@/components/ui/confirm-provider";
 import { FormSection } from "@/components/ui/form-section";
 import { ActionBar } from "@/components/ui/form-actions";
 import { Input } from "@/components/ui/input";
@@ -370,7 +370,10 @@ export function CarrierQuotesTable({
     builderRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  function removeRow(i: number) { setQuoteRows((prev) => prev.filter((_, idx) => idx !== i)); }
+  async function removeRow(i: number) {
+    if (!(await confirm(removeItem("esta ruta de la cotización")))) return;
+    setQuoteRows((prev) => prev.filter((_, idx) => idx !== i));
+  }
   function updateCost(i: number, v: string) {
     const num = parseFloat(v.replace(/[^0-9.]/g, "")) || 0;
     setQuoteRows((prev) => prev.map((r, idx) => idx === i ? { ...r, cost: num } : r));

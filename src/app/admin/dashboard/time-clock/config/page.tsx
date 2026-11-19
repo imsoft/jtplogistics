@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useConfirm, removeItem, SAVE_CHANGES } from "@/components/ui/confirm-provider";
 import { toast } from "sonner";
 import { Loader2, Plus, Wifi, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ const MODE_OPTIONS = [
 ];
 
 export default function TimeClockConfigPage() {
+  const confirm = useConfirm();
   const [lat, setLat] = useState("");
   const [lng, setLng] = useState("");
   const [radius, setRadius] = useState("");
@@ -62,6 +64,7 @@ export default function TimeClockConfigPage() {
   }
 
   async function save() {
+    if (!(await confirm({ ...SAVE_CHANGES, description: "Se actualizará la ubicación de la oficina y las redes desde las que se puede checar." }))) return;
     setIsSaving(true);
     try {
       const res = await fetch("/api/admin/settings", {
@@ -139,7 +142,9 @@ export default function TimeClockConfigPage() {
                       variant="ghost"
                       size="icon"
                       aria-label={`Quitar ${ip}`}
-                      onClick={() => setIps(ips.filter((v) => v !== ip))}
+                      onClick={async () => {
+                        if (await confirm(removeItem(`la IP ${ip}`))) setIps(ips.filter((v) => v !== ip));
+                      }}
                     >
                       <X className="size-4" />
                     </Button>

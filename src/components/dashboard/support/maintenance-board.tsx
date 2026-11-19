@@ -25,6 +25,7 @@ import {
 } from "@/lib/support";
 import { MaintenanceReportButton } from "./maintenance-report-button";
 import { MaintenanceCalendar } from "./maintenance-calendar";
+import { useConfirm, removeItem } from "@/components/ui/confirm-provider";
 
 interface EquipmentItem {
   id: string;
@@ -84,6 +85,7 @@ export function MaintenanceBoard({ currentUserName }: { currentUserName: string 
   const [scheduledFor, setScheduledFor] = useState(todayIso());
   const [findings, setFindings] = useState("");
   const [photos, setPhotos] = useState<{ url: string; publicId?: string }[]>([]);
+  const confirm = useConfirm();
   const [isUploading, setIsUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -312,7 +314,10 @@ export function MaintenanceBoard({ currentUserName }: { currentUserName: string 
                         <Image src={p.url} alt={`Evidencia ${i + 1}`} fill className="object-cover" />
                         <button
                           type="button"
-                          onClick={() => setPhotos((prev) => prev.filter((x) => x.url !== p.url))}
+                          onClick={async () => {
+                            if (!(await confirm(removeItem("esta foto")))) return;
+                            setPhotos((prev) => prev.filter((x) => x.url !== p.url));
+                          }}
                           className="absolute right-1 top-1 rounded-full bg-background/90 p-1 text-destructive"
                           aria-label="Quitar foto"
                         >

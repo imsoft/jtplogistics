@@ -22,7 +22,7 @@ import { FormSection } from "@/components/ui/form-section";
 import type { Employee, EmployeeFormData } from "@/types/resources.types";
 import { formatPhone } from "@/lib/utils";
 import { toast } from "sonner";
-import { SAVE_CHANGES, useConfirm } from "@/components/ui/confirm-provider";
+import { SAVE_CHANGES, useConfirm, removeItem } from "@/components/ui/confirm-provider";
 
 const MODULES = [
   { suffix: "Messages", label: "Mensajes" },
@@ -278,7 +278,9 @@ export default function EditEmployeePage() {
                 description="Controla permisos por módulo para leer, crear, editar y eliminar."
                 aside={
                   <div className="hidden gap-2 sm:flex">
-                    <Button type="button" variant="outline" size="sm" onClick={() => setAllPermissions(false)}>
+                    <Button type="button" variant="outline" size="sm" onClick={async () => {
+                    if (await confirm({ ...removeItem("todos los permisos"), description: "Se desmarcan todos. El cambio se guarda al presionar Guardar." })) setAllPermissions(false);
+                  }}>
                       Quitar todos
                     </Button>
                     <Button type="button" size="sm" onClick={() => setAllPermissions(true)}>
@@ -289,7 +291,9 @@ export default function EditEmployeePage() {
               >
                 {/* En celular los botones van arriba de la lista: en el encabezado no caben. */}
                 <div className="mb-3 grid grid-cols-2 gap-2 sm:hidden">
-                  <Button type="button" variant="outline" size="sm" onClick={() => setAllPermissions(false)}>
+                  <Button type="button" variant="outline" size="sm" onClick={async () => {
+                    if (await confirm({ ...removeItem("todos los permisos"), description: "Se desmarcan todos. El cambio se guarda al presionar Guardar." })) setAllPermissions(false);
+                  }}>
                     Quitar todos
                   </Button>
                   <Button type="button" size="sm" onClick={() => setAllPermissions(true)}>

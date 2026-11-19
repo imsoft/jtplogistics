@@ -12,7 +12,6 @@ import { ClientLocationsCard } from "@/components/dashboard/clients/client-locat
 import { type AssignedRoute, clientRoutesEndpoint } from "@/components/dashboard/clients/client-routes";
 import { Badge } from "@/components/ui/badge";
 import { InfoRow } from "@/components/dashboard/users/info-row";
-import { ClientViewActions } from "@/components/dashboard/clients/client-view-actions";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { formatPhone } from "@/lib/utils";
 import type { Client } from "@/types/client.types";
@@ -69,7 +68,6 @@ export default function ClientProfilePage() {
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <ClientViewActions clientId={id} onSave={loadRoutes} />
           <Button asChild>
             <Link href={`/admin/dashboard/clients/${id}/edit`}>
               <Pencil className="size-4" />
@@ -158,9 +156,10 @@ export default function ClientProfilePage() {
         </Card>
       )}
 
-      <ClientAssignedRoutesCard routes={routes} loaded={routesLoaded} canAssign />
+      {/* En el perfil solo se consultan; se agregan, quitan y editan en "Editar". */}
+      <ClientAssignedRoutesCard routes={routes} loaded={routesLoaded} canAssign={false} />
 
-      <ClientLocationsCard clientId={id} routes={routes} loaded={routesLoaded} canEdit />
+      <ClientLocationsCard clientId={id} routes={routes} loaded={routesLoaded} canEdit={false} />
     </div>
   );
 }

@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { AppSelect } from "@/components/ui/app-select";
 import { FormSection } from "@/components/ui/form-section";
 import { COUNTRIES, MX_STATES, SCT_PERMITS, TRAILER_SUBTYPES, VEHICLE_CONFIGS } from "@/lib/sat-catalogs";
+import { useConfirm, removeItem } from "@/components/ui/confirm-provider";
 import {
   cartaPorteMissing,
   cartaPorteTotals,
@@ -287,6 +288,7 @@ export function CartaPorteSection({
   trailer: string;
 }) {
   const [loadingFleet, setLoadingFleet] = useState(false);
+  const confirm = useConfirm();
   const setTransport = (k: keyof CartaPorteTransport) => (v: string) => onChange({ ...value, transport: { ...value.transport, [k]: v } });
   const t = value.transport;
   const totals = cartaPorteTotals(value);
@@ -366,7 +368,15 @@ export function CartaPorteSection({
                 value={g}
                 disabled={disabled}
                 onChange={(next) => onChange({ ...value, goods: value.goods.map((x, j) => (j === i ? next : x)) })}
-                onRemove={value.goods.length > 1 ? () => onChange({ ...value, goods: value.goods.filter((_, j) => j !== i) }) : null}
+                onRemove={
+                  value.goods.length > 1
+                    ? async () => {
+                        const hasData = Object.values(g).some((v) => String(v).trim());
+                        if (hasData && !(await confirm(removeItem(`la mercancía ${i + 1}`)))) return;
+                        onChange({ ...value, goods: value.goods.filter((_, j) => j !== i) });
+                      }
+                    : null
+                }
               />
             ))}
           </ol>
