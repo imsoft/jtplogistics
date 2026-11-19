@@ -370,8 +370,8 @@ export default function CarrierProfilePage() {
           </h2>
           {companyLocked && (
             <p className="rounded-lg border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-              Los datos de la empresa, sus contactos y las notas los administra el
-              usuario principal. Si necesitas cambiarlos, pídele el permiso.
+              Los datos de la empresa, sus contactos y las notas los administra
+              JTP. Si necesitas un cambio, escríbenos por Mensajes.
             </p>
           )}
           <div className="grid gap-4 sm:grid-cols-2">

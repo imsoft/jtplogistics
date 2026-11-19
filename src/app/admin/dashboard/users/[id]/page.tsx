@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { safeBackHref } from "@/lib/safe-back-href";
 import { notFound } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Pencil } from "lucide-react";
 import { FleetManager } from "@/components/dashboard/fleet/fleet-manager";
 import { CarrierPaymentDays } from "@/components/dashboard/users/carrier-payment-days";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ import { CarrierRoutesManager } from "@/components/dashboard/users/carrier-route
 import { ProviderTariffButton } from "@/components/dashboard/providers/provider-tariff-button";
 import { DeleteUserButton } from "@/components/dashboard/users/delete-user-button";
 import type { UserRole } from "@/types/user.types";
-import { CARRIER_MEMBER_PERMISSIONS } from "@/lib/carrier-permissions";
+import { CarrierMembersManager } from "@/components/dashboard/users/carrier-members-manager";
 
 /** Alineado con el modelo Contact de Prisma (tipado explícito para el include del perfil). */
 type ProfileContact = {
@@ -103,26 +103,6 @@ export default async function UserProfilePage({
 
   const isCarrier = user.role === "carrier";
 
-  // Usuarios que el proveedor dio de alta. Dirección los ve sin poder tocarlos:
-  // los administra el usuario principal de la empresa.
-  const carrierMembers =
-    isCarrier && !user.parentCarrierId
-      ? await prisma.user.findMany({
-          where: { parentCarrierId: user.id },
-          orderBy: [{ memberRevokedAt: { sort: "asc", nulls: "first" } }, { name: "asc" }],
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            memberRevokedAt: true,
-            memberCanViewRates: true,
-            memberCanEditRates: true,
-            memberCanMessage: true,
-            memberCanSuggest: true,
-            memberCanEditCompany: true,
-          },
-        })
-      : [];
   const isDeletable = user.role === "carrier" || user.role === "collaborator";
 
   const contacts = (user.profile?.contacts ?? []) as ProfileContact[];
@@ -211,12 +191,20 @@ export default async function UserProfilePage({
           </CardContent>
         </Card>
 
-        {/* Perfil */}
+        {/* Perfil: los datos de la empresa del proveedor los edita JTP. */}
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               Perfil
             </CardTitle>
+            {isCarrier && !user.parentCarrierId && (
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`/admin/dashboard/users/${id}/company`}>
+                  <Pencil className="size-3.5" />
+                  Editar datos y contactos
+                </Link>
+              </Button>
+            )}
           </CardHeader>
           <CardContent className="px-4 pb-4">
             {user.profile ? (
@@ -250,52 +238,12 @@ export default async function UserProfilePage({
         </section>
       )}
 
-      {/* Usuarios de la empresa — solo lectura para JTP */}
+      {/* Usuarios (colaboradores) del proveedor: los administra JTP. */}
       {isCarrier && !user.parentCarrierId && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Usuarios de la empresa ({carrierMembers.filter((m) => !m.memberRevokedAt).length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 pb-4">
-            {carrierMembers.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Solo entra el usuario principal. Los usuarios adicionales los da de
-                alta el propio proveedor desde su panel.
-              </p>
-            ) : (
-              <div className="divide-y">
-                {carrierMembers.map((m) => {
-                  const granted = CARRIER_MEMBER_PERMISSIONS.filter((p) => m[p.key]);
-                  return (
-                    <div key={m.id} className="flex flex-col gap-1 py-2.5 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium">{m.name}</p>
-                        <p className="text-email text-xs text-muted-foreground">{m.email}</p>
-                      </div>
-                      {m.memberRevokedAt ? (
-                        <span className="text-xs text-muted-foreground">Sin acceso</span>
-                      ) : (
-                        <span className="flex flex-wrap gap-1 sm:justify-end">
-                          {granted.length === 0 ? (
-                            <span className="text-xs text-muted-foreground">Sin permisos</span>
-                          ) : (
-                            granted.map((p) => (
-                              <span key={p.key} className="rounded bg-muted px-1.5 py-0.5 text-xs">
-                                {p.label}
-                              </span>
-                            ))
-                          )}
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <section className="space-y-2">
+          <h2 className="text-muted-foreground text-sm font-semibold tracking-wider uppercase">Usuarios del proveedor</h2>
+          <CarrierMembersManager apiBase={`/api/admin/carriers/${id}/members`} mode="admin" />
+        </section>
       )}
 
       {/* Notas del transportista — solo para carriers */}

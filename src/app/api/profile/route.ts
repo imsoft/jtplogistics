@@ -4,6 +4,7 @@ import { requireSession } from "@/lib/auth-server";
 import { normalizeDisplayName } from "@/lib/normalize";
 import { logAudit } from "@/lib/audit-log";
 import { validateCarrierProfilePayload } from "@/lib/validators/registration-abuse";
+import { companyAlreadySet, loadCompany, readCompanyBody, saveCompany } from "@/lib/carrier-company-server";
 
 export async function GET() {
   try {
@@ -20,7 +21,6 @@ export async function GET() {
         birthDate: true,
         role: true,
         parentCarrierId: true,
-        memberCanEditCompany: true,
         profile: {
           select: {
             commercialName: true,
@@ -74,8 +74,10 @@ export async function GET() {
       address: company?.address ?? "",
       contacts: company?.contacts ?? [],
       isCarrierMember: Boolean(user.parentCarrierId),
-      // La pantalla bloquea la sección de empresa cuando esto es falso.
-      companyEditable: !user.parentCarrierId || user.memberCanEditCompany,
+      // La pantalla bloquea la sección de empresa cuando esto es falso: el
+      // proveedor la captura al registrarse; después la administra JTP.
+      companyEditable:
+        user.role === "carrier" ? !user.parentCarrierId && !(company?.legalName?.trim() || company?.rfc?.trim()) : true,
       position: user.employeeProfile?.position ?? null,
       department: user.employeeProfile?.department ?? null,
     });
@@ -90,54 +92,31 @@ export async function PATCH(request: NextRequest) {
   try {
     const session = await requireSession();
     const userId = session.user.id;
-    const body = await request.json();
+    const body = (await request.json()) as Record<string, unknown>;
 
     // Lo personal se guarda en quien está dentro; lo de la empresa, en el
-    // principal. Si un usuario agregado no tiene permiso sobre la empresa, esa
-    // parte se ignora en vez de rechazar el guardado entero: su nombre sí
-    // puede cambiarlo.
+    // principal. Los datos de la empresa los captura el proveedor una sola vez
+    // (al registrarse); después solo los cambia JTP. Si no puede tocarlos, esa
+    // parte se ignora en vez de rechazar el guardado: su nombre sí lo cambia.
     const me = await prisma.user.findUnique({
       where: { id: userId },
-      select: { parentCarrierId: true, memberCanEditCompany: true },
+      select: { role: true, parentCarrierId: true },
     });
     const companyOwnerId = me?.parentCarrierId ?? userId;
-    const canTouchCompany = !me?.parentCarrierId || me.memberCanEditCompany;
+    const canTouchCompany =
+      me?.role === "carrier" ? !me.parentCarrierId && !(await companyAlreadySet(companyOwnerId)) : true;
 
     const name = body.name != null ? normalizeDisplayName(String(body.name)) : undefined;
     const birthDate = body.birthDate != null
       ? (body.birthDate ? new Date(String(body.birthDate)) : null)
       : undefined;
-    const commercialName = body.commercialName != null ? String(body.commercialName).trim() || null : undefined;
-    const legalName = body.legalName != null ? String(body.legalName).trim() || null : undefined;
-    const rfc = body.rfc != null ? String(body.rfc).trim().toUpperCase() || null : undefined;
-    const address = body.address != null ? String(body.address).trim() || null : undefined;
     if (birthDate && Number.isNaN(birthDate.getTime())) {
       return Response.json({ error: "La fecha de nacimiento no es válida." }, { status: 400 });
     }
-    // Los contactos solo se reemplazan si vienen: un guardado parcial (p. ej.
-    // solo el nombre) no debe dejar a la empresa sin contactos.
-    const replaceContacts = Array.isArray(body.contacts);
-    const rawContacts: unknown[] = replaceContacts ? body.contacts : [];
-    if (rawContacts.length > 50) return Response.json({ error: "Demasiados contactos." }, { status: 400 });
-    const text = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
-    const contacts: { type: "phone" | "email"; value: string; label?: string; position?: string; personName?: string }[] = [];
-    for (const raw of rawContacts) {
-      const c = (raw ?? {}) as Record<string, unknown>;
-      if (c.type !== "phone" && c.type !== "email") return Response.json({ error: "Tipo de contacto no válido." }, { status: 400 });
-      const value = text(c.value, 200);
-      if (!value) continue;
-      contacts.push({ type: c.type, value, label: text(c.label, 60), position: text(c.position, 100), personName: text(c.personName, 120) });
-    }
-
-    const abuse = validateCarrierProfilePayload({
-      name,
-      commercialName,
-      legalName,
-      contacts,
-    });
-    if (!abuse.ok) {
-      return Response.json({ error: abuse.message }, { status: 400 });
-    }
+    const company = readCompanyBody(body);
+    if (!company.ok) return Response.json({ error: company.error }, { status: 400 });
+    const abuse = validateCarrierProfilePayload({ name });
+    if (!abuse.ok) return Response.json({ error: abuse.message }, { status: 400 });
 
     if (name !== undefined || birthDate !== undefined) {
       await prisma.user.update({
@@ -149,88 +128,14 @@ export async function PATCH(request: NextRequest) {
       });
     }
 
-    if (!canTouchCompany) {
-      const current = await prisma.profile.findUnique({
-        where: { userId: companyOwnerId },
-        select: {
-          commercialName: true,
-          legalName: true,
-          rfc: true,
-          address: true,
-          contacts: {
-            select: { id: true, type: true, value: true, label: true, position: true, personName: true },
-            orderBy: { createdAt: "asc" },
-          },
-        },
-      });
-      void logAudit({
-        resource: "profile", resourceId: userId, resourceLabel: (name ?? session.user.name) as string,
-        action: "updated", userId, userName: (name ?? session.user.name) as string,
-      });
-      return Response.json({
-        name: name ?? session.user.name,
-        commercialName: current?.commercialName ?? "",
-        legalName: current?.legalName ?? "",
-        rfc: current?.rfc ?? "",
-        address: current?.address ?? "",
-        contacts: current?.contacts ?? [],
-      });
-    }
-
-    // Upsert profile
-    const profile = await prisma.profile.upsert({
-      where: { userId: companyOwnerId },
-      create: {
-        userId: companyOwnerId,
-        commercialName: commercialName ?? undefined,
-        legalName: legalName ?? undefined,
-        rfc: rfc ?? undefined,
-        address: address ?? undefined,
-      },
-      update: {
-        ...(commercialName !== undefined && { commercialName }),
-        ...(legalName !== undefined && { legalName }),
-        ...(rfc !== undefined && { rfc }),
-        ...(address !== undefined && { address }),
-      },
-    });
-
-    // Se reemplazan juntos: si algo falla, no se quedan borrados.
-    if (replaceContacts) {
-      await prisma.$transaction([
-        prisma.contact.deleteMany({ where: { profileId: profile.id } }),
-        prisma.contact.createMany({
-          data: contacts.map((c) => ({
-            profileId: profile.id,
-            type: c.type,
-            value: c.value,
-            label: c.label || null,
-            position: c.position || null,
-            personName: c.personName || null,
-          })),
-        }),
-      ]);
-    }
-
-    const updatedContacts = await prisma.contact.findMany({
-      where: { profileId: profile.id },
-      select: { id: true, type: true, value: true, label: true, position: true, personName: true },
-      orderBy: { createdAt: "asc" },
-    });
+    const saved = canTouchCompany ? await saveCompany(companyOwnerId, company.data) : await loadCompany(companyOwnerId);
 
     void logAudit({
       resource: "profile", resourceId: userId, resourceLabel: (name ?? session.user.name) as string,
       action: "updated", userId, userName: (name ?? session.user.name) as string,
     });
 
-    return Response.json({
-      name: name ?? session.user.name,
-      commercialName: profile.commercialName ?? "",
-      legalName: profile.legalName ?? "",
-      rfc: profile.rfc ?? "",
-      address: profile.address ?? "",
-      contacts: updatedContacts,
-    });
+    return Response.json({ name: name ?? session.user.name, ...saved });
   } catch (e) {
     if (e instanceof Response) return e;
     console.error(e);

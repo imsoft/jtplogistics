@@ -40,10 +40,12 @@ export const CARRIER_MEMBER_PERMISSIONS = [
     hint: "Proponer rutas nuevas a nombre de la empresa.",
   },
   {
+    // La columna conserva su nombre, pero desde que los datos de la empresa los
+    // administra JTP, este permiso solo da la flota (unidades y operadores).
     key: "memberCanEditCompany",
     ability: "editCompany",
-    label: "Datos de la empresa",
-    hint: "Editar razón social, RFC, domicilio y contactos.",
+    label: "Unidades y operadores",
+    hint: "Dar de alta y editar tractos, cajas y operadores para la carta porte.",
   },
 ] as const;
 
