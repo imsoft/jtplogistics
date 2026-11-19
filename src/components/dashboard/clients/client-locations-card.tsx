@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Loader2, MapPin, MoveRight, Plus, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { CardListSkeleton } from "@/components/ui/skeletons";
 import type { AssignedRoute } from "./client-routes";
@@ -121,11 +122,17 @@ export function ClientLocationsCard({ clientId, routes, loaded, canEdit }: { cli
                   </div>
                   <div className="space-y-3 p-4">
                     {list.length > 0 && (
-                      <div className="text-muted-foreground hidden grid-cols-[1fr_auto_1fr_auto] gap-2 text-xs font-semibold uppercase tracking-wide sm:grid">
+                      <div
+                        className={cn(
+                          "text-muted-foreground hidden gap-2 text-xs font-semibold uppercase tracking-wide sm:grid",
+                          // Sin la columna del bote de basura cuando es solo de lectura.
+                          canEdit ? "grid-cols-[1fr_auto_1fr_auto]" : "grid-cols-[1fr_auto_1fr]"
+                        )}
+                      >
                         <span>Carga · {g.origin}</span>
                         <span className="w-4" />
                         <span>Entrega · {g.destination}</span>
-                        <span className="w-9" />
+                        {canEdit && <span className="w-9" />}
                       </div>
                     )}
                     {list.length === 0 && <p className="text-muted-foreground text-sm">Sin direcciones.</p>}
@@ -156,11 +163,18 @@ export function ClientLocationsCard({ clientId, routes, loaded, canEdit }: { cli
                           </Button>
                         </div>
                       ) : (
-                        <p key={p.key} className="flex flex-wrap items-center gap-1.5 text-sm">
-                          {p.originAddress}
-                          <MoveRight className="text-muted-foreground size-3.5" aria-hidden />
-                          {p.destinationAddress}
-                        </p>
+                        // Solo lectura: mismas columnas que la cabecera, a todo el ancho.
+                        <div key={p.key} className="grid grid-cols-1 gap-1 text-sm sm:grid-cols-[1fr_auto_1fr] sm:items-center sm:gap-2">
+                          <p>
+                            <span className="text-muted-foreground mr-1 text-xs font-semibold uppercase sm:hidden">Carga:</span>
+                            {p.originAddress}
+                          </p>
+                          <MoveRight className="text-muted-foreground hidden size-4 sm:block" aria-hidden />
+                          <p>
+                            <span className="text-muted-foreground mr-1 text-xs font-semibold uppercase sm:hidden">Entrega:</span>
+                            {p.destinationAddress}
+                          </p>
+                        </div>
                       )
                     )}
                     {canEdit && (
