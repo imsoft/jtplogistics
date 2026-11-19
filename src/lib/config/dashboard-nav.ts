@@ -25,7 +25,7 @@ import { Building2 } from "lucide-react";
 import { Anchor } from "lucide-react";
 import { DollarSign } from "lucide-react";
 import { BarChart3, Handshake, HandCoins, ReceiptText, Landmark, Wallet, FileBarChart } from "lucide-react";
-import { AlertTriangle, Inbox, TrendingUp, Network, StarIcon, LayoutPanelTop, MailCheck, LifeBuoy } from "lucide-react";
+import { AlertTriangle, Inbox, TrendingUp, Network, StarIcon, LayoutPanelTop, MailCheck, LifeBuoy, MessageCircle } from "lucide-react";
 
 export interface DashboardNavItem {
   title: string;
@@ -108,6 +108,7 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
       { title: "Tareas", href: "/admin/dashboard/tasks", icon: ClipboardList },
       { title: "Cuenta demo", href: "/admin/dashboard/demo-account", icon: Copy },
       { title: "Correos de prueba", href: "/admin/dashboard/email-demos", icon: MailCheck },
+      { title: "WhatsApp de prueba", href: "/admin/dashboard/whatsapp-demos", icon: MessageCircle },
       { title: "Soporte de TI", href: "/admin/dashboard/support", icon: LifeBuoy },
       { title: "Configuración", href: "/admin/dashboard/settings", icon: Settings },
       { title: "Historial de cambios", href: "/admin/dashboard/routes/logs", icon: ScrollText },
