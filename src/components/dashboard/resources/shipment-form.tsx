@@ -22,7 +22,6 @@ import { Button } from "@/components/ui/button";
 import { ShipmentLettersButton } from "@/components/dashboard/resources/instruction-letter-button";
 import { CartaPorteSection } from "@/components/dashboard/resources/carta-porte-section";
 import { cartaPorteForDb, readCartaPorte } from "@/lib/carta-porte";
-import type { Route } from "@/types/route.types";
 import type { Shipment, ShipmentFormData, ShipmentStatus } from "@/types/shipment.types";
 import type { Client } from "@/types/client.types";
 import type { User } from "@/types/user.types";
@@ -118,8 +117,6 @@ export function ShipmentForm({
   const lockedAtLoad = shipmentLockReason(initialValues) !== null && !unlocked;
   const [missingError, setMissingError] = useState("");
 
-  const [routes, setRoutes] = useState<Route[]>([]);
-
   // Embarque nuevo: propone el siguiente ECO consecutivo (se puede cambiar).
   useEffect(() => {
     if (initialValues.id || initialValues.eco) return;
@@ -140,23 +137,11 @@ export function ShipmentForm({
     // el formulario se quedaba sin origen, destino ni cliente.
     if (scope === "collaborator") {
       fetch("/api/collaborator/shipment-options")
-        .then((r) => (r.ok ? r.json() : { routes: [], clients: [] }))
-        .then((d: { routes?: Route[]; clients?: Client[] }) => {
-          setRoutes(Array.isArray(d.routes) ? d.routes : []);
-          setClients(Array.isArray(d.clients) ? d.clients : []);
-        })
-        .catch(() => {
-          setRoutes([]);
-          setClients([]);
-        });
+        .then((r) => (r.ok ? r.json() : { clients: [] }))
+        .then((d: { clients?: Client[] }) => setClients(Array.isArray(d.clients) ? d.clients : []))
+        .catch(() => setClients([]));
       return;
     }
-    fetch("/api/routes")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data: unknown) => {
-        setRoutes(Array.isArray(data) ? (data as Route[]) : []);
-      })
-      .catch(() => setRoutes([]));
     fetch(clientsEndpoint)
       .then((r) => (r.ok ? r.json() : { data: [] }))
       .then((res: unknown) => {
@@ -175,6 +160,24 @@ export function ShipmentForm({
       })
       .catch(() => setCarriers([]));
   }, [carriersEndpoint]);
+
+  // Origen y destino: solo las rutas asignadas al cliente elegido (su ficha →
+  // Editar → Seleccionar rutas). Sin cliente no hay opciones.
+  const selectedClientId = clients.find((x) => x.name.trim().toLowerCase() === client.trim().toLowerCase())?.id;
+  const [clientRoutes, setClientRoutes] = useState<{ for: string; list: { origin: string; destination: string }[] } | null>(null);
+  useEffect(() => {
+    if (!selectedClientId) return;
+    let cancelled = false;
+    fetch(`/api/clients/${selectedClientId}/shipment-routes`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((list) => !cancelled && setClientRoutes({ for: selectedClientId, list: Array.isArray(list) ? list : [] }))
+      .catch(() => !cancelled && setClientRoutes({ for: selectedClientId, list: [] }));
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedClientId]);
+  const clientRoutesLoaded = !!selectedClientId && clientRoutes?.for === selectedClientId;
+  const routes = useMemo(() => (clientRoutesLoaded ? clientRoutes!.list : []), [clientRoutesLoaded, clientRoutes]);
 
   const origins = useMemo(() => {
     const s = new Set(routes.map((r) => r.origin).filter(Boolean));
@@ -430,6 +433,12 @@ export function ShipmentForm({
           <AppSelect
             value={clientValue}
             onValueChange={(v) => {
+              if (v !== clientValue) {
+                // Otro cliente: sus rutas son otras, así que origen y destino se eligen de nuevo.
+                setOrigin("");
+                setDestination("");
+                forgetAddresses();
+              }
               setClient(v);
               // Otro cliente: su tarifa acordada sustituye a la anterior.
               setSaleTouched(false);
@@ -453,6 +462,10 @@ export function ShipmentForm({
             disabled={isClosed || originOptions.length === 0}
             className="w-full"
           />
+          {!isClosed && !selectedClientId && <p className="text-muted-foreground text-xs">Elige el cliente para ver sus rutas.</p>}
+          {!isClosed && clientRoutesLoaded && routes.length === 0 && (
+            <p className="text-xs text-amber-700">Este cliente no tiene rutas asignadas. Asígnalas en su ficha: Editar → Seleccionar rutas.</p>
+          )}
           <AddressPairPicker
             city={origin}
             destinationCity={destination}
