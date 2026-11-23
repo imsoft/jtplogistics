@@ -5,7 +5,7 @@ import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 
 const vendorNavItems = [
   {
-    title: "Cotizador",
+    title: "Cotizador nacional",
     href: "/vendor/dashboard/quotes",
     icon: Calculator,
   },

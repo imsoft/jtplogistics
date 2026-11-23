@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { VendorQuotesTable } from "@/components/dashboard/vendor-quotes/vendor-quotes-table";
 
 export const metadata = {
-  title: "Cotizador | JTP Logistics",
+  title: "Cotizador nacional | JTP Logistics",
   description: "Consulta el resumen de targets por ruta y tu comisión",
 };
 
@@ -14,7 +14,7 @@ export default function VendorCotizadorPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <h1 className="page-heading">
-            Cotizador
+            Cotizador nacional
           </h1>
           <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
             Filtra por origen y destino para ver el resumen de precios y tu comisión.

@@ -1,12 +1,14 @@
 import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
+import { parseQuoteScope } from "@/lib/quote-scope";
 
-export async function GET() {
+/** GET ?scope=nacional|internacional — las cotizaciones del colaborador en ese cotizador. */
+export async function GET(request: Request) {
   try {
     const session = await requireCollaboratorOrAdmin();
 
     const quotes = await prisma.generatedQuote.findMany({
-      where: { createdById: session.user.id },
+      where: { createdById: session.user.id, scope: parseQuoteScope(new URL(request.url).searchParams.get("scope")) },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,

@@ -39,7 +39,7 @@ export default function CollaboratorMaritimeQuotesPage() {
     <div className="min-w-0 space-y-4 sm:space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="page-heading">Cotización marítima</h1>
+          <h1 className="page-heading">Cotizador marítimo</h1>
           <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
             Solicitudes de impuestos de importación y su estado.
           </p>

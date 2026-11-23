@@ -22,7 +22,6 @@ import { Copy } from "lucide-react";
 import { MessageSquare } from "lucide-react";
 import { ScrollText } from "lucide-react";
 import { Building2 } from "lucide-react";
-import { Anchor } from "lucide-react";
 import { DollarSign } from "lucide-react";
 import { BarChart3, Handshake, HandCoins, ReceiptText, Landmark, Wallet, FileBarChart } from "lucide-react";
 import { AlertTriangle, Inbox, TrendingUp, Network, StarIcon, LayoutPanelTop, MailCheck, LifeBuoy, MessageCircle } from "lucide-react";
@@ -31,6 +30,7 @@ export interface DashboardNavItem {
   title: string;
   href: string;
   icon: LucideIcon;
+  subItems?: { title: string; href: string }[];
 }
 
 export interface DashboardNavGroup {
@@ -43,8 +43,16 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
     label: "Operaciones",
     items: [
       { title: "Rutas", href: "/admin/dashboard/routes", icon: RouteIcon },
-      { title: "Cotizador", href: "/admin/dashboard/quotes", icon: Calculator },
-      { title: "Cotización marítima", href: "/admin/dashboard/maritime-quotes", icon: Anchor },
+      {
+        title: "Cotizador",
+        href: "cotizador",
+        icon: Calculator,
+        subItems: [
+          { title: "Cotizador nacional", href: "/admin/dashboard/quotes" },
+          { title: "Cotizador marítimo", href: "/admin/dashboard/maritime-quotes" },
+          { title: "Cotizador internacional", href: "/admin/dashboard/international-quotes" },
+        ],
+      },
       { title: "KPIs de cotizaciones", href: "/admin/dashboard/quote-kpis", icon: BarChart3 },
       { title: "Tipos de unidades", href: "/admin/dashboard/unit-types", icon: Boxes },
       { title: "Mensajes", href: "/admin/dashboard/messages", icon: MessageSquare },

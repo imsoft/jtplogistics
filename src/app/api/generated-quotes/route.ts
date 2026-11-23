@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireQuoteAuthor } from "@/lib/auth-server";
 import { logAudit } from "@/lib/audit-log";
 import { nextQuoteNumber } from "@/lib/quote-number.server";
+import { parseQuoteScope } from "@/lib/quote-scope";
 import type { Prisma } from "@prisma/client";
 
 export async function POST(request: NextRequest) {
@@ -30,6 +31,8 @@ export async function POST(request: NextRequest) {
       rows: Prisma.InputJsonValue[];
       /** "borrador" para guardar sin enviar; cualquier otra cosa es enviada. */
       status?: string;
+      /** Cotizador del que sale: "nacional" (por defecto) o "internacional". */
+      scope?: string;
     };
 
     const { quoteNumber, company, contact, phone, email, validUntil, rows } = body;
@@ -64,6 +67,7 @@ export async function POST(request: NextRequest) {
             email: email?.trim() || null,
             validUntil: new Date(validUntil),
             rows,
+            scope: parseQuoteScope(body.scope),
             createdById: session.user.id,
           },
           select: { id: true },

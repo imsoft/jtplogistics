@@ -9,7 +9,7 @@ const PERMISSION_MODULES = [
   { suffix: "Routes", label: "Rutas" },
   { suffix: "RouteLogs", label: "Historial de cambios" },
   { suffix: "UnitTypes", label: "Tipos de unidades" },
-  { suffix: "Quotes", label: "Cotizador" },
+  { suffix: "Quotes", label: "Cotizador nacional" },
   { suffix: "Providers", label: "Proveedores" },
   { suffix: "Clients", label: "Clientes" },
   { suffix: "Employees", label: "Colaboradores" },
@@ -20,7 +20,7 @@ const PERMISSION_MODULES = [
   { suffix: "Tasks", label: "Tareas" },
   { suffix: "Shipments", label: "Embarques" },
   { suffix: "Finances", label: "Finanzas" },
-  { suffix: "MaritimeQuotes", label: "Cotización marítima" },
+  { suffix: "MaritimeQuotes", label: "Cotizador marítimo" },
 ] as const;
 
 const ALLOWED_FIELDS = PERMISSION_MODULES.flatMap((module) => [

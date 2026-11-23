@@ -35,8 +35,12 @@ export interface NavItem {
   title: string;
   href: string;
   icon: LucideIcon;
+  /** Con subItems el elemento es un submenú desplegable; `href` solo sirve de llave. */
   subItems?: { title: string; href: string }[];
 }
+
+/** Si la ruta actual es esa página o una de sus subpáginas (nueva, editar…). */
+const isAt = (pathname: string, href: string) => pathname === href || pathname.startsWith(href + "/");
 
 export interface NavGroup {
   label: string;
@@ -67,7 +71,7 @@ export function DashboardSidebar({
 }: DashboardSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { state } = useSidebar();
+  const { state, setOpen } = useSidebar();
   const { data: session } = useSession();
   const [jtpWhatsapp, setJtpWhatsapp] = useState<string | null>(null);
   // La sesión guarda una copia de los datos del usuario que tarda minutos en
@@ -171,14 +175,16 @@ export function DashboardSidebar({
                         <Collapsible
                           key={item.href}
                           asChild
-                          defaultOpen={pathname.startsWith(item.href)}
+                          defaultOpen={item.subItems.some((s) => isAt(pathname, s.href))}
                           className="group/collapsible"
                         >
                           <SidebarMenuItem>
                             <CollapsibleTrigger asChild>
                               <SidebarMenuButton
                                 tooltip={item.title}
-                                isActive={pathname.startsWith(item.href)}
+                                isActive={item.subItems.some((s) => isAt(pathname, s.href))}
+                                // Con la barra en iconos el submenú no se ve: se abre la barra.
+                                onClick={() => state === "collapsed" && setOpen(true)}
                               >
                                 <item.icon />
                                 <span>{item.title}</span>
@@ -191,7 +197,7 @@ export function DashboardSidebar({
                                   <SidebarMenuSubItem key={sub.href}>
                                     <SidebarMenuSubButton
                                       asChild
-                                      isActive={pathname === sub.href}
+                                      isActive={isAt(pathname, sub.href)}
                                     >
                                       <Link href={sub.href}>
                                         <span>{sub.title}</span>

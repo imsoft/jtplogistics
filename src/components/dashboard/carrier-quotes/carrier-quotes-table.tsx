@@ -1,5 +1,6 @@
 "use client";
 
+import type { QuoteScope } from "@/lib/quote-scope";
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -77,6 +78,8 @@ interface CarrierQuotesTableProps {
   termsPath?: string;
   /** Catálogo de clientes del panel. Sin él, los datos del cliente se teclean. */
   clientsEndpoint?: string;
+  /** Cotizador al que se guardan las cotizaciones nuevas. Nacional por defecto. */
+  scope?: QuoteScope;
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -126,6 +129,7 @@ export function CarrierQuotesTable({
   termsPath = "/admin/dashboard/quotes/terms",
   allowDraft = true,
   clientsEndpoint,
+  scope = "nacional",
 }: CarrierQuotesTableProps) {
   const router = useRouter();
   const confirm = useConfirm();
@@ -509,6 +513,7 @@ export function CarrierQuotesTable({
           quoteNumber, company, contact, phone, email: email || null, validUntil,
           rows: quoteRows,
           status: "borrador",
+          scope,
         }),
       });
       const saved = await res.json().catch(() => ({})) as { error?: string };
@@ -558,7 +563,7 @@ export function CarrierQuotesTable({
         const saveRes = await fetch("/api/generated-quotes", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ quoteNumber, company, contact, phone, email: email || null, validUntil, rows: quoteRows }),
+          body: JSON.stringify({ quoteNumber, company, contact, phone, email: email || null, validUntil, rows: quoteRows, scope }),
         });
         const saved = await saveRes.json().catch(() => ({})) as { error?: string; quoteNumber?: string };
         if (!saveRes.ok) {

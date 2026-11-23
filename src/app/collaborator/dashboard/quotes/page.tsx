@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { QUOTE_SCOPE_LABELS, quoteScopeFromPath, quotesBase } from "@/lib/quote-scope";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataTableSkeleton } from "@/components/ui/skeletons";
@@ -17,6 +18,9 @@ export default function CollaboratorQuotesPage() {
   const { permissions, isLoaded } = useCollaboratorPermissions();
   const [quotes, setQuotes] = useState<CrmQuote[] | null>(null);
   const hasRedirected = useRef(false);
+  // Sirve a los dos cotizadores (nacional e internacional) según la URL.
+  const scope = quoteScopeFromPath(usePathname());
+  const base = quotesBase("collaborator", scope);
 
   useEffect(() => {
     if (isLoaded && !permissions?.canViewQuotes && !hasRedirected.current) {
@@ -27,11 +31,11 @@ export default function CollaboratorQuotesPage() {
 
   useEffect(() => {
     if (!permissions?.canViewQuotes) return;
-    fetch("/api/collaborator/generated-quotes")
+    fetch(`/api/collaborator/generated-quotes?scope=${scope}`)
       .then((r) => (r.ok ? r.json() : []))
       .then((data: CrmQuote[]) => setQuotes(Array.isArray(data) ? data : []))
       .catch(() => setQuotes([]));
-  }, [permissions]);
+  }, [permissions, scope]);
 
   if (!isLoaded || !permissions?.canViewQuotes) return null;
 
@@ -39,14 +43,14 @@ export default function CollaboratorQuotesPage() {
     <div className="min-w-0 space-y-4 sm:space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="page-heading">Cotizaciones</h1>
+          <h1 className="page-heading">{QUOTE_SCOPE_LABELS[scope]}</h1>
           <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
             Seguimiento del estado de cada cotización generada.
           </p>
         </div>
         {permissions.canCreateQuotes && (
           <Button asChild>
-            <Link href="/collaborator/dashboard/quotes/new">
+            <Link href={`${base}/new`}>
               <Plus className="size-4" />
               Nueva cotización
             </Link>
@@ -64,7 +68,7 @@ export default function CollaboratorQuotesPage() {
         <QuotesCrmTable
           initialQuotes={quotes}
           apiEndpoint="/api/collaborator/generated-quotes"
-          editBase="/collaborator/dashboard/quotes"
+          editBase={base}
           // Mismo permiso que pide la API para cambiar el estado de sus cotizaciones.
           canUpdateStatus={permissions.canUpdateQuotes}
           canEdit={permissions.canUpdateQuotes}

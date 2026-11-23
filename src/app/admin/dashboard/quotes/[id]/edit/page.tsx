@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
+import { quoteScopeFromPath, quotesBase } from "@/lib/quote-scope";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,9 @@ import { QuoteSendButton } from "@/components/dashboard/quotes/quote-send-button
 export default function EditQuotePage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  // Sirve a los dos cotizadores: la URL dice a cuál regresar.
+  const scope = quoteScopeFromPath(usePathname());
+  const base = quotesBase("admin", scope);
 
   const [quote, setQuote] = useState<EditQuote | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -56,7 +60,7 @@ export default function EditQuotePage() {
 
   async function handleDelete() {
     await fetch(`/api/admin/generated-quotes/${id}`, { method: "DELETE" });
-    router.push("/admin/dashboard/quotes");
+    router.push(base);
     router.refresh();
   }
 
@@ -70,7 +74,7 @@ export default function EditQuotePage() {
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2 min-w-0">
           <Button variant="ghost" size="icon" asChild className="shrink-0">
-            <Link href="/admin/dashboard/quotes" aria-label="Volver a cotizaciones">
+            <Link href={base} aria-label="Volver a cotizaciones">
               <ChevronLeft className="size-4" />
             </Link>
           </Button>
@@ -94,7 +98,7 @@ export default function EditQuotePage() {
 
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <CarrierQuotesTable editQuote={quote} showTermsLink clientsEndpoint="/api/admin/clients?all=1" />
+          <CarrierQuotesTable editQuote={quote} showTermsLink clientsEndpoint="/api/admin/clients?all=1" listPath={base} scope={scope} />
         </div>
         <div>
           <QuoteComments quoteId={id} />

@@ -17,7 +17,7 @@ export const PERMISSION_MODULES = [
   { suffix: "Routes", label: "Rutas" },
   { suffix: "RouteLogs", label: "Historial de cambios" },
   { suffix: "UnitTypes", label: "Tipos de unidades" },
-  { suffix: "Quotes", label: "Cotizador" },
+  { suffix: "Quotes", label: "Cotizador nacional" },
   { suffix: "Providers", label: "Proveedores" },
   { suffix: "ProviderProspects", label: "Prospección de proveedores" },
   { suffix: "ProviderOnboardings", label: "Alta de proveedores" },
@@ -32,7 +32,7 @@ export const PERMISSION_MODULES = [
   { suffix: "Shipments", label: "Embarques" },
   { suffix: "Finances", label: "Finanzas" },
   { suffix: "Billing", label: "Administración (cobranza, pagos y bancos)" },
-  { suffix: "MaritimeQuotes", label: "Cotización marítima" },
+  { suffix: "MaritimeQuotes", label: "Cotizador marítimo" },
   { suffix: "Mural", label: "Mural" },
 ] as const;
 

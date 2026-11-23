@@ -31,7 +31,6 @@ import {
   Network,
   Building2,
   DollarSign,
-  Anchor,
   LayoutPanelTop,
   LifeBuoy,
   Wrench,
@@ -73,8 +72,9 @@ interface Permissions {
 
 const BASE = "/collaborator/dashboard";
 
-interface PermNavItem extends NavItem {
+interface PermNavItem extends Omit<NavItem, "subItems"> {
   permission?: keyof Permissions;
+  subItems?: { title: string; href: string; permission: keyof Permissions }[];
 }
 
 interface PermNavGroup {
@@ -87,8 +87,17 @@ const allNavGroups: PermNavGroup[] = [
     label: "Operaciones",
     items: [
       { title: "Rutas", href: `${BASE}/routes`, icon: RouteIcon, permission: "canViewRoutes" },
-      { title: "Cotizador", href: `${BASE}/quotes`, icon: Calculator, permission: "canViewQuotes" },
-      { title: "Cotización marítima", href: `${BASE}/maritime-quotes`, icon: Anchor, permission: "canViewMaritimeQuotes" },
+      {
+        title: "Cotizador",
+        href: "cotizador",
+        icon: Calculator,
+        subItems: [
+          { title: "Cotizador nacional", href: `${BASE}/quotes`, permission: "canViewQuotes" },
+          { title: "Cotizador marítimo", href: `${BASE}/maritime-quotes`, permission: "canViewMaritimeQuotes" },
+          // Por ahora usa los mismos permisos que el nacional.
+          { title: "Cotizador internacional", href: `${BASE}/international-quotes`, permission: "canViewQuotes" },
+        ],
+      },
       { title: "KPIs de cotizaciones", href: `${BASE}/quote-kpis`, icon: BarChart3, permission: "canViewQuoteKpis" },
       { title: "Tipos de unidades", href: `${BASE}/unit-types`, icon: Boxes, permission: "canViewUnitTypes" },
       { title: "Mensajes", href: `${BASE}/messages`, icon: MessageSquare, permission: "canViewMessages" },
@@ -171,11 +180,19 @@ export function CollaboratorAppSidebar() {
   const navGroups: NavGroup[] = allNavGroups
     .map((group) => ({
       label: group.label,
-      items: group.items.filter((item) => {
-        if (!item.permission) return true;
-        if (!permissions) return false; // hide until loaded
-        return permissions[item.permission];
-      }),
+      items: group.items
+        .map((item): NavItem => ({
+          ...item,
+          // Del submenú solo quedan los cotizadores que puede ver.
+          subItems: item.subItems?.filter((s) => permissions?.[s.permission]),
+        }))
+        .filter((item, i) => {
+          const def = group.items[i];
+          if (def.subItems) return (item.subItems?.length ?? 0) > 0;
+          if (!def.permission) return true;
+          if (!permissions) return false; // hide until loaded
+          return permissions[def.permission];
+        }),
     }))
     .filter((group) => group.items.length > 0);
 

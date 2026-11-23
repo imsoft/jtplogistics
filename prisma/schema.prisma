@@ -951,12 +951,16 @@ model GeneratedQuote {
   /// Por qué se perdió (clave de QUOTE_REJECTION_REASONS). Solo con estado rechazada.
   rejectionReason String?    @map("rejection_reason")
   rejectionNote   String?    @map("rejection_note")
+  /// Cotizador del que salió: "nacional" o "internacional" (ver lib/quote-scope).
+  /// Texto y no enum: así un valor nuevo no tumba al código ya desplegado.
+  scope       String         @default("nacional") @map("scope")
   createdById String         @map("created_by_id")
   createdBy   User           @relation(fields: [createdById], references: [id], onDelete: Cascade)
   comments    QuoteComment[]
   providers   QuoteProvider[]
   createdAt   DateTime       @default(now()) @map("created_at")
 
+  @@index([scope])
   @@map("generated_quotes")
 }
 

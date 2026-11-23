@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
+import { quoteScopeFromPath, quotesBase } from "@/lib/quote-scope";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,9 @@ import { QuoteSendButton } from "@/components/dashboard/quotes/quote-send-button
 export default function EditQuotePage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  // Sirve a los dos cotizadores: la URL dice a cuál regresar.
+  const scope = quoteScopeFromPath(usePathname());
+  const base = quotesBase("collaborator", scope);
 
   const [quote, setQuote] = useState<EditQuote | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -56,7 +60,7 @@ export default function EditQuotePage() {
 
   async function handleDelete() {
     await fetch(`/api/collaborator/generated-quotes/${id}/delete`, { method: "DELETE" });
-    router.push("/collaborator/dashboard/quotes");
+    router.push(base);
     router.refresh();
   }
 
@@ -70,7 +74,7 @@ export default function EditQuotePage() {
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2 min-w-0">
           <Button variant="ghost" size="icon" asChild className="shrink-0">
-            <Link href="/collaborator/dashboard/quotes" aria-label="Volver a cotizaciones">
+            <Link href={base} aria-label="Volver a cotizaciones">
               <ChevronLeft className="size-4" />
             </Link>
           </Button>
@@ -107,7 +111,8 @@ export default function EditQuotePage() {
             apiEndpoint="/api/collaborator/carrier-quotes"
             clientsEndpoint="/api/collaborator/clients?all=1"
             updateEndpoint="/api/collaborator/generated-quotes"
-            listPath="/collaborator/dashboard/quotes"
+            listPath={base}
+            scope={scope}
           />
         </div>
         <div>
