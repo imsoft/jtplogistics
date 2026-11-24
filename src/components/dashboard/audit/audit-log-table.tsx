@@ -52,6 +52,8 @@ const RESOURCE_LABELS: Record<string, string> = {
   carrier_suggestion: "Sugerencia de transportista",
   generated_quote: "Cotización",
   maritime_quote: "Cotización marítima",
+  whatsapp_message: "WhatsApp",
+  setting: "Configuración",
   notification: "Notificación",
 };
 

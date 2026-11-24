@@ -1,4 +1,6 @@
+import { after } from "next/server";
 import { Prisma } from "@prisma/client";
+import { notifyShipmentStatus } from "@/lib/whatsapp-auto";
 import { prisma } from "@/lib/db";
 import { isShipmentStatus } from "@/lib/shipment-statuses";
 import { readExtraCosts } from "@/lib/shipment-extras";
@@ -204,6 +206,12 @@ export function PATCH(
     }
 
     const updated = await prisma.shipment.update({ where: { id }, data });
+    // Al cliente le llega un WhatsApp con el nuevo estado (si está prendido).
+    // Va después de responder: un mensaje que no sale no frena el cambio.
+    if (updated.status !== shipment.status) {
+      const actor = { id: session.user.id, name: session.user.name };
+      after(() => notifyShipmentStatus(updated, actor));
+    }
     // Un solo registro de finanzas por embarque: se crea al cerrarlo y se
     // actualiza si se edita cerrado o se reabre y se vuelve a cerrar.
     if (touchesTariffs || updated.status === SHIPMENT_CLOSED_STATUS || shipment.status === SHIPMENT_CLOSED_STATUS) {

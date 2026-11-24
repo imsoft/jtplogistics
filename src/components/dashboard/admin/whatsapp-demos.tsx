@@ -11,6 +11,7 @@ import { AppSelect } from "@/components/ui/app-select";
 import { FormSection } from "@/components/ui/form-section";
 import { PhoneInput } from "@/components/ui/phone-plates-input";
 import { FormSkeleton } from "@/components/ui/skeletons";
+import { WhatsAppAutoCard } from "@/components/dashboard/admin/whatsapp-auto-card";
 import { cn } from "@/lib/utils";
 import { shipmentStatusLabel } from "@/lib/shipment-statuses";
 import { trackingDate } from "@/lib/shipment-tracking";
@@ -230,6 +231,9 @@ export function WhatsAppDemos() {
           </p>
         )}
       </FormSection>
+
+      {/* Envío automático al cambiar el estado del embarque */}
+      {status.configured && <WhatsAppAutoCard />}
 
       {/* Plantillas */}
       <FormSection
