@@ -31,6 +31,8 @@ import { ClientPicker } from "@/components/dashboard/resources/client-picker";
 import { getCarrierQuotesColumns } from "./carrier-quotes-columns";
 import { QuotePdf } from "./quote-pdf";
 import { CityCombobox } from "@/components/dashboard/routes/city-combobox";
+import { IntlPlacePicker, type IntlPlace } from "@/components/dashboard/carrier-quotes/intl-place-picker";
+import { placeLabel } from "@/lib/countries";
 import { parseCityValue } from "@/lib/data/mexico-cities";
 import { ROUTE_STATUS_LABELS } from "@/lib/constants/route-status";
 import type { ActiveRoute, CarrierQuote, CarrierQuotesResponse, QuoteRow } from "@/types/carrier-quote.types";
@@ -153,6 +155,11 @@ export function CarrierQuotesTable({
   // Valores del catálogo de ciudades, con formato "Estado|Ciudad".
   const [selectedOrigin, setSelectedOrigin] = useState<string | null>(null);
   const [selectedDestination, setSelectedDestination] = useState<string | null>(null);
+  // Cotizador internacional: país, estado y ciudad de cada punta. Lo elegido se
+  // convierte al mismo texto que traen las rutas ("Laredo, Estados Unidos")
+  // para encontrar la ruta registrada, igual que el nacional.
+  const [intlOrigin, setIntlOrigin] = useState<IntlPlace>({ country: "MX", state: "", city: "" });
+  const [intlDestination, setIntlDestination] = useState<IntlPlace>({ country: "US", state: "", city: "" });
   const [search, setSearch] = useState("");
   const [filterPrice, setFilterPrice] = useState("all");
   const [finalPrice, setFinalPrice] = useState<number | null>(null);
@@ -224,24 +231,11 @@ export function CarrierQuotesTable({
     [selectedDestination]
   );
   const destinationState = useMemo(
-    () => parseCityValue(selectedDestination).state || null,
-    [selectedDestination]
+    () => (scope === "internacional" ? intlDestination.state || null : parseCityValue(selectedDestination).state || null),
+    [selectedDestination, scope, intlDestination.state]
   );
   const hasCityPair = Boolean(originCity && destinationCity);
 
-  // Opciones del cotizador internacional: los orígenes de sus rutas y, ya
-  // elegido el origen, solo los destinos que salen de ahí.
-  const intlOrigins = useMemo(
-    () => [...new Set(filteredByUnit.map((r) => r.origin))].sort().map((o) => ({ value: o, label: o })),
-    [filteredByUnit]
-  );
-  const intlDestinations = useMemo(
-    () =>
-      [...new Set(filteredByUnit.filter((r) => !selectedOrigin || r.origin === selectedOrigin).map((r) => r.destination))]
-        .sort()
-        .map((d) => ({ value: d, label: d })),
-    [filteredByUnit, selectedOrigin]
-  );
 
   const sameCity = (a: string, b: string) =>
     a.trim().toLowerCase() === b.trim().toLowerCase();
@@ -620,34 +614,28 @@ export function CarrierQuotesTable({
     <div className="space-y-4 sm:space-y-5">
       {/* ─── SECCIÓN 1: FILTROS ─────────────────────────────────────────────── */}
       <FormSection icon={Search} title="Buscar ruta" description="Elige origen, destino y tipo de unidad." className="space-y-4">
-      <div className={`grid gap-4 sm:grid-cols-2 ${scope === "internacional" ? "lg:grid-cols-5" : "lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_auto]"}`}>
-        {scope === "internacional" ? (
-          // Fuera de México no hay catálogo de ciudades: se elige de las rutas
-          // internacionales dadas de alta (vienen con el país en el nombre).
-          <>
-            <div className="space-y-2">
-              <Label>Origen</Label>
-              <AppSelect
-                value={selectedOrigin ?? ""}
-                onValueChange={(v) => { handleOriginChange(v || null); setSelectedDestination(null); }}
-                options={intlOrigins}
-                className="w-full"
-              />
-              {routes.length === 0 && (
-                <p className="text-muted-foreground text-xs">Aún no hay rutas internacionales. Se dan de alta en Rutas.</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label>Destino</Label>
-              <AppSelect
-                value={selectedDestination ?? ""}
-                onValueChange={(v) => setSelectedDestination(v || null)}
-                options={intlDestinations}
-                className="w-full"
-              />
-            </div>
-          </>
-        ) : (
+      {scope === "internacional" && (
+        <div className="space-y-4">
+          <IntlPlacePicker
+            label="Origen"
+            value={intlOrigin}
+            onChange={(p) => {
+              setIntlOrigin(p);
+              handleOriginChange(p.city ? placeLabel(p.city, p.country) : null);
+            }}
+          />
+          <IntlPlacePicker
+            label="Destino"
+            value={intlDestination}
+            onChange={(p) => {
+              setIntlDestination(p);
+              setSelectedDestination(p.city ? placeLabel(p.city, p.country) : null);
+            }}
+          />
+        </div>
+      )}
+      <div className={`grid gap-4 sm:grid-cols-2 ${scope === "internacional" ? "lg:grid-cols-3" : "lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_auto]"}`}>
+        {scope === "internacional" ? null : (
           <>
             <CityCombobox
               id="qb-origin"
