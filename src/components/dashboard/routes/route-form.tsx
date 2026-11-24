@@ -10,6 +10,8 @@ import { FormSection, RequiredText } from "@/components/ui/form-section";
 import { AppSelect } from "@/components/ui/app-select";
 import { CityCombobox } from "./city-combobox";
 import { COUNTRIES, HOME_COUNTRY, isInternationalRoute } from "@/lib/countries";
+import { usStateOfCity } from "@/lib/data/us-cities";
+import { UsStateCityPicker } from "./us-state-city-picker";
 import { parseCityValue, findCityValue } from "@/lib/data/mexico-cities";
 import { ROUTE_STATUS_OPTIONS } from "@/lib/constants/route-status";
 import { UNIT_TYPE_FALLBACK } from "@/lib/constants/unit-type";
@@ -94,10 +96,20 @@ export function RouteForm({
   const [destinationText, setDestinationText] = useState(
     initialValues.destinationCountry && initialValues.destinationCountry !== HOME_COUNTRY ? initialValues.destination ?? "" : ""
   );
+  // El estado de origen no se guarda: al editar se deduce de la ciudad.
+  const [originUsState, setOriginUsState] = useState(
+    initialValues.originCountry === "US" ? usStateOfCity(initialValues.origin ?? "") : ""
+  );
   const originAbroad = international && originCountry !== HOME_COUNTRY;
   const destinationAbroad = international && destinationCountry !== HOME_COUNTRY;
   // Internacional sin ninguna punta fuera de México no tiene sentido.
   const internationalWithoutAbroad = international && !originAbroad && !destinationAbroad;
+  const originInUs = originAbroad && originCountry === "US";
+  const destinationInUs = destinationAbroad && destinationCountry === "US";
+  // En Estados Unidos estado y ciudad se eligen de listas que el navegador no valida.
+  const missingUsPlace =
+    (originInUs && (!originUsState || !originText.trim())) ||
+    (destinationInUs && (!destinationState.trim() || !destinationText.trim()));
   const [unitTypeOptions, setUnitTypeOptions] = useState(UNIT_TYPE_FALLBACK);
 
   useEffect(() => {
@@ -195,7 +207,16 @@ export function RouteForm({
             <>
               <div className="space-y-2">
                 <Label>País de origen</Label>
-                <AppSelect value={originCountry} onValueChange={setOriginCountry} options={[...COUNTRIES]} className="w-full" />
+                <AppSelect
+                  value={originCountry}
+                  onValueChange={(c) => {
+                    setOriginCountry(c);
+                    setOriginText("");
+                    setOriginUsState("");
+                  }}
+                  options={[...COUNTRIES]}
+                  className="w-full"
+                />
               </div>
               <div className="space-y-2">
                 <Label>País de destino</Label>
@@ -203,6 +224,7 @@ export function RouteForm({
                   value={destinationCountry}
                   onValueChange={(c) => {
                     setDestinationCountry(c);
+                    setDestinationText("");
                     // El estado de México sale del catálogo; el de fuera se escribe.
                     setDestinationState(c === HOME_COUNTRY ? parseCityValue(destination).state : "");
                   }}
@@ -217,7 +239,18 @@ export function RouteForm({
           <p className="text-destructive text-sm">En una ruta internacional el origen o el destino tiene que estar fuera de México.</p>
         )}
         <div className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-        {originAbroad ? (
+        {originInUs ? (
+          <UsStateCityPicker
+            idPrefix="route-origin"
+            label="Origen"
+            state={originUsState}
+            city={originText}
+            onChange={({ state, city }) => {
+              setOriginUsState(state);
+              setOriginText(city);
+            }}
+          />
+        ) : originAbroad ? (
           <div className="space-y-2">
             <Label htmlFor="route-origin-text"><RequiredText>Origen</RequiredText></Label>
             <Input id="route-origin-text" value={originText} onChange={(e) => setOriginText(e.target.value)} required className="w-full" />
@@ -233,7 +266,18 @@ export function RouteForm({
           required
         />
         )}
-        {destinationAbroad ? (
+        {destinationInUs ? (
+          <UsStateCityPicker
+            idPrefix="route-destination"
+            label="Destino"
+            state={destinationState}
+            city={destinationText}
+            onChange={({ state, city }) => {
+              setDestinationState(state);
+              setDestinationText(city);
+            }}
+          />
+        ) : destinationAbroad ? (
           <div className="space-y-2">
             <Label htmlFor="route-destination-text"><RequiredText>Destino</RequiredText></Label>
             <Input id="route-destination-text" value={destinationText} onChange={(e) => setDestinationText(e.target.value)} required className="w-full" />
@@ -252,6 +296,7 @@ export function RouteForm({
           required
         />
         )}
+        {!destinationInUs && (
         <div className="space-y-2">
           <Label htmlFor="route-destination-state">{destinationAbroad ? "Estado o provincia del destino" : "Estado del destino"}</Label>
           {destinationAbroad ? (
@@ -272,6 +317,7 @@ export function RouteForm({
           />
           )}
         </div>
+        )}
         </div>
         {isDuplicate && (
           <div className="flex items-start gap-2 rounded-lg border border-amber-400/50 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -391,7 +437,7 @@ export function RouteForm({
         sticky
         submitLabel={submitLabel}
         cancelHref={cancelHref}
-        submitDisabled={isDuplicate || duplicateUnitTypes.length > 0 || internationalWithoutAbroad}
+        submitDisabled={isDuplicate || duplicateUnitTypes.length > 0 || internationalWithoutAbroad || missingUsPlace}
       />
     </form>
   );
