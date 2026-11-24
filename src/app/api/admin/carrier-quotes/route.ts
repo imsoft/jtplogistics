@@ -1,5 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
+import { parseQuoteScope } from "@/lib/quote-scope";
+import { placeLabel, routeScopeWhere } from "@/lib/countries";
 import { requireAdmin } from "@/lib/auth-server";
 
 type CarrierRouteWithCarrier = {
@@ -25,10 +27,20 @@ export async function GET(request: NextRequest) {
 
     // Se listan TODAS las rutas (activas, pendientes e inactivas): el cotizador
     // debe poder cotizar cualquier ruta registrada, no solo las activas.
-    const routes = await prisma.route.findMany({
-      select: { id: true, origin: true, destination: true, destinationState: true, unitType: true, target: true, status: true },
-      orderBy: [{ origin: "asc" }, { destination: "asc" }],
-    });
+    // Cada cotizador ve sus rutas: el internacional las que salen o llegan
+    // fuera de México (con el país en el nombre) y el nacional el resto.
+    const international = parseQuoteScope(searchParams.get("scope")) === "internacional";
+    const routes = (
+      await prisma.route.findMany({
+        where: routeScopeWhere(international),
+        select: { id: true, origin: true, destination: true, destinationState: true, unitType: true, target: true, status: true, originCountry: true, destinationCountry: true },
+        orderBy: [{ origin: "asc" }, { destination: "asc" }],
+      })
+    ).map(({ originCountry, destinationCountry, ...r }) => ({
+      ...r,
+      origin: placeLabel(r.origin, originCountry),
+      destination: placeLabel(r.destination, destinationCountry),
+    }));
 
     if (!routeId) {
       return Response.json({ routes, carriers: [] });

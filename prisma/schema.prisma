@@ -333,6 +333,10 @@ model Route {
   target           Float?             @map("target")
   weeklyVolume     Int?               @map("weekly_volume")
   destinationState String?            @map("destination_state")
+  /// País de origen y de destino (clave de lib/countries). Si alguno no es
+  /// México la ruta es internacional y sale en el cotizador internacional.
+  originCountry      String           @default("MX") @map("origin_country")
+  destinationCountry String           @default("MX") @map("destination_country")
   unitType         String             @default("caja_seca") @map("unit_type")
   status           RouteStatus        @default(pending) @map("status")
   /// Vino de una carga masiva (Excel) sin elegir a nombre de quién: se muestra

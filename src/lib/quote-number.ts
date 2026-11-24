@@ -23,8 +23,12 @@ export function quoteDayKey(date = new Date()): string {
   return `${get("day")}${get("month")}${get("year")}`;
 }
 
-export function quoteNumberPrefix(date = new Date()): string {
-  return `JTP-${quoteDayKey(date)}-`;
+/**
+ * Prefijo del número. El cotizador internacional lleva "INT" y su propio
+ * consecutivo: JTP-INT-DDMMAAAA-NNN.
+ */
+export function quoteNumberPrefix(date = new Date(), international = false): string {
+  return `JTP-${international ? "INT-" : ""}${quoteDayKey(date)}-`;
 }
 
 /**

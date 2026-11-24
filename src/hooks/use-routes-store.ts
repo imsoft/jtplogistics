@@ -50,6 +50,8 @@ export function useRoutesStore() {
             origin: data.origin.trim(),
             destination: data.destination.trim(),
             destinationState: data.destinationState?.trim() || undefined,
+            originCountry: data.originCountry,
+            destinationCountry: data.destinationCountry,
             description: data.description?.trim() || undefined,
             target: data.target,
             weeklyVolume: data.weeklyVolume,

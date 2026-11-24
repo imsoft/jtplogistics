@@ -33,6 +33,8 @@ export function EditRouteForm({
           origin: data.origin.trim(),
           destination: data.destination.trim(),
           destinationState: data.destinationState?.trim() || undefined,
+          originCountry: data.originCountry,
+          destinationCountry: data.destinationCountry,
           // Siempre se envía: vacía significa borrar la descripción guardada.
           description: data.description?.trim() ?? "",
           target: data.target,
@@ -79,6 +81,8 @@ export function EditRouteForm({
           origin: route.origin,
           destination: route.destination,
           destinationState: route.destinationState ?? "",
+          originCountry: route.originCountry ?? "MX",
+          destinationCountry: route.destinationCountry ?? "MX",
           description: route.description ?? "",
           target: route.target,
           weeklyVolume: route.weeklyVolume,

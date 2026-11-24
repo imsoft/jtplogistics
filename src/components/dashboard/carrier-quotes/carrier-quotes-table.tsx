@@ -84,8 +84,10 @@ interface CarrierQuotesTableProps {
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-async function fetchQuotes(endpoint: string, routeId?: string): Promise<CarrierQuotesResponse> {
-  const url = routeId ? `${endpoint}?routeId=${routeId}` : endpoint;
+async function fetchQuotes(endpoint: string, scope: QuoteScope, routeId?: string): Promise<CarrierQuotesResponse> {
+  const params = new URLSearchParams({ scope });
+  if (routeId) params.set("routeId", routeId);
+  const url = `${endpoint}?${params}`;
   const res = await fetch(url);
   if (!res.ok) return { routes: [], carriers: [] };
   return res.json();
@@ -182,10 +184,10 @@ export function CarrierQuotesTable({
   // ── Load data ──
   const loadRoutes = useCallback(() =>
     Promise.all([
-      fetchQuotes(apiEndpoint),
+      fetchQuotes(apiEndpoint, scope),
       fetch("/api/unit-types").then((r) => r.ok ? r.json() : []),
       // En modo edición se conserva el número existente.
-      isEditing ? Promise.resolve(null) : fetch("/api/generated-quotes/next-number").then((r) => r.ok ? r.json() : null),
+      isEditing ? Promise.resolve(null) : fetch(`/api/generated-quotes/next-number?scope=${scope}`).then((r) => r.ok ? r.json() : null),
       // Datos del usuario actual: al crear una cotización, él es quien firma.
       fetch("/api/profile").then((r) => (r.ok ? r.json() : null)),
     ]).then(([data, utRes, numRes, profileRes]) => {
@@ -200,7 +202,7 @@ export function CarrierQuotesTable({
       }
       if (!isEditing && numRes?.quoteNumber) setQuoteNumber(numRes.quoteNumber);
       setIsLoaded(true);
-    }), [apiEndpoint, isEditing]);
+    }), [apiEndpoint, isEditing, scope]);
 
   useEffect(() => { loadRoutes(); }, [loadRoutes]);
 
@@ -226,6 +228,20 @@ export function CarrierQuotesTable({
     [selectedDestination]
   );
   const hasCityPair = Boolean(originCity && destinationCity);
+
+  // Opciones del cotizador internacional: los orígenes de sus rutas y, ya
+  // elegido el origen, solo los destinos que salen de ahí.
+  const intlOrigins = useMemo(
+    () => [...new Set(filteredByUnit.map((r) => r.origin))].sort().map((o) => ({ value: o, label: o })),
+    [filteredByUnit]
+  );
+  const intlDestinations = useMemo(
+    () =>
+      [...new Set(filteredByUnit.filter((r) => !selectedOrigin || r.origin === selectedOrigin).map((r) => r.destination))]
+        .sort()
+        .map((d) => ({ value: d, label: d })),
+    [filteredByUnit, selectedOrigin]
+  );
 
   const sameCity = (a: string, b: string) =>
     a.trim().toLowerCase() === b.trim().toLowerCase();
@@ -259,12 +275,12 @@ export function CarrierQuotesTable({
 
   useEffect(() => {
     if (!selectedRouteId) return;
-    fetchQuotes(apiEndpoint, selectedRouteId).then((data) => {
+    fetchQuotes(apiEndpoint, scope, selectedRouteId).then((data) => {
       setCarriers(data.carriers);
       setServerSuggested(data.suggestedPrice ?? null);
       setIsLoadingCarriers(false);
     });
-  }, [selectedRouteId, apiEndpoint]);
+  }, [selectedRouteId, apiEndpoint, scope]);
 
   // ── Handlers ──
   function handleUnitTypeChange(v: string) {
@@ -585,7 +601,7 @@ export function CarrierQuotesTable({
         return;
       }
 
-      const nextRes = await fetch("/api/generated-quotes/next-number").catch(() => null);
+      const nextRes = await fetch(`/api/generated-quotes/next-number?scope=${scope}`).catch(() => null);
       if (nextRes?.ok) {
         const { quoteNumber: next } = await nextRes.json() as { quoteNumber: string };
         setQuoteNumber(next);
@@ -605,18 +621,48 @@ export function CarrierQuotesTable({
       {/* ─── SECCIÓN 1: FILTROS ─────────────────────────────────────────────── */}
       <FormSection icon={Search} title="Buscar ruta" description="Elige origen, destino y tipo de unidad." className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_auto]">
-        <CityCombobox
-          id="qb-origin"
-          label="Origen"
-          value={selectedOrigin}
-          onValueChange={handleOriginChange}
-        />
-        <CityCombobox
-          id="qb-destination"
-          label="Destino"
-          value={selectedDestination}
-          onValueChange={setSelectedDestination}
-        />
+        {scope === "internacional" ? (
+          // Fuera de México no hay catálogo de ciudades: se elige de las rutas
+          // internacionales dadas de alta (vienen con el país en el nombre).
+          <>
+            <div className="space-y-2">
+              <Label>Origen</Label>
+              <AppSelect
+                value={selectedOrigin ?? ""}
+                onValueChange={(v) => { handleOriginChange(v || null); setSelectedDestination(null); }}
+                options={intlOrigins}
+                className="w-full"
+              />
+              {routes.length === 0 && (
+                <p className="text-muted-foreground text-xs">Aún no hay rutas internacionales. Se dan de alta en Rutas.</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label>Destino</Label>
+              <AppSelect
+                value={selectedDestination ?? ""}
+                onValueChange={(v) => setSelectedDestination(v || null)}
+                options={intlDestinations}
+                className="w-full"
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            <CityCombobox
+              id="qb-origin"
+              label="Origen"
+              value={selectedOrigin}
+              onValueChange={handleOriginChange}
+            />
+            <CityCombobox
+              id="qb-destination"
+              label="Destino"
+              value={selectedDestination}
+              onValueChange={setSelectedDestination}
+            />
+          </>
+        )}
         <div className="space-y-2">
           <Label>Tipo de unidad</Label>
           <AppSelect

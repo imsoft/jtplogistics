@@ -1,5 +1,6 @@
 "use client";
 
+import { isInternationalRoute, placeLabel } from "@/lib/countries";
 import { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -228,14 +229,17 @@ export function RoutesCrud({
                               key={route.id}
                               className="border-b last:border-b-0 transition-colors hover:bg-hover hover:text-hover-foreground"
                             >
-                              <td className="px-4 py-3" data-export={`${route.origin} → ${route.destination}`}>
+                              <td className="px-4 py-3" data-export={`${placeLabel(route.origin, route.originCountry)} → ${placeLabel(route.destination, route.destinationCountry)}`}>
                                 <Link
                                   href={`${basePath}/${route.id}`}
                                   className="flex items-center gap-1 font-medium hover:text-primary transition-colors uppercase"
                                 >
-                                  <span className="truncate">{route.origin}</span>
+                                  <span className="truncate">{placeLabel(route.origin, route.originCountry)}</span>
                                   <MoveRight className="size-3.5 shrink-0 text-muted-foreground" />
-                                  <span className="truncate">{route.destination}</span>
+                                  <span className="truncate">{placeLabel(route.destination, route.destinationCountry)}</span>
+                                  {isInternationalRoute(route) && (
+                                    <span className="bg-primary/10 text-primary ml-1 shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold">Internacional</span>
+                                  )}
                                 </Link>
                               </td>
                               <td className="px-4 py-3">

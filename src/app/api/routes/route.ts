@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { parseCountry } from "@/lib/countries";
 import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
 import { gateRoutes } from "@/lib/route-auth";
@@ -53,8 +54,11 @@ export async function POST(request: NextRequest) {
     const origin = String(body.origin ?? "").trim();
     const destination = String(body.destination ?? "").trim();
     const description = body.description != null ? String(body.description).trim() : null;
+    const originCountry = parseCountry(body.originCountry);
+    const destinationCountry = parseCountry(body.destinationCountry);
     const stateFromBody = body.destinationState != null ? String(body.destinationState).trim() : "";
-    const destinationState = stateFromBody || (destination ? getCityState(destination) : null);
+    // Fuera de México no hay catálogo de ciudades: el estado es el que se escribió.
+    const destinationState = stateFromBody || (destination && destinationCountry === "MX" ? getCityState(destination) : null);
     const target = body.target != null ? Number(body.target) : null;
     const weeklyVolume = body.weeklyVolume != null ? Math.round(Number(body.weeklyVolume)) : null;
     const unitTargetsRaw: Array<{ unitType?: unknown; target?: unknown }> = Array.isArray(body.unitTargets) ? body.unitTargets : [];
@@ -132,6 +136,8 @@ export async function POST(request: NextRequest) {
         origin,
         destination,
         destinationState: destinationState || undefined,
+        originCountry,
+        destinationCountry,
         description: description || undefined,
         target: first.target ?? target ?? undefined,
         weeklyVolume: weeklyVolume ?? undefined,

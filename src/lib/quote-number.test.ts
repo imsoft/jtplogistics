@@ -32,4 +32,7 @@ describe("quoteNumberPrefix", () => {
     // 05:00 UTC del 27 siguen siendo las 23:00 del 26.
     expect(quoteNumberPrefix(new Date("2026-08-27T05:00:00Z"))).toBe("JTP-26082026-");
   });
+  it("el internacional lleva INT", () => {
+    expect(quoteNumberPrefix(new Date("2026-11-24T18:00:00Z"), true)).toBe("JTP-INT-24112026-");
+  });
 });

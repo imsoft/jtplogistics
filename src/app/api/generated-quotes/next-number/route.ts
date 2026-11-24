@@ -1,8 +1,10 @@
 import { prisma } from "@/lib/db";
 import { requireQuoteAuthor } from "@/lib/auth-server";
 import { nextQuoteNumber } from "@/lib/quote-number.server";
+import { parseQuoteScope } from "@/lib/quote-scope";
 
-export async function GET() {
+/** GET ?scope=nacional|internacional — el siguiente número de ese cotizador. */
+export async function GET(request: Request) {
   try {
     const session = await requireQuoteAuthor();
 
@@ -17,7 +19,7 @@ export async function GET() {
       }
     }
 
-    return Response.json({ quoteNumber: await nextQuoteNumber() });
+    return Response.json({ quoteNumber: await nextQuoteNumber(parseQuoteScope(new URL(request.url).searchParams.get("scope"))) });
   } catch (e) {
     if (e instanceof Response) return e;
     console.error(e);

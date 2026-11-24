@@ -9,6 +9,7 @@ import { FormActions } from "@/components/ui/form-actions";
 import { FormSection, RequiredText } from "@/components/ui/form-section";
 import { AppSelect } from "@/components/ui/app-select";
 import { CityCombobox } from "./city-combobox";
+import { COUNTRIES, HOME_COUNTRY, isInternationalRoute } from "@/lib/countries";
 import { parseCityValue, findCityValue } from "@/lib/data/mexico-cities";
 import { ROUTE_STATUS_OPTIONS } from "@/lib/constants/route-status";
 import { UNIT_TYPE_FALLBACK } from "@/lib/constants/unit-type";
@@ -21,6 +22,8 @@ const defaultFormData: RouteFormData = {
   origin: "",
   destination: "",
   destinationState: "",
+  originCountry: HOME_COUNTRY,
+  destinationCountry: HOME_COUNTRY,
   description: "",
   target: undefined,
   weeklyVolume: undefined,
@@ -80,6 +83,21 @@ export function RouteForm({
   const [destinationState, setDestinationState] = useState<string>(
     initialValues.destinationState?.trim() || ""
   );
+  // Ruta internacional: cada punta con su país. Fuera de México no hay
+  // catálogo de ciudades y la ciudad y el estado se escriben a mano.
+  const [international, setInternational] = useState(isInternationalRoute(initialValues));
+  const [originCountry, setOriginCountry] = useState(initialValues.originCountry || HOME_COUNTRY);
+  const [destinationCountry, setDestinationCountry] = useState(initialValues.destinationCountry || HOME_COUNTRY);
+  const [originText, setOriginText] = useState(
+    initialValues.originCountry && initialValues.originCountry !== HOME_COUNTRY ? initialValues.origin ?? "" : ""
+  );
+  const [destinationText, setDestinationText] = useState(
+    initialValues.destinationCountry && initialValues.destinationCountry !== HOME_COUNTRY ? initialValues.destination ?? "" : ""
+  );
+  const originAbroad = international && originCountry !== HOME_COUNTRY;
+  const destinationAbroad = international && destinationCountry !== HOME_COUNTRY;
+  // Internacional sin ninguna punta fuera de México no tiene sentido.
+  const internationalWithoutAbroad = international && !originAbroad && !destinationAbroad;
   const [unitTypeOptions, setUnitTypeOptions] = useState(UNIT_TYPE_FALLBACK);
 
   useEffect(() => {
@@ -92,8 +110,8 @@ export function RouteForm({
     description: initialValues.description ?? defaultFormData.description,
   };
 
-  const originCity = parseCityValue(origin).city;
-  const destCity = parseCityValue(destination).city;
+  const originCity = originAbroad ? originText.trim() : parseCityValue(origin).city;
+  const destCity = destinationAbroad ? destinationText.trim() : parseCityValue(destination).city;
   const duplicateUnitTypes = unitTargets
     .map((ut) => ut.unitType)
     .filter((value, index, arr) => arr.indexOf(value) !== index);
@@ -114,8 +132,7 @@ export function RouteForm({
     e.preventDefault();
     const form = e.currentTarget;
     const formData = new FormData(form);
-    const { city: originCity } = parseCityValue(origin);
-    const { city: destCity, state: destState } = parseCityValue(destination);
+    const { state: destState } = parseCityValue(destination);
     const normalizedUnitTargets = unitTargets.map((item) => ({
       unitType: item.unitType,
       target: parseMxn(item.targetDisplay),
@@ -125,7 +142,9 @@ export function RouteForm({
     const data: RouteFormData = {
       origin: originCity,
       destination: destCity,
-      destinationState: destState || destinationState.trim(),
+      destinationState: destinationAbroad ? destinationState.trim() : destState || destinationState.trim(),
+      originCountry: international ? originCountry : HOME_COUNTRY,
+      destinationCountry: international ? destinationCountry : HOME_COUNTRY,
       description: (formData.get("description") as string)?.trim() ?? "",
       target: normalizedUnitTargets[0]?.target,
       weeklyVolume: parsedVolume != null && !isNaN(parsedVolume) ? parsedVolume : null,
@@ -148,8 +167,63 @@ export function RouteForm({
 
   return (
     <form onSubmit={handleSubmit} className="w-full space-y-4 sm:space-y-5">
-      <FormSection icon={MapPin} title="Ruta" description="De dónde a dónde. Las ciudades vienen del catálogo de México por estado." className="space-y-4">
+      <FormSection icon={MapPin} title="Ruta" description="De dónde a dónde. En México las ciudades vienen del catálogo por estado." className="space-y-4">
         <div className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="space-y-2">
+            <Label>Tipo de ruta</Label>
+            <AppSelect
+              value={international ? "internacional" : "nacional"}
+              onValueChange={(v) => {
+                const intl = v === "internacional";
+                setInternational(intl);
+                // Lo común es que el destino sea el extranjero.
+                if (intl && originCountry === HOME_COUNTRY && destinationCountry === HOME_COUNTRY) {
+                  setDestinationCountry("US");
+                  setDestinationState("");
+                }
+                if (!intl) setDestinationState(parseCityValue(destination).state);
+              }}
+              options={[
+                { value: "nacional", label: "Nacional" },
+                { value: "internacional", label: "Internacional" },
+              ]}
+              className="w-full"
+            />
+            <p className="text-muted-foreground text-xs">Las internacionales salen en el Cotizador internacional.</p>
+          </div>
+          {international && (
+            <>
+              <div className="space-y-2">
+                <Label>País de origen</Label>
+                <AppSelect value={originCountry} onValueChange={setOriginCountry} options={[...COUNTRIES]} className="w-full" />
+              </div>
+              <div className="space-y-2">
+                <Label>País de destino</Label>
+                <AppSelect
+                  value={destinationCountry}
+                  onValueChange={(c) => {
+                    setDestinationCountry(c);
+                    // El estado de México sale del catálogo; el de fuera se escribe.
+                    setDestinationState(c === HOME_COUNTRY ? parseCityValue(destination).state : "");
+                  }}
+                  options={[...COUNTRIES]}
+                  className="w-full"
+                />
+              </div>
+            </>
+          )}
+        </div>
+        {internationalWithoutAbroad && (
+          <p className="text-destructive text-sm">En una ruta internacional el origen o el destino tiene que estar fuera de México.</p>
+        )}
+        <div className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+        {originAbroad ? (
+          <div className="space-y-2">
+            <Label htmlFor="route-origin-text"><RequiredText>Origen</RequiredText></Label>
+            <Input id="route-origin-text" value={originText} onChange={(e) => setOriginText(e.target.value)} required className="w-full" />
+            <p className="text-muted-foreground text-xs">Ciudad de origen.</p>
+          </div>
+        ) : (
         <CityCombobox
           id="route-origin"
           label={<RequiredText>Origen</RequiredText>}
@@ -158,6 +232,14 @@ export function RouteForm({
           name="origin"
           required
         />
+        )}
+        {destinationAbroad ? (
+          <div className="space-y-2">
+            <Label htmlFor="route-destination-text"><RequiredText>Destino</RequiredText></Label>
+            <Input id="route-destination-text" value={destinationText} onChange={(e) => setDestinationText(e.target.value)} required className="w-full" />
+            <p className="text-muted-foreground text-xs">Ciudad de destino.</p>
+          </div>
+        ) : (
         <CityCombobox
           id="route-destination"
           label={<RequiredText>Destino</RequiredText>}
@@ -169,8 +251,18 @@ export function RouteForm({
           name="destination"
           required
         />
+        )}
         <div className="space-y-2">
-          <Label htmlFor="route-destination-state">Estado del destino</Label>
+          <Label htmlFor="route-destination-state">{destinationAbroad ? "Estado o provincia del destino" : "Estado del destino"}</Label>
+          {destinationAbroad ? (
+            <Input
+              id="route-destination-state"
+              type="text"
+              value={destinationState}
+              onChange={(e) => setDestinationState(e.target.value)}
+              className="w-full"
+            />
+          ) : (
           <Input
             id="route-destination-state"
             type="text"
@@ -178,6 +270,7 @@ export function RouteForm({
             readOnly
             className="w-full bg-muted/50 cursor-default text-muted-foreground"
           />
+          )}
         </div>
         </div>
         {isDuplicate && (
@@ -298,7 +391,7 @@ export function RouteForm({
         sticky
         submitLabel={submitLabel}
         cancelHref={cancelHref}
-        submitDisabled={isDuplicate || duplicateUnitTypes.length > 0}
+        submitDisabled={isDuplicate || duplicateUnitTypes.length > 0 || internationalWithoutAbroad}
       />
     </form>
   );

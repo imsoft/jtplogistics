@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
+import { routeScopeWhere } from "@/lib/countries";
 import { requireVendedor } from "@/lib/auth-server";
 import { suggestedQuotePrice, vendorCommissionSummary } from "@/lib/vendor-pricing";
 
@@ -17,7 +18,9 @@ export async function GET(request: NextRequest) {
 
     // Se listan TODAS las rutas (activas, pendientes e inactivas): se puede
     // cotizar cualquier trayecto.
+    // El vendedor solo tiene el cotizador nacional.
     const routes = await prisma.route.findMany({
+      where: routeScopeWhere(false),
       select: {
         id: true,
         origin: true,

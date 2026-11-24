@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       } catch (e) {
         const code = (e as { code?: string }).code;
         if (code !== "P2002") throw e;   // solo el choque de número se reintenta
-        assignedNumber = await nextQuoteNumber();
+        assignedNumber = await nextQuoteNumber(parseQuoteScope(body.scope));
       }
     }
 

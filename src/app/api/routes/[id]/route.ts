@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { parseCountry } from "@/lib/countries";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireCollaboratorOrAdmin } from "@/lib/auth-server";
@@ -59,6 +60,8 @@ export async function PATCH(
     const destination = body.destination != null ? String(body.destination).trim() : undefined;
     const destinationState = body.destinationState != null ? String(body.destinationState).trim() : undefined;
     const description = body.description != null ? String(body.description).trim() : undefined;
+    const originCountry = body.originCountry != null ? parseCountry(body.originCountry) : undefined;
+    const destinationCountry = body.destinationCountry != null ? parseCountry(body.destinationCountry) : undefined;
     const target = body.target != null ? Number(body.target) : undefined;
     // null explícito = borrar el volumen; ausente = sin cambio.
     const weeklyVolume =
@@ -100,10 +103,12 @@ export async function PATCH(
     if (origin !== undefined) updateData.origin = origin;
     if (destination !== undefined) {
       updateData.destination = destination;
-      const state = destinationState !== undefined ? String(destinationState).trim() : getCityState(destination);
+      const state = destinationState !== undefined ? String(destinationState).trim() : (destinationCountry ?? "MX") === "MX" ? getCityState(destination) : null;
       updateData.destinationState = state || null;
     }
     if (destinationState !== undefined && destination === undefined) updateData.destinationState = destinationState || null;
+    if (originCountry !== undefined) updateData.originCountry = originCountry;
+    if (destinationCountry !== undefined) updateData.destinationCountry = destinationCountry;
     // Cadena vacía = borrar la descripción guardada.
     if (description !== undefined) updateData.description = description || null;
     if (target !== undefined) updateData.target = target;

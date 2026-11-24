@@ -3,6 +3,9 @@ export interface Route {
   origin: string;
   destination: string;
   destinationState?: string;
+  /** Clave de país (lib/countries). México si no viene. */
+  originCountry?: string;
+  destinationCountry?: string;
   description?: string;
   target?: number;
   weeklyVolume?: number;
@@ -22,6 +25,8 @@ export interface RouteFormData {
   origin: string;
   destination: string;
   destinationState: string;
+  originCountry: string;
+  destinationCountry: string;
   description: string;
   target?: number;
   /** null = limpiar el volumen guardado; undefined = sin cambio. */
