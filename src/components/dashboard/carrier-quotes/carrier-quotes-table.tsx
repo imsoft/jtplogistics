@@ -620,7 +620,7 @@ export function CarrierQuotesTable({
     <div className="space-y-4 sm:space-y-5">
       {/* ─── SECCIÓN 1: FILTROS ─────────────────────────────────────────────── */}
       <FormSection icon={Search} title="Buscar ruta" description="Elige origen, destino y tipo de unidad." className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_auto]">
+      <div className={`grid gap-4 sm:grid-cols-2 ${scope === "internacional" ? "lg:grid-cols-5" : "lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_auto]"}`}>
         {scope === "internacional" ? (
           // Fuera de México no hay catálogo de ciudades: se elige de las rutas
           // internacionales dadas de alta (vienen con el país en el nombre).
@@ -684,11 +684,14 @@ export function CarrierQuotesTable({
             </div>
           </>
         )}
-        <div className="space-y-2">
-          {/* Solo alinea el botón con los campos; en celular sobra. */}
-          <Label className="invisible hidden sm:flex" aria-hidden>_</Label>
-          <Button type="button" variant="outline" onClick={handleClear} className="w-full">Limpiar</Button>
-        </div>
+        {/* El internacional no lleva "Limpiar" (pedido del cliente). */}
+        {scope !== "internacional" && (
+          <div className="space-y-2">
+            {/* Solo alinea el botón con los campos; en celular sobra. */}
+            <Label className="invisible hidden sm:flex" aria-hidden>_</Label>
+            <Button type="button" variant="outline" onClick={handleClear} className="w-full">Limpiar</Button>
+          </div>
+        )}
       </div>
 
       {/* Aviso: la ruta se puede cotizar aunque no esté activa. */}
