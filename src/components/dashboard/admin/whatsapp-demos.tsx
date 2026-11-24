@@ -132,7 +132,10 @@ export function WhatsAppDemos() {
   }
 
   const metaStatus = useMemo(() => new Map((status?.templates ?? []).map((t) => [t.name, t])), [status]);
-  const pendingToRegister = WHATSAPP_TEMPLATES.filter((t) => !t.builtIn && !metaStatus.has(t.name)).length;
+  // Si Meta no contestó no se sabe qué plantillas tiene: no se marcan como
+  // "Sin registrar" ni se ofrece mandarlas a revisión (ya podrían estar aprobadas).
+  const metaDown = Boolean(status?.templatesError);
+  const pendingToRegister = metaDown ? 0 : WHATSAPP_TEMPLATES.filter((t) => !t.builtIn && !metaStatus.has(t.name)).length;
 
   async function registerTemplates() {
     setRegistering(true);
@@ -193,7 +196,7 @@ export function WhatsAppDemos() {
 
   const missingVars = kind === "template" && template ? missingParams(template, params) : [];
   // Solo se manda una plantilla aprobada en Meta (si no, WhatsApp la rechaza).
-  const templateApproved = !!template && (metaStatus.get(template.name)?.status === "APPROVED" || (template.builtIn === true && !metaStatus.has(template.name)));
+  const templateApproved = !!template && !metaDown && (metaStatus.get(template.name)?.status === "APPROVED" || (template.builtIn === true && !metaStatus.has(template.name)));
   const canSend =
     status.configured &&
     !!whatsappNumber(to) &&
@@ -248,7 +251,15 @@ export function WhatsAppDemos() {
           </div>
         }
       >
-        {status.templatesError && <p className="text-destructive mb-3 text-sm">{status.templatesError}</p>}
+        {status.templatesError && (
+          <div className="border-destructive/30 bg-destructive/5 mb-3 rounded-lg border px-3 py-2 text-sm">
+            <p className="text-destructive font-semibold">Sin conexión con Meta: {status.templatesError}</p>
+            <p className="text-muted-foreground mt-1 text-xs">
+              No se pudo consultar el estado de las plantillas, así que no se muestra ni se manda nada a revisión. Revisa en Meta que la app
+              no esté restringida y que el token de acceso (WHATSAPP_ACCESS_TOKEN en Vercel) siga vigente; después presiona &quot;Actualizar&quot;.
+            </p>
+          </div>
+        )}
         <ul className="divide-y rounded-lg border">
           {WHATSAPP_TEMPLATES.map((t) => {
             const meta = metaStatus.get(t.name);
@@ -260,8 +271,8 @@ export function WhatsAppDemos() {
                   <p className="text-muted-foreground mt-0.5 text-xs normal-case">{t.name}</p>
                   {!t.builtIn && <p className="text-muted-foreground mt-1 text-xs">{t.body}</p>}
                 </div>
-                <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold", st?.className ?? "bg-gray-100 text-gray-600")}>
-                  {st?.label ?? "Sin registrar"}
+                <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold", metaDown ? "bg-red-50 text-red-700" : st?.className ?? "bg-gray-100 text-gray-600")}>
+                  {metaDown ? "Sin conexión" : st?.label ?? "Sin registrar"}
                 </span>
               </li>
             );
@@ -334,7 +345,9 @@ export function WhatsAppDemos() {
                   />
                   {template && !templateApproved && (
                     <p className="text-xs text-amber-700">
-                      {metaStatus.has(template.name)
+                      {metaDown
+                        ? "No hay conexión con Meta, así que no se puede mandar. Revisa el aviso en Plantillas."
+                        : metaStatus.has(template.name)
                         ? `Meta todavía no la aprueba (${META_STATUS[metaStatus.get(template.name)!.status]?.label ?? metaStatus.get(template.name)!.status}). Se podrá mandar cuando diga "Aprobada"; presiona "Actualizar" en Plantillas.`
                         : 'No está registrada en Meta. Presiona "Mandar a revisión" en Plantillas.'}
                     </p>
