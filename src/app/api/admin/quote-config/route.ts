@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { adminHandler } from "@/lib/api-handler";
-import { TERMS_BULLETS, TERMS_CONTRACT, TERMS_PRIVACY, TERMS_LIMITS, TARIFF_TERMS } from "@/lib/constants/quote-terms";
-import { bulletsToLexicalJson, textToLexicalJson } from "@/lib/utils/text-to-lexical";
+import { parseQuoteScope } from "@/lib/quote-scope";
+import { QUOTE_CONFIG_FIELDS, quoteConfigId, readQuoteConfig } from "@/lib/quote-config-server";
 import { logAudit } from "@/lib/audit-log";
 
 const QUOTE_CONFIG_LABELS: Record<string, string> = {
@@ -12,28 +12,9 @@ const QUOTE_CONFIG_LABELS: Record<string, string> = {
   tariffTermsJson: "Cláusulas del tarifario de proveedores",
 };
 
-function defaults() {
-  return {
-    bulletsJson: bulletsToLexicalJson(TERMS_BULLETS),
-    contractJson: textToLexicalJson(TERMS_CONTRACT),
-    privacyJson: textToLexicalJson(TERMS_PRIVACY),
-    limitsJson: textToLexicalJson(TERMS_LIMITS),
-    tariffTermsJson: bulletsToLexicalJson(TARIFF_TERMS),
-  };
-}
-
-export function GET() {
-  return adminHandler(async () => {
-    const cfg = await prisma.quoteConfig.findUnique({ where: { id: "default" } });
-    const d = defaults();
-    return Response.json({
-      bulletsJson: cfg?.bulletsJson || d.bulletsJson,
-      contractJson: cfg?.contractJson || d.contractJson,
-      privacyJson: cfg?.privacyJson || d.privacyJson,
-      limitsJson: cfg?.limitsJson || d.limitsJson,
-      tariffTermsJson: cfg?.tariffTermsJson || d.tariffTermsJson,
-    });
-  });
+/** GET ?scope=nacional|internacional — los textos de ese cotizador. */
+export function GET(request: Request) {
+  return adminHandler(async () => Response.json(await readQuoteConfig(parseQuoteScope(new URL(request.url).searchParams.get("scope")))));
 }
 
 export function PATCH(request: Request) {
@@ -46,7 +27,9 @@ export function PATCH(request: Request) {
       tariffTermsJson?: string;
     };
 
-    const fields = ["bulletsJson", "contractJson", "privacyJson", "limitsJson", "tariffTermsJson"] as const;
+    const fields = QUOTE_CONFIG_FIELDS;
+    const scope = parseQuoteScope(new URL(request.url).searchParams.get("scope"));
+    const id = quoteConfigId(scope);
     for (const field of fields) {
       const val = body[field];
       if (val !== undefined) {
@@ -59,10 +42,10 @@ export function PATCH(request: Request) {
       }
     }
 
-    const previous = await prisma.quoteConfig.findUnique({ where: { id: "default" } });
+    const previous = await prisma.quoteConfig.findUnique({ where: { id } });
     const cfg = await prisma.quoteConfig.upsert({
-      where: { id: "default" },
-      create: { id: "default", ...body },
+      where: { id },
+      create: { id, ...body },
       update: body,
     });
 
@@ -72,7 +55,7 @@ export function PATCH(request: Request) {
       .map((f) => ({ field: f, label: QUOTE_CONFIG_LABELS[f], from: null, to: "Actualizado" }));
     if (changes.length > 0) {
       void logAudit({
-        resource: "settings", resourceId: "quote-config", resourceLabel: "Textos legales del cotizador",
+        resource: "settings", resourceId: `quote-config-${scope}`, resourceLabel: scope === "internacional" ? "Textos legales del cotizador internacional" : "Textos legales del cotizador",
         action: "updated", userId: session.user.id, userName: session.user.name, changes,
       });
     }

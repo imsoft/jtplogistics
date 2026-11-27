@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { isIncidentBody, setFinanceIncident } from "@/lib/finance-incident-server";
 import { logAudit } from "@/lib/audit-log";
 import { companyDateKey } from "@/lib/time-clock";
 import { effectiveTariffs } from "@/lib/shipment-tariffs";
@@ -125,10 +126,11 @@ async function setEvidence(id: string, body: unknown, user: { id: string; name: 
   return Response.json({ evidenceReceivedOn: on ? on.toISOString().slice(0, 10) : null });
 }
 
-/** PATCH /api/admin/finances/[id] { evidenceReceived } */
+/** PATCH /api/admin/finances/[id] { evidenceReceived } o { incident, incidentType } */
 export function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   return adminHandler(async (session) => {
     const { id } = await params;
-    return setEvidence(id, await req.json().catch(() => ({})), session.user);
+    const body = await req.json().catch(() => ({}));
+    return isIncidentBody(body) ? setFinanceIncident(id, body, session.user) : setEvidence(id, body, session.user);
   });
 }

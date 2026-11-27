@@ -1,6 +1,12 @@
 "use client";
 
 import type { QuoteScope } from "@/lib/quote-scope";
+import type { QuoteCurrency } from "@/types/carrier-quote.types";
+
+const CURRENCY_OPTIONS = [
+  { value: "USD", label: "USD" },
+  { value: "MXN", label: "MXN" },
+];
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -130,11 +136,13 @@ export function CarrierQuotesTable({
   editQuote,
   updateEndpoint = "/api/admin/generated-quotes",
   listPath = "/admin/dashboard/quotes",
-  termsPath = "/admin/dashboard/quotes/terms",
+  termsPath: termsPathProp,
   allowDraft = true,
   clientsEndpoint,
   scope = "nacional",
 }: CarrierQuotesTableProps) {
+  // Cada cotizador tiene sus textos legales.
+  const termsPath = termsPathProp ?? (scope === "internacional" ? "/admin/dashboard/international-quotes/terms" : "/admin/dashboard/quotes/terms");
   const router = useRouter();
   const confirm = useConfirm();
   const isEditing = !!editQuote;
@@ -353,8 +361,12 @@ export function CarrierQuotesTable({
   const quoteDestination = selectedRoute?.destination ?? destinationCity;
   const quoteDestinationState = selectedRoute?.destinationState ?? destinationState;
 
+  // Misma llave que los renglones ya agregados: en el internacional el renglón
+  // guarda la ciudad sola (sin el país), así que la llave también.
   const selectedRouteKey = hasCityPair
-    ? `${quoteOrigin}||${quoteDestination}||${selectedUnitLabel ?? ""}`
+    ? scope === "internacional"
+      ? `${intlOrigin.city}||${intlDestination.city}||${selectedUnitLabel ?? ""}`
+      : `${quoteOrigin}||${quoteDestination}||${selectedUnitLabel ?? ""}`
     : null;
 
   // Sin ruta registrada nadie pone el tipo de unidad por nosotros, y la columna
@@ -373,13 +385,25 @@ export function CarrierQuotesTable({
   function addCurrentRouteToQuote() {
     if (!canAddToQuote || !selectedRouteKey) return;
     const cost = finalPrice ?? suggestedPrice ?? 0;
-    setQuoteRows((prev) => [...prev, {
-      origin: quoteOrigin,
-      destination: quoteDestination,
-      destinationState: quoteDestinationState,
-      cost,
-      unitLabel: selectedUnitLabel ?? "",
-    }]);
+    setQuoteRows((prev) => [...prev, scope === "internacional"
+      ? {
+          // En el PDF va la ciudad sola: el país ya se entiende por el estado.
+          origin: intlOrigin.city,
+          destination: intlDestination.city,
+          destinationState: intlDestination.state || null,
+          originZip: intlOrigin.country === "US" ? intlOrigin.zip?.trim() || undefined : undefined,
+          destinationZip: intlDestination.country === "US" ? intlDestination.zip?.trim() || undefined : undefined,
+          currency: "USD" as const,
+          cost,
+          unitLabel: selectedUnitLabel ?? "",
+        }
+      : {
+          origin: quoteOrigin,
+          destination: quoteDestination,
+          destinationState: quoteDestinationState,
+          cost,
+          unitLabel: selectedUnitLabel ?? "",
+        }]);
     setQuoteError(null);
     builderRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -387,6 +411,9 @@ export function CarrierQuotesTable({
   async function removeRow(i: number) {
     if (!(await confirm(removeItem("esta ruta de la cotización")))) return;
     setQuoteRows((prev) => prev.filter((_, idx) => idx !== i));
+  }
+  function updateCurrency(i: number, currency: QuoteCurrency) {
+    setQuoteRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, currency } : r)));
   }
   function updateCost(i: number, v: string) {
     const num = parseFloat(v.replace(/[^0-9.]/g, "")) || 0;
@@ -428,7 +455,7 @@ export function CarrierQuotesTable({
     // se genera igual en vez de dejar al usuario sin PDF.
     let termsJson: QuoteTermsJson = { bulletsJson: "", contractJson: "", privacyJson: "", limitsJson: "" };
     try {
-      const termsRes = await fetch("/api/quote-config");
+      const termsRes = await fetch(`/api/quote-config?scope=${scope}`);
       if (termsRes.ok) termsJson = await termsRes.json();
     } catch (e) {
       console.error("No se pudieron cargar los textos legales:", e);
@@ -441,6 +468,7 @@ export function CarrierQuotesTable({
         termsJson={termsJson}
         creatorName={signer.name}
         creatorPosition={signer.position}
+        international={scope === "internacional"}
       />
     ).toBlob();
   }
@@ -575,9 +603,21 @@ export function CarrierQuotesTable({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ quoteNumber, company, contact, phone, email: email || null, validUntil, rows: quoteRows, scope }),
         });
-        const saved = await saveRes.json().catch(() => ({})) as { error?: string; quoteNumber?: string };
+        const saved = await saveRes.json().catch(() => ({})) as { error?: string; quoteNumber?: string; id?: string };
         if (!saveRes.ok) {
           throw new Error(saved.error ?? `Error ${saveRes.status}`);
+        }
+        // Ya quedó guardada: se abre esa cotización. Quedarse en esta pantalla
+        // dejaba volver a guardarla (borrador o PDF otra vez) como una nueva.
+        if (saved.id) {
+          if (saved.quoteNumber && saved.quoteNumber !== quoteNumber) {
+            toast.warning(`El número ${quoteNumber} ya estaba ocupado: se guardó como ${saved.quoteNumber}. Descarga el PDF de nuevo desde aquí para que coincida.`);
+          } else {
+            toast.success(`Cotización ${saved.quoteNumber ?? quoteNumber} guardada.`);
+          }
+          router.push(`${listPath}/${saved.id}`);
+          router.refresh();
+          return;
         }
         // El servidor puede haber asignado otro número si el previsto ya estaba
         // tomado; se avisa para que no se mande un PDF con un número distinto
@@ -914,7 +954,8 @@ export function CarrierQuotesTable({
                     <th className="text-left px-3 py-2 font-medium text-xs">Origen</th>
                     <th className="text-left px-3 py-2 font-medium text-xs">Destino</th>
                     <th className="text-left px-3 py-2 font-medium text-xs hidden sm:table-cell">Estado</th>
-                    <th className="text-left px-3 py-2 font-medium text-xs">Costo ($)</th>
+                    {scope === "internacional" && <th className="text-left px-3 py-2 font-medium text-xs hidden sm:table-cell">C.P.</th>}
+                    <th className="text-left px-3 py-2 font-medium text-xs">Costo</th>
                     <th className="text-left px-3 py-2 font-medium text-xs">Unidad</th>
                     <th className="px-2 py-2 w-8" />
                   </tr>
@@ -925,13 +966,27 @@ export function CarrierQuotesTable({
                       <td className="px-3 py-2 text-sm">{row.origin}</td>
                       <td className="px-3 py-2 text-sm">{row.destination}</td>
                       <td className="px-3 py-2 text-sm text-muted-foreground hidden sm:table-cell">{row.destinationState ?? "—"}</td>
+                      {scope === "internacional" && (
+                        <td className="px-3 py-2 text-sm text-muted-foreground hidden sm:table-cell">{row.destinationZip || "—"}</td>
+                      )}
                       <td className="px-3 py-2">
-                        <Input
-                          type="number" min="0" step="100"
-                          value={row.cost || ""}
-                          onChange={(e) => updateCost(i, e.target.value)}
-                          className="w-28 h-8"
-                        />
+                        <div className="flex items-center gap-1.5">
+                          <Input
+                            type="number" min="0" step="100"
+                            value={row.cost || ""}
+                            onChange={(e) => updateCost(i, e.target.value)}
+                            className="w-28 h-8"
+                            aria-label={`Costo de la ruta ${i + 1}`}
+                          />
+                          {scope === "internacional" && (
+                            <AppSelect
+                              value={row.currency ?? "USD"}
+                              onValueChange={(v) => updateCurrency(i, v === "MXN" ? "MXN" : "USD")}
+                              options={CURRENCY_OPTIONS}
+                              className="h-8 w-24"
+                            />
+                          )}
+                        </div>
                       </td>
                       <td className="px-3 py-2 text-xs font-medium">{row.unitLabel}</td>
                       <td className="px-2 py-2">

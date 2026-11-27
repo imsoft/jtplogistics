@@ -13,6 +13,7 @@ export interface StoredQuote {
   rows: QuoteRow[];
   creatorName: string;
   creatorPosition?: string | null;
+  scope?: string;
 }
 
 /**
@@ -29,13 +30,11 @@ export async function buildQuotePdf({
   id: string;
   apiEndpoint: string;
 }): Promise<{ quote: StoredQuote; blob: Blob }> {
-  const [quoteRes, termsRes] = await Promise.all([
-    fetch(`${apiEndpoint}/${id}`),
-    fetch("/api/quote-config"),
-  ]);
+  const quoteRes = await fetch(`${apiEndpoint}/${id}`);
   if (!quoteRes.ok) throw new Error("No se pudo cargar la cotización");
-
   const quote = (await quoteRes.json()) as StoredQuote;
+  // Los textos legales son los del cotizador de donde salió.
+  const termsRes = await fetch(`/api/quote-config?scope=${quote.scope === "internacional" ? "internacional" : "nacional"}`);
   const termsJson = termsRes.ok
     ? await termsRes.json()
     : { bulletsJson: "", contractJson: "", privacyJson: "", limitsJson: "" };
@@ -60,6 +59,7 @@ export async function buildQuotePdf({
       termsJson={termsJson}
       creatorName={quote.creatorName}
       creatorPosition={quote.creatorPosition ?? undefined}
+      international={quote.scope === "internacional"}
     />
   ).toBlob();
 

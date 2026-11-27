@@ -247,6 +247,12 @@ model User {
 
   @@index([parentCarrierId])
   @@map("users")
+  /// Evaluaciones de RH/dirección a este colaborador (él no las ve) y las que hizo.
+  employeeEvaluations      EmployeeEvaluation[]     @relation("EmployeeEvaluations")
+  employeeEvaluationsGiven EmployeeEvaluation[]     @relation("EmployeeEvaluationsGiven")
+  /// Actas administrativas levantadas a este colaborador y las que levantó.
+  administrativeRecords        AdministrativeRecord[] @relation("AdministrativeRecords")
+  administrativeRecordsCreated AdministrativeRecord[] @relation("AdministrativeRecordsCreated")
 }
 
 model Session {
@@ -1930,4 +1936,40 @@ model CarrierOperator {
 
   @@index([carrierId])
   @@map("carrier_operators")
+}
+
+// ---- RH: evaluaciones de colaboradores y actas administrativas ----
+
+/// Evaluación de un colaborador. La hacen dirección y RH; el colaborador no la ve.
+model EmployeeEvaluation {
+  id            String   @id @default(cuid()) @map("id")
+  employeeId    String   @map("employee_id")
+  employee      User     @relation("EmployeeEvaluations", fields: [employeeId], references: [id], onDelete: Cascade)
+  /// Mes evaluado, "AAAA-MM".
+  period        String   @map("period")
+  /// 1 a 5 en medias.
+  stars         Float    @map("stars")
+  comment       String?  @map("comment")
+  evaluatedById String?  @map("evaluated_by_id")
+  evaluatedBy   User?    @relation("EmployeeEvaluationsGiven", fields: [evaluatedById], references: [id], onDelete: SetNull)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([employeeId])
+  @@map("employee_evaluations")
+}
+
+/// Acta administrativa levantada (se guarda al generar el PDF). `data` es el
+/// ActaData de lib/acta-administrativa.ts, para volver a descargarla igual.
+model AdministrativeRecord {
+  id           String   @id @default(cuid()) @map("id")
+  employeeId   String?  @map("employee_id")
+  employee     User?    @relation("AdministrativeRecords", fields: [employeeId], references: [id], onDelete: SetNull)
+  employeeName String   @map("employee_name")
+  data         Json     @map("data")
+  createdById  String?  @map("created_by_id")
+  createdBy    User?    @relation("AdministrativeRecordsCreated", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([employeeId])
+  @@map("administrative_records")
 }

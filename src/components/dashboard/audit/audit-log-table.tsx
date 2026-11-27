@@ -53,6 +53,8 @@ const RESOURCE_LABELS: Record<string, string> = {
   generated_quote: "Cotización",
   maritime_quote: "Cotización marítima",
   whatsapp_message: "WhatsApp",
+  employee_evaluation: "Evaluación de colaborador",
+  administrative_record: "Acta administrativa",
   setting: "Configuración",
   notification: "Notificación",
 };

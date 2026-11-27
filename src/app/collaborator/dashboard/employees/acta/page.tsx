@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { prisma } from "@/lib/db";
 import { requireCollaboratorPage } from "@/lib/auth-server";
 import { ResourceListPage } from "@/components/dashboard/resources/resource-list-page";
-import { ActaForm } from "@/components/dashboard/hr/acta-form";
+import { ActaPageContent } from "@/components/dashboard/hr/acta-page-content";
 
 export const metadata = { title: "Acta administrativa | JTP Logistics" };
 
@@ -18,11 +18,11 @@ export default async function CollaboratorActaPage() {
   return (
     <ResourceListPage
       title="Acta administrativa"
-      description="Captura los datos y descarga el acta en PDF con el formato de JTP. No se guarda en la plataforma."
+      description="Captura los datos y descarga el acta en PDF con el formato de JTP. Queda registrada en la plataforma."
     >
       {allowed ? (
         <Suspense>
-          <ActaForm responsibleName={session.user.name} employeesEndpoint="/api/collaborator/employees" />
+          <ActaPageContent responsibleName={session.user.name} employeesEndpoint="/api/collaborator/employees" />
         </Suspense>
       ) : (
         <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">

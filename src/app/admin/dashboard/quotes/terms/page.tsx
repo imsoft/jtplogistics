@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { quoteScopeFromPath, quotesBase } from "@/lib/quote-scope";
 import { ChevronLeft, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LexicalEditor } from "@/components/ui/lexical-editor";
@@ -25,7 +27,17 @@ const SECTIONS: { key: Section; label: string; description: string }[] = [
   { key: "tariffTermsJson", label: "Tarifario proveedores", description: "Cláusulas del tarifario que se descarga por proveedor" },
 ];
 
+/** El cotizador internacional solo lleva términos (Aralo) y notas (Swift/TransMex). */
+const INTL_SECTIONS: { key: Section; label: string; description: string }[] = [
+  { key: "bulletsJson", label: "Términos y condiciones", description: "Accesoriales y condiciones (debajo de la tabla de la cotización)" },
+  { key: "contractJson", label: "Notas y restricciones", description: "Notas y restricciones (página 2)" },
+];
+
+/** Sirve a los dos cotizadores: la URL dice de cuál son los textos. */
 export default function QuoteTermsPage() {
+  const scope = quoteScopeFromPath(usePathname());
+  const base = quotesBase("admin", scope);
+  const sections = scope === "internacional" ? INTL_SECTIONS : SECTIONS;
   const [config, setConfig] = useState<QuoteConfig | null>(null);
   const [activeSection, setActiveSection] = useState<Section>("bulletsJson");
   const [isSaving, setIsSaving] = useState(false);
@@ -35,7 +47,7 @@ export default function QuoteTermsPage() {
 
   const load = useCallback(
     () =>
-      fetch("/api/admin/quote-config").then(async (res) => {
+      fetch(`/api/admin/quote-config?scope=${scope}`).then(async (res) => {
         if (!res.ok) {
           setLoadError("No se pudieron cargar los textos. Recarga la página.");
           return;
@@ -43,7 +55,7 @@ export default function QuoteTermsPage() {
         const data: QuoteConfig = await res.json();
         setConfig(data);
       }),
-    []
+    [scope]
   );
 
   useEffect(() => { load(); }, [load]);
@@ -57,7 +69,7 @@ export default function QuoteTermsPage() {
     setError(null);
     setIsSaving(true);
     try {
-      const res = await fetch("/api/admin/quote-config", {
+      const res = await fetch(`/api/admin/quote-config?scope=${scope}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(config),
@@ -81,7 +93,7 @@ export default function QuoteTermsPage() {
     );
   }
 
-  const current = SECTIONS.find((s) => s.key === activeSection)!;
+  const current = sections.find((s) => s.key === activeSection) ?? sections[0];
 
   return (
     <div className="min-w-0 space-y-6">
@@ -89,12 +101,12 @@ export default function QuoteTermsPage() {
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2 min-w-0">
           <Button variant="ghost" size="icon" asChild className="shrink-0">
-            <Link href="/admin/dashboard/quotes" aria-label="Volver al cotizador">
+            <Link href={base} aria-label="Volver al cotizador">
               <ChevronLeft className="size-4" />
             </Link>
           </Button>
           <div className="min-w-0">
-            <h1 className="page-heading">Textos legales de cotización</h1>
+            <h1 className="page-heading">{scope === "internacional" ? "Textos legales del cotizador internacional" : "Textos legales de cotización"}</h1>
             <p className="mt-0.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Edita el contenido que aparece en cada página del PDF.
             </p>
@@ -117,7 +129,7 @@ export default function QuoteTermsPage() {
 
       {/* Tab nav */}
       <div className="flex gap-1 border-b overflow-x-auto">
-        {SECTIONS.map((s) => (
+        {sections.map((s) => (
           <button
             key={s.key}
             onClick={() => setActiveSection(s.key)}

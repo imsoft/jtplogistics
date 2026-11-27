@@ -57,7 +57,7 @@ export const dashboardNavGroups: DashboardNavGroup[] = [
       { title: "Tipos de unidades", href: "/admin/dashboard/unit-types", icon: Boxes },
       { title: "Mensajes", href: "/admin/dashboard/messages", icon: MessageSquare },
       { title: "Tipos de incidencia", href: "/admin/dashboard/incident-types", icon: AlertTriangle },
-      { title: "Rating transportistas", href: "/admin/dashboard/providers/ratings", icon: StarIcon },
+      { title: "Evaluación transportistas", href: "/admin/dashboard/providers/ratings", icon: StarIcon },
       { title: "Rentabilidad por ruta", href: "/admin/dashboard/finances/analytics", icon: TrendingUp },
     ],
   },

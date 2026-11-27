@@ -14,13 +14,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { AppSelect } from "@/components/ui/app-select";
 import {
   ACTA_AREAS,
-  actaFilename,
   emptyActa,
   validateActa,
   type ActaData,
   type ActaErrors,
 } from "@/lib/acta-administrativa";
 import { DatePicker } from "@/components/ui/date-picker";
+import { downloadActaPdf } from "@/components/dashboard/hr/hr-records";
 
 interface EmployeeOption {
   id: string;
@@ -73,9 +73,12 @@ function Field({
 export function ActaForm({
   responsibleName,
   employeesEndpoint,
+  onSaved,
 }: {
   responsibleName: string;
   employeesEndpoint: string;
+  /** Después de guardarla (para refrescar la lista de actas). */
+  onSaved?: () => void;
 }) {
   const params = useSearchParams();
   const initial = useMemo(() => {
@@ -130,24 +133,26 @@ export function ActaForm({
     }
     setBusy(true);
     try {
-      const [{ pdf }, { ActaPdf }] = await Promise.all([
-        import("@react-pdf/renderer"),
-        import("@/components/dashboard/hr/acta-pdf"),
-      ]);
-      const blob = await pdf(
-        <ActaPdf data={data} logoUrl={`${window.location.origin}/images/logo/jtp-logistics.png`} />
-      ).toBlob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = actaFilename(data);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
+      await downloadActaPdf(data);
     } catch (e) {
       console.error("[acta] PDF", e);
       toast.error("No se pudo generar el PDF. Intenta de nuevo.");
+      setBusy(false);
+      return;
+    }
+    // Queda registrada en la plataforma (decisión del cliente).
+    try {
+      const res = await fetch("/api/hr/actas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ employeeId: employeeId || null, data }),
+      });
+      const d = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) throw new Error(d.error ?? "No se pudo guardar.");
+      toast.success("Acta generada y guardada.");
+      onSaved?.();
+    } catch (e) {
+      toast.error(`El PDF se descargó, pero el acta no se guardó: ${e instanceof Error ? e.message : "error"}`);
     } finally {
       setBusy(false);
     }

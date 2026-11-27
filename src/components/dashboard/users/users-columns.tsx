@@ -4,8 +4,29 @@ import { type ColumnDef } from "@tanstack/react-table";
 import { SortableColumnHeader } from "@/components/ui/sortable-column-header";
 import { USER_ROLE_LABELS } from "@/lib/constants/user-role";
 import type { User } from "@/types/user.types";
+import { StarRating } from "@/components/ui/star-rating";
 
-export function getUsersColumns(): ColumnDef<User>[] {
+/** Llave para empatar la evaluación con el proveedor: su razón social. */
+export const ratingKey = (legalName: string | null | undefined) => (legalName ?? "").trim().toLowerCase();
+
+/**
+ * `starsByLegalName`: solo en la lista de proveedores; agrega la columna de
+ * evaluación (la calificación que cuenta, con el ajuste de JTP si lo hay).
+ */
+export function getUsersColumns(starsByLegalName?: Map<string, number>): ColumnDef<User>[] {
+  const ratingColumn: ColumnDef<User>[] = starsByLegalName
+    ? [
+        {
+          id: "evaluation",
+          accessorFn: (row) => starsByLegalName.get(ratingKey(row.profile?.legalName)) ?? -1,
+          header: ({ column }) => <SortableColumnHeader column={column} title="Evaluación" />,
+          cell: ({ row }) => {
+            const stars = starsByLegalName.get(ratingKey(row.original.profile?.legalName));
+            return stars != null ? <StarRating stars={stars} showNumber /> : <span className="text-muted-foreground text-xs">Sin embarques</span>;
+          },
+        },
+      ]
+    : [];
   return [
     {
       id: "search",
@@ -29,6 +50,7 @@ export function getUsersColumns(): ColumnDef<User>[] {
           : <span className="text-muted-foreground">—</span>;
       },
     },
+    ...ratingColumn,
     {
       accessorKey: "name",
       header: ({ column }) => <SortableColumnHeader column={column} title="Nombre" />,

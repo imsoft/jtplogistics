@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoRow } from "@/components/dashboard/users/info-row";
 import { SecretRow } from "@/components/dashboard/users/secret-row";
 import { ResetPasswordButton } from "@/components/dashboard/resources/reset-password-button";
+import { EmployeeHrCards } from "@/components/dashboard/hr/hr-records";
 import { OffboardBanner, OffboardButton, assignedSummary } from "@/components/dashboard/resources/offboard-controls";
 import { ChangeEmailButton } from "@/components/dashboard/resources/change-email-button";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
@@ -366,6 +367,9 @@ export function EmployeeProfileView({
             )}
         </CardContent>
       </Card>
+
+      {/* RH: evaluaciones y actas (dirección y RH; el colaborador no las ve). */}
+      {canWriteActa && id && <EmployeeHrCards employeeId={id} />}
     </div>
   );
 }

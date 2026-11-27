@@ -156,9 +156,15 @@ export function QuoteDetailView({
                         <tr key={i} className="border-b last:border-0">
                           <td className="px-3 py-2.5">{r.origin}</td>
                           <td className="px-3 py-2.5">{r.destination}</td>
-                          <td className="text-muted-foreground px-3 py-2.5">{r.destinationState ?? "—"}</td>
+                          <td className="text-muted-foreground px-3 py-2.5">
+                            {r.destinationState ?? "—"}
+                            {r.destinationZip ? ` · C.P. ${r.destinationZip}` : ""}
+                          </td>
                           <td className="px-3 py-2.5">{r.unitLabel}</td>
-                          <td className="whitespace-nowrap px-3 py-2.5 text-right tabular-nums">${formatMxn(Number(r.cost) || 0)}</td>
+                          <td className="whitespace-nowrap px-3 py-2.5 text-right tabular-nums">
+                            ${formatMxn(Number(r.cost) || 0)}
+                            {r.currency ? ` ${r.currency}` : ""}
+                          </td>
                         </tr>
                       ))}
                     </tbody>

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { isIncidentBody, setFinanceIncident } from "@/lib/finance-incident-server";
 import { logAudit } from "@/lib/audit-log";
 import { companyDateKey } from "@/lib/time-clock";
 import { effectiveTariffs } from "@/lib/shipment-tariffs";
@@ -150,7 +151,7 @@ async function setEvidence(id: string, body: unknown, user: { id: string; name: 
   return Response.json({ evidenceReceivedOn: on ? on.toISOString().slice(0, 10) : null });
 }
 
-/** PATCH /api/collaborator/finances/[id] { evidenceReceived } — con permiso de editar Finanzas. */
+/** PATCH /api/collaborator/finances/[id] { evidenceReceived } o { incident, incidentType } — con permiso de editar Finanzas. */
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireCollaboratorOrAdmin();
@@ -159,7 +160,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       if (!me?.canUpdateFinances) return Response.json({ error: "Sin permiso" }, { status: 403 });
     }
     const { id } = await params;
-    return await setEvidence(id, await req.json().catch(() => ({})), session.user);
+    const body = await req.json().catch(() => ({}));
+    return await (isIncidentBody(body) ? setFinanceIncident(id, body, session.user) : setEvidence(id, body, session.user));
   } catch (e) {
     if (e instanceof Response) return e;
     console.error(e);

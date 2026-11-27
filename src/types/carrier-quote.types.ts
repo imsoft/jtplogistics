@@ -34,12 +34,18 @@ export interface CarrierQuotesResponse {
   suggestedPrice?: number | null;
 }
 
+export type QuoteCurrency = "MXN" | "USD";
+
 export interface QuoteRow {
   origin: string;
   destination: string;
   destinationState: string | null;
   cost: number;
   unitLabel: string;
+  /** Solo en el cotizador internacional: moneda del costo y códigos postales. */
+  currency?: QuoteCurrency;
+  originZip?: string;
+  destinationZip?: string;
 }
 
 export interface QuoteData {

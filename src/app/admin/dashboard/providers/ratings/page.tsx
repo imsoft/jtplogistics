@@ -350,7 +350,7 @@ export default function CarrierRatingsPage() {
           </Link>
         </Button>
         <div>
-          <h1 className="page-heading">Rating de transportistas</h1>
+          <h1 className="page-heading">Evaluación de transportistas</h1>
           <p className="mt-0.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:text-sm">
             Puntualidad · Incidencias · Tasa de entrega
           </p>

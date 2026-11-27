@@ -13,7 +13,8 @@ import { InfoRow } from "@/components/dashboard/users/info-row";
 import { ResourceDetailSkeleton } from "@/components/ui/skeletons";
 import { useIncidentTypes } from "@/hooks/use-incident-types";
 import { useUnitTypes } from "@/hooks/use-unit-types";
-import { formatIncidentYesNo } from "@/lib/incident-yes-no";
+import { INCIDENT_YES_NO_OPTIONS, formatIncidentYesNo, incidentAllowsIncidentType } from "@/lib/incident-yes-no";
+import { AppSelect } from "@/components/ui/app-select";
 import { IncidentTypeBadge } from "@/components/dashboard/resources/incident-type-badge";
 import { formatMxn, formatPhone } from "@/lib/utils";
 import { shipmentStatusDisplay } from "@/components/dashboard/resources/shipments-table";
@@ -67,6 +68,27 @@ export function FinanceDetailView({ panel, canMarkEvidence }: { panel: "admin" |
   }, [api, id]);
 
   const unitLabel = row?.unit?.trim() ? unitTypes.find((t) => t.value === row.unit)?.label ?? row.unit : null;
+
+  /** Finanzas registra la incidencia del embarque (Sí/No y el tipo). */
+  async function saveIncident(incident: string, incidentType: string | null) {
+    if (!row) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`${api}/${row.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ incident, incidentType: incidentAllowsIncidentType(incident) ? incidentType : null }),
+      });
+      const d = (await res.json().catch(() => ({}))) as { error?: string; incident?: string | null; incidentType?: string | null };
+      if (!res.ok) throw new Error(d.error ?? "No se pudo guardar.");
+      setRow({ ...row, incident: d.incident ?? null, incidentType: d.incidentType ?? null });
+      toast.success("Incidencia guardada.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo guardar.");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function toggleEvidence() {
     if (!row) return;
@@ -151,8 +173,41 @@ export function FinanceDetailView({ panel, canMarkEvidence }: { panel: "admin" |
           <div>
             <InfoRow label="Recolección" value={fmtDate(row.pickupDate)} />
             <InfoRow label="Entrega" value={fmtDate(row.deliveryDate)} />
-            <InfoRow label="Incidencia" value={row.incident ? formatIncidentYesNo(row.incident) : null} />
-            <InfoRow label="Tipo de incidencia" value={row.incidentType ? <IncidentTypeBadge value={row.incidentType} types={incidentTypes} /> : null} />
+            {canMarkEvidence ? (
+              <>
+                <InfoRow
+                  label="Incidencia"
+                  value={
+                    <AppSelect
+                      value={(row.incident ?? "").toLowerCase() === "sí" ? "si" : (row.incident ?? "").toLowerCase()}
+                      onValueChange={(v) => saveIncident(v, v === "si" ? row.incidentType : null)}
+                      options={INCIDENT_YES_NO_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+                      disabled={busy}
+                      className="w-32"
+                    />
+                  }
+                />
+                {incidentAllowsIncidentType(row.incident ?? "") && (
+                  <InfoRow
+                    label="Tipo de incidencia"
+                    value={
+                      <AppSelect
+                        value={row.incidentType ?? ""}
+                        onValueChange={(v) => saveIncident(row.incident ?? "si", v || null)}
+                        options={incidentTypes.map((t) => ({ value: t.value, label: t.label }))}
+                        disabled={busy}
+                        className="w-full max-w-xs"
+                      />
+                    }
+                  />
+                )}
+              </>
+            ) : (
+              <>
+                <InfoRow label="Incidencia" value={row.incident ? formatIncidentYesNo(row.incident) : null} />
+                <InfoRow label="Tipo de incidencia" value={row.incidentType ? <IncidentTypeBadge value={row.incidentType} types={incidentTypes} /> : null} />
+              </>
+            )}
             <InfoRow label="Comentarios" value={row.comments} />
           </div>
         </CardContent>

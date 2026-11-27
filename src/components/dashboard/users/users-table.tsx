@@ -6,7 +6,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { AppSelect } from "@/components/ui/app-select";
 import { DataTableSkeleton } from "@/components/ui/skeletons";
-import { getUsersColumns } from "./users-columns";
+import { getUsersColumns, ratingKey } from "./users-columns";
 import { USER_ROLE_LABELS } from "@/lib/constants/user-role";
 import type { User, UserRole } from "@/types/user.types";
 
@@ -67,11 +67,23 @@ export function UsersTable({
     loadUsers();
   }, [loadUsers]);
 
+  // En la lista de proveedores se ve la evaluación de cada uno (por razón social).
+  const [starsByLegalName, setStarsByLegalName] = useState<Map<string, number> | undefined>(undefined);
+  useEffect(() => {
+    if (defaultRole !== "carrier") return;
+    fetch("/api/admin/carriers/ratings")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((list: { legalName: string; stars: number; manualStars: number | null }[]) =>
+        setStarsByLegalName(new Map(list.map((x) => [ratingKey(x.legalName), x.manualStars ?? x.stars])))
+      )
+      .catch(() => setStarsByLegalName(new Map()));
+  }, [defaultRole]);
+
   const filteredUsers = useMemo(() => {
     return roleFilter === "all" ? users : users.filter((u) => u.role === roleFilter);
   }, [users, roleFilter]);
 
-  const columns = useMemo(() => getUsersColumns(), []);
+  const columns = useMemo(() => getUsersColumns(starsByLegalName), [starsByLegalName]);
 
   if (!isLoaded) {
     return <DataTableSkeleton />;

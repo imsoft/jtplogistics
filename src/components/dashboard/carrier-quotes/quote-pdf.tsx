@@ -21,7 +21,8 @@ const s = StyleSheet.create({
   // El PNG del logo es cuadrado (3200x3200): con una caja apaisada, objectFit
   // "contain" lo encogía a la altura y dejaba el ancho vacío.
   logo: { width: 106, height: 106, objectFit: "contain" },
-  headerDate: { fontSize: 8, color: MUTED, fontFamily: "Helvetica", textAlign: "right", maxWidth: 200 },
+  headerDate: { fontSize: 8, color: MUTED, fontFamily: "Helvetica", textAlign: "right" },
+  headerDateBlock: { alignItems: "flex-end", gap: 2 },
   // ── Page 1 title ──
   titleWrapper: { borderBottomWidth: 1, borderColor: BRAND, paddingVertical: 4, marginBottom: 6 },
   titleText: { color: BRAND, fontSize: 12, fontFamily: "Helvetica-Bold", textAlign: "center" },
@@ -73,7 +74,27 @@ const lexStyles = {
 function formatDateEs(date: Date): string {
   const days = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
   const months = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
-  return `${days[date.getDay()]} ${date.getDate()} de ${months[date.getMonth()]} del ${date.getFullYear()}, Guadalajara, Jalisco`;
+  return `${days[date.getDay()]} ${date.getDate()} de ${months[date.getMonth()]} del ${date.getFullYear()}`;
+}
+
+/** Dónde se emite: va en su propio renglón para que la esquina no se corte a media frase. */
+const ISSUED_AT = "Guadalajara, Jalisco";
+
+/** Hay texto en ese apartado (el internacional no trae aviso de privacidad ni límites). */
+function hasContent(json: string | undefined): boolean {
+  if (!json?.trim()) return false;
+  try {
+    const root = (JSON.parse(json) as { root?: { children?: unknown[] } }).root;
+    return (root?.children?.length ?? 0) > 0;
+  } catch {
+    return false;
+  }
+}
+
+/** Monto con formato; en el internacional se dice la moneda (4,666.70 USD). */
+function money(cost: number, currency?: string): string {
+  const n = "$" + Number(cost).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return currency ? n + " " + currency : n;
 }
 
 function formatValidUntilEs(iso: string): string {
@@ -87,7 +108,10 @@ function PageHeader({ logoUrl, date }: { logoUrl: string; date: string }) {
     <View style={s.header} fixed>
       {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf no tiene alt */}
       <Image src={logoUrl} style={s.logo} />
-      <Text style={s.headerDate}>{date}</Text>
+      <View style={s.headerDateBlock}>
+        <Text style={s.headerDate}>{date}</Text>
+        <Text style={s.headerDate}>{ISSUED_AT}</Text>
+      </View>
     </View>
   );
 }
@@ -160,9 +184,11 @@ interface Props {
   creatorName?: string;
   /** Puesto de quien creó la cotización (aparece bajo su nombre). */
   creatorPosition?: string;
+  /** El internacional dice la moneda, lleva código postal y sus propios textos. */
+  international?: boolean;
 }
 
-export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPosition }: Props) {
+export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPosition, international = false }: Props) {
   const today = new Date();
   const dateStr = formatDateEs(today);
   const rowBg = (i: number) => (i % 2 === 0 ? BRAND_LIGHT : WHITE);
@@ -174,7 +200,7 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
         <PageHeader logoUrl={logoUrl} date={dateStr} />
         <PageFooter />
         <View style={s.titleWrapper}>
-          <Text style={s.titleText}>Propuesta de servicio Nacional / Internacional</Text>
+          <Text style={s.titleText}>{international ? "Propuesta de servicio internacional" : "Propuesta de servicio Nacional / Internacional"}</Text>
         </View>
         <View style={[s.companyRow, { marginBottom: 2 }]}>
           <Text style={s.companyLabel}>Compañía:</Text>
@@ -209,15 +235,17 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
             <Text style={s.tableHeadCell}>Origen</Text>
             <Text style={s.tableHeadCell}>Destino</Text>
             <Text style={s.tableHeadCell}>Estado</Text>
+            {international && <Text style={s.tableHeadCell}>C.P.</Text>}
             <Text style={s.tableHeadCell}>Costo</Text>
             <Text style={s.tableHeadCellLast}>Unidad</Text>
           </View>
           {data.rows.map((row, i) => (
             <View key={i} wrap={false} style={[s.tableRow, { backgroundColor: rowBg(i) }]}>
-              <Text style={s.tableCell}>{pdfTitle(row.origin)}</Text>
+              <Text style={s.tableCell}>{pdfTitle(row.origin)}{international && row.originZip ? " " + row.originZip : ""}</Text>
               <Text style={s.tableCell}>{pdfTitle(row.destination)}</Text>
               <Text style={s.tableCell}>{pdfTitle(row.destinationState)}</Text>
-              <Text style={s.tableCell}>${Number(row.cost).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
+              {international && <Text style={s.tableCell}>{row.destinationZip || "—"}</Text>}
+              <Text style={s.tableCell}>{money(row.cost, international ? row.currency ?? "USD" : undefined)}</Text>
               <Text style={s.tableCellLast}>{pdfSentence(row.unitLabel)}</Text>
             </View>
           ))}
@@ -235,11 +263,12 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
         />
       </Page>
 
-      {/* ── Página 2: Términos del contrato ── */}
+      {/* ── Página 2: Términos del contrato (en el internacional, notas y restricciones) ── */}
+      {hasContent(termsJson.contractJson) && (
       <Page size="LETTER" style={s.page}>
         <PageHeader logoUrl={logoUrl} date={dateStr} />
         <PageFooter />
-        <Text style={s.pageTitle}>Términos insertos en el contrato</Text>
+        <Text style={s.pageTitle}>{international ? "Notas y restricciones" : "Términos insertos en el contrato"}</Text>
         {renderLexicalContent(termsJson.contractJson, lexStyles, { sentenceCase: true })}
         <Signatures
           creatorName={creatorName}
@@ -248,7 +277,10 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
         />
       </Page>
 
+      )}
+
       {/* ── Página 3: Aviso de privacidad ── */}
+      {hasContent(termsJson.privacyJson) && (
       <Page size="LETTER" style={s.page}>
         <PageHeader logoUrl={logoUrl} date={dateStr} />
         <PageFooter />
@@ -261,7 +293,10 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
         />
       </Page>
 
+      )}
+
       {/* ── Página 4: Límites de responsabilidad ── */}
+      {hasContent(termsJson.limitsJson) && (
       <Page size="LETTER" style={s.page}>
         <PageHeader logoUrl={logoUrl} date={dateStr} />
         <PageFooter />
@@ -272,6 +307,7 @@ export function QuotePdf({ data, logoUrl, termsJson, creatorName, creatorPositio
           contactName={data.contact}
         />
       </Page>
+      )}
     </Document>
   );
 }

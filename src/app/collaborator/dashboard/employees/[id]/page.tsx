@@ -9,6 +9,7 @@ import { InfoRow } from "@/components/dashboard/users/info-row";
 import { useResourceEdit } from "@/hooks/use-resource-edit";
 import { useCollaboratorPermissions } from "@/hooks/use-collaborator-permissions";
 import { ChangeEmailButton } from "@/components/dashboard/resources/change-email-button";
+import { EmployeeHrCards } from "@/components/dashboard/hr/hr-records";
 import { OffboardBanner, OffboardButton, assignedSummary } from "@/components/dashboard/resources/offboard-controls";
 import type { Employee } from "@/types/resources.types";
 import { formatPhone } from "@/lib/utils";
@@ -208,6 +209,9 @@ export default function CollaboratorEmployeeProfilePage() {
           </CardContent>
         </Card>
       )}
+
+      {/* RH: evaluaciones y actas. La API no deja ver el expediente propio. */}
+      {permissions?.canUpdateEmployees && id && <EmployeeHrCards employeeId={id} />}
     </div>
   );
 }

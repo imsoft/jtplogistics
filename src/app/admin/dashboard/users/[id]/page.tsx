@@ -19,6 +19,8 @@ import { ProviderTariffButton } from "@/components/dashboard/providers/provider-
 import { DeleteUserButton } from "@/components/dashboard/users/delete-user-button";
 import type { UserRole } from "@/types/user.types";
 import { CarrierMembersManager } from "@/components/dashboard/users/carrier-members-manager";
+import { StarRating } from "@/components/ui/star-rating";
+import { evaluationsFor } from "@/lib/carrier-evaluation-server";
 
 /** Alineado con el modelo Contact de Prisma (tipado explícito para el include del perfil). */
 type ProfileContact = {
@@ -103,6 +105,11 @@ export default async function UserProfilePage({
 
   const isCarrier = user.role === "carrier";
 
+  // La evaluación del proveedor (la de JTP si la ajustó; si no, la de sus embarques).
+  const carrierStars =
+    isCarrier && !user.parentCarrierId && user.profile?.legalName?.trim()
+      ? (await evaluationsFor(user.profile.legalName)).overall.stars
+      : null;
   const isDeletable = user.role === "carrier" || user.role === "collaborator";
 
   const contacts = (user.profile?.contacts ?? []) as ProfileContact[];
@@ -213,6 +220,20 @@ export default async function UserProfilePage({
                 <InfoRow label="Razón social"     value={user.profile.legalName} />
                 <InfoRow label="RFC"              value={user.profile.rfc} />
                 <InfoRow label="Dirección"        value={user.profile.address} />
+                {isCarrier && !user.parentCarrierId && (
+                  <InfoRow
+                    label="Evaluación"
+                    value={
+                      carrierStars != null ? (
+                        <Link href="/admin/dashboard/providers/ratings" className="inline-flex hover:opacity-80">
+                          <StarRating stars={carrierStars} showNumber />
+                        </Link>
+                      ) : (
+                        "Sin embarques para evaluar"
+                      )
+                    }
+                  />
+                )}
               </>
             ) : (
               <p className="text-muted-foreground rounded-lg border border-dashed p-4 text-center text-sm">
